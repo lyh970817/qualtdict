@@ -9,7 +9,8 @@ dict_generate(
   var_name = c("question_name", "easy_name"),
   block_pattern = NULL,
   block_sep = ".",
-  split_by_block = FALSE
+  split_by_block = FALSE,
+  survey_name = NULL
 )
 }
 \arguments{
