@@ -179,9 +179,18 @@ recode_json <- function(surveyID,
             map(paste, level, sep = "_") %>%
             unlist()
         }
-        else if (sub_selector == "SingleAnswer" || sub_selector == "DL") {
+        else if (sub_selector == "DL") {
           new_qid <- paste_narm(qid, names(item), sep = "_") %>%
             rep_qid(item, choice_len)
+        }
+        else if (sub_selector == "SingleAnswer") {
+          if (is.null(item)) {
+            new_qid <- paste(qid, names(level), sep = "_")
+          }
+          else {
+            new_qid <- paste(qid, names(item), sep = "_") %>%
+              rep_item(choice_len)
+          }
         }
       }
       else if (selector == "TE") {
