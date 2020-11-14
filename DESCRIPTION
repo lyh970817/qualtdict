@@ -23,7 +23,7 @@ Imports:
     stringi,
     sjlabelled,
     qualtRics,
-    stringdist
-Suggests: 
-    slowraker,
+    stringdist,
     googlesheets4
+Suggests:
+    slowraker

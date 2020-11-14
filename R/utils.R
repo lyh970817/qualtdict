@@ -1,14 +1,15 @@
 #' @import dplyr
-#' @import tibble
-#' @import tidyr
 #' @import purrr
+#' @importFrom tibble tibble as_tibble tibble_row enframe
+#' @importFrom tidyr unnest unite
 #' @import stringr
-#' @import stringi
-#' @import stringdist
-#' @import slowraker
-#' @import sjlabelled
-#' @import googlesheets4
+#' @importFrom stringi stri_count_words
+#' @importFrom stringdist amatch
+#' @importFrom sjlabelled set_label set_labels
+#' @importFrom googlesheets4 read_sheet write_sheet
 #' @importFrom magrittr %>%
+#' @importFrom qualtRics fetch_survey metadata
+#' @import slowraker
 
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
@@ -161,3 +162,4 @@ order_name <- function(list) {
 #' @export qualtrics_api_credentials
 #' @name qualtrics_api_credentials
 NULL
+
