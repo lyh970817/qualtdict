@@ -119,14 +119,17 @@ recode_json <- function(surveyID,
       sub_q_len <- sub_q_len + 1
     }
 
+    level_len_col <- map(qjson$columns, "choices") %>% map_dbl(length)
+    col_len <- length(qjson$columns)
+    col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
 
     # Zero length columns means it's a carried forward question
-    if (type == "SBS" & length(qjson$columns) != 0) {
+    if (type == "SBS" & col_len != 0) {
       level_lens <- map(qjson$columns, "choices") %>% map_dbl(length)
-      choice_len <- sum(level_lens)
+      choice_len <- sum(level_len_col)
 
       question <- map(qjson$columns, "questionText") %>%
-        map2(level_lens, ~ rep(.x, each = .y)) %>%
+        map2(level_len_col, ~ rep(.x, each = .y)) %>%
         unlist() %>%
         rep(times = sub_q_len)
 
@@ -139,100 +142,19 @@ recode_json <- function(surveyID,
         unlist()
 
       item <- unlist(map(qjson$subQuestions, "description"))
+    }
 
-      col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
+    new_qid <- qid_recode(qid,
+      col_len = col_len, col_type = col_type, item = item, level = level, label = label,
+      choice_len = choice_len, level_len_col = level_len_col,
+      type = type, selector = selector, sub_selector = sub_selector
+    )
 
-      qid <- paste(qid, sep = "#", seq(length(qjson$columns))) %>%
-        map2(length(item), rep) %>%
-        map(paste, names(item), sep = "_") %>%
-        map2(level_lens, rep) %>%
-        map2(col_type, function(qids, type) {
-          if (type == "TE") {
-            return(paste(qids, "1", sep = "_"))
-          }
-          else {
-            return(qids)
-          }
-        }) %>%
-        unlist()
-    }
-    # if (qid == "QID565") {
-    #   browser()
-    # }
-    if (type == "MC") {
-      if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
-        new_qid <- paste(qid, level, sep = "_")
-      }
-      else if (selector == "SAVR" || selector == "SACOL" || selector == "DL") {
-        new_qid <- rep(qid, length(level))
-      }
-
-      text_pos <- grep("TEXT", level)
-      if (!is.null(text_pos)) {
-        new_qid[text_pos] <- paste(qid, names(level), sep = "_")[text_pos]
-      }
-    }
-    else if (type == "Matrix") {
-      if (selector == "Likert") {
-        if (sub_selector == "MultipleAnswer") {
-          new_qid <- paste_narm(qid, names(item), sep = "_") %>%
-            map(paste, level, sep = "_") %>%
-            unlist()
-        }
-        else if (sub_selector == "DL") {
-          new_qid <- paste_narm(qid, names(item), sep = "_") %>%
-            rep_qid(item, choice_len)
-        }
-        else if (sub_selector == "SingleAnswer") {
-          if (is.null(item)) {
-            new_qid <- paste(qid, names(level), sep = "_")
-          }
-          else {
-            new_qid <- paste(qid, names(item), sep = "_") %>%
-              rep_item(choice_len)
-          }
-        }
-      }
-      else if (selector == "TE") {
-        new_qid <- paste(qid, names(item), sep = "_") %>%
-          rep(each = choice_len) %>%
-          paste(level, sep = "_")
-      }
-      else if (selector == "Profile" || selector == "Bipolar") {
-        new_qid <- paste(qid, names(item), sep = "_") %>%
-          rep_qid(item, choice_len)
-      }
-    }
-    else if (type == "Slider" && selector == "HSLIDER") {
-      if (is.null(item)) {
-        new_qid <- paste(qid, names(level), sep = "_")
-      }
-      else {
-        new_qid <- paste(qid, names(item), sep = "_") %>%
-          rep_item(choice_len)
-      }
-    }
-    else if (type == "Slider" && selector == "HBAR") {
-      new_qid <- paste(qid, level, sep = "_")
-    }
-    else if (type == "Slider" && selector == "STAR") {
-      new_qid <- paste(qid, level, sep = "_")
-    }
-    else if (type == "TE" && selector == "FORM") {
-      new_qid <- paste(qid, names(label), sep = "_")
-    }
-    else if (type == "TE" &&
-      (selector == "SL" ||
-        selector == "ML" ||
-        selector == "ESTB")) {
-      new_qid <- paste(qid, "TEXT", sep = "_")
-    }
-    else if (type == "SBS") {
-      new_qid <- qid
-    }
-    else {
-      new_qid <- qid
-    }
+    question_name <- qid_recode(question_name,
+      col_len = col_len, col_type = col_type, item = item, level = level, label = label,
+      choice_len = choice_len, level_len_col = level_len_col,
+      type = type, selector = selector, sub_selector = sub_selector
+    )
 
     tab_qid <- data.frame(
       qid = new_qid,
@@ -262,7 +184,6 @@ recode_json <- function(surveyID,
 
   # Remove duplicated question text in item
   json$item[json$item == json$question] <- NA
-
 
   attr(json, "survey_name") <- as.character(mt$metadata$name)
   attr(json, "surveyID") <- surveyID
@@ -350,4 +271,110 @@ rep_loop <- function(x, question_meta) {
     }
   }) %>%
     unlist(recursive = FALSE)
+}
+
+qid_recode <- function(qid,
+                       col_len,
+                       item,
+                       level,
+                       label = label,
+                       choice_len,
+                       level_len_col,
+                       col_type,
+                       type,
+                       selector,
+                       sub_selector) {
+  if (type == "MC") {
+    if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
+      new_qid <- paste(qid, level, sep = "_")
+    }
+    else if (selector == "SAVR" || selector == "SACOL" || selector == "DL") {
+      new_qid <- rep(qid, length(level))
+    }
+
+    text_pos <- grep("TEXT", level)
+    if (!is.null(text_pos)) {
+      new_qid[text_pos] <- paste(qid, names(level), sep = "_")[text_pos]
+    }
+  }
+  else if (type == "Matrix") {
+    if (selector == "Likert") {
+      if (sub_selector == "MultipleAnswer") {
+        new_qid <- paste_narm(qid, names(item), sep = "_") %>%
+          map(paste, level, sep = "_") %>%
+          unlist()
+      }
+      else if (sub_selector == "DL") {
+        new_qid <- paste_narm(qid, names(item), sep = "_") %>%
+          rep_qid(item, choice_len)
+      }
+      else if (sub_selector == "SingleAnswer") {
+        if (is.null(item)) {
+          new_qid <- paste(qid, names(level), sep = "_")
+        }
+        else {
+          new_qid <- paste(qid, names(item), sep = "_") %>%
+            rep_item(choice_len)
+        }
+      }
+    }
+    else if (selector == "TE") {
+      new_qid <- paste(qid, names(item), sep = "_") %>%
+        rep(each = choice_len) %>%
+        paste(level, sep = "_")
+    }
+    else if (selector == "Profile" || selector == "Bipolar") {
+      new_qid <- paste(qid, names(item), sep = "_") %>%
+        rep_qid(item, choice_len)
+    }
+  }
+  else if (type == "Slider" && selector == "HSLIDER") {
+    if (is.null(item)) {
+      new_qid <- paste(qid, names(level), sep = "_")
+    }
+    else {
+      new_qid <- paste(qid, names(item), sep = "_") %>%
+        rep_item(choice_len)
+    }
+  }
+  else if (type == "Slider" && selector == "HBAR") {
+    new_qid <- paste(qid, level, sep = "_")
+  }
+  else if (type == "Slider" && selector == "STAR") {
+    new_qid <- paste(qid, level, sep = "_")
+  }
+  else if (type == "TE" && selector == "FORM") {
+    new_qid <- paste(qid, names(label), sep = "_")
+  }
+  else if (type == "TE" &&
+    (selector == "SL" ||
+      selector == "ML" ||
+      selector == "ESTB")) {
+    new_qid <- paste(qid, "TEXT", sep = "_")
+  }
+  else if (type == "SBS") {
+    new_qid <- paste(qid, sep = "#", seq(col_len)) %>%
+      map2(length(item), rep) %>%
+      map(paste, names(item), sep = "_") %>%
+      map2(level_len_col, rep) %>%
+      map2(col_type, function(qids, type) {
+        if (type == "TE") {
+          return(paste(qids, "1", sep = "_"))
+        }
+        else {
+          return(qids)
+        }
+      }) %>%
+      unlist()
+  }
+  else {
+    new_qid <- qid
+  }
+
+  # Some questions might have no choices which produces NULL
+  if (is.null(new_qid)) {
+    return(qid)
+  }
+
+  return(new_qid)
 }
