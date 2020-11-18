@@ -3,17 +3,17 @@ qualtdict
 
 **License:** [MIT](https://opensource.org/licenses/MIT)
 
-[Qualtrics](https://www.qualtrics.com/) is an online survey and data
-collection software platform. The qualtdict package builds on the
-[qualtRics](https://github.com/ropensci/qualtRics) R package which
-implements the retrieval of survey data using the Qualtrics API. The
-current package makes more comprehensive use of the survey metadata and
-generates a variable dictionary inlucding most of the information
-essential for data processing and analysis. It also uses a modified
-version of the RAKE algorithm as implemented in the package
-[slowraker](https://github.com/cran/slowraker) to generate meaningful
-names for all variables in the survey, as well as adding a comprehensive
-set of metadata attributes that uniquely identifies each variable.
+[Qualtrics](https://www.qualtrics.com/) is an online survey and data collection
+software platform. The qualtdict package builds on the
+[qualtRics](https://github.com/ropensci/qualtRics) R package which implements
+the retrieval of survey data using the Qualtrics API. The current package makes
+more comprehensive use of the survey metadata and generates a variable
+dictionary inlucding most of the information essential for data processing and
+analysis. It also uses a modified version of the RAKE algorithm as implemented
+in the package [slowraker](https://github.com/cran/slowraker) to generate
+meaningful names for all variables in the survey, as well as using the
+[sjlabelled](https://github.com/strengejacke/sjlabelled) package to add a
+comprehensive set of metadata attributes that uniquely identifies each variable.
 
 Installation
 ------------
