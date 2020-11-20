@@ -40,7 +40,7 @@ null_na <- function(x) {
 remove_format <- function(data, skip) {
   chr_cols <- discard(colnames(data), ~ . %in% c(skip))
   mutate_at(
-    data, vars(-question_name),
+    data, vars(-name),
     ~ str_remove_all(., "(<[^>]+>|\\n)+") %>%
       str_remove_all("Selected Choice - ") %>%
       str_squish()
