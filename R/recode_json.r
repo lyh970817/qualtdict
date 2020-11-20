@@ -314,7 +314,7 @@ qid_recode <- function(qid,
         }
         else {
           new_qid <- paste(qid, names(item), sep = "_") %>%
-            rep_item(choice_len)
+            rep_qid(item, choice_len)
         }
       }
     }
