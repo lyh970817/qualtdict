@@ -147,13 +147,13 @@ recode_json <- function(surveyID,
     new_qid <- qid_recode(qid,
       col_len = col_len, col_type = col_type, item = item, level = level, label = label,
       choice_len = choice_len, level_len_col = level_len_col,
-      type = type, selector = selector, sub_selector = sub_selector
+      type = type, selector = selector, sub_selector = sub_selector, is_qid = TRUE
     )
 
     question_name <- qid_recode(question_name,
       col_len = col_len, col_type = col_type, item = item, level = level, label = label,
       choice_len = choice_len, level_len_col = level_len_col,
-      type = type, selector = selector, sub_selector = sub_selector
+      type = type, selector = selector, sub_selector = sub_selector, is_qid = FALSE
     )
 
     tab_qid <- data.frame(
@@ -283,7 +283,8 @@ qid_recode <- function(qid,
                        col_type,
                        type,
                        selector,
-                       sub_selector) {
+                       sub_selector,
+                       is_qid) {
   if (type == "MC") {
     if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
       new_qid <- paste(qid, level, sep = "_")
