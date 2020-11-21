@@ -368,6 +368,20 @@ qid_recode <- function(qid,
       }) %>%
       unlist()
   }
+  else if (type == "CS") {
+    if (selector == "HR") {
+      if (sub_selector == "TX") {
+        # Is it possible to have item?
+        if (is.null(item)) {
+          new_qid <- paste(qid, names(level), sep = "_")
+        }
+        else {
+          new_qid <- paste(qid, names(item), sep = "_") %>%
+            rep_item(choice_len)
+        }
+      }
+    }
+  }
   else {
     warn_msg <- glue::glue(
     "{qid} is an unsupported type of question with type = {type}, selector = {selector} and sub_selector = {sub_selector}.
