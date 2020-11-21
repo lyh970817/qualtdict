@@ -374,7 +374,7 @@ qid_recode <- function(qid,
     Please report this to the issue page of the qualtdict package."
     )
 
-    warning(warn_msg, .call = FALSE)
+    warning(warn_msg, call. = FALSE)
     new_qid <- qid
   }
 
