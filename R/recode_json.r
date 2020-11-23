@@ -289,7 +289,7 @@ qid_recode <- function(qid,
     if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
       new_qid <- paste(qid, level, sep = "_")
     }
-    else if (selector == "SAVR" || selector == "SACOL" || selector == "DL") {
+    else if (selector == "SAVR" || selector == "SACOL" || selector == "DL" || selector == "SAHR") {
       new_qid <- rep(qid, length(level))
     }
 
@@ -391,11 +391,11 @@ qid_recode <- function(qid,
     warning(warn_msg, call. = FALSE)
     new_qid <- qid
   }
-
   # Some questions might have no choices which produces NULL
   if (is.null(new_qid)) {
     return(qid)
   }
+
 
   return(new_qid)
 }
