@@ -23,8 +23,8 @@ dict_rename <- function(dict,
   dict[["name"]] <- recode(
     dict[["name"]],
     !!!setNames(
-      make.unique(dict_diff[["name_reference"]]),
-      dict_diff[["name"]]
+      make.unique(dict_matches[["name_reference"]]),
+      dict_matches[["name"]]
     )
   )
 
