@@ -18,23 +18,25 @@
 #'
 #' @export
 dict_compare <- function(dict,
-                         reference_dict,
-                         field = c("question", "item", "both")) {
-  field <- match.arg(field)
-
-  if (field == "both") {
-    field <- c("question", "item")
+                         reference_dict) {
+  get_texts <- function(dict) {
+    apply(dict, 1, function(row) {
+      item <- row[["item"]]
+      type <- row[["type"]]
+      selector <- row[["selector"]]
+      sub_selector <- row[["sub_selector"]]
+      fields <- get_fields(item, type, selector, sub_selector)
+      do.call(paste_narm, as.list(row[fields]))
+    })
   }
 
-  texts <- do.call(paste_narm, as.list(dict[field]))
-  texts_ref <- do.call(paste_narm, as.list(reference_dict[field]))
+  texts <- get_texts(dict)
+  texts_ref <- get_texts(reference_dict)
 
   # When field is "item", some texts could be empty due to no content in
   # item. Fill those texts with "question".
-  if (all(field == "item")) {
-    texts[texts == ""] <- dict[["question"]][texts == ""]
-    texts_ref[texts_ref == ""] <- reference_dict[["question"]][texts_ref == ""]
-  }
+  texts[texts == ""] <- dict[["question"]][texts == ""]
+  texts_ref[texts_ref == ""] <- reference_dict[["question"]][texts_ref == ""]
 
   # Get matching indices for identical matches
   match_is <- match(texts, texts_ref)
@@ -109,4 +111,82 @@ get_labels <- function(dict, matches) {
     filter(.data[["name"]] == .x) %>%
     select(label) %>%
     unlist())
+}
+
+get_fields <- function(item,
+                       type,
+                       selector,
+                       sub_selector) {
+  if (type == "MC") {
+    if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
+      fields <- c("question", "label")
+    }
+    else if (selector == "SAVR" || selector == "SACOL" || selector == "DL" || selector == "SAHR") {
+      fields <- "question"
+    }
+  }
+  else if (type == "Matrix") {
+    if (selector == "Likert") {
+      if (sub_selector == "MultipleAnswer") {
+        fields <- c("question", "item", "label")
+      }
+      else if (sub_selector == "DL") {
+        fields <- c("question", "item")
+      }
+      else if (sub_selector == "SingleAnswer") {
+        if (is.null(item)) {
+          fields <- c("question", "label")
+        }
+        else {
+          fields <- c("question", "item")
+        }
+      }
+    }
+    else if (selector == "TE") {
+      fields <- c("question", "item", "label")
+    }
+    else if (selector == "Profile" || selector == "Bipolar") {
+      fields <- c("question", "item")
+    }
+  }
+  else if (type == "Slider" && selector == "HSLIDER") {
+    if (is.null(item)) {
+      fields <- c("question", "label")
+    }
+    else {
+      fields <- c("question", "item")
+    }
+  }
+  else if (type == "Slider" && selector == "HBAR") {
+    fields <- c("question", "label")
+  }
+  else if (type == "Slider" && selector == "STAR") {
+    fields <- c("question", "label")
+  }
+  else if (type == "TE" && selector == "FORM") {
+    fields <- c("question", "label")
+  }
+  else if (type == "TE" &&
+    (selector == "SL" ||
+      selector == "ML" ||
+      selector == "ESTB")) {
+    fields <- c("question")
+  }
+  else if (type == "SBS") {
+    fields <- c("question", "item")
+  }
+  else if (type == "CS") {
+    if (selector == "HR") {
+      if (sub_selector == "TX") {
+        if (is.null(item)) {
+          fields <- c("question", "label")
+        }
+        else {
+          fields <- c("question", "item")
+        }
+      }
+    }
+  }
+
+  return(fields)
 }
