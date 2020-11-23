@@ -19,15 +19,19 @@
 #' @export
 dict_compare <- function(dict,
                          reference_dict,
-                         field = c("question", "item")) {
+                         field = c("question", "item", "both")) {
   field <- match.arg(field)
+
+  if (field == "both") {
+    field <- c("question", "item")
+  }
 
   texts <- do.call(paste_narm, as.list(dict[field]))
   texts_ref <- do.call(paste_narm, as.list(reference_dict[field]))
 
   # When field is "item", some texts could be empty due to no content in
   # item. Fill those texts with "question".
-  if (field == "item") {
+  if (all(field == "item")) {
     texts[texts == ""] <- dict[["question"]][texts == ""]
     texts_ref[texts_ref == ""] <- reference_dict[["question"]][texts_ref == ""]
   }
