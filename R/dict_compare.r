@@ -36,11 +36,13 @@ dict_compare <- function(dict,
   match_is <- match(texts, texts_ref)
 
   # Select non-identical texts for fuzzyz matching
-  texts_tofuzzy <- ifelse(question %in% question_ref, NA, question)
-  texts_ref_tofuzzy <- ifelse(question_ref %in% question, NA, question_ref)
+  texts_tofuzzy <- ifelse(texts %in% texts_ref, NA, texts) %>%
+    discard(is.na)
+  texts_ref_tofuzzy <- ifelse(texts_ref %in% texts, NA, texts_ref) %>%
+    discard(is.na)
 
   # Get matching indices for fuzzy matches
-  amatch_is <- amatch(texts_fuzzy, texts_ref_fuzzy, maxDist = 1000)
+  amatch_is <- amatch(texts_tofuzzy, texts_ref_tofuzzy, maxDist = 1000)
 
   # Get matching results
   texts_fuzzy_is <- get_match(amatch_is)[[1]]
@@ -56,12 +58,12 @@ dict_compare <- function(dict,
 
   labels <- get_labels(
     dict,
-    c(question_fuzzy_is, question_is)
+    c(texts_fuzzy_is, texts_is)
   )
 
   labels_ref <- get_labels(
     reference_dict,
-    c(question_ref_fuzzy_is, question_ref_is)
+    c(texts_ref_fuzzy_is, texts_ref_is)
   )
 
   label_match <- map2_lgl(labels, labels_ref, ~ identical(.x, .y))
@@ -71,11 +73,11 @@ dict_compare <- function(dict,
   }
   else {
     tibble(
-      name = dict[[newname]][c(texts_fuzzy_is, texts_is)],
-      question = question[c(texts_fuzzy_is, texts_is)],
+      name = dict[["name"]][c(texts_fuzzy_is, texts_is)],
+      question = texts[c(texts_fuzzy_is, texts_is)],
       n_levels = map_dbl(labels, length),
-      name_reference = reference_dict[[newname_ref]][
-        c(question_ref_fuzzy_is, question_ref_is)
+      name_reference = reference_dict[["name"]][
+        c(texts_ref_fuzzy_is, texts_ref_is)
       ],
       question_reference = texts_ref[c(
         texts_ref_fuzzy_is,
@@ -84,10 +86,8 @@ dict_compare <- function(dict,
       n_levels_ref = map_dbl(labels_ref, length),
       texts_match = texts_match,
       label_match = label_match
-    )
-    # %>%
-    #     # Do we still need this?
-    #     .[!duplicated(.), ] %>%
+    ) %>%
+      .[!duplicated(.), ]
     #     na.omit()
   }
 }
@@ -102,7 +102,7 @@ get_match <- function(matches) {
 get_labels <- function(dict, matches) {
   nms <- dict[["name"]][matches]
   map(nms, ~ dict %>%
-    filter(.data[[newname]] == .x) %>%
+    filter(.data[["name"]] == .x) %>%
     select(label) %>%
     unlist())
 }
