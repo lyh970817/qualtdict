@@ -18,14 +18,20 @@
 #'
 #' @export
 dict_compare <- function(dict,
-                         reference_dict) {
-  get_texts <- function(dict) {
+                         reference_dict,
+                         field = c("all", "question", "item")) {
+
+  field <- match.arg(field) 
+
+  get_texts <- function(dict, field) {
     apply(dict, 1, function(row) {
       item <- row[["item"]]
       type <- row[["type"]]
       selector <- row[["selector"]]
       sub_selector <- row[["sub_selector"]]
-      fields <- get_fields(item, type, selector, sub_selector)
+      if (field == "all") {
+        fields <- get_fields(item, type, selector, sub_selector)
+      }
       do.call(paste_narm, as.list(row[fields]))
     })
   }
