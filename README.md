@@ -58,14 +58,15 @@ qualtrics_api_credentials(api_key = "<YOUR-QUALTRICS_API_KEY>",
                           install = TRUE)
 ```
 
-You can then generate a variable dictionary.
+You can then generate a variable dictionary with a Qualtrics survey ID.
 
 ``` r
 mydict <- dict_generate("SV_4YyAHbAxpdbzacl", var_name = "question_name")
 ```
 
-You may wish to generate meaningful variable names (if you don’t already
-have them in the survey) in the dictionary.
+You may wish to generate meaningful variable names (if you don’t already have
+them in the survey) from various text elements (question text, item and label)
+in the survey.
 
 If doing so, preferably you would also want to define a function that extracts
 block prefixes from block names.
@@ -82,6 +83,12 @@ mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
   block_pattern = block_pattern,
   block_sep = "."
 )
+```
+
+You could validate (check for potential mistakes in) the dictionary.
+
+``` r
+dict_validate(mydict)
 ```
 
 And download labelled survey data with the dictionary.
