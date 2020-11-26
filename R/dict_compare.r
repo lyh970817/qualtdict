@@ -36,8 +36,8 @@ dict_compare <- function(dict,
     })
   }
 
-  texts <- get_texts(dict)
-  texts_ref <- get_texts(reference_dict)
+  texts <- get_texts(dict, field)
+  texts_ref <- get_texts(reference_dict, field)
 
   # When field is "item", some texts could be empty due to no content in
   # item. Fill those texts with "question".
