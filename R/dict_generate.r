@@ -79,10 +79,11 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
   # Temporary
   # For these questions each chioce (with a label) is exported as variable,
   # thus the easy name should depend on the label
+  json_copy <- json
 
   json$item[is.na(json$item)] <- json$question[is.na(json$item)]
-  ma_lgl <- json$selector == "MACOL" || json$selector == "MAVR" || json$selector == "MAHR"
-  json$item[ma_lgl] <- paste(json$label[ma_lgl])
+  ma_lgl <- json$selector == "MACOL" | json$selector == "MAVR" | json$selector == "MAHR"
+  json$item[ma_lgl] <- json$label[ma_lgl]
 
   # Extract unique question text
   unique_texts <- unique(json$item)
@@ -164,8 +165,8 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
     not_duplicated_easynames
   )
 
-  json$name <- recode(json$qid, !!!setNames(all_easynames$easyname, all_easynames$qid))
-  json$easyname <- NULL
+  json_copy$name <- recode(json$qid, !!!setNames(all_easynames$easyname, all_easynames$qid))
+  # json_copy$easyname <- NULL
 
-  json
+  json_copy
 }
