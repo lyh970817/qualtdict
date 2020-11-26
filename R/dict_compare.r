@@ -80,12 +80,12 @@ dict_compare <- function(dict,
   else {
     tibble(
       name = dict[["name"]][c(texts_fuzzy_is, texts_is)],
-      question = texts[c(texts_fuzzy_is, texts_is)],
+      text = texts[c(texts_fuzzy_is, texts_is)],
       n_levels = map_dbl(labels, length),
       name_reference = reference_dict[["name"]][
         c(texts_ref_fuzzy_is, texts_ref_is)
       ],
-      question_reference = texts_ref[c(
+      text_reference = texts_ref[c(
         texts_ref_fuzzy_is,
         texts_ref_is
       )],
