@@ -9,18 +9,18 @@ software platform. The qualtdict package builds on the
 the retrieval of survey data using the Qualtrics API. The current package makes
 more comprehensive use of the survey metadata and generates a variable
 dictionary inlucding most of the information essential for data processing and
-analysis. It also uses a modified version of the RAKE algorithm as implemented
-in the package [slowraker](https://github.com/cran/slowraker) to generate
-meaningful names for all variables in the survey, as well as using the
+analysis. It also uses a modified version of the RAKE (Rapid Automatic Keyword
+Extraction; https://www.osti.gov/biblio/978967) algorithm implemented in the
+package [slowraker](https://github.com/cran/slowraker) to generate meaningful
+names for variables in the survey, as well as using the
 [sjlabelled](https://github.com/strengejacke/sjlabelled) package to add a
 comprehensive set of metadata attributes that uniquely identifies each variable.
 
 Installation
 ------------
 
-This package is in early stage of development and can be installed with
-the [remotes](https://cran.r-project.org/package=remotes) package (or
-[devtools](https://cran.r-project.org/package=devtools)):
+This package is in an early stage of development and can be installed with
+the [devtools](https://cran.r-project.org/package=devtools) package. 
 
 Note that the package currently depends on my own fork of the
 [qualtRics](https://github.com/ropensci/qualtRics) package (the pull requests of
