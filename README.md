@@ -32,17 +32,6 @@ devtools::install_github("lyh970817/qualtRics", ref = "qualtdict")
 devtools::install_github("lyh970817/qultdict")
 ```
 
-Optionally, install my fork of the
-[sjlabelled](https://github.com/strengejacke/sjlabelled) package.
-
-The [sjlabelled](https://github.com/strengejacke/sjlabelled) package allows
-adding label attributes to vectors. My fork fixes the issue where labels cannot
-be set for vectors with only NAs.
-
-``` r
-devtools::install_github("lyh970817/sjlabelled")
-```
-
 A demo workflow
 ---------------
 
