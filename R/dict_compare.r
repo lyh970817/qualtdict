@@ -20,8 +20,7 @@
 dict_compare <- function(dict,
                          reference_dict,
                          field = c("all", "question", "item")) {
-
-  field <- match.arg(field) 
+  field <- match.arg(field)
 
   get_texts <- function(dict, field) {
     apply(dict, 1, function(row) {
@@ -33,7 +32,8 @@ dict_compare <- function(dict,
         fields <- get_fields(item, type, selector, sub_selector)
       }
       do.call(paste_narm, as.list(row[fields]))
-    })
+    }) %>%
+      setNames(dict[["name"]])
   }
 
   texts <- get_texts(dict, field)
@@ -44,38 +44,35 @@ dict_compare <- function(dict,
   texts[texts == ""] <- dict[["question"]][texts == ""]
   texts_ref[texts_ref == ""] <- reference_dict[["question"]][texts_ref == ""]
 
+  texts <- texts[!duplicated(texts)]
+  texts_ref <- texts_ref[!duplicated(texts_ref)]
+
   # Get matching indices for identical matches
   match_is <- match(texts, texts_ref)
-
-  # Select non-identical texts for fuzzyz matching
-  texts_tofuzzy <- ifelse(texts %in% texts_ref, NA, texts) %>%
-    discard(is.na)
-  texts_ref_tofuzzy <- ifelse(texts_ref %in% texts, NA, texts_ref) %>%
-    discard(is.na)
+  # Get matching results
+  texts_is <- get_match(match_is)[[1]]
 
   # Get matching indices for fuzzy matches
-  amatch_is <- amatch(texts_tofuzzy, texts_ref_tofuzzy, maxDist = 1000)
+  amatch_is <- amatch(texts, texts_ref, maxDist = 1000)
 
-  # Get matching results
   texts_fuzzy_is <- get_match(amatch_is)[[1]]
   texts_ref_fuzzy_is <- get_match(amatch_is)[[2]]
 
-  texts_is <- get_match(match_is)[[1]]
-  texts_ref_is <- get_match(match_is)[[2]]
+  texts_match <- ifelse(texts_fuzzy_is %in% texts_is, TRUE, FALSE)
 
-  texts_match <- c(
-    rep(FALSE, times = length(texts_fuzzy_is)),
-    rep(TRUE, times = length(texts_is))
-  )
+  matched_texts <- texts[texts_fuzzy_is]
+  matched_texts_ref <- texts_ref[texts_ref_fuzzy_is]
+
+  matched_names <- names(matched_texts)
+  matched_names_ref <- names(matched_texts_ref)
 
   labels <- get_labels(
-    dict,
-    c(texts_fuzzy_is, texts_is)
+    dict, matched_names
   )
 
   labels_ref <- get_labels(
     reference_dict,
-    c(texts_ref_fuzzy_is, texts_ref_is)
+    matched_names_ref
   )
 
   label_match <- map2_lgl(labels, labels_ref, ~ identical(.x, .y))
@@ -85,22 +82,16 @@ dict_compare <- function(dict,
   }
   else {
     tibble(
-      name = dict[["name"]][c(texts_fuzzy_is, texts_is)],
-      text = texts[c(texts_fuzzy_is, texts_is)],
+      name = matched_names,
+      text = matched_texts,
       n_levels = map_dbl(labels, length),
-      name_reference = reference_dict[["name"]][
-        c(texts_ref_fuzzy_is, texts_ref_is)
-      ],
-      text_reference = texts_ref[c(
-        texts_ref_fuzzy_is,
-        texts_ref_is
-      )],
+      name_reference = matched_names_ref,
+      text_reference = matched_texts_ref,
       n_levels_ref = map_dbl(labels_ref, length),
       texts_match = texts_match,
       label_match = label_match
     ) %>%
-      .[!duplicated(.), ]
-    #     na.omit()
+      arrange(texts_match, label_match)
   }
 }
 
@@ -112,8 +103,7 @@ get_match <- function(matches) {
 }
 
 get_labels <- function(dict, matches) {
-  nms <- dict[["name"]][matches]
-  map(nms, ~ dict %>%
+  map(matches, ~ dict %>%
     filter(.data[["name"]] == .x) %>%
     select(label) %>%
     unlist())
