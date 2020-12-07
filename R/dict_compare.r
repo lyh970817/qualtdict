@@ -15,11 +15,14 @@
 #' dictionary wil be used when the object returned by the function is used
 #' for \code{\link[qualtdict]{dict_merge}} or \code{\link[qualtdict]{dict_rename}}
 #' @param field String. Which field is used when comparing variables.
+#' @param ... Other arguments passed to
+#' \code{\link[stringdist]{amatch}} to configure fuzzy matching.
 #'
 #' @export
 dict_compare <- function(dict,
                          reference_dict,
-                         field = c("all", "question", "item")) {
+                         field = c("all", "question", "item"),
+                         ...) {
   field <- match.arg(field)
 
   get_texts <- function(dict, field) {
@@ -53,7 +56,7 @@ dict_compare <- function(dict,
   texts_is <- get_match(match_is)[[1]]
 
   # Get matching indices for fuzzy matches
-  amatch_is <- amatch(texts, texts_ref, maxDist = 1000)
+  amatch_is <- amatch(texts, texts_ref, ...)
 
   texts_fuzzy_is <- get_match(amatch_is)[[1]]
   texts_ref_fuzzy_is <- get_match(amatch_is)[[2]]
