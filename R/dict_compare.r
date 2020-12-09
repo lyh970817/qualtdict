@@ -47,8 +47,9 @@ dict_compare <- function(dict,
   texts[texts == ""] <- dict[["question"]][texts == ""]
   texts_ref[texts_ref == ""] <- reference_dict[["question"]][texts_ref == ""]
 
-  texts <- texts[!duplicated(texts)]
-  texts_ref <- texts_ref[!duplicated(texts_ref)]
+  # Remove the repeated rows referring to the same variable
+  texts <- texts[!duplicated(names(texts))]
+  texts_ref <- texts_ref[!duplicated(names(texts_ref))]
 
   # Get matching indices for identical matches
   match_is <- match(texts, texts_ref)
