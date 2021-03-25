@@ -64,10 +64,6 @@ get_survey_data <- function(dict,
   args$label <- FALSE
   # What about loop and merge?
   include_qids <- unique(str_extract(dict[["qid"]], "QID[0-9]+"))
-  # Somehow doesn't work when there is only one question
-  if (length(include_qids) > 1) {
-    args$include_questions <- include_qids
-  }
 
   survey <- do.call(fetch_survey, args)
 
