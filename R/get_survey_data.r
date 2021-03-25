@@ -157,8 +157,10 @@ survey_var_recode <- function(var, var_dict, unanswer_recode, unanswer_recode_mu
       labels <- c(labels, "Seen but not answered")
     }
   }
-
-  var <- set_labels(var, labels = setNames(levels, labels))
+  # TE variables dont have levels or labels
+  if (any(!is.na(levels))) {
+    var <- set_labels(var, labels = setNames(levels, labels))
+  }
   text_label <- unique(paste_narm(var_dict[["question"]], var_dict[["item"]]))
   var <- set_label(var, label = text_label)
 
