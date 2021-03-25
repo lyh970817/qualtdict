@@ -4,7 +4,7 @@
 \alias{dict_compare}
 \title{Compare two dictionaries and suggest potential matching variables}
 \usage{
-dict_compare(dict, reference_dict, field = c("question", "item"))
+dict_compare(dict, reference_dict, field = c("all", "question", "item"), ...)
 }
 \arguments{
 \item{dict}{A variable dictionary returned by
@@ -16,6 +16,9 @@ dictionary wil be used when the object returned by the function is used
 for \code{\link[qualtdict]{dict_merge}} or \code{\link[qualtdict]{dict_rename}}}
 
 \item{field}{String. Which field is used when comparing variables.}
+
+\item{...}{Other arguments passed to
+\code{\link[stringdist]{amatch}} to configure fuzzy matching.}
 }
 \description{
 Compare variables in two dictionaries based on either their question or
