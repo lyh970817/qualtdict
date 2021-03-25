@@ -8,7 +8,7 @@
 #' @importFrom sjlabelled set_label set_labels
 #' @importFrom googlesheets4 read_sheet write_sheet
 #' @importFrom magrittr %>%
-#' @importFrom qualtRics fetch_survey metadata
+#' @importFrom qualtRics fetch_survey metadata fetch_description
 #' @import slowraker
 
 which_not_onetoone <- function(cols) {

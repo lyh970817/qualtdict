@@ -20,27 +20,24 @@ recode_json <- function(surveyID,
 
   mt <- metadata(
     surveyID,
-    survey_definition = F,
-    get = list(
-      "questions" = TRUE,
-      "metadata" = TRUE,
-      "blocks" = TRUE,
-      "responsecounts" = FALSE,
-      "flow" = TRUE,
-      "comments" = TRUE
+    c(
+      "questions",
+      "metadata",
+      "blocks",
+      "responsecounts",
+      "flow",
+      "comments"
     )
   )
 
-  mt_d <- metadata(
+
+  mt_d <- fetch_description(
     surveyID,
-    survey_definition = T,
-    get = list(
-      "questions" = TRUE,
-      "metadata" = TRUE,
-      "blocks" = TRUE,
-      "responsecounts" = FALSE,
-      "flow" = TRUE,
-      "comments" = TRUE
+    c(
+      "questions",
+      "metadata",
+      "blocks",
+      "flow"
     )
   )
 
