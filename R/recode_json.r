@@ -383,7 +383,7 @@ qid_recode <- function(qid,
   }
   else {
     warn_msg <- glue::glue(
-    "{qid} is an unsupported type of question with type = {type}, selector = {selector} and sub_selector = {sub_selector}.
+      "{qid} is an unsupported type of question with type = {type}, selector = {selector} and sub_selector = {sub_selector}.
     Please report this to the issue page of the qualtdict package."
     )
 
