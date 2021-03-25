@@ -70,10 +70,10 @@ dict_generate <- function(surveyID,
 }
 
 easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
-
   if (!requireNamespace("slowraker", quietly = TRUE)) {
     stop("Package \"slowraker\" needed for `easyname_gen = TRUE` to work. Please install it.",
-      call. = FALSE)
+      call. = FALSE
+    )
   }
 
   # Temporary

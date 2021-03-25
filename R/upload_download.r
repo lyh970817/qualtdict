@@ -11,10 +11,9 @@
 #'
 #' @export
 dict_upload <- function(dict, url, surveyID = FALSE) {
-
   dict <- bind_rows(tibble_row(), dict)
   dict[1, "qid"] <- "surveyName"
-  dict[1, "question"] <- attr(dict, "surveyName")
+  # dict[1, "question"] <- attr(dict, "surveyName")
 
   if (surveyID) {
     dict <- bind_rows(tibble_row(), dict)

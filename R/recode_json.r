@@ -101,8 +101,6 @@ recode_json <- function(surveyID,
     level <- unlist(map(qjson$choices, "recode"))
     label <- unlist(map(qjson$choices, "description"))
 
-    # Discard qids that are not in the datafile
-
     has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
 
     if (length(has_text) > 0) {
@@ -125,6 +123,9 @@ recode_json <- function(surveyID,
 
     # Zero length columns means it's a carried forward question
     if (type == "SBS" & col_len != 0) {
+      if (qid == "QID791") {
+        browser()
+      }
       level_lens <- map(qjson$columns, "choices") %>% map_dbl(length)
       choice_len <- sum(level_len_col)
 
@@ -396,6 +397,9 @@ qid_recode <- function(qid,
     return(qid)
   }
 
+  # This needs to be refactored so that with supported 'type' but
+  # unsupported 'selector' or 'sub_selector' there is still a warning
+  # msg
 
   return(new_qid)
 }

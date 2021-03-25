@@ -121,12 +121,10 @@ slowrake <- function(txt,
 
   structure(all_out, class = c(class(all_out), "rakelist"))
 }
-#
 
 .internals <- c("get_cand_words", "filter_words", "process_keyword_df")
-# load from the ggplot2 namespace
+# load from the slowraker namespace
 slowraker2 <- structure(
   mapply(function(.internals, i) getFromNamespace(i, "slowraker"), .internals, .internals),
   class = c("internal")
 )
-ls(getNamespace("slowraker"), all.names = TRUE)

@@ -162,4 +162,3 @@ order_name <- function(list) {
 #' @export qualtrics_api_credentials
 #' @name qualtrics_api_credentials
 NULL
-
