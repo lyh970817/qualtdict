@@ -158,7 +158,7 @@ recode_json <- function(surveyID,
       qid = new_qid,
       name = question_name,
       block = block,
-      question_name, question,
+      question,
       item = rep_item(item, choice_len) %>% null_na(),
       level = rep_level(level, item) %>% null_na(),
       label = rep_level(label, item) %>% null_na(),
@@ -259,8 +259,9 @@ rep_loop <- function(x, question_meta) {
       # This excludes all the "_TEXT" choices!!!
       labels <- x[[looping_qid[name]]][["label"]][prefixes]
       map2(prefixes, labels, function(prefix, label) {
-        qmeta["new_qid"] <- paste(prefix, qmeta[["new_qid"]], sep = "_")
+        qmeta["qid"] <- paste(prefix, qmeta[["qid"]], sep = "_")
         qmeta["question"] <- paste(qmeta[["question"]], label, sep = "-")
+        qmeta["name"] <- paste(prefix, qmeta[["name"]], sep = "_")
         return(qmeta)
       })
     }
