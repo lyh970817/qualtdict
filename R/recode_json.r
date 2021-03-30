@@ -121,7 +121,6 @@ recode_json <- function(surveyID,
     # Zero length columns means it's a carried forward question
     if (type == "SBS" & col_len != 0) {
       if (qid == "QID791") {
-        browser()
       }
       level_lens <- map(qjson$columns, "choices") %>% map_dbl(length)
       choice_len <- sum(level_len_col)
