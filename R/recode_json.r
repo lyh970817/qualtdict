@@ -6,7 +6,7 @@ recode_json <- function(surveyID,
     suppressWarnings(
       invisible(capture.output(
         survey <- # Hides the progress bar
-          fetch_survey(surveyID,
+          fetch_survey2(surveyID,
             import_id = TRUE, convert = FALSE,
             label = FALSE, force_request = TRUE,
             limit = 1,
@@ -18,7 +18,7 @@ recode_json <- function(surveyID,
   qids_data <- str_extract(colnames(survey), "QID[0-9]+") %>%
     discard(is.na)
 
-  mt <- metadata(
+  mt <- metadata2(
     surveyID,
     c(
       "questions",
@@ -31,7 +31,7 @@ recode_json <- function(surveyID,
   )
 
 
-  mt_d <- fetch_description(
+  mt_d <- fetch_description2(
     surveyID,
     c(
       "questions",

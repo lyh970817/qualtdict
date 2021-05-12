@@ -117,6 +117,33 @@ order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
 
+retry <- function(f) {
+    function(...) {
+        r <- NULL
+        attempt <- 1
+        while (is.null(r) && attempt <= 2) {
+            attempt <- attempt + 1
+            try(
+                r <- f(...)
+            )
+        }
+
+        if (is.null(r)) {
+            f(...)
+        } else {
+            return(r)
+        }
+    }
+}
+
+
+fetch_survey2 <- retry(fetch_survey)
+
+metadata2 <- retry(metadata)
+
+fetch_description2 <- retry(fetch_description)
+
+
 #' Install Qualtrics credentials in your \code{.Renviron} file for repeated use
 #'
 #' @description This function adds your Qualtrics API key and base URL to your
