@@ -121,7 +121,7 @@ retry <- function(f) {
     function(...) {
         r <- NULL
         attempt <- 1
-        while (is.null(r) && attempt <= 2) {
+        while (is.null(r)) {
             attempt <- attempt + 1
             try(
                 r <- f(...)
