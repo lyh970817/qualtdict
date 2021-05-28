@@ -82,7 +82,16 @@ dict_compare <- function(dict,
   label_match <- map2_lgl(labels, labels_ref, ~ identical(.x, .y))
 
   if (all(is.na(amatch_is)) && all(is.na(match_is))) {
-    return(tibble())
+    tibble(
+      name = character(),
+      text = character(),
+      n_levels = numeric(),
+      name_reference = character(),
+      text_reference = character(),
+      n_levels_ref = numeric(),
+      texts_match = character(),
+      label_match = character()
+   )
   }
   else {
     tibble(
