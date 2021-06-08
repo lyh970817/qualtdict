@@ -20,6 +20,10 @@
 #' @export
 dict_rename <- function(dict,
                         dict_matches) {
+  if (is.na(dict_matches[["name_reference"]])) {
+     stop("The match file is empty")
+  }
+
   dict[["name"]] <- recode(
     dict[["name"]],
     !!!setNames(
