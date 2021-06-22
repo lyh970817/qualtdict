@@ -20,8 +20,8 @@
 #' @export
 dict_rename <- function(dict,
                         dict_matches) {
-  if (is.na(dict_matches[["name_reference"]])) {
-     stop("The match file is empty")
+  if (length(dict_matches[["name_reference"]]) == 0) {
+     stop("No matches found")
   }
 
   dict[["name"]] <- recode(
