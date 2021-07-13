@@ -120,23 +120,21 @@ recode_json <- function(surveyID,
 
     # Zero length columns means it's a carried forward question
     if (type == "SBS" & col_len != 0) {
-      if (qid == "QID791") {
-      }
       level_lens <- map(qjson$columns, "choices") %>% map_dbl(length)
-      choice_len <- sum(level_len_col)
+      choice_len <- level_len_col
 
+      top_question <- qjson$questionText
       question <- map(qjson$columns, "questionText") %>%
         map2(level_len_col, ~ rep(.x, each = .y)) %>%
         unlist() %>%
-        rep(times = sub_q_len)
+        rep(each = sub_q_len) %>%
+        paste(top_question, ., sep = " ")
 
       level <- map(qjson$columns, "choices") %>%
-        map(~ map_chr(.x, "recode")) %>%
-        unlist()
+        map(~ map_chr(.x, "recode"))
 
       label <- map(qjson$columns, "choices") %>%
-        map(~ map_chr(.x, "description")) %>%
-        unlist()
+        map(~ map_chr(.x, "description"))
 
       item <- unlist(map(qjson$subQuestions, "description"))
     }
@@ -222,13 +220,15 @@ rep_qid <- function(qid, item, choice_len) {
 }
 
 rep_item <- function(item, choice_len) {
-  imap(item, function(itm, nam) {
-    if (!grepl("TEXT", nam)) {
-      return(rep(itm, each = choice_len))
-    }
-    else {
-      return(itm)
-    }
+  map(choice_len, function(c) {
+    imap(item, function(itm, nam) {
+      if (!grepl("TEXT", nam)) {
+        return(rep(itm, each = c))
+      }
+      else {
+        return(itm)
+      }
+    })
   }) %>%
     unlist()
 }
@@ -237,14 +237,15 @@ rep_level <- function(level, item) {
   if (is.null(item)) {
     return(level)
   }
-
-  imap(item, function(itm, nam) {
-    if (!grepl("TEXT", nam)) {
-      return(level)
-    }
-    else {
-      return("TEXT")
-    }
+  map(level, function(l) {
+    imap(item, function(itm, nam) {
+      if (!grepl("TEXT", nam)) {
+        return(l)
+      }
+      else {
+        return("TEXT")
+      }
+    })
   }) %>%
     unlist()
 }
@@ -355,7 +356,7 @@ qid_recode <- function(qid,
     new_qid <- paste(qid, sep = "#", seq(col_len)) %>%
       map2(length(item), rep) %>%
       map(paste, names(item), sep = "_") %>%
-      map2(level_len_col, rep) %>%
+      map2(level_len_col, ~ rep(.x, each = .y)) %>%
       map2(col_type, function(qids, type) {
         if (type == "TE") {
           return(paste(qids, "1", sep = "_"))
