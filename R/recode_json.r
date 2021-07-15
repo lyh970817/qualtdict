@@ -125,8 +125,8 @@ recode_json <- function(surveyID,
     item <- unlist(map(qjson$subQuestions, "choiceText"))
     sub_selector <- qjson$questionType$subSelector
     if (length(has_text_sub) > 0) {
-      item <- add_text(item, has_text_sub)
-      sub_q_len <- sub_q_len + 1
+      item <- unlist(add_text(item, has_text_sub))
+      sub_q_len <- sub_q_len + length(has_text_sub)
     }
 
     # Get number of levels in each column
