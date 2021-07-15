@@ -118,25 +118,25 @@ order_name <- function(list) {
 }
 
 retry <- function(f, endless = FALSE) {
-    function(...) {
-        r <- NULL
-        attempt <- 1
-        while (is.null(r) && attempt <= 2) {
-            if (!endless) {
-                # Don't cummulate count with endless attempts
-                attempt <- attempt + 1
-            }
-            try(
-                r <- f(...)
-            )
-        }
-
-        if (is.null(r)) {
-            f(...)
-        } else {
-            return(r)
-        }
+  function(...) {
+    r <- NULL
+    attempt <- 1
+    while (is.null(r) && attempt <= 2) {
+      if (!endless) {
+        # Don't cummulate count with endless attempts
+        attempt <- attempt + 1
+      }
+      try(
+        r <- f(...)
+      )
     }
+
+    if (is.null(r)) {
+      f(...)
+    } else {
+      return(r)
+    }
+  }
 }
 
 
