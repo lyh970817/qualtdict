@@ -95,8 +95,10 @@ recode_json <- function(surveyID,
     selector <- qjson$questionType$selector
     block <- qjson$block
 
-    level <- unlist(map(qjson$choices, "recode"))
-    label <- unlist(map(qjson$choices, "description"))
+    # The rep_level function works on lists for dealing with SBS questions
+    # For consistency we convert to lists for non-SBS questions
+    level <- list(unlist(map(qjson$choices, "recode")))
+    label <- list(unlist(map(qjson$choices, "description")))
 
     has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
 
@@ -187,6 +189,7 @@ recode_json <- function(surveyID,
 }
 
 add_text <- function(x, has_text, label = F) {
+  x <- unlist(x)
   if (!is.null(x)) {
     for (i in seq_along(has_text)) {
       pos <- has_text[i] + (i - 1)
@@ -200,7 +203,7 @@ add_text <- function(x, has_text, label = F) {
       # Required for sub
       names(x)[pos + 1] <- paste(text, sep = "_", "TEXT")
     }
-    return(x)
+    return(list(x))
   }
 }
 
@@ -235,7 +238,7 @@ rep_item <- function(item, choice_len) {
 
 rep_level <- function(level, item) {
   if (is.null(item)) {
-    return(level)
+    return(unlist(level))
   }
   map(level, function(l) {
     imap(item, function(itm, nam) {
