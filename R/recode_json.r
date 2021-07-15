@@ -2,6 +2,8 @@ recode_json <- function(surveyID,
                         easyname_gen,
                         block_pattern,
                         block_sep) {
+
+  # Fetch survey to obtain QID column names
   suppressMessages(
     suppressWarnings(
       invisible(capture.output(
@@ -18,6 +20,8 @@ recode_json <- function(surveyID,
   qids_data <- str_extract(colnames(survey), "QID[0-9]+") %>%
     discard(is.na)
 
+  # Fetch metadata
+  # Wrapper functions foo2 to retry when timeout
   mt <- metadata2(
     surveyID,
     c(
@@ -41,6 +45,7 @@ recode_json <- function(surveyID,
     )
   )
 
+  # Extract useful block metadata
   blocks <- mt_d$block
   block_meta <- map(blocks, function(block) {
     list(
@@ -58,9 +63,12 @@ recode_json <- function(surveyID,
         looping_qid = block$looping_qid
       ))
     }) %>%
+    # Use 'c' to combine multiple lists into one list
+    # Previously the lists are nested in block and then QID
     do.call(c, .) %>%
     setNames(map_chr(., ~ .x$qid))
 
+  # Extract question metadata
   question_meta <- map(
     mt$questions, `[`,
     c(
@@ -71,12 +79,14 @@ recode_json <- function(surveyID,
     )
   )
 
+  # Order the metadata by QID name so that the two metadata match
   question_meta <- question_meta[unique(qids_data)] %>%
     order_name()
 
   block_meta <- block_meta[names(block_meta) %in% unique(qids_data)] %>%
     order_name()
 
+  # Combine two metadata
   question_meta <- map2(question_meta, block_meta, function(x, y) {
     x["block"] <- y["description"]
     x["looping_prefix"] <- y["looping_prefix"]
@@ -86,6 +96,7 @@ recode_json <- function(surveyID,
 
 
   json <- imap(question_meta, function(qjson, qid) {
+    # If no subquestion or choice, treat the number as 0
     sub_q_len <- length(qjson$subQuestions) %>% ifelse(. > 0, ., 1)
     choice_len <- length(qjson$choices) %>% ifelse(. > 0, ., 1)
 
@@ -100,6 +111,7 @@ recode_json <- function(surveyID,
     level <- list(unlist(map(qjson$choices, "recode")))
     label <- list(unlist(map(qjson$choices, "description")))
 
+    # Recode QIDs for  text entry choices
     has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
 
     if (length(has_text) > 0) {
@@ -108,6 +120,7 @@ recode_json <- function(surveyID,
       label <- add_text(label, has_text)
     }
 
+    # Recode QIDs for  text entry item
     has_text_sub <- which(map_lgl(qjson$subQuestions, ~ "textEntry" %in% names(.x)))
     item <- unlist(map(qjson$subQuestions, "choiceText"))
     sub_selector <- qjson$questionType$subSelector
@@ -116,8 +129,11 @@ recode_json <- function(surveyID,
       sub_q_len <- sub_q_len + 1
     }
 
+    # Get number of levels in each column
     level_len_col <- map(qjson$columns, "choices") %>% map_dbl(length)
+    # Calculate column length
     col_len <- length(qjson$columns)
+    # Get column types
     col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
 
     # Zero length columns means it's a carried forward question
@@ -125,11 +141,17 @@ recode_json <- function(surveyID,
       level_lens <- map(qjson$columns, "choices") %>% map_dbl(length)
       choice_len <- level_len_col
 
+      # Get overacching question
       top_question <- qjson$questionText
+      # Get questions in each column
       question <- map(qjson$columns, "questionText") %>%
+        # Repeat the question for the number of levels, separately for each
+        # column
         map2(level_len_col, ~ rep(.x, each = .y)) %>%
         unlist() %>%
+        # Repeat for the number of items
         rep(each = sub_q_len) %>%
+        # Prepend the overarching question
         paste(top_question, ., sep = " ")
 
       level <- map(qjson$columns, "choices") %>%
@@ -180,6 +202,7 @@ recode_json <- function(surveyID,
   }
 
   # Remove duplicated question text in item
+  # This was useful in generating easy names
   json$item[json$item == json$question] <- NA
 
   attr(json, "survey_name") <- as.character(mt$metadata$name)
