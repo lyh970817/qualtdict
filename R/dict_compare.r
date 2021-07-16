@@ -62,9 +62,9 @@ dict_compare <- function(dict,
 
   # Get matching indices for identical matches
   match_is <- match(texts, texts_ref)
+
   # Get matching results
   texts_is <- get_match(match_is)[[1]]
-
   # Get matching indices for fuzzy matches
   amatch_is <- amatch(texts, texts_ref, ...)
 
@@ -100,7 +100,7 @@ dict_compare <- function(dict,
       n_levels_ref = numeric(),
       texts_match = character(),
       label_match = character()
-   )
+    )
   }
   else {
     tibble(
