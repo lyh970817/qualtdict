@@ -15,6 +15,8 @@
 #' dictionary wil be used when the object returned by the function is used
 #' for \code{\link[qualtdict]{dict_merge}} or \code{\link[qualtdict]{dict_rename}}
 #' @param field String. Which field is used when comparing variables.
+#' @param ignore_punctuation Logical Whether to ignore punctuations in
+#' comparison
 #' @param ... Other arguments passed to
 #' \code{\link[stringdist]{amatch}} to configure fuzzy matching.
 #'
@@ -22,6 +24,7 @@
 dict_compare <- function(dict,
                          reference_dict,
                          field = c("all", "question", "item"),
+                         ignore_punctuation = TRUE,
                          ...) {
   field <- match.arg(field)
 
@@ -50,6 +53,12 @@ dict_compare <- function(dict,
   # Remove the repeated rows referring to the same variable
   texts <- texts[!duplicated(names(texts))]
   texts_ref <- texts_ref[!duplicated(names(texts_ref))]
+
+  if (ignore_punctuation) {
+    # Remove punctuations
+    texts <- str_remove_all("texts", "[[:punct:]]")
+    texts_ref <- str_remove_all("texts_ref", "[[:punct:]]")
+  }
 
   # Get matching indices for identical matches
   match_is <- match(texts, texts_ref)
