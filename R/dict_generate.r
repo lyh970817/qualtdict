@@ -98,7 +98,12 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
   }
   if (!file.exists(tmpfile_path) || length(unique_texts) != length(keywords)) {
     message("Generating easy names...")
-    keywords <- slowrake(str_remove_all(unique_texts, "\\(.+\\)"),
+
+    # Remove brackets and punctuations
+    unique_texts <- str_remove_all(unique_texts, "\\(.+\\)")
+    unique_texts <- str_remove_all(unique_texts, "[[:punct:]]")
+
+    keywords <- slowrake(unique_texts,
       all_words = paste(json$item, collapse = ""), stop_pos = NULL
     )
     # Save in temp folder
