@@ -55,9 +55,16 @@ dict_compare <- function(dict,
   texts_ref <- texts_ref[!duplicated(names(texts_ref))]
 
   if (ignore_punctuation) {
+    # Store names (which are variable names)
+    nm_texts <- names(texts)
+    nm_ref_texts <- names(texts_ref)
+
     # Remove punctuations
-    texts <- str_remove_all("texts", "[[:punct:]]")
-    texts_ref <- str_remove_all("texts_ref", "[[:punct:]]")
+    texts <- str_remove_all(texts, "[[:punct:]]") %>%
+      setNames(nm_texts)
+
+    texts_ref <- str_remove_all(texts_ref, "[[:punct:]]") %>%
+      setNames(nm_ref_texts)
   }
 
   # Get matching indices for identical matches
