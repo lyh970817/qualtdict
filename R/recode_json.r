@@ -321,7 +321,10 @@ qid_recode <- function(qid,
                        selector,
                        sub_selector,
                        is_qid) {
-  if (type != "SBS") level <- level[[1]]
+  if (type != "SBS") {
+    level <- level[[1]]
+    label <- label[[1]]
+  }
 
   if (type == "MC") {
     if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
