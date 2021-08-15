@@ -108,8 +108,23 @@ recode_json <- function(surveyID,
 
     # The rep_level function works on lists for dealing with SBS questions
     # For consistency we convert to lists for non-SBS questions
-    level <- list(unlist(map(qjson$choices, "recode")))
-    label <- list(unlist(map(qjson$choices, "description")))
+
+    unlist_n <- function(list) {
+      # unlist that preserves names
+      names <- names(list)
+      v <- unlist(map(list, null_na)) %>%
+        setNames(names)
+      return(v)
+    }
+
+    level <- map(qjson$choices, "recode") %>%
+      unlist_n() %>%
+      list()
+
+    label <- map(qjson$choices, "description") %>%
+      unlist_n() %>%
+      list()
+
 
     # Recode QIDs for  text entry choices
     has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
