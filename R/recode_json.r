@@ -252,8 +252,7 @@ rep_qid <- function(qid, item, choice_len) {
   map2(qid, names(item), function(id, nam) {
     if (!grepl("TEXT", nam)) {
       return(rep(id, each = choice_len))
-    }
-    else {
+    } else {
       return(id)
     }
   }) %>%
@@ -265,8 +264,7 @@ rep_item <- function(item, choice_len) {
     imap(item, function(itm, nam) {
       if (!grepl("TEXT", nam)) {
         return(rep(itm, each = c))
-      }
-      else {
+      } else {
         return(itm)
       }
     })
@@ -282,8 +280,7 @@ rep_level <- function(level, item) {
     imap(item, function(itm, nam) {
       if (!grepl("TEXT", nam)) {
         return(l)
-      }
-      else {
+      } else {
         return("TEXT")
       }
     })
@@ -305,8 +302,7 @@ rep_loop <- function(x, question_meta) {
         qmeta["name"] <- paste(prefix, qmeta[["name"]], sep = "_")
         return(qmeta)
       })
-    }
-    else {
+    } else {
       return(list(qmeta))
     }
   }) %>%
@@ -330,8 +326,7 @@ qid_recode <- function(qid,
   if (type == "MC") {
     if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
       new_qid <- paste(qid, level, sep = "_")
-    }
-    else if (selector == "SAVR" || selector == "SACOL" || selector == "DL" || selector == "SAHR") {
+    } else if (selector == "SAVR" || selector == "SACOL" || selector == "DL" || selector == "SAHR") {
       new_qid <- rep(qid, length(level))
     }
 
@@ -339,63 +334,50 @@ qid_recode <- function(qid,
     if (!is.null(text_pos)) {
       new_qid[text_pos] <- paste(qid, names(level), sep = "_")[text_pos]
     }
-  }
-  else if (type == "Matrix") {
+  } else if (type == "Matrix") {
     if (selector == "Likert") {
       if (sub_selector == "MultipleAnswer") {
         new_qid <- paste_narm(qid, names(item), sep = "_") %>%
           map(paste, level, sep = "_") %>%
           unlist()
-      }
-      else if (sub_selector == "DL") {
+      } else if (sub_selector == "DL") {
         new_qid <- paste_narm(qid, names(item), sep = "_") %>%
           rep_qid(item, choice_len)
-      }
-      else if (sub_selector == "SingleAnswer") {
+      } else if (sub_selector == "SingleAnswer") {
         if (is.null(item)) {
           new_qid <- paste(qid, names(level), sep = "_")
-        }
-        else {
+        } else {
           new_qid <- paste(qid, names(item), sep = "_") %>%
             rep_qid(item, choice_len)
         }
       }
-    }
-    else if (selector == "TE") {
+    } else if (selector == "TE") {
       new_qid <- paste(qid, names(item), sep = "_") %>%
         rep(each = choice_len) %>%
         paste(level, sep = "_")
-    }
-    else if (selector == "Profile" || selector == "Bipolar") {
+    } else if (selector == "Profile" || selector == "Bipolar") {
       new_qid <- paste(qid, names(item), sep = "_") %>%
         rep_qid(item, choice_len)
     }
-  }
-  else if (type == "Slider" && selector == "HSLIDER") {
+  } else if (type == "Slider" && selector == "HSLIDER") {
     if (is.null(item)) {
       new_qid <- paste(qid, names(level), sep = "_")
-    }
-    else {
+    } else {
       new_qid <- paste(qid, names(item), sep = "_") %>%
         rep_item(choice_len)
     }
-  }
-  else if (type == "Slider" && selector == "HBAR") {
+  } else if (type == "Slider" && selector == "HBAR") {
     new_qid <- paste(qid, level, sep = "_")
-  }
-  else if (type == "Slider" && selector == "STAR") {
+  } else if (type == "Slider" && selector == "STAR") {
     new_qid <- paste(qid, level, sep = "_")
-  }
-  else if (type == "TE" && selector == "FORM") {
+  } else if (type == "TE" && selector == "FORM") {
     new_qid <- paste(qid, names(label), sep = "_")
-  }
-  else if (type == "TE" &&
+  } else if (type == "TE" &&
     (selector == "SL" ||
       selector == "ML" ||
       selector == "ESTB")) {
     new_qid <- paste(qid, "TEXT", sep = "_")
-  }
-  else if (type == "SBS") {
+  } else if (type == "SBS") {
     new_qid <- paste(qid, sep = "#", seq(col_len)) %>%
       map2(length(item), rep) %>%
       map(paste, names(item), sep = "_") %>%
@@ -403,28 +385,24 @@ qid_recode <- function(qid,
       map2(col_type, function(qids, type) {
         if (type == "TE") {
           return(paste(qids, "1", sep = "_"))
-        }
-        else {
+        } else {
           return(qids)
         }
       }) %>%
       unlist()
-  }
-  else if (type == "CS") {
+  } else if (type == "CS") {
     if (selector == "HR") {
       if (sub_selector == "TX") {
         # Is it possible to have item?
         if (is.null(item)) {
           new_qid <- paste(qid, names(level), sep = "_")
-        }
-        else {
+        } else {
           new_qid <- paste(qid, names(item), sep = "_") %>%
             rep_item(choice_len)
         }
       }
     }
-  }
-  else {
+  } else {
     warn_msg <- glue::glue(
       "{qid} is an unsupported type of question with type = {type}, selector = {selector} and sub_selector = {sub_selector}.
     Please report this to the issue page of the qualtdict package."
