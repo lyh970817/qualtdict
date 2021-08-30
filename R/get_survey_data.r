@@ -137,6 +137,7 @@ survey_recode <- function(dict, dat, keys, unanswer_recode, unanswer_recode_mult
 survey_var_recode <- function(var, var_dict, unanswer_recode, unanswer_recode_multi, numeric_to_pos) {
   type <- var_dict[["type"]][1]
   selector <- var_dict[["selector"]][1]
+  content_type <- var_dict[["content_type"]][[1]]
   levels <- var_dict[["level"]]
   labels <- var_dict[["label"]]
   if (type == "TE" || any(grepl("_TEXT", levels))) {}

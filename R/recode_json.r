@@ -79,11 +79,21 @@ recode_json <- function(surveyID,
     )
   )
 
-  # Order the metadata by QID name so that the two metadata match
+  content_type_meta <- mt_d$question %>%
+    map("Validation") %>%
+    map("Settings") %>%
+    map("ContentType") %>%
+    map(null_na) %>%
+    map(str_remove, "Valid")
+
+  # Order the metadatas by QID name so that the questions match
   question_meta <- question_meta[unique(qids_data)] %>%
     order_name()
 
-  block_meta <- block_meta[names(block_meta) %in% unique(qids_data)] %>%
+  block_meta <- block_meta[unique(qids_data)] %>%
+    order_name()
+
+  content_type_meta <- content_type_meta[unique(qids_data)] %>%
     order_name()
 
   # Combine two metadata
@@ -92,8 +102,11 @@ recode_json <- function(surveyID,
     x["looping_prefix"] <- y["looping_prefix"]
     x["looping_qid"] <- y["looping_qid"]
     return(x)
-  })
-
+  }) %>%
+    map2(content_type_meta, function(x, y) {
+      x["content_type"] <- y
+      return(x)
+    })
 
   json <- imap(question_meta, function(qjson, qid) {
     # If no subquestion or choice, treat the number as 0
@@ -105,6 +118,7 @@ recode_json <- function(surveyID,
     question <- qjson$questionText
     selector <- qjson$questionType$selector
     block <- qjson$block
+    content_type <- qjson$content_type
 
     # The rep_level function works on lists for dealing with SBS questions
     # For consistency we convert to lists for non-SBS questions
@@ -198,7 +212,7 @@ recode_json <- function(surveyID,
       item = rep_item(item, choice_len) %>% null_na(),
       level = rep_level(level, item) %>% null_na(),
       label = rep_level(label, item) %>% null_na(),
-      type, selector,
+      type, selector, content_type,
       sub_selector = null_na(sub_selector),
       looping = all(!is.null(qjson$looping_qid))
     ) %>%

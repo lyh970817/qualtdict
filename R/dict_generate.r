@@ -53,7 +53,7 @@ dict_generate <- function(surveyID,
 
   dict <- dict[c(
     "qid", "name", "block", "question",
-    "item", "level", "label", "type", "selector", "sub_selector"
+    "item", "level", "label", "type", "selector", "sub_selector", "content_type"
   )]
 
   # Add survey attributes
