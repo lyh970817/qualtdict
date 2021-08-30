@@ -18,7 +18,7 @@
 #' @examples
 #' \dontrun{
 #'
-#' # Create a function for \\code{block_pattern} that returns the first three letters of a string
+#' # Create a function for \code{block_pattern} that returns the first three letters of a string
 #' block_pattern <- function(x) {
 #'   substring(x, 1, 3)
 #' }
@@ -115,12 +115,10 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
     if (all(is.na(x))) {
       # If no keywords generated, use original text
       nm <- unique_texts[i]
-    }
-    else if (stri_count_words(unique(json$item)[i]) < 8) {
+    } else if (stri_count_words(unique(json$item)[i]) < 8) {
       # If original text shorter than 8 words, use original text
       nm <- unique_texts[i]
-    }
-    else {
+    } else {
       # Else use the firt four keywords
       nm <- paste(x[[1]], collapse = " ") %>%
         str_split(" ") %>%
