@@ -135,13 +135,23 @@ survey_recode <- function(dict, dat, keys, unanswer_recode, unanswer_recode_mult
 }
 
 survey_var_recode <- function(var, var_dict, unanswer_recode, unanswer_recode_multi, numeric_to_pos) {
+  # Multiple rows for a question, only first one chosen
   type <- var_dict[["type"]][1]
   selector <- var_dict[["selector"]][1]
   content_type <- var_dict[["content_type"]][[1]]
   levels <- var_dict[["level"]]
   labels <- var_dict[["label"]]
-  if (type == "TE" || any(grepl("_TEXT", levels))) {}
-  else if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
+
+  if (!is.na(content_type) && content_type == "Number") {
+
+    # Check for content_type numeric,
+    # vector with numbers such as "06" passes validation on Qualtrics but
+    # will be character when read by readr
+
+    var <- as.numeric(var)
+  }
+
+  if (type == "TE" || any(grepl("_TEXT", levels))) {} else if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
     levels <- 1
     if (!is.null(unanswer_recode_multi)) {
       levels <- c(levels, unanswer_recode_multi)
