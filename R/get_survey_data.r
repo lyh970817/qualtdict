@@ -54,12 +54,6 @@ get_survey_data <- function(dict,
     return(error_list$non_unique_names)
   }
 
-  not_onetoone <- error_list$mistake_dict[grep("1", error_list$mistake_dict$mistake), ]
-  if (!is.null(not_onetoone)) {
-    message("Some variables don't have one-to-one level-label correspondence.")
-    return(not_onetoone)
-  }
-
   mistake_qids <- unique(error_list$mistake_dict[["qid"]])
 
   args <- list(...)
