@@ -112,6 +112,15 @@ recode_json <- function(surveyID,
   json <- imap(question_meta, function(qjson, qid) {
     # If no subquestion or choice, treat the number as 0
     sub_q_len <- length(qjson$subQuestions) %>% ifelse(. > 0, ., 1)
+
+    # Clean the &nbsp; level/label fields (empty on Qualtrics)
+    nbsps <- map(qjson$choices, "description") == "&nbsp;"
+
+    # If there is only one nbsq, the question is a title
+    if (length(nbsps) != 1) {
+      qjson$choices <- qjson$choices[!nbsps]
+    }
+
     choice_len <- length(qjson$choices) %>% ifelse(. > 0, ., 1)
 
     question_name <- qjson$questionName
