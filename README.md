@@ -22,13 +22,8 @@ Installation
 This package is in an early stage of development and can be installed with
 the [devtools](https://cran.r-project.org/package=devtools) package. 
 
-Note that the package currently depends on my own fork of the
-[qualtRics](https://github.com/ropensci/qualtRics) package (the pull requests of
-which I have submitted).
-
 ``` r
 install.packages("devtools")
-devtools::install_github("lyh970817/qualtRics", ref = "qualtdict")
 devtools::install_github("lyh970817/qultdict")
 ```
 
