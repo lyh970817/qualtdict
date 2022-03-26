@@ -220,6 +220,7 @@ recode_json <- function(surveyID,
       name = question_name,
       block = block,
       question = question,
+      looping_question = NA,
       item = rep_item(item, choice_len) %>% null_na(),
       level = rep_level(level, item) %>% null_na(),
       label = rep_level(label, item) %>% null_na(),
@@ -246,6 +247,11 @@ recode_json <- function(surveyID,
   # Remove duplicated question text in item
   # This was useful in generating easy names
   json$item[json$item == json$question] <- NA
+
+  # Add questions with loop and merge placeholders replaced with labels
+  looping_questions <- json$looping_question
+  json$question[!is.na(looping_questions)] <-
+    looping_questions[!is.na(looping_questions)]
 
   attr(json, "survey_name") <- as.character(mt$metadata$name)
   attr(json, "surveyID") <- surveyID
@@ -329,6 +335,10 @@ rep_loop <- function(x, question_meta) {
       imap(labels, function(label, prefix) {
         qmeta[["qid"]] <- paste(prefix, qmeta[["qid"]], sep = "_")
         # What about second loop (field 2))?
+        qmeta[["looping_question"]] <-
+          gsub("\\$\\{lm://Field/1\\}", label, qmeta[["question"]])
+        qmeta[["question"]] <-
+          gsub("\\$\\{lm://Field/1\\}", "{}", qmeta[["question"]])
         qmeta[["name"]] <- paste(prefix, qmeta[["name"]], sep = ".")
         # To use in easyname_gen
         qmeta[["looping_label"]] <- label
