@@ -314,17 +314,20 @@ rep_level <- function(level, item) {
 }
 
 rep_loop <- function(x, question_meta) {
-  looping_prefix <- map(question_meta, "looping_prefix")
-  looping_qid <- unlist(map(question_meta, "looping_qid"))
+  looping_qids_meta <- unlist(map(question_meta, "looping_qid"))
+  looping_prefixes_meta <- map(question_meta, "looping_prefix")
   imap(x, function(qmeta, name) {
-    if (all(qmeta$looping)) {
-      prefixes <- looping_prefix[[name]]
-      # This excludes all the "_TEXT" choices!!!
-      labels <- x[[looping_qid[name]]][["label"]][prefixes]
-      map2(prefixes, labels, function(prefix, label) {
-        qmeta["qid"] <- paste(prefix, qmeta[["qid"]], sep = "_")
-        qmeta["question"] <- paste(qmeta[["question"]], label, sep = "-")
-        qmeta["name"] <- paste(prefix, qmeta[["name"]], sep = "_")
+    if (qmeta$looping) {
+      looping_qmeta <- x[[looping_qids_meta[name]]]
+
+      # Get labels and prefixes (names) generated in `recode_json` (remove _TEXT)
+      labels <- looping_qmeta[["label"]] %>%
+        discard(grepl("_TEXT", names(.)))
+
+      imap(labels, function(label, prefix) {
+        qmeta[["qid"]] <- paste(prefix, qmeta[["qid"]], sep = "_")
+        # What about second loop (field 2))?
+        qmeta[["name"]] <- paste(prefix, qmeta[["name"]], sep = ".")
         return(qmeta)
       })
     } else {
