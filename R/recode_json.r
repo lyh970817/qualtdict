@@ -214,24 +214,25 @@ recode_json <- function(surveyID,
       type = type, selector = selector, sub_selector = sub_selector, is_qid = FALSE
     )
 
-    tab_qid <- data.frame(
+    # Use a list instead so cols can be named vectors (for `rep_loop`)?
+    list_qid <- list(
       qid = new_qid,
       name = question_name,
       block = block,
-      question,
+      question = question,
       item = rep_item(item, choice_len) %>% null_na(),
       level = rep_level(level, item) %>% null_na(),
       label = rep_level(label, item) %>% null_na(),
-      type, selector, content_type,
+      type = type, selector = selector, content_type = content_type,
       sub_selector = null_na(sub_selector),
       looping = all(!is.null(qjson$looping_qid))
-    ) %>%
-      as_tibble()
+    )
 
-    return(tab_qid)
+    return(list_qid)
   }) %>%
     discard(is.null) %>%
     rep_loop(question_meta) %>%
+    modify(as_tibble) %>%
     bind_rows() %>%
     # Don't get rid of bracekts in labels
     remove_format(skip = "label")
