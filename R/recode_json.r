@@ -225,6 +225,8 @@ recode_json <- function(surveyID,
       label = rep_level(label, item) %>% null_na(),
       type = type, selector = selector, content_type = content_type,
       sub_selector = null_na(sub_selector),
+      # To use in rep_loop
+      looping_label = NA,
       looping = all(!is.null(qjson$looping_qid))
     )
 
@@ -328,6 +330,8 @@ rep_loop <- function(x, question_meta) {
         qmeta[["qid"]] <- paste(prefix, qmeta[["qid"]], sep = "_")
         # What about second loop (field 2))?
         qmeta[["name"]] <- paste(prefix, qmeta[["name"]], sep = ".")
+        # To use in easyname_gen
+        qmeta[["looping_label"]] <- label
         return(qmeta)
       })
     } else {

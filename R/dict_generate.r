@@ -155,6 +155,24 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
   # Add txt to text questions
   txt_qs <- grep("_TEXT", json$qid)
   json$easyname[txt_qs] <- paste(json$easyname[txt_qs], ".txt")
+
+  label_to_sfx <- function(x) {
+    str_remove_all(str_replace_all(
+      tolower(x),
+      "\\s", "_"
+    ), "[^0-9A-Za-z_\\.]")
+  }
+
+  # Add label to matrix with multiple answers
+  add_label_qs <- json$type == "Matrix" & json$selector == "Likert" & json$sub_selector == "MultipleAnswer"
+  json$easyname[add_label_qs] <- paste(json$easyname[add_label_qs], label_to_sfx(json$label[add_label_qs]), sep = ".")
+
+  # Add label to loop and merge
+  add_loop_label_qs <- as.logical(json$looping)
+  loop_json <- json[add_loop_label_qs, ]
+  loop_labels <- label_to_sfx(json$looping_label[add_loop_label_qs])
+  json$easyname[add_loop_label_qs] <- paste(loop_json$easyname, loop_labels, sep = ".")
+
   json$easyname <- str_remove_all(json$easyname, "[^0-9A-Za-z_\\.]")
 
   # Make unique duplicated easynames
