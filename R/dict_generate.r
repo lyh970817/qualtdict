@@ -76,17 +76,20 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
     )
   }
 
+  json_copy <- json
+
+  # Extract relevant text
+  texts <- json$item
+
+  texts[is.na(texts)] <- json$question[is.na(texts)]
   # Temporary
   # For these questions each chioce (with a label) is exported as variable,
   # thus the easy name should depend on the label
-  json_copy <- json
-
-  json$item[is.na(json$item)] <- json$question[is.na(json$item)]
   ma_lgl <- json$selector == "MACOL" | json$selector == "MAVR" | json$selector == "MAHR"
-  json$item[ma_lgl] <- json$label[ma_lgl]
+  texts[ma_lgl] <- json$label[ma_lgl]
 
-  # Extract unique question text
-  unique_texts <- unique(json$item)
+  # Extract unique text
+  unique_texts <- unique(texts)
 
   # Generate temp file path
   tmpfile_path <- paste0(tempdir(), "/", surveyID, "K.rds")
@@ -104,7 +107,7 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
     unique_texts <- str_remove_all(unique_texts, "[[:punct:]]")
 
     keywords <- slowrake(unique_texts,
-      all_words = paste(json$item, collapse = ""), stop_pos = NULL
+      all_words = paste(texts, collapse = ""), stop_pos = NULL
     )
     # Save in temp folder
     saveRDS(keywords, file = tmpfile_path)
@@ -115,7 +118,7 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
     if (all(is.na(x))) {
       # If no keywords generated, use original text
       nm <- unique_texts[i]
-    } else if (stri_count_words(unique(json$item)[i]) < 8) {
+    } else if (stri_count_words(unique(texts)[i]) < 8) {
       # If original text shorter than 8 words, use original text
       nm <- unique_texts[i]
     } else {
@@ -142,7 +145,7 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
 
   # Expand easy variable names and block prefixes to repeat the right
   # number of times
-  json$easyyquestion <- unique_expand(easyquestion_single, json$item)
+  json$easyyquestion <- unique_expand(easyquestion_single, texts)
   json$easyblock <- unique_expand(tolower(block_single), json$block)
 
   json <- json %>%
