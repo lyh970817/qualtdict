@@ -10,6 +10,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom qualtRics fetch_survey metadata fetch_description
 #' @import slowraker
+#' @importFrom xml2 xml_text read_html
 
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
@@ -35,6 +36,25 @@ null_na <- function(x) {
   } else {
     x
   }
+}
+
+convert_html <- function(data) {
+  unescape_html <- function(x) {
+    map_chr(
+      x,
+      ~ xml2::xml_text(
+        suppressMessages(
+          xml2::read_html(paste0("<x>", .x, "</x>"))
+        )
+      )
+    )
+  }
+
+  data %>%
+    mutate_at(
+      vars(question),
+      unescape_html
+    )
 }
 
 remove_format <- function(data, skip) {

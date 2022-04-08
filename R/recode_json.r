@@ -237,6 +237,7 @@ recode_json <- function(surveyID,
     rep_loop(question_meta) %>%
     modify(as_tibble) %>%
     bind_rows() %>%
+    convert_html() %>%
     # Don't get rid of bracekts in labels
     remove_format(skip = "label")
 
