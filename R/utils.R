@@ -109,7 +109,7 @@ match_all <- function(x, y) {
 
 paste_narm <- function(...) {
   args <- list(...)
-  is_null_na <- map_lgl(args, ~ is.null(.x) || is.na(.x))
+  is_null_na <- map_lgl(args, ~ is.null(.x) | all(is.na(.x)))
   args[is_null_na] <- NULL
 
   sep <- list(...)$sep %>%
