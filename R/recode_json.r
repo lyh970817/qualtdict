@@ -1,7 +1,8 @@
 recode_json <- function(surveyID,
                         easyname_gen,
                         block_pattern,
-                        block_sep) {
+                        block_sep,
+                        preprocess) {
 
   # Fetch survey to obtain QID column names
   suppressMessages(
@@ -242,7 +243,7 @@ recode_json <- function(surveyID,
     remove_format(skip = "label")
 
   if (easyname_gen) {
-    json <- easyname_gen(json, surveyID, block_pattern, block_sep)
+    json <- easyname_gen(json, surveyID, block_pattern, block_sep, preprocess)
   }
 
   # Remove duplicated question text in item

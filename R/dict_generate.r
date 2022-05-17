@@ -9,6 +9,9 @@
 #' @param block_pattern Function. A function that given the name of a
 #' survey block, returns a string to be appended to variable names in that block.
 #' Defaults to \code{NULL}.
+#' @param preprocess Function. A function that given a dataframe with the
+#' column names as in a dictionary, does formatting for each column.
+#' Defaults to \code{NULL}.
 #' @param block_sep String. Seperator between variable names and block
 #' prefixes returned by \code{block_pattern}. Defaults to "_".
 #' @param split_by_block Logical. If \code{TRUE}, the function returns a
@@ -36,6 +39,7 @@ dict_generate <- function(surveyID,
                           var_name = c("question_name", "easy_name"),
                           block_pattern = NULL,
                           block_sep = ".",
+                          preprocess = NULL,
                           split_by_block = FALSE,
                           survey_name = NULL) {
   var_name <- match.arg(var_name)
@@ -48,7 +52,8 @@ dict_generate <- function(surveyID,
   dict <- recode_json(surveyID,
     easyname_gen = easyname_gen,
     block_pattern = block_pattern,
-    block_sep = block_sep
+    block_sep = block_sep,
+    preprocess = preprocess
   )
 
   dict <- dict[c(
@@ -69,7 +74,7 @@ dict_generate <- function(surveyID,
   dict
 }
 
-easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
+easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   if (!requireNamespace("slowraker", quietly = TRUE)) {
     stop("Package \"slowraker\" needed for `easyname_gen = TRUE` to work. Please install it.",
       call. = FALSE
@@ -77,6 +82,9 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep) {
   }
 
   json_copy <- json
+  if (!is.null(preprocess)) {
+    json <- preprocess(json)
+  }
 
   # Extract relevant text
   texts <- json$item
