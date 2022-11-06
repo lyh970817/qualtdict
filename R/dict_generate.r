@@ -99,6 +99,9 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   # For matrix likert single answer
   # matrix_single_qs <- json$type == "Matrix" & json$selector == "Likert" & json$sub_selector == "SingleAnswer"
   # texts[matrix_single_qs] <- json$question[matrix_single_qs]
+  # For SBS matrix
+  sbs_matrix <- json$type == "SBS" & json$selector == "SBSMatrix"
+  texts[sbs_matrix] <- json$question[sbs_matrix]
 
   # Extract unique text
   unique_texts <- unique(texts)
@@ -188,6 +191,12 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   #     label_to_sfx(json$item[matrix_single_qs]),
   #     sep = "."
   #   )
+
+  # Add item to sbs matrix with single answers
+  json$easyname[sbs_matrix] <- paste(json$easyname[sbs_matrix],
+    label_to_sfx(json$item[sbs_matrix]),
+    sep = "."
+  )
 
   # Add label to loop and merge
   add_loop_label_qs <- as.logical(json$looping)
