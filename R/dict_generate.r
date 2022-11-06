@@ -82,6 +82,7 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   }
 
   json_copy <- json
+
   if (!is.null(preprocess)) {
     json <- preprocess(json)
   }
@@ -182,8 +183,16 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   }
 
   # Add label to matrix with multiple answers
-  add_label_qs <- json$type == "Matrix" & json$selector == "Likert" & json$sub_selector == "MultipleAnswer"
-  json$easyname[add_label_qs] <- paste(json$easyname[add_label_qs], label_to_sfx(json$label[add_label_qs]), sep = ".")
+  add_label_qs <-
+    json$type == "Matrix" &
+      json$selector == "Likert" &
+      json$sub_selector == "MultipleAnswer"
+
+  json$easyname[add_label_qs] <-
+    paste(json$easyname[add_label_qs],
+      label_to_sfx(json$label[add_label_qs]),
+      sep = "."
+    )
 
   # Add item to matrix with single answers
   # json$easyname[matrix_single_qs] <-
@@ -199,11 +208,13 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   )
 
   # Add label to loop and merge
-  add_loop_label_qs <- as.logical(json$looping)
-  loop_json <- json[add_loop_label_qs, ]
-  loop_labels <- label_to_sfx(json$looping_label[add_loop_label_qs])
-  json$easyname[add_loop_label_qs] <- paste(loop_json$easyname, loop_labels, sep = ".")
+  add_loop_option_qs <- as.logical(json$looping)
+  loop_json <- json[add_loop_option_qs, ]
+  loop_options <- label_to_sfx(json$looping_option[add_loop_option_qs])
+  json$easyname[add_loop_option_qs] <-
+    paste(loop_json$easyname, loop_options, sep = ".")
 
+  # Remove symbols
   json$easyname <- str_remove_all(json$easyname, "[^0-9A-Za-z_\\.]")
 
   # Make unique duplicated easynames
@@ -218,7 +229,6 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   )
 
   json_copy$name <- recode(json$qid, !!!setNames(all_easynames$easyname, all_easynames$qid))
-  # json_copy$easyname <- NULL
 
   json_copy
 }
