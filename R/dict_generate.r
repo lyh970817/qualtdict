@@ -97,8 +97,8 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   texts[ma_lgl] <- json$label[ma_lgl]
   # Temporary
   # For matrix likert single answer
-  matrix_single_qs <- json$type == "Matrix" & json$selector == "Likert" & json$sub_selector == "SingleAnswer"
-  texts[matrix_single_qs] <- json$question[matrix_single_qs]
+  # matrix_single_qs <- json$type == "Matrix" & json$selector == "Likert" & json$sub_selector == "SingleAnswer"
+  # texts[matrix_single_qs] <- json$question[matrix_single_qs]
 
   # Extract unique text
   unique_texts <- unique(texts)
@@ -182,8 +182,12 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   add_label_qs <- json$type == "Matrix" & json$selector == "Likert" & json$sub_selector == "MultipleAnswer"
   json$easyname[add_label_qs] <- paste(json$easyname[add_label_qs], label_to_sfx(json$label[add_label_qs]), sep = ".")
 
-  # Add label to matrix with single answers
-  json$easyname[matrix_single_qs] <- paste(json$easyname[matrix_single_qs], label_to_sfx(json$item[matrix_single_qs]), sep = ".")
+  # Add item to matrix with single answers
+  # json$easyname[matrix_single_qs] <-
+  #   paste(json$easyname[matrix_single_qs],
+  #     label_to_sfx(json$item[matrix_single_qs]),
+  #     sep = "."
+  #   )
 
   # Add label to loop and merge
   add_loop_label_qs <- as.logical(json$looping)
