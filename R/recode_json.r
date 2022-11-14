@@ -214,11 +214,10 @@ recode_json <- function(surveyID,
       choice_len = choice_len, level_len_col = level_len_col,
       type = type, selector = selector, sub_selector = sub_selector, is_qid = FALSE
     )
-
     # Use a list instead so cols can be named vectors (for `rep_loop`)?
     list_qid <- list(
       qid = new_qid,
-      name = question_name,
+      name = null_na(question_name),
       block = block,
       question = question,
       looping_question = NA,
@@ -303,8 +302,7 @@ rep_item <- function(item, choice_len) {
         return(itm)
       }
     })
-  }) %>%
-    unlist()
+  })
 }
 
 rep_level <- function(level, item) {
@@ -319,8 +317,7 @@ rep_level <- function(level, item) {
         return("TEXT")
       }
     })
-  }) %>%
-    unlist()
+  })
 }
 
 rep_loop <- function(x, question_meta) {
