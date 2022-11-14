@@ -227,7 +227,7 @@ recode_json <- function(surveyID,
       type = type, selector = selector, content_type = content_type,
       sub_selector = null_na(sub_selector),
       # To use in rep_loop
-      looping_label = NA,
+      looping_option = NA,
       looping = all(!is.null(qjson$looping_qid))
     )
 
@@ -329,18 +329,26 @@ rep_loop <- function(x, question_meta) {
 
       # Get labels and prefixes (names) generated in `recode_json` (remove _TEXT)
       labels <- looping_qmeta[["label"]] %>%
+      if (looping_qmeta[["type"]] == "Matrix") {
+        loop_options <- map(looping_qmeta[["item"]], ~ map_chr(.x, 1))
+      } else {
+        loop_options <- map(looping_qmeta[["label"]], ~ map_chr(.x, 1))
+      }
+
+      loop_options <- loop_options %>%
+        unlist() %>%
         discard(grepl("_TEXT", names(.)))
 
-      imap(labels, function(label, prefix) {
+      imap(loop_options, function(option, prefix) {
         qmeta[["qid"]] <- paste(prefix, qmeta[["qid"]], sep = "_")
         # What about second loop (field 2))?
         qmeta[["looping_question"]] <-
-          gsub("\\$\\{lm://Field/1\\}", label, qmeta[["question"]])
+          gsub("\\$\\{lm://Field/1\\}", option, qmeta[["question"]])
         qmeta[["question"]] <-
           gsub("\\$\\{lm://Field/1\\}", "{}", qmeta[["question"]])
         qmeta[["name"]] <- paste(prefix, qmeta[["name"]], sep = ".")
         # To use in easyname_gen
-        qmeta[["looping_label"]] <- label
+        qmeta[["looping_option"]] <- option
         return(qmeta)
       })
     } else {
