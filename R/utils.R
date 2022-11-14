@@ -44,33 +44,23 @@ convert_html <- function(data) {
   unescape_html <- function(x) {
     map_chr(
       x,
-      ~ xml2::xml_text(
-        suppressMessages(
-          xml2::read_html(paste0("<x>", .x, "</x>"))
-        )
-      )
+      function(x) {
+        if (is.na(x)) {
+          NA
+        } else {
+          xml2::xml_text(
+            suppressMessages(
+              xml2::read_html(paste0("<x>", x, "</x>"))
+            )
+          )
+        }
+      }
     )
   }
 
   data %>%
-    mutate_at(
-      vars(question),
+    mutate_all(
       unescape_html
-    )
-}
-
-remove_format <- function(data, skip) {
-  chr_cols <- discard(colnames(data), ~ . %in% c(skip))
-  mutate_at(
-    data, vars(-name),
-    ~ str_remove_all(., "(<[^>]+>|\\n)+") %>%
-      str_remove_all("Selected Choice - ") %>%
-      str_squish()
-  ) %>%
-    mutate_at(
-      vars(all_of(chr_cols)),
-      ~ str_remove_all(., "\\(.*\\)") %>%
-        str_squish()
     )
 }
 

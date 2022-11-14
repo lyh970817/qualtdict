@@ -235,11 +235,8 @@ recode_json <- function(surveyID,
   }) %>%
     discard(is.null) %>%
     rep_loop(question_meta) %>%
-    modify(as_tibble) %>%
-    bind_rows() %>%
-    convert_html() %>%
-    # Don't get rid of bracekts in labels
-    remove_format(skip = "label")
+    to_dataframe() %>%
+    convert_html()
 
   if (easyname_gen) {
     json <- easyname_gen(json, surveyID, block_pattern, block_sep, preprocess)
@@ -356,6 +353,12 @@ rep_loop <- function(x, question_meta) {
     }
   }) %>%
     unlist(recursive = FALSE)
+}
+
+to_dataframe <- function(json) {
+  map_df(json, function(qmeta) {
+    map_df(qmeta, unlist) 
+  })
 }
 
 qid_recode <- function(qid,
