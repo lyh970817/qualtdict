@@ -91,10 +91,12 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
   texts <- json$item
 
   texts[is.na(texts)] <- json$question[is.na(texts)]
-  # Temporary
+
+ # Temporary
   # For these questions each chioce (with a label) is exported as variable,
   # thus the easy name should depend on the label
-  ma_lgl <- json$selector == "MACOL" | json$selector == "MAVR" | json$selector == "MAHR"
+  ma_lgl <-
+    json$selector == "MACOL" | json$selector == "MAVR" | json$selector == "MAHR"
   texts[ma_lgl] <- json$label[ma_lgl]
   # Temporary
   # For matrix likert single answer
@@ -125,6 +127,7 @@ easyname_gen <- function(json, surveyID, block_pattern, block_sep, preprocess) {
     keywords <- slowrake(unique_texts,
       all_words = paste(texts, collapse = ""), stop_pos = NULL
     )
+     
     # Save in temp folder
     saveRDS(keywords, file = tmpfile_path)
   }
