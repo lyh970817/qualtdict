@@ -21,13 +21,15 @@
 dict_rename <- function(dict,
                         dict_matches) {
   if (length(dict_matches[["name_reference"]]) == 0) {
-     stop("No matches found")
+    stop("No matches found")
   }
+
+  renames <- make.unique(dict_matches[["name_reference"]])
 
   dict[["name"]] <- recode(
     dict[["name"]],
     !!!setNames(
-      make.unique(dict_matches[["name_reference"]]),
+      renames,
       dict_matches[["name"]]
     )
   )

@@ -125,6 +125,9 @@ slowrake <- function(txt,
 .internals <- c("get_cand_words", "filter_words", "process_keyword_df")
 # load from the slowraker namespace
 slowraker2 <- structure(
-  mapply(function(.internals, i) getFromNamespace(i, "slowraker"), .internals, .internals),
+  mapply(
+    function(.internals, i) getFromNamespace(i, "slowraker"),
+    .internals, .internals
+  ),
   class = c("internal")
 )

@@ -36,8 +36,7 @@ dict_validate <- function(dict) {
 
   if (length(error_list) == 0) {
     return(level_label_pairs)
-  }
-  else {
+  } else {
     return(list(
       level_label_pairs = level_label_pairs,
       errors = error_list

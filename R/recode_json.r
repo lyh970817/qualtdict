@@ -204,15 +204,19 @@ recode_json <- function(surveyID,
     }
 
     new_qid <- qid_recode(qid,
-      col_len = col_len, col_type = col_type, item = item, level = level, label = label,
+      col_len = col_len, col_type = col_type, 
+      item = item, level = level, label = label,
       choice_len = choice_len, level_len_col = level_len_col,
-      type = type, selector = selector, sub_selector = sub_selector, is_qid = TRUE
+      type = type, selector = selector, 
+      sub_selector = sub_selector, is_qid = TRUE
     )
 
     question_name <- qid_recode(question_name,
-      col_len = col_len, col_type = col_type, item = item, level = level, label = label,
+      col_len = col_len, col_type = col_type, 
+      item = item, level = level, label = label,
       choice_len = choice_len, level_len_col = level_len_col,
-      type = type, selector = selector, sub_selector = sub_selector, is_qid = FALSE
+      type = type, selector = selector, 
+      sub_selector = sub_selector, is_qid = FALSE
     )
     # Use a list instead so cols can be named vectors (for `rep_loop`)?
     list_qid <- list(
@@ -306,6 +310,7 @@ rep_level <- function(level, item) {
   if (is.null(item)) {
     return(unlist(level))
   }
+
   map(level, function(l) {
     imap(item, function(itm, nam) {
       if (!grepl("TEXT", nam)) {
@@ -324,8 +329,8 @@ rep_loop <- function(x, question_meta) {
     if (qmeta$looping) {
       looping_qmeta <- x[[looping_qids_meta[name]]]
 
-      # Get labels and prefixes (names) generated in `recode_json` (remove _TEXT)
-      labels <- looping_qmeta[["label"]] %>%
+      # Get loop option and prefixes (names) generated
+      # in `recode_json` (remove _TEXT)
       if (looping_qmeta[["type"]] == "Matrix") {
         loop_options <- map(looping_qmeta[["item"]], ~ map_chr(.x, 1))
       } else {

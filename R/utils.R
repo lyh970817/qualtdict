@@ -112,8 +112,7 @@ paste_narm <- function(...) {
 or <- function(x) {
   if (length(x) > 1) {
     lgl <- do.call(`|`, x)
-  }
-  else {
+  } else {
     lgl <- unlist(x)
   }
 
@@ -181,7 +180,6 @@ fetch_description2 <- retry(fetch_description)
 #' @param overwrite If TRUE, will overwrite existing Qualtrics
 #' credentials that you already have in your \code{.Renviron} file.
 #' @examples
-#'
 #' \dontrun{
 #' qualtrics_api_credentials(
 #'   api_key = "<YOUR-QUALTRICS_API_KEY>",
