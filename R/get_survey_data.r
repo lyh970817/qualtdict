@@ -44,17 +44,17 @@ get_survey_data <- function(dict,
                             surveyID = NULL,
                             keys = NULL,
                             split_by_block = FALSE,
-                            skip_mistakes = FALSE,
+                            # skip_mistakes = FALSE,
                             ...) {
 
   # Validate the dictionary
-  suppressWarnings(error_list <- dict_validate(dict)$error)
-  if (!is.null(error_list$non_unique_names)) {
-    message("Variables don't have unique names.")
-    return(error_list$non_unique_names)
-  }
+  # suppressWarnings(error_list <- dict_validate(dict)$error)
+  # if (!is.null(error_list$non_unique_names)) {
+  #   message("Variables don't have unique names.")
+  #   return(error_list$non_unique_names)
+  # }
 
-  mistake_qids <- unique(error_list$mistake_dict[["qid"]])
+  # mistake_qids <- unique(error_list$mistake_dict[["qid"]])
 
   args <- list(...)
   args$force_request <- TRUE
@@ -71,14 +71,14 @@ get_survey_data <- function(dict,
   colnames(survey) <- str_remove(colnames(survey), "_$")
 
 
-  if (skip_mistakes) {
-    survey <- survey[!colnames(survey) %in% mistake_qids]
-  } else if (!is.null(mistake_qids)) {
-    warning("There are variables with potential incorrect level-label codings.
-            Run 'dict_validate()' on the dictionary object for details or
-            specify 'skip_mistakes = TRUE' to not apply recoding to
-            variables with mistakes.")
-  }
+  # if (skip_mistakes) {
+  #   survey <- survey[!colnames(survey) %in% mistake_qids]
+  # } else if (!is.null(mistake_qids)) {
+  #   warning("There are variables with potential incorrect level-label codings.
+  #           Run 'dict_validate()' on the dictionary object for details or
+  #           specify 'skip_mistakes = TRUE' to not apply recoding to
+  #           variables with mistakes.")
+  # }
 
   if (split_by_block == TRUE) {
     keys <- unique(unlist(dict[dict[["name"]] %in% keys, "qid"]))
