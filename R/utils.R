@@ -128,15 +128,13 @@ order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
 
-retry <- function(f, endless = FALSE) {
+retry <- function(f) {
   function(...) {
     r <- NULL
     attempt <- 1
-    while (is.null(r) && attempt <= 2) {
-      if (!endless) {
+    while (is.null(r) && attempt <= 5) {
         # Don't cummulate count with endless attempts
         attempt <- attempt + 1
-      }
       try(
         r <- f(...)
       )
@@ -152,8 +150,6 @@ retry <- function(f, endless = FALSE) {
 
 
 fetch_survey2 <- retry(fetch_survey)
-
-fetch_survey3 <- retry(fetch_survey, endless = TRUE)
 
 metadata2 <- retry(metadata)
 
