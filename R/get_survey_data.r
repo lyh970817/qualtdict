@@ -65,7 +65,7 @@ get_survey_data <- function(dict,
   # What about loop and merge?
   include_qids <- unique(str_extract(dict[["qid"]], "QID[0-9]+"))
 
-  survey <- do.call(fetch_survey3, args)
+  survey <- do.call(fetch_survey2, args)
 
   # Not sure why underscore is appended sometimes when include_questions is specified
   colnames(survey) <- str_remove(colnames(survey), "_$")
