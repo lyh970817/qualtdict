@@ -144,18 +144,19 @@ survey_var_recode <- function(var, var_dict, unanswer_recode, unanswer_recode_mu
     var <- as.numeric(var)
   }
 
-  if (type == "TE" || any(grepl("_TEXT", levels))) {} else if (selector == "MACOL" || selector == "MAVR" || selector == "MAHR") {
-    levels <- 1
+  if (type == "TE" || any(grepl("_TEXT", levels))) {
+
+  } else if (nrow(var_dict) == 1) {
+    # Single row means allowing for multiple answer
+    # levels <- 1
     if (!is.null(unanswer_recode_multi)) {
       levels <- c(levels, unanswer_recode_multi)
       labels <- c(labels, paste("Not", labels))
     }
-  }
-
-  # If multiple rows it's ordinal
-  else if (nrow(var_dict) > 1) {
-    labels <- grep("TEXT", labels, invert = T, value = T)
-    levels <- grep("TEXT", levels, invert = T, value = T)
+  } else if (nrow(var_dict) > 1) {
+    # If multiple rows it's ordinal
+    labels <- grep("TEXT", labels, invert = TRUE, value = TRUE)
+    levels <- grep("TEXT", levels, invert = TRUE, value = TRUE)
     if (!is.null(unanswer_recode)) {
       levels <- c(levels, unanswer_recode)
       labels <- c(labels, "Seen but not answered")
