@@ -3,24 +3,6 @@ recode_json <- function(surveyID,
                         block_pattern,
                         block_sep,
                         preprocess) {
-
-  # Fetch survey to obtain QID column names
-  suppressMessages(
-    suppressWarnings(
-      invisible(capture.output(
-        survey <- # Hides the progress bar
-          fetch_survey2(surveyID,
-            import_id = TRUE, convert = FALSE,
-            label = FALSE, force_request = TRUE,
-            limit = 1,
-          )
-      ))
-    )
-  )
-
-  qids_data <- str_extract(colnames(survey), "QID[0-9]+") %>%
-    discard(is.na)
-
   # Fetch metadata
   # Wrapper functions foo2 to retry when timeout
   mt <- metadata2(
@@ -88,14 +70,17 @@ recode_json <- function(surveyID,
     map(null_na) %>%
     map(str_remove, "Valid")
 
-  # Order the metadatas by QID name so that the questions match
-  question_meta <- question_meta[unique(qids_data)] %>%
+  # Order the metadatas by QID name and use only those
+  # in question_meta so that the questions match
+  qids <- names(question_meta)
+  question_meta <- question_meta[qids] %>%
     order_name()
 
-  block_meta <- block_meta[unique(qids_data)] %>%
+
+  block_meta <- block_meta[qids] %>%
     order_name()
 
-  content_type_meta <- content_type_meta[unique(qids_data)] %>%
+  content_type_meta <- content_type_meta[qids] %>%
     order_name()
 
   # Combine two metadata
