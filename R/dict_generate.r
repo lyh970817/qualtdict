@@ -36,16 +36,16 @@
 #' }
 #'
 dict_generate <- function(surveyID,
-                          var_name = c("question_name", "easy_name"),
+                          name = c("question_name", "easy_name"),
                           block_pattern = NULL,
                           block_sep = ".",
                           preprocess = NULL,
                           split_by_block = FALSE,
                           survey_name = NULL) {
-  var_name <- match.arg(var_name)
+  name <- match.arg(name)
 
   easyname_gen <- ifelse(
-    var_name == "easy_name",
+    name == "easy_name",
     TRUE, FALSE
   )
 
