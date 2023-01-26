@@ -17,7 +17,6 @@ recode_json <- function(surveyID,
     )
   )
 
-
   mt_d <- fetch_description2(
     surveyID,
     c(
@@ -27,7 +26,6 @@ recode_json <- function(surveyID,
       "flow"
     )
   )
-
 
   # Extract useful block metadata
   blocks <- mt_d$block
@@ -98,8 +96,8 @@ recode_json <- function(surveyID,
   json <- imap(question_meta, function(qjson, qid) {
     # Clean the &nbsp; level/label fields (empty on Qualtrics)
     nbsps <- map(qjson$choices, "description") == "&nbsp;"
-
     # If there is only one nbsq, the question is a title
+    # No need to clean
     if (length(nbsps) != 1) {
       qjson$choices <- qjson$choices[!nbsps]
     }
@@ -136,7 +134,6 @@ recode_json <- function(surveyID,
 
     # Recode for text entry choices
     has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
-
     if (length(has_text) > 0) {
       # Add text level and labels directly after the non-text level
       level <- add_text(level, has_text)
@@ -195,21 +192,21 @@ recode_json <- function(surveyID,
     }
 
     new_qid <- qid_recode(qid,
-      col_len = col_len, col_type = col_type, 
+      col_len = col_len, col_type = col_type,
       item = item, level = level, label = label,
       choice_len = level_len,
-      type = type, selector = selector, 
+      type = type, selector = selector,
       sub_selector = sub_selector, is_qid = TRUE
     )
 
     question_name <- qid_recode(question_name,
-      col_len = col_len, col_type = col_type, 
+      col_len = col_len, col_type = col_type,
       item = item, level = level, label = label,
       choice_len = level_len,
-      type = type, selector = selector, 
+      type = type, selector = selector,
       sub_selector = sub_selector, is_qid = FALSE
     )
-    # Use a list instead so cols can be named vectors (for `rep_loop`)?
+
     list_qid <- list(
       qid = new_qid,
       name = null_na(question_name),
@@ -238,7 +235,7 @@ recode_json <- function(surveyID,
   }
 
   # Remove duplicated question text in item
-  # This was useful in generating easy names
+  # This is useful in generating easy names
   json$item[json$item == json$question] <- NA
 
   # Add questions with loop and merge placeholders replaced with labels
@@ -252,7 +249,7 @@ recode_json <- function(surveyID,
   return(json)
 }
 
-add_text <- function(x, has_text, label = F) {
+add_text <- function(x, has_text, label = FALSE) {
   x <- unlist(x)
   if (!is.null(x)) {
     for (i in seq_along(has_text)) {
@@ -315,7 +312,6 @@ rep_level <- function(level, item) {
 
 rep_loop <- function(x, question_meta) {
   looping_qids_meta <- unlist(map(question_meta, "looping_qid"))
-  looping_prefixes_meta <- map(question_meta, "looping_prefix")
   imap(x, function(qmeta, name) {
     if (qmeta$looping) {
       looping_qmeta <- x[[looping_qids_meta[name]]]
@@ -353,6 +349,6 @@ rep_loop <- function(x, question_meta) {
 
 to_dataframe <- function(json) {
   map_df(json, function(qmeta) {
-    map_df(qmeta, unlist) 
+    map_df(qmeta, unlist)
   })
 }
