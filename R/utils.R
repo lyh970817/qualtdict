@@ -32,8 +32,8 @@ is_onetoone <- function(cols) {
 
 null_na <- function(x) {
   # A list created with NULL values will have lengths of all 0
-  if (is.null(x) | 
-      all(map_dbl(x, length) == 0)) {
+  if (is.null(x) |
+    all(map_dbl(x, length) == 0)) {
     NA
   } else {
     x
@@ -85,20 +85,6 @@ survey_rename <- function(survey) {
   return(survey)
 }
 
-# get_varname <- function(dict) {
-#   if ("easyname" %in% colnames(dict)) {
-#     return("easyname")
-#   }
-#   else if ("question_name" %in% colnames(dict)) {
-#     return("easyname")
-#   }
-# }
-
-match_all <- function(x, y) {
-  unlist(map(y, ~ which(x == .x)))
-}
-
-
 paste_narm <- function(...) {
   args <- list(...)
   is_null_na <- map_lgl(args, ~ is.null(.x) | all(is.na(.x)))
@@ -107,21 +93,6 @@ paste_narm <- function(...) {
   sep <- list(...)$sep %>%
     ifelse(is.null(.), " ", .)
   do.call(paste, args)
-}
-
-or <- function(x) {
-  if (length(x) > 1) {
-    lgl <- do.call(`|`, x)
-  } else {
-    lgl <- unlist(x)
-  }
-
-  lgl[is.na(lgl)] <- FALSE
-  return(lgl)
-}
-
-split_orderd <- function(x, f) {
-  split(x, f = factor(f, level = unique(f)))
 }
 
 order_name <- function(list) {
@@ -133,8 +104,8 @@ retry <- function(f) {
     r <- NULL
     attempt <- 1
     while (is.null(r) && attempt <= 5) {
-        # Don't cummulate count with endless attempts
-        attempt <- attempt + 1
+      # Don't cummulate count with endless attempts
+      attempt <- attempt + 1
       try(
         r <- f(...)
       )
