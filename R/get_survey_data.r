@@ -44,7 +44,7 @@ get_survey_data <- function(dict,
                             surveyID = NULL,
                             keys = NULL,
                             split_by_block = FALSE,
-                            # skip_mistakes = FALSE,
+                            skip = NULL,
                             ...) {
 
   # Validate the dictionary
@@ -70,15 +70,9 @@ get_survey_data <- function(dict,
   # Not sure why underscore is appended sometimes when include_questions is specified
   colnames(survey) <- str_remove(colnames(survey), "_$")
 
-
-  # if (skip_mistakes) {
-  #   survey <- survey[!colnames(survey) %in% mistake_qids]
-  # } else if (!is.null(mistake_qids)) {
-  #   warning("There are variables with potential incorrect level-label codings.
-  #           Run 'dict_validate()' on the dictionary object for details or
-  #           specify 'skip_mistakes = TRUE' to not apply recoding to
-  #           variables with mistakes.")
-  # }
+  if (!is.null(skip)) {
+    survey <- survey[!colnames(survey) %in% skip]
+  }
 
   if (split_by_block == TRUE) {
     keys <- unique(unlist(dict[dict[["name"]] %in% keys, "qid"]))
