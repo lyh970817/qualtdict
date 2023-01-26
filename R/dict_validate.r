@@ -27,19 +27,19 @@ dict_validate <- function(dict) {
     error_list$non_unique_names <- non_unique_names
   }
 
-  mistake_dict <- check_json(split_dict)
+  mistake <- check_json(split_dict)
 
-  if (nrow(mistake_dict) > 0) {
+  if (nrow(mistake) > 0) {
     message("There are variables with potential incorrect level-label codings.")
-    error_list$mistake_dict <- mistake_dict
+    error_list$mistake <- mistake
   }
 
   if (length(error_list) == 0) {
     return(level_label_pairs)
   } else {
     return(list(
-      level_label_pairs = level_label_pairs,
-      errors = error_list
+      errors = error_list,
+      level_label_pairs = level_label_pairs
     ))
   }
 }
