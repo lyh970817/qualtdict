@@ -15,6 +15,12 @@
 #' @importFrom haven read_xpt
 #' @importFrom crul Async
 
+globalVariables(c(
+  ".", "label", "level", "pair",
+  "name", "easyname", "easyblock", "easyquestion",
+  "get_pos_tags", "handle_pos_error", "stop_pos_tags"
+))
+
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
     cols %>%
