@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2020 Yuhao Lin
+Copyright (c) 2023 Yuhao Lin
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
