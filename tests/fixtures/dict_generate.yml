@@ -1,0 +1,587 @@
+http_interactions:
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '1408'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '57978'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:01:34 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"result":{"id":"SV_0AQg1pFepA0V2d0","name":"Test","ownerId":"UR_cYCFQWCwckGHpf7","organizationId":"kcliop","isActive":false,"creationDate":"2022-02-08T09:36:16Z","lastModifiedDate":"2023-01-23T13:28:38Z","expiration":{"startDate":null,"endDate":null},"questions":{"QID1":{"questionType":{"type":"MC","selector":"SAVR","subSelector":"TX"},"questionText":"Multiple
+        choice one answer","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q1","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true,"textEntry":{}}}},"QID43":{"questionType":{"type":"MC","selector":"SAVR","subSelector":"TX"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q43","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID41":{"questionType":{"type":"MC","selector":"SACOL","subSelector":"TX"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q41","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID42":{"questionType":{"type":"MC","selector":"SAHR","subSelector":"TX"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q42","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID6":{"questionType":{"type":"MC","selector":"SAVR","subSelector":"TX"},"questionText":"Multiple
+        choice multiple answer carryforward","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q6","choices":{"x1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"x2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"x3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true,"textEntry":{}}},"carryForward":{"choices":{"questionId":"QID1","description":null}}},"QID32":{"questionType":{"type":"MC","selector":"DL","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q32","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID40":{"questionType":{"type":"MC","selector":"MAVR","subSelector":"TX"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q40","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID39":{"questionType":{"type":"MC","selector":"SB","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q39","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID33":{"questionType":{"type":"MC","selector":"MSB","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q33","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID38":{"questionType":{"type":"MC","selector":"MAVR","subSelector":"TX"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q38","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID2":{"questionType":{"type":"TE","selector":"SL","subSelector":null},"questionText":"Text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q2"},"QID37":{"questionType":{"type":"DB","selector":"TB","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q37"},"QID3":{"questionType":{"type":"Matrix","selector":"Likert","subSelector":"SingleAnswer"},"questionText":"Matrix
+        table Likert one answer","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q3","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1:Right","choiceText":"Click to write Statement 1:Right","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2:Right","choiceText":"Click to write Statement 2:Right","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3:Right","choiceText":"Click to write Statement 3:Right","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Dislike
+        a great deal","choiceText":"Dislike a great deal","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Dislike
+        somewhat","choiceText":"Dislike somewhat","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Neither
+        like nor dislike","choiceText":"Neither like nor dislike","imageDescription":null,"analyze":true},"4":{"recode":"4","description":"Like
+        somewhat","choiceText":"Like somewhat","imageDescription":null,"analyze":true},"5":{"recode":"5","description":"Like
+        a great deal","choiceText":"Like a great deal","imageDescription":null,"analyze":true}}},"QID7":{"questionType":{"type":"Matrix","selector":"Likert","subSelector":"MultipleAnswer"},"questionText":"Matrix
+        table multiple answer","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q7","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Symptom
+        1","choiceText":"Symptom 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Symptom
+        1","choiceText":"Symptom 1","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Symptom
+        1","choiceText":"Symptom 1","imageDescription":null,"analyze":true},"4":{"recode":"4","description":"Symptom
+        1","choiceText":"Symptom 1","imageDescription":null,"analyze":true},"5":{"recode":"5","description":"Symptom
+        1","choiceText":"Symptom 1","imageDescription":null,"analyze":true}}},"QID34":{"questionType":{"type":"Matrix","selector":"Likert","subSelector":"DL"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q34","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Click
+        to write Scale Point 1","choiceText":"Click to write Scale Point 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Scale Point 2","choiceText":"Click to write Scale Point 2","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Scale Point 3","choiceText":"Click to write Scale Point 3","imageDescription":null,"analyze":true}}},"QID35":{"questionType":{"type":"Matrix","selector":"Likert","subSelector":"DND"},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q35","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Click
+        to write Scale Point 1","choiceText":"Click to write Scale Point 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Scale Point 2","choiceText":"Click to write Scale Point 2","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Scale Point 3","choiceText":"Click to write Scale Point 3","imageDescription":null,"analyze":true}}},"QID8":{"questionType":{"type":"Matrix","selector":"Bipolar","subSelector":null},"questionText":"Matrix
+        table Likert bipolar","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q8","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1:Right","choiceText":"Click to write Statement 1:Right","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2:Right","choiceText":"Click to write Statement 2:Right","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3:Right","choiceText":"Click to write Statement 3:Right","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"1","choiceText":"1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"2","choiceText":"2","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"3","choiceText":"3","imageDescription":null,"analyze":true},"4":{"recode":"4","description":"4","choiceText":"4","imageDescription":null,"analyze":true},"5":{"recode":"5","description":"5","choiceText":"5","imageDescription":null,"analyze":true}}},"QID9":{"questionType":{"type":"Matrix","selector":"RO","subSelector":null},"questionText":"Matrix
+        table rank order","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q9","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Click
+        to write Scale Point 1","choiceText":"Click to write Scale Point 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Scale Point 2","choiceText":"Click to write Scale Point 2","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Scale Point 3","choiceText":"Click to write Scale Point 3","imageDescription":null,"analyze":true}}},"QID10":{"questionType":{"type":"Matrix","selector":"CS","subSelector":"WTB"},"questionText":"Matrix
+        table constant sum","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q10","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Click
+        to write Scale Point 1","choiceText":"Click to write Scale Point 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Scale Point 2","choiceText":"Click to write Scale Point 2","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Scale Point 3","choiceText":"Click to write Scale Point 3","imageDescription":null,"analyze":true}}},"QID11":{"questionType":{"type":"Matrix","selector":"TE","subSelector":"Short"},"questionText":"Matrix
+        table text entry","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q11","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Click
+        to write Scale Point 1","choiceText":"Click to write Scale Point 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Scale Point 2","choiceText":"Click to write Scale Point 2","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Scale Point 3","choiceText":"Click to write Scale Point 3","imageDescription":null,"analyze":true}}},"QID12":{"questionType":{"type":"Matrix","selector":"MaxDiff","subSelector":null},"questionText":"Matrix
+        table maxDiff","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q12","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Click
+        to write Scale Point 1","choiceText":"Click to write Scale Point 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Scale Point 2","choiceText":"Click to write Scale Point 2","imageDescription":null,"analyze":true}}},"QID4":{"questionType":{"type":"Slider","selector":"HSLIDER","subSelector":null},"questionText":"Slider
+        sliders","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q4","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID13":{"questionType":{"type":"Slider","selector":"HBAR","subSelector":null},"questionText":"Slider
+        bars","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q13","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID14":{"questionType":{"type":"Slider","selector":"STAR","subSelector":null},"questionText":"Slider
+        stars","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q14","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID36":{"questionType":{"type":"Slider","selector":"HSLIDER","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q36","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID15":{"questionType":{"type":"TE","selector":"FORM","subSelector":null},"questionText":"Form
+        field","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q15","choices":{"1":{"description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID16":{"questionType":{"type":"SBS","selector":"SBSMatrix","subSelector":null},"questionText":"Side
+        by side","questionLabel":null,"questionName":"Q16","validation":{"doesForceResponse":false},"columns":{"1":{"questionType":{"type":"Matrix","selector":"TE","subSelector":"Medium"},"questionText":"Click
+        to write Column 1","questionLabel":null,"validation":{"doesForceResponse":false},"choices":{"1":{"recode":"1","description":"Answer
+        1","choiceText":"Answer 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Answer
+        2","choiceText":"Answer 2","imageDescription":null,"analyze":true}}},"2":{"questionType":{"type":"Matrix","selector":"Likert","subSelector":"SingleAnswer"},"questionText":"Click
+        to write Column 2","questionLabel":null,"validation":{"doesForceResponse":false},"choices":{"1":{"recode":"1","description":"Answer
+        1","choiceText":"Answer 1","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Answer
+        2","choiceText":"Answer 2","imageDescription":null,"analyze":true}}}},"subQuestions":{"1":{"recode":"1","description":"Click
+        to write Statement 1","choiceText":"Click to write Statement 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Statement 2","choiceText":"Click to write Statement 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Statement 3","choiceText":"Click to write Statement 3","variableName":null,"imageDescription":null}}},"QID17":{"questionType":{"type":"MC","selector":"NPS","subSelector":null},"questionText":"How
+        likely are you to recommend [INSERT COMPANY NAME HERE] to a friend or colleague?","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q17","choices":{"0":{"recode":"0","description":"0","choiceText":"0","imageDescription":null,"variableName":null,"analyze":true},"1":{"recode":"1","description":"1","choiceText":"1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"2","choiceText":"2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"3","choiceText":"3","imageDescription":null,"variableName":null,"analyze":true},"4":{"recode":"4","description":"4","choiceText":"4","imageDescription":null,"variableName":null,"analyze":true},"5":{"recode":"5","description":"5","choiceText":"5","imageDescription":null,"variableName":null,"analyze":true},"6":{"recode":"6","description":"6","choiceText":"6","imageDescription":null,"variableName":null,"analyze":true},"7":{"recode":"7","description":"7","choiceText":"7","imageDescription":null,"variableName":null,"analyze":true},"8":{"recode":"8","description":"8","choiceText":"8","imageDescription":null,"variableName":null,"analyze":true},"9":{"recode":"9","description":"9","choiceText":"9","imageDescription":null,"variableName":null,"analyze":true},"10":{"recode":"10","description":"10","choiceText":"10","imageDescription":null,"variableName":null,"analyze":true}}},"QID18":{"questionType":{"type":"Timing","selector":"PageTimer","subSelector":null},"questionText":"Timing","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q18","choices":{"1":{"recode":"1","description":"First
+        Click","choiceText":"First Click","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Last
+        Click","choiceText":"Last Click","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Page
+        Submit","choiceText":"Page Submit","imageDescription":null,"variableName":null,"analyze":true},"4":{"recode":"4","description":"Click
+        Count","choiceText":"Click Count","imageDescription":null,"variableName":null,"analyze":true}}},"QID19":{"questionType":{"type":"SS","selector":"TA","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q19","choices":{"0":{"recode":"0","description":"0","choiceText":"0","imageDescription":null,"variableName":null,"analyze":true},"1":{"recode":"1","description":"1","choiceText":"1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"2","choiceText":"2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"3","choiceText":"3","imageDescription":null,"variableName":null,"analyze":true},"4":{"recode":"4","description":"4","choiceText":"4","imageDescription":null,"variableName":null,"analyze":true},"5":{"recode":"5","description":"5","choiceText":"5","imageDescription":null,"variableName":null,"analyze":true},"6":{"recode":"6","description":"6","choiceText":"6","imageDescription":null,"variableName":null,"analyze":true},"7":{"recode":"7","description":"7","choiceText":"7","imageDescription":null,"variableName":null,"analyze":true},"8":{"recode":"8","description":"8","choiceText":"8","imageDescription":null,"variableName":null,"analyze":true},"9":{"recode":"9","description":"9","choiceText":"9","imageDescription":null,"variableName":null,"analyze":true},"10":{"recode":"10","description":"10","choiceText":"10","imageDescription":null,"variableName":null,"analyze":true}}},"QID20":{"questionType":{"type":"CS","selector":"VRTL","subSelector":"TX"},"questionText":"Constant
+        sum choices","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q20","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID21":{"questionType":{"type":"CS","selector":"HBAR","subSelector":null},"questionText":"Constant
+        sum bars","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q21","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID22":{"questionType":{"type":"CS","selector":"HSLIDER","subSelector":null},"questionText":"Constant
+        sum sliders","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q22","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}},"QID23":{"questionType":{"type":"FileUpload","selector":"FileUpload","subSelector":null},"questionText":"File
+        upload","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q23"},"QID24":{"questionType":{"type":"PGR","selector":"DragAndDrop","subSelector":"NoColumns"},"questionText":"Pick,
+        group and rank","questionLabel":null,"questionName":"Q24","validation":{"doesForceResponse":false},"items":{"1":{"description":"Click
+        to write Item 1","imageDescription":null,"analyze":true},"2":{"description":"Click
+        to write Item 2","imageDescription":null,"analyze":true},"3":{"description":"Click
+        to write Item 3","imageDescription":null,"analyze":true}},"groups":{"0":{"recode":"0","description":"Click
+        to write Group 1"},"1":{"recode":"1","description":"Click to write Group 2"},"2":{"recode":"2","description":"Click
+        to write Group 3"}}},"QID25":{"questionType":{"type":"DD","selector":"DL","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q25","subQuestions":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","variableName":null,"imageDescription":null},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","variableName":null,"imageDescription":null},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"1997","choiceText":"1997","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"1997
+        ~ Ford","choiceText":"1997 ~ Ford","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"1997
+        ~ Ford ~ Taurus","choiceText":"1997 ~ Ford ~ Taurus","imageDescription":null,"analyze":true},"4":{"recode":"4","description":"1997
+        ~ Ford ~ Escort","choiceText":"1997 ~ Ford ~ Escort","imageDescription":null,"analyze":true},"5":{"recode":"5","description":"1997
+        ~ Ford ~ F-350","choiceText":"1997 ~ Ford ~ F-350","imageDescription":null,"analyze":true},"6":{"recode":"6","description":"1997
+        ~ Chevy","choiceText":"1997 ~ Chevy","imageDescription":null,"analyze":true},"7":{"recode":"7","description":"1997
+        ~ Chevy ~ Lumina","choiceText":"1997 ~ Chevy ~ Lumina","imageDescription":null,"analyze":true},"8":{"recode":"8","description":"1997
+        ~ Chevy ~ Malibu","choiceText":"1997 ~ Chevy ~ Malibu","imageDescription":null,"analyze":true},"9":{"recode":"9","description":"1997
+        ~ Chevy ~ Silverado","choiceText":"1997 ~ Chevy ~ Silverado","imageDescription":null,"analyze":true},"10":{"recode":"10","description":"1997
+        ~ Geo","choiceText":"1997 ~ Geo","imageDescription":null,"analyze":true},"11":{"recode":"11","description":"1997
+        ~ Geo ~ Prizm","choiceText":"1997 ~ Geo ~ Prizm","imageDescription":null,"analyze":true},"12":{"recode":"12","description":"1997
+        ~ Geo ~ Metro","choiceText":"1997 ~ Geo ~ Metro","imageDescription":null,"analyze":true},"13":{"recode":"13","description":"1997
+        ~ Toyota","choiceText":"1997 ~ Toyota","imageDescription":null,"analyze":true},"14":{"recode":"14","description":"1997
+        ~ Toyota ~ Corolla","choiceText":"1997 ~ Toyota ~ Corolla","imageDescription":null,"analyze":true},"15":{"recode":"15","description":"1998","choiceText":"1998","imageDescription":null,"analyze":true},"16":{"recode":"16","description":"1998
+        ~ Ford","choiceText":"1998 ~ Ford","imageDescription":null,"analyze":true},"17":{"recode":"17","description":"1998
+        ~ Ford ~ Taurus","choiceText":"1998 ~ Ford ~ Taurus","imageDescription":null,"analyze":true},"18":{"recode":"18","description":"1998
+        ~ Ford ~ Escort","choiceText":"1998 ~ Ford ~ Escort","imageDescription":null,"analyze":true},"19":{"recode":"19","description":"1998
+        ~ Ford ~ F-350","choiceText":"1998 ~ Ford ~ F-350","imageDescription":null,"analyze":true},"20":{"recode":"20","description":"1998
+        ~ Chevy","choiceText":"1998 ~ Chevy","imageDescription":null,"analyze":true},"21":{"recode":"21","description":"1998
+        ~ Chevy ~ Lumina","choiceText":"1998 ~ Chevy ~ Lumina","imageDescription":null,"analyze":true},"22":{"recode":"22","description":"1998
+        ~ Chevy ~ Malibu","choiceText":"1998 ~ Chevy ~ Malibu","imageDescription":null,"analyze":true},"23":{"recode":"23","description":"1998
+        ~ Chevy ~ Silverado","choiceText":"1998 ~ Chevy ~ Silverado","imageDescription":null,"analyze":true},"24":{"recode":"24","description":"1998
+        ~ Geo","choiceText":"1998 ~ Geo","imageDescription":null,"analyze":true},"25":{"recode":"25","description":"1998
+        ~ Geo ~ Prizm","choiceText":"1998 ~ Geo ~ Prizm","imageDescription":null,"analyze":true},"26":{"recode":"26","description":"1998
+        ~ Geo ~ Metro","choiceText":"1998 ~ Geo ~ Metro","imageDescription":null,"analyze":true},"27":{"recode":"27","description":"1998
+        ~ Toyota","choiceText":"1998 ~ Toyota","imageDescription":null,"analyze":true},"28":{"recode":"28","description":"1998
+        ~ Toyota ~ Corolla","choiceText":"1998 ~ Toyota ~ Corolla","imageDescription":null,"analyze":true},"29":{"recode":"29","description":"1999","choiceText":"1999","imageDescription":null,"analyze":true},"30":{"recode":"30","description":"1999
+        ~ Ford","choiceText":"1999 ~ Ford","imageDescription":null,"analyze":true},"31":{"recode":"31","description":"1999
+        ~ Ford ~ Taurus","choiceText":"1999 ~ Ford ~ Taurus","imageDescription":null,"analyze":true},"32":{"recode":"32","description":"1999
+        ~ Ford ~ Escort","choiceText":"1999 ~ Ford ~ Escort","imageDescription":null,"analyze":true},"33":{"recode":"33","description":"1999
+        ~ Ford ~ F-350","choiceText":"1999 ~ Ford ~ F-350","imageDescription":null,"analyze":true},"34":{"recode":"34","description":"1999
+        ~ Chevy","choiceText":"1999 ~ Chevy","imageDescription":null,"analyze":true},"35":{"recode":"35","description":"1999
+        ~ Chevy ~ Lumina","choiceText":"1999 ~ Chevy ~ Lumina","imageDescription":null,"analyze":true},"36":{"recode":"36","description":"1999
+        ~ Chevy ~ Malibu","choiceText":"1999 ~ Chevy ~ Malibu","imageDescription":null,"analyze":true},"37":{"recode":"37","description":"1999
+        ~ Chevy ~ Silverado","choiceText":"1999 ~ Chevy ~ Silverado","imageDescription":null,"analyze":true},"38":{"recode":"38","description":"1999
+        ~ Chevy ~ Prizm","choiceText":"1999 ~ Chevy ~ Prizm","imageDescription":null,"analyze":true},"39":{"recode":"39","description":"1999
+        ~ Chevy ~ Metro","choiceText":"1999 ~ Chevy ~ Metro","imageDescription":null,"analyze":true},"40":{"recode":"40","description":"1999
+        ~ Toyota","choiceText":"1999 ~ Toyota","imageDescription":null,"analyze":true},"41":{"recode":"41","description":"1999
+        ~ Toyota ~ Corolla","choiceText":"1999 ~ Toyota ~ Corolla","imageDescription":null,"analyze":true}}},"QID26":{"questionType":{"type":"Draw","selector":"Signature","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q26"},"QID28":{"questionType":{"type":"HL","selector":"Text","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q28","subQuestions":{"4":{"recode":"4","description":"1:
+        This","choiceText":"1: This","variableName":null,"imageDescription":null},"5":{"recode":"5","description":"2:
+        is","choiceText":"2: is","variableName":null,"imageDescription":null},"6":{"recode":"6","description":"3:
+        the","choiceText":"3: the","variableName":null,"imageDescription":null},"7":{"recode":"7","description":"4:
+        text","choiceText":"4: text","variableName":null,"imageDescription":null},"8":{"recode":"8","description":"5:
+        you","choiceText":"5: you","variableName":null,"imageDescription":null},"9":{"recode":"9","description":"6:
+        can","choiceText":"6: can","variableName":null,"imageDescription":null},"10":{"recode":"10","description":"7:
+        highlight","choiceText":"7: highlight","variableName":null,"imageDescription":null},"11":{"recode":"11","description":"8:
+        with","choiceText":"8: with","variableName":null,"imageDescription":null},"12":{"recode":"12","description":"9:
+        the","choiceText":"9: the","variableName":null,"imageDescription":null},"13":{"recode":"13","description":"10:
+        above","choiceText":"10: above","variableName":null,"imageDescription":null},"14":{"recode":"14","description":"11:
+        color","choiceText":"11: color","variableName":null,"imageDescription":null},"15":{"recode":"15","description":"12:
+        categories.","choiceText":"12: categories.","variableName":null,"imageDescription":null},"16":{"recode":"16","description":"13:
+        To","choiceText":"13: To","variableName":null,"imageDescription":null},"17":{"recode":"17","description":"14:
+        edit","choiceText":"14: edit","variableName":null,"imageDescription":null},"18":{"recode":"18","description":"15:
+        this","choiceText":"15: this","variableName":null,"imageDescription":null},"19":{"recode":"19","description":"16:
+        text,","choiceText":"16: text,","variableName":null,"imageDescription":null},"20":{"recode":"20","description":"17:
+        click","choiceText":"17: click","variableName":null,"imageDescription":null},"21":{"recode":"21","description":"18:
+        on","choiceText":"18: on","variableName":null,"imageDescription":null},"22":{"recode":"22","description":"19:
+        the","choiceText":"19: the","variableName":null,"imageDescription":null},"23":{"recode":"23","description":"20:
+        link","choiceText":"20: link","variableName":null,"imageDescription":null},"24":{"recode":"24","description":"21:
+        below.","choiceText":"21: below.","variableName":null,"imageDescription":null},"25":{"recode":"25","description":"22:
+        Click","choiceText":"22: Click","variableName":null,"imageDescription":null},"26":{"recode":"26","description":"23:
+        between","choiceText":"23: between","variableName":null,"imageDescription":null},"27":{"recode":"27","description":"24:
+        the","choiceText":"24: the","variableName":null,"imageDescription":null},"28":{"recode":"28","description":"25:
+        words","choiceText":"25: words","variableName":null,"imageDescription":null},"29":{"recode":"29","description":"26:
+        to","choiceText":"26: to","variableName":null,"imageDescription":null},"30":{"recode":"30","description":"27:
+        combine","choiceText":"27: combine","variableName":null,"imageDescription":null},"31":{"recode":"31","description":"28:
+        or","choiceText":"28: or","variableName":null,"imageDescription":null},"32":{"recode":"32","description":"29:
+        separate","choiceText":"29: separate","variableName":null,"imageDescription":null},"33":{"recode":"33","description":"30:
+        them.","choiceText":"30: them.","variableName":null,"imageDescription":null},"34":{"recode":"34","description":"31:
+        Clicking","choiceText":"31: Clicking","variableName":null,"imageDescription":null},"35":{"recode":"35","description":"32:
+        directly","choiceText":"32: directly","variableName":null,"imageDescription":null},"36":{"recode":"36","description":"33:
+        on","choiceText":"33: on","variableName":null,"imageDescription":null},"37":{"recode":"37","description":"34:
+        words","choiceText":"34: words","variableName":null,"imageDescription":null},"38":{"recode":"38","description":"35:
+        will","choiceText":"35: will","variableName":null,"imageDescription":null},"39":{"recode":"39","description":"36:
+        allow","choiceText":"36: allow","variableName":null,"imageDescription":null},"40":{"recode":"40","description":"37:
+        or","choiceText":"37: or","variableName":null,"imageDescription":null},"41":{"recode":"41","description":"38:
+        disallow","choiceText":"38: disallow","variableName":null,"imageDescription":null},"42":{"recode":"42","description":"39:
+        respondents","choiceText":"39: respondents","variableName":null,"imageDescription":null},"43":{"recode":"43","description":"40:
+        from","choiceText":"40: from","variableName":null,"imageDescription":null},"44":{"recode":"44","description":"41:
+        highlighting","choiceText":"41: highlighting","variableName":null,"imageDescription":null},"45":{"recode":"45","description":"42:
+        them.","choiceText":"42: them.","variableName":null,"imageDescription":null}},"choices":{"1":{"recode":"1","description":"Like","choiceText":"Like","imageDescription":null,"analyze":true},"2":{"recode":"2","description":"Neither
+        like nor dislike","choiceText":"Neither like nor dislike","imageDescription":null,"analyze":true},"3":{"recode":"3","description":"Dislike","choiceText":"Dislike","imageDescription":null,"analyze":true}}},"QID29":{"questionType":{"type":"Meta","selector":"Browser","subSelector":null},"questionText":"Click
+        to write the question text","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q29","choices":{"1":{"description":"Browser","choiceText":"Browser","imageDescription":null,"variableName":null,"analyze":true},"2":{"description":"Version","choiceText":"Version","imageDescription":null,"variableName":null,"analyze":true},"3":{"description":"Operating
+        System","choiceText":"Operating System","imageDescription":null,"variableName":null,"analyze":true},"4":{"description":"Screen
+        Resolution","choiceText":"Screen Resolution","imageDescription":null,"variableName":null,"analyze":true},"5":{"description":"Flash
+        Version","choiceText":"Flash Version","imageDescription":null,"variableName":null,"analyze":true},"6":{"description":"Java
+        Support","choiceText":"Java Support","imageDescription":null,"variableName":null,"analyze":true},"7":{"description":"User
+        Agent","choiceText":"User Agent","imageDescription":null,"variableName":null,"analyze":true}}},"QID31":{"questionType":{"type":"MC","selector":"SAVR","subSelector":"TX"},"questionText":"Loop
+        and merge text ${lm://Field/1}","questionLabel":null,"validation":{"doesForceResponse":false},"questionName":"Q31","choices":{"1":{"recode":"1","description":"Click
+        to write Choice 1","choiceText":"Click to write Choice 1","imageDescription":null,"variableName":null,"analyze":true,"textEntry":{}},"2":{"recode":"2","description":"Click
+        to write Choice 2","choiceText":"Click to write Choice 2","imageDescription":null,"variableName":null,"analyze":true},"3":{"recode":"3","description":"Click
+        to write Choice 3","choiceText":"Click to write Choice 3","imageDescription":null,"variableName":null,"analyze":true}}}},"exportColumnMap":{"Q1":{"question":"QID1"},"Q1_TEXT":{"question":"QID1"},"Q43":{"question":"QID43"},"Q41":{"question":"QID41"},"Q42":{"question":"QID42"},"Q6":{"question":"QID6"},"Q6_TEXT":{"question":"QID6"},"Q32":{"question":"QID32"},"Q40_1":{"question":"QID40","choice":"QID40.choices.1"},"Q40_2":{"question":"QID40","choice":"QID40.choices.2"},"Q40_3":{"question":"QID40","choice":"QID40.choices.3"},"Q39":{"question":"QID39"},"Q33_1":{"question":"QID33","choice":"QID33.choices.1"},"Q33_2":{"question":"QID33","choice":"QID33.choices.2"},"Q33_3":{"question":"QID33","choice":"QID33.choices.3"},"Q38_1":{"question":"QID38","choice":"QID38.choices.1"},"Q38_2":{"question":"QID38","choice":"QID38.choices.2"},"Q38_3":{"question":"QID38","choice":"QID38.choices.3"},"Q2":{"question":"QID2"},"Q37":{"question":"QID37"},"Q3_1":{"question":"QID3","subQuestion":"QID3.subQuestions.1"},"Q3_2":{"question":"QID3","subQuestion":"QID3.subQuestions.2"},"Q3_3":{"question":"QID3","subQuestion":"QID3.subQuestions.3"},"Q7_1_1":{"question":"QID7","subQuestion":"QID7.subQuestions.1","choice":"QID7.choices.1"},"Q7_1_2":{"question":"QID7","subQuestion":"QID7.subQuestions.1","choice":"QID7.choices.2"},"Q7_1_3":{"question":"QID7","subQuestion":"QID7.subQuestions.1","choice":"QID7.choices.3"},"Q7_1_4":{"question":"QID7","subQuestion":"QID7.subQuestions.1","choice":"QID7.choices.4"},"Q7_1_5":{"question":"QID7","subQuestion":"QID7.subQuestions.1","choice":"QID7.choices.5"},"Q7_2_1":{"question":"QID7","subQuestion":"QID7.subQuestions.2","choice":"QID7.choices.1"},"Q7_2_2":{"question":"QID7","subQuestion":"QID7.subQuestions.2","choice":"QID7.choices.2"},"Q7_2_3":{"question":"QID7","subQuestion":"QID7.subQuestions.2","choice":"QID7.choices.3"},"Q7_2_4":{"question":"QID7","subQuestion":"QID7.subQuestions.2","choice":"QID7.choices.4"},"Q7_2_5":{"question":"QID7","subQuestion":"QID7.subQuestions.2","choice":"QID7.choices.5"},"Q7_3_1":{"question":"QID7","subQuestion":"QID7.subQuestions.3","choice":"QID7.choices.1"},"Q7_3_2":{"question":"QID7","subQuestion":"QID7.subQuestions.3","choice":"QID7.choices.2"},"Q7_3_3":{"question":"QID7","subQuestion":"QID7.subQuestions.3","choice":"QID7.choices.3"},"Q7_3_4":{"question":"QID7","subQuestion":"QID7.subQuestions.3","choice":"QID7.choices.4"},"Q7_3_5":{"question":"QID7","subQuestion":"QID7.subQuestions.3","choice":"QID7.choices.5"},"Q34_1":{"question":"QID34","subQuestion":"QID34.subQuestions.1"},"Q34_2":{"question":"QID34","subQuestion":"QID34.subQuestions.2"},"Q34_3":{"question":"QID34","subQuestion":"QID34.subQuestions.3"},"Q35_1":{"question":"QID35","subQuestion":"QID35.subQuestions.1"},"Q35_2":{"question":"QID35","subQuestion":"QID35.subQuestions.2"},"Q35_3":{"question":"QID35","subQuestion":"QID35.subQuestions.3"},"Q8_1":{"question":"QID8","subQuestion":"QID8.subQuestions.1"},"Q8_2":{"question":"QID8","subQuestion":"QID8.subQuestions.2"},"Q8_3":{"question":"QID8","subQuestion":"QID8.subQuestions.3"},"Q9_1_1":{"question":"QID9","subQuestion":"QID9.subQuestions.1","choice":"QID9.choices.1"},"Q9_1_2":{"question":"QID9","subQuestion":"QID9.subQuestions.1","choice":"QID9.choices.2"},"Q9_1_3":{"question":"QID9","subQuestion":"QID9.subQuestions.1","choice":"QID9.choices.3"},"Q9_2_1":{"question":"QID9","subQuestion":"QID9.subQuestions.2","choice":"QID9.choices.1"},"Q9_2_2":{"question":"QID9","subQuestion":"QID9.subQuestions.2","choice":"QID9.choices.2"},"Q9_2_3":{"question":"QID9","subQuestion":"QID9.subQuestions.2","choice":"QID9.choices.3"},"Q9_3_1":{"question":"QID9","subQuestion":"QID9.subQuestions.3","choice":"QID9.choices.1"},"Q9_3_2":{"question":"QID9","subQuestion":"QID9.subQuestions.3","choice":"QID9.choices.2"},"Q9_3_3":{"question":"QID9","subQuestion":"QID9.subQuestions.3","choice":"QID9.choices.3"},"Q10_1_1":{"question":"QID10","subQuestion":"QID10.subQuestions.1","choice":"QID10.choices.1"},"Q10_1_2":{"question":"QID10","subQuestion":"QID10.subQuestions.1","choice":"QID10.choices.2"},"Q10_1_3":{"question":"QID10","subQuestion":"QID10.subQuestions.1","choice":"QID10.choices.3"},"Q10_2_1":{"question":"QID10","subQuestion":"QID10.subQuestions.2","choice":"QID10.choices.1"},"Q10_2_2":{"question":"QID10","subQuestion":"QID10.subQuestions.2","choice":"QID10.choices.2"},"Q10_2_3":{"question":"QID10","subQuestion":"QID10.subQuestions.2","choice":"QID10.choices.3"},"Q10_3_1":{"question":"QID10","subQuestion":"QID10.subQuestions.3","choice":"QID10.choices.1"},"Q10_3_2":{"question":"QID10","subQuestion":"QID10.subQuestions.3","choice":"QID10.choices.2"},"Q10_3_3":{"question":"QID10","subQuestion":"QID10.subQuestions.3","choice":"QID10.choices.3"},"Q11_1_1_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.1","choice":"QID11.choices.1"},"Q11_1_2_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.1","choice":"QID11.choices.2"},"Q11_1_3_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.1","choice":"QID11.choices.3"},"Q11_2_1_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.2","choice":"QID11.choices.1"},"Q11_2_2_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.2","choice":"QID11.choices.2"},"Q11_2_3_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.2","choice":"QID11.choices.3"},"Q11_3_1_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.3","choice":"QID11.choices.1"},"Q11_3_2_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.3","choice":"QID11.choices.2"},"Q11_3_3_TEXT":{"question":"QID11","subQuestion":"QID11.subQuestions.3","choice":"QID11.choices.3"},"Q12_1":{"question":"QID12","subQuestion":"QID12.subQuestions.1"},"Q12_2":{"question":"QID12","subQuestion":"QID12.subQuestions.2"},"Q12_3":{"question":"QID12","subQuestion":"QID12.subQuestions.3"},"Q4_1":{"question":"QID4","choice":"QID4.choices.1"},"Q4_2":{"question":"QID4","choice":"QID4.choices.2"},"Q4_3":{"question":"QID4","choice":"QID4.choices.3"},"Q13_1":{"question":"QID13","choice":"QID13.choices.1"},"Q13_2":{"question":"QID13","choice":"QID13.choices.2"},"Q13_3":{"question":"QID13","choice":"QID13.choices.3"},"Q14_1":{"question":"QID14","choice":"QID14.choices.1"},"Q14_2":{"question":"QID14","choice":"QID14.choices.2"},"Q14_3":{"question":"QID14","choice":"QID14.choices.3"},"Q36_1":{"question":"QID36","choice":"QID36.choices.1"},"Q36_2":{"question":"QID36","choice":"QID36.choices.2"},"Q36_3":{"question":"QID36","choice":"QID36.choices.3"},"Q15_1_TEXT":{"question":"QID15","choice":"QID15.choices.1"},"Q15_2_TEXT":{"question":"QID15","choice":"QID15.choices.2"},"Q15_3_TEXT":{"question":"QID15","choice":"QID15.choices.3"},"Q16#1_1_1_TEXT":{"question":"QID16","column":"QID16.columns.1","subQuestion":"QID16.subQuestions.1","choice":"QID16.columns.1.choices.1"},"Q16#1_1_2_TEXT":{"question":"QID16","column":"QID16.columns.1","subQuestion":"QID16.subQuestions.1","choice":"QID16.columns.1.choices.2"},"Q16#1_2_1_TEXT":{"question":"QID16","column":"QID16.columns.1","subQuestion":"QID16.subQuestions.2","choice":"QID16.columns.1.choices.1"},"Q16#1_2_2_TEXT":{"question":"QID16","column":"QID16.columns.1","subQuestion":"QID16.subQuestions.2","choice":"QID16.columns.1.choices.2"},"Q16#1_3_1_TEXT":{"question":"QID16","column":"QID16.columns.1","subQuestion":"QID16.subQuestions.3","choice":"QID16.columns.1.choices.1"},"Q16#1_3_2_TEXT":{"question":"QID16","column":"QID16.columns.1","subQuestion":"QID16.subQuestions.3","choice":"QID16.columns.1.choices.2"},"Q16#2_1":{"question":"QID16","column":"QID16.columns.2","subQuestion":"QID16.subQuestions.1"},"Q16#2_2":{"question":"QID16","column":"QID16.columns.2","subQuestion":"QID16.subQuestions.2"},"Q16#2_3":{"question":"QID16","column":"QID16.columns.2","subQuestion":"QID16.subQuestions.3"},"Q17":{"question":"QID17"},"Q18_1":{"question":"QID18","choice":"QID18.choices.1"},"Q18_2":{"question":"QID18","choice":"QID18.choices.2"},"Q18_3":{"question":"QID18","choice":"QID18.choices.3"},"Q18_4":{"question":"QID18","choice":"QID18.choices.4"},"Q19":{"question":"QID19"},"Q20_1":{"question":"QID20","choice":"QID20.choices.1"},"Q20_2":{"question":"QID20","choice":"QID20.choices.2"},"Q20_3":{"question":"QID20","choice":"QID20.choices.3"},"Q21_1":{"question":"QID21","choice":"QID21.choices.1"},"Q21_2":{"question":"QID21","choice":"QID21.choices.2"},"Q21_3":{"question":"QID21","choice":"QID21.choices.3"},"Q22_1":{"question":"QID22","choice":"QID22.choices.1"},"Q22_2":{"question":"QID22","choice":"QID22.choices.2"},"Q22_3":{"question":"QID22","choice":"QID22.choices.3"},"Q23_FILE_ID":{"question":"QID23"},"Q23_FILE_NAME":{"question":"QID23"},"Q23_FILE_SIZE":{"question":"QID23"},"Q23_FILE_TYPE":{"question":"QID23"},"Q24_1_Group":{"question":"QID24","item":"QID24.items.1"},"Q24_1_Rank":{"question":"QID24","item":"QID24.items.1"},"Q24_2_Group":{"question":"QID24","item":"QID24.items.2"},"Q24_2_Rank":{"question":"QID24","item":"QID24.items.2"},"Q24_3_Group":{"question":"QID24","item":"QID24.items.3"},"Q24_3_Rank":{"question":"QID24","item":"QID24.items.3"},"Q25_1":{"question":"QID25","subQuestion":"QID25.subQuestions.1"},"Q25_2":{"question":"QID25","subQuestion":"QID25.subQuestions.2"},"Q25_3":{"question":"QID25","subQuestion":"QID25.subQuestions.3"},"Q26_FILE_ID":{"question":"QID26"},"Q26_FILE_NAME":{"question":"QID26"},"Q26_FILE_SIZE":{"question":"QID26"},"Q26_FILE_TYPE":{"question":"QID26"},"Q28_4":{"question":"QID28","subQuestion":"QID28.subQuestions.4"},"Q28_5":{"question":"QID28","subQuestion":"QID28.subQuestions.5"},"Q28_6":{"question":"QID28","subQuestion":"QID28.subQuestions.6"},"Q28_7":{"question":"QID28","subQuestion":"QID28.subQuestions.7"},"Q28_8":{"question":"QID28","subQuestion":"QID28.subQuestions.8"},"Q28_9":{"question":"QID28","subQuestion":"QID28.subQuestions.9"},"Q28_10":{"question":"QID28","subQuestion":"QID28.subQuestions.10"},"Q28_11":{"question":"QID28","subQuestion":"QID28.subQuestions.11"},"Q28_12":{"question":"QID28","subQuestion":"QID28.subQuestions.12"},"Q28_13":{"question":"QID28","subQuestion":"QID28.subQuestions.13"},"Q28_14":{"question":"QID28","subQuestion":"QID28.subQuestions.14"},"Q28_15":{"question":"QID28","subQuestion":"QID28.subQuestions.15"},"Q28_16":{"question":"QID28","subQuestion":"QID28.subQuestions.16"},"Q28_17":{"question":"QID28","subQuestion":"QID28.subQuestions.17"},"Q28_18":{"question":"QID28","subQuestion":"QID28.subQuestions.18"},"Q28_19":{"question":"QID28","subQuestion":"QID28.subQuestions.19"},"Q28_20":{"question":"QID28","subQuestion":"QID28.subQuestions.20"},"Q28_21":{"question":"QID28","subQuestion":"QID28.subQuestions.21"},"Q28_22":{"question":"QID28","subQuestion":"QID28.subQuestions.22"},"Q28_23":{"question":"QID28","subQuestion":"QID28.subQuestions.23"},"Q28_24":{"question":"QID28","subQuestion":"QID28.subQuestions.24"},"Q28_25":{"question":"QID28","subQuestion":"QID28.subQuestions.25"},"Q28_26":{"question":"QID28","subQuestion":"QID28.subQuestions.26"},"Q28_27":{"question":"QID28","subQuestion":"QID28.subQuestions.27"},"Q28_28":{"question":"QID28","subQuestion":"QID28.subQuestions.28"},"Q28_29":{"question":"QID28","subQuestion":"QID28.subQuestions.29"},"Q28_30":{"question":"QID28","subQuestion":"QID28.subQuestions.30"},"Q28_31":{"question":"QID28","subQuestion":"QID28.subQuestions.31"},"Q28_32":{"question":"QID28","subQuestion":"QID28.subQuestions.32"},"Q28_33":{"question":"QID28","subQuestion":"QID28.subQuestions.33"},"Q28_34":{"question":"QID28","subQuestion":"QID28.subQuestions.34"},"Q28_35":{"question":"QID28","subQuestion":"QID28.subQuestions.35"},"Q28_36":{"question":"QID28","subQuestion":"QID28.subQuestions.36"},"Q28_37":{"question":"QID28","subQuestion":"QID28.subQuestions.37"},"Q28_38":{"question":"QID28","subQuestion":"QID28.subQuestions.38"},"Q28_39":{"question":"QID28","subQuestion":"QID28.subQuestions.39"},"Q28_40":{"question":"QID28","subQuestion":"QID28.subQuestions.40"},"Q28_41":{"question":"QID28","subQuestion":"QID28.subQuestions.41"},"Q28_42":{"question":"QID28","subQuestion":"QID28.subQuestions.42"},"Q28_43":{"question":"QID28","subQuestion":"QID28.subQuestions.43"},"Q28_44":{"question":"QID28","subQuestion":"QID28.subQuestions.44"},"Q28_45":{"question":"QID28","subQuestion":"QID28.subQuestions.45"},"Q29_1_TEXT":{"question":"QID29","choice":"QID29.choices.1"},"Q29_2_TEXT":{"question":"QID29","choice":"QID29.choices.2"},"Q29_3_TEXT":{"question":"QID29","choice":"QID29.choices.3"},"Q29_4_TEXT":{"question":"QID29","choice":"QID29.choices.4"},"Q29_5_TEXT":{"question":"QID29","choice":"QID29.choices.5"},"Q29_6_TEXT":{"question":"QID29","choice":"QID29.choices.6"},"Q29_7_TEXT":{"question":"QID29","choice":"QID29.choices.7"},"Q31(x1)":{"question":"x1_QID31"},"Q31_TEXT(x1)":{"question":"x1_QID31"},"Q31(x2)":{"question":"x2_QID31"},"Q31_TEXT(x2)":{"question":"x2_QID31"},"Q31(x3)":{"question":"x3_QID31"},"Q31_TEXT(x3)":{"question":"x3_QID31"}},"blocks":{"BL_eJoO9gHZSsFvXBI":{"description":"Default
+        Question Block","elements":[{"type":"Question","questionId":"QID1"},{"type":"Question","questionId":"QID43"},{"type":"Question","questionId":"QID41"},{"type":"Question","questionId":"QID42"},{"type":"Question","questionId":"QID6"},{"type":"Question","questionId":"QID32"},{"type":"Question","questionId":"QID40"},{"type":"Question","questionId":"QID39"},{"type":"Question","questionId":"QID33"},{"type":"Question","questionId":"QID38"},{"type":"Question","questionId":"QID2"},{"type":"Question","questionId":"QID37"},{"type":"Question","questionId":"QID3"},{"type":"Question","questionId":"QID7"},{"type":"Question","questionId":"QID34"},{"type":"Question","questionId":"QID35"},{"type":"Question","questionId":"QID8"},{"type":"Question","questionId":"QID9"},{"type":"Question","questionId":"QID10"},{"type":"Question","questionId":"QID11"},{"type":"Question","questionId":"QID12"},{"type":"Question","questionId":"QID4"},{"type":"Question","questionId":"QID13"},{"type":"Question","questionId":"QID14"},{"type":"Question","questionId":"QID36"},{"type":"Question","questionId":"QID15"},{"type":"Question","questionId":"QID16"},{"type":"PageBreak"},{"type":"Question","questionId":"QID17"},{"type":"Question","questionId":"QID18"},{"type":"Question","questionId":"QID19"},{"type":"Question","questionId":"QID20"},{"type":"Question","questionId":"QID21"},{"type":"Question","questionId":"QID22"},{"type":"Question","questionId":"QID23"},{"type":"Question","questionId":"QID24"},{"type":"Question","questionId":"QID25"},{"type":"Question","questionId":"QID26"},{"type":"Question","questionId":"QID28"},{"type":"Question","questionId":"QID29"}]},"BL_06dlEES4T6Zch1Q":{"description":"Block
+        2","elements":[{"type":"Question","questionId":"QID31"}]}},"flow":[{"id":"BL_eJoO9gHZSsFvXBI","type":"Block"},{"id":"BL_06dlEES4T6Zch1Q","type":"Block"}],"embeddedData":[],"comments":{},"loopAndMerge":{"BL_06dlEES4T6Zch1Q":{"loopType":"Question","loopQuestionMeta":{"questionId":"QID6","questionType":"MC","loopOn":[{"criterion":"SelectedChoices"}]},"randomizationMeta":{"randomize":"None","limit":null},"columnNames":{"field1":["Click
+        to write Choice 1","Click to write Choice 2","Click to write Choice 3"]}}},"responseCounts":{"auditable":0,"generated":1,"deleted":0}},"meta":{"httpStatus":"200
+        - OK","requestId":"a7ea504a-7d4d-458f-af84-c6818891a5fd"}}'
+  recorded_at: 2023-01-26 09:01:38 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/survey-definitions/SV_0AQg1pFepA0V2d0/
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '356'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '42476'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:01:36 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"meta":{"httpStatus":"200 - OK","requestId":"9b6a69f0-d345-422e-89b6-8f02f55d0d2b"},"result":{"QuestionCount":"43","SurveyOptions":{"BackButton":"false","SaveAndContinue":"true","SurveyProtection":"PublicSurvey","BallotBoxStuffingPrevention":"false","NoIndex":"Yes","SecureResponseFiles":"true","SurveyExpiration":"None","SurveyTermination":"DefaultMessage","Header":"","Footer":"","ProgressBarDisplay":"None","PartialData":"+1
+        week","ValidationMessage":"","PreviousButton":"","NextButton":"","SurveyTitle":"Qualtrics
+        Survey | Qualtrics Experience Management","SkinLibrary":"kcliop","SkinType":"templated","Skin":{"brandingId":null,"templateId":"*2014","overrides":null},"NewScoring":1,"SurveyLanguage":"EN","ActiveResponseSet":"RS_8eabOkW2G0HpIJE","SurveyStartDate":null,"SurveyExpirationDate":null,"SurveyCreationDate":"2022-02-08T09:36:16Z"},"SurveyID":"SV_0AQg1pFepA0V2d0","SurveyName":"Test","SurveyStatus":"Inactive","LastModified":"2023-01-23T13:28:38Z","BrandID":"kcliop","OwnerID":"UR_cYCFQWCwckGHpf7","DivisionID":"DV_bxf8drkuO8NR2sZ","LastAccessed":null,"CreatorID":"UR_cYCFQWCwckGHpf7","LastActivated":null,"Questions":{"QID5":{"QuestionText":"Click
+        to write the question text","DataExportTag":"Q5","QuestionType":"MC","Selector":"SAVR","SubSelector":"TX","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID5","QuestionText_Unsafe":"Click
+        to write the question text"},"QID19":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q19","QuestionType":"SS","Selector":"TA","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Validation":{"Settings":{"ForceResponse":"OFF"}},"GradingData":[],"Language":[],"NextChoiceId":12,"NextAnswerId":1,"Category":"Gauges","Scale":"TenGauge","Choices":[{"Display":"0"},{"Display":1},{"Display":2},{"Display":3},{"Display":4},{"Display":5},{"Display":6},{"Display":7},{"Display":8},{"Display":9},{"Display":10}],"QuestionID":"QID19","QuestionText_Unsafe":"Click
+        to write the question text"},"QID25":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q25","QuestionType":"DD","Selector":"DL","Configuration":{"QuestionDescriptionOption":"UseText","VariableCount":3},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"QuestionID":"QID25","Answers":{"1":{"Display":"1997"},"2":{"Display":"1997
+        ~ Ford"},"3":{"Display":"1997 ~ Ford ~ Taurus"},"4":{"Display":"1997 ~ Ford
+        ~ Escort"},"5":{"Display":"1997 ~ Ford ~ F-350"},"6":{"Display":"1997 ~ Chevy"},"7":{"Display":"1997
+        ~ Chevy ~ Lumina"},"8":{"Display":"1997 ~ Chevy ~ Malibu"},"9":{"Display":"1997
+        ~ Chevy ~ Silverado"},"10":{"Display":"1997 ~ Geo"},"11":{"Display":"1997
+        ~ Geo ~ Prizm"},"12":{"Display":"1997 ~ Geo ~ Metro"},"13":{"Display":"1997
+        ~ Toyota"},"14":{"Display":"1997 ~ Toyota ~ Corolla"},"15":{"Display":"1998"},"16":{"Display":"1998
+        ~ Ford"},"17":{"Display":"1998 ~ Ford ~ Taurus"},"18":{"Display":"1998 ~ Ford
+        ~ Escort"},"19":{"Display":"1998 ~ Ford ~ F-350"},"20":{"Display":"1998 ~
+        Chevy"},"21":{"Display":"1998 ~ Chevy ~ Lumina"},"22":{"Display":"1998 ~ Chevy
+        ~ Malibu"},"23":{"Display":"1998 ~ Chevy ~ Silverado"},"24":{"Display":"1998
+        ~ Geo"},"25":{"Display":"1998 ~ Geo ~ Prizm"},"26":{"Display":"1998 ~ Geo
+        ~ Metro"},"27":{"Display":"1998 ~ Toyota"},"28":{"Display":"1998 ~ Toyota
+        ~ Corolla"},"29":{"Display":"1999"},"30":{"Display":"1999 ~ Ford"},"31":{"Display":"1999
+        ~ Ford ~ Taurus"},"32":{"Display":"1999 ~ Ford ~ Escort"},"33":{"Display":"1999
+        ~ Ford ~ F-350"},"34":{"Display":"1999 ~ Chevy"},"35":{"Display":"1999 ~ Chevy
+        ~ Lumina"},"36":{"Display":"1999 ~ Chevy ~ Malibu"},"37":{"Display":"1999
+        ~ Chevy ~ Silverado"},"38":{"Display":"1999 ~ Chevy ~ Prizm"},"39":{"Display":"1999
+        ~ Chevy ~ Metro"},"40":{"Display":"1999 ~ Toyota"},"41":{"Display":"1999 ~
+        Toyota ~ Corolla"}},"AnswerMap":{"1":{"2":{"3":null,"4":null,"5":null},"6":{"7":null,"8":null,"9":null},"10":{"11":null,"12":null},"13":{"14":null}},"15":{"16":{"17":null,"18":null,"19":null},"20":{"21":null,"22":null,"23":null},"24":{"25":null,"26":null},"27":{"28":null}},"29":{"30":{"31":null,"32":null,"33":null},"34":{"35":null,"36":null,"37":null,"38":null,"39":null},"40":{"41":null}}},"QuestionText_Unsafe":"Click
+        to write the question text"},"QID26":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q26","QuestionType":"Draw","Selector":"Signature","Configuration":{"QuestionDescriptionOption":"UseText","ShowBackgroundText":true,"BoxSize":"Medium"},"QuestionDescription":"Click
+        to write the question text","Validation":{"Settings":{"ForceResponse":"OFF"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID26","QuestionText_Unsafe":"Click
+        to write the question text"},"QID27":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q27","QuestionType":"HeatMap","Selector":"Image","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"X,Y"}},"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":12,"NextAnswerId":1,"Clicks":1,"Regions":[],"QuestionID":"QID27","QuestionText_Unsafe":"Click
+        to write the question text"},"QID28":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q28","QuestionType":"HL","Selector":"Text","Configuration":{"QuestionDescriptionOption":"UseText","CustomTextSize":false,"AutoStopWords":false},"QuestionDescription":"Click
+        to write the question text","Choices":{"4":{"WordIndex":0,"WordLength":4,"Word":"This","Display":"1:
+        This"},"5":{"WordIndex":5,"WordLength":2,"Word":"is","Display":"2: is"},"6":{"WordIndex":8,"WordLength":3,"Word":"the","Display":"3:
+        the"},"7":{"WordIndex":12,"WordLength":4,"Word":"text","Display":"4: text"},"8":{"WordIndex":17,"WordLength":3,"Word":"you","Display":"5:
+        you"},"9":{"WordIndex":21,"WordLength":3,"Word":"can","Display":"6: can"},"10":{"WordIndex":25,"WordLength":9,"Word":"highlight","Display":"7:
+        highlight"},"11":{"WordIndex":35,"WordLength":4,"Word":"with","Display":"8:
+        with"},"12":{"WordIndex":40,"WordLength":3,"Word":"the","Display":"9: the"},"13":{"WordIndex":44,"WordLength":5,"Word":"above","Display":"10:
+        above"},"14":{"WordIndex":50,"WordLength":5,"Word":"color","Display":"11:
+        color"},"15":{"WordIndex":56,"WordLength":11,"Word":"categories.","Display":"12:
+        categories."},"16":{"WordIndex":68,"WordLength":2,"Word":"To","Display":"13:
+        To"},"17":{"WordIndex":71,"WordLength":4,"Word":"edit","Display":"14: edit"},"18":{"WordIndex":76,"WordLength":4,"Word":"this","Display":"15:
+        this"},"19":{"WordIndex":81,"WordLength":5,"Word":"text,","Display":"16: text,"},"20":{"WordIndex":87,"WordLength":5,"Word":"click","Display":"17:
+        click"},"21":{"WordIndex":93,"WordLength":2,"Word":"on","Display":"18: on"},"22":{"WordIndex":96,"WordLength":3,"Word":"the","Display":"19:
+        the"},"23":{"WordIndex":100,"WordLength":4,"Word":"link","Display":"20: link"},"24":{"WordIndex":105,"WordLength":6,"Word":"below.","Display":"21:
+        below."},"25":{"WordIndex":112,"WordLength":5,"Word":"Click","Display":"22:
+        Click"},"26":{"WordIndex":118,"WordLength":7,"Word":"between","Display":"23:
+        between"},"27":{"WordIndex":126,"WordLength":3,"Word":"the","Display":"24:
+        the"},"28":{"WordIndex":130,"WordLength":5,"Word":"words","Display":"25: words"},"29":{"WordIndex":136,"WordLength":2,"Word":"to","Display":"26:
+        to"},"30":{"WordIndex":139,"WordLength":7,"Word":"combine","Display":"27:
+        combine"},"31":{"WordIndex":147,"WordLength":2,"Word":"or","Display":"28:
+        or"},"32":{"WordIndex":150,"WordLength":8,"Word":"separate","Display":"29:
+        separate"},"33":{"WordIndex":159,"WordLength":5,"Word":"them.","Display":"30:
+        them."},"34":{"WordIndex":165,"WordLength":8,"Word":"Clicking","Display":"31:
+        Clicking"},"35":{"WordIndex":174,"WordLength":8,"Word":"directly","Display":"32:
+        directly"},"36":{"WordIndex":183,"WordLength":2,"Word":"on","Display":"33:
+        on"},"37":{"WordIndex":186,"WordLength":5,"Word":"words","Display":"34: words"},"38":{"WordIndex":192,"WordLength":4,"Word":"will","Display":"35:
+        will"},"39":{"WordIndex":197,"WordLength":5,"Word":"allow","Display":"36:
+        allow"},"40":{"WordIndex":203,"WordLength":2,"Word":"or","Display":"37: or"},"41":{"WordIndex":206,"WordLength":8,"Word":"disallow","Display":"38:
+        disallow"},"42":{"WordIndex":215,"WordLength":11,"Word":"respondents","Display":"39:
+        respondents"},"43":{"WordIndex":227,"WordLength":4,"Word":"from","Display":"40:
+        from"},"44":{"WordIndex":232,"WordLength":12,"Word":"highlighting","Display":"41:
+        highlighting"},"45":{"WordIndex":245,"WordLength":5,"Word":"them.","Display":"42:
+        them."}},"ChoiceOrder":[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":46,"NextAnswerId":4,"Answers":{"1":{"Display":"Like","BGColor":"#1a9641","TextColor":"#ffffff"},"2":{"Display":"Neither
+        like nor dislike","BGColor":"#ffffbf","TextColor":"#000000"},"3":{"Display":"Dislike","BGColor":"#d7191c","TextColor":"#ffffff"}},"ExcludedWords":[],"WordChoiceIds":[],"HighlightText":"This
+        is the text you can highlight with the above color categories. To edit this
+        text, click on the link below. Click between the words to combine or separate
+        them. Clicking directly on words will allow or disallow respondents from highlighting
+        them.","ColorScale":"RdYlGn","QuestionID":"QID28","QuestionText_Unsafe":"Click
+        to write the question text"},"QID29":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q29","QuestionType":"Meta","Selector":"Browser","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Browser","TextEntry":1},"2":{"Display":"Version","TextEntry":1},"3":{"Display":"Operating
+        System","TextEntry":1},"4":{"Display":"Screen Resolution","TextEntry":1},"5":{"Display":"Flash
+        Version","TextEntry":1},"6":{"Display":"Java Support","TextEntry":1},"7":{"Display":"User
+        Agent","TextEntry":1}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID29","QuestionText_Unsafe":"Click
+        to write the question text"},"QID30":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q30","QuestionType":"HotSpot","Selector":"LikeDislike","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":[],"ChoiceOrder":[],"Validation":{"Settings":{"Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":1,"NextAnswerId":4,"Answers":{"1":{"Display":"Dislike"},"2":{"Display":"Neutral"},"3":{"Display":"Like"}},"Regions":[],"Visibility":"HiddenUntilHover","QuestionID":"QID30","QuestionText_Unsafe":"Click
+        to write the question text"},"QID32":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q32","QuestionType":"MC","Selector":"DL","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID32","QuestionText_Unsafe":"Click
+        to write the question text"},"QID33":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q33","QuestionType":"MC","Selector":"MSB","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID33","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Click
+        to write the question text"},"QID34":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q34","QuestionID":"QID34","QuestionType":"Matrix","Selector":"Likert","SubSelector":"DL","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Statement
+        1"},"2":{"Display":"Click to write Statement 2"},"3":{"Display":"Click to
+        write Statement 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":4,"Answers":{"1":{"Display":"Click
+        to write Scale Point 1"},"2":{"Display":"Click to write Scale Point 2"},"3":{"Display":"Click
+        to write Scale Point 3"}},"AnswerOrder":["1","2","3"],"ChoiceDataExportTags":false,"QuestionText_Unsafe":"Click
+        to write the question text"},"QID35":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q35","QuestionID":"QID35","QuestionType":"Matrix","Selector":"Likert","SubSelector":"DND","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"Stack":"OFF"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Statement
+        1","ExclusiveAnswer":false},"2":{"Display":"Click to write Statement 2","ExclusiveAnswer":false},"3":{"Display":"Click
+        to write Statement 3","ExclusiveAnswer":false}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":4,"Answers":{"1":{"Display":"Click
+        to write Scale Point 1"},"2":{"Display":"Click to write Scale Point 2"},"3":{"Display":"Click
+        to write Scale Point 3"}},"AnswerOrder":["1","2","3"],"ChoiceDataExportTags":false,"QuestionText_Unsafe":"Click
+        to write the question text"},"QID36":{"QuestionText":"Click to write the question
+        text","DefaultChoices":false,"DataExportTag":"Q36","QuestionID":"QID36","QuestionType":"Slider","Selector":"HSLIDER","Configuration":{"QuestionDescriptionOption":"UseText","CSSliderMin":0,"CSSliderMax":100,"GridLines":10,"SnapToGrid":false,"NumDecimals":"0","ShowValue":true,"CustomStart":false,"NotApplicable":true,"MobileFirst":true},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":{"NA":{"Display":"Not
+        Applicable"}},"QuestionText_Unsafe":"Click to write the question text"},"QID37":{"QuestionText":"Click
+        to write the question text","DefaultChoices":false,"DataExportTag":"Q37","QuestionID":"QID37","QuestionType":"DB","Selector":"TB","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","ChoiceOrder":[],"Validation":{"Settings":{"Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionText_Unsafe":"Click
+        to write the question text"},"QID38":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q38","QuestionType":"MC","Selector":"MAVR","SubSelector":"TX","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID38","QuestionText_Unsafe":"Click
+        to write the question text"},"QID39":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q39","QuestionType":"MC","Selector":"SB","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID39","QuestionText_Unsafe":"Click
+        to write the question text"},"QID40":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q40","QuestionType":"MC","Selector":"MAVR","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID40","SubSelector":"TX","QuestionText_Unsafe":"Click
+        to write the question text"},"QID41":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q41","QuestionType":"MC","Selector":"SACOL","SubSelector":"TX","Configuration":{"QuestionDescriptionOption":"UseText","NumColumns":2},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID41","QuestionText_Unsafe":"Click
+        to write the question text"},"QID42":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q42","QuestionType":"MC","Selector":"SAHR","Configuration":{"QuestionDescriptionOption":"UseText","LabelPosition":"BELOW"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID42","SubSelector":"TX","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Click
+        to write the question text"},"QID43":{"QuestionText":"Click to write the question
+        text","DataExportTag":"Q43","QuestionType":"MC","Selector":"SAVR","SubSelector":"TX","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Click
+        to write the question text","Choices":{"1":{"Display":"Click to write Choice
+        1"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click to write
+        Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID43","ChoiceGroups":{"cg_1":{"ChoiceGroupOrder":null,"GroupLabel":"Group","Options":[]}},"ChoiceGroupOrder":["1","2","3","cg_1"],"QuestionText_Unsafe":"Click
+        to write the question text"},"QID21":{"QuestionText":"Constant sum bars","DefaultChoices":false,"DataExportTag":"Q21","QuestionID":"QID21","QuestionType":"CS","Selector":"HBAR","Configuration":{"QuestionDescriptionOption":"UseText","CSSliderMin":0,"CSSliderMax":100,"GridLines":10,"NumDecimals":"0","ShowValue":true,"CustomStart":false},"QuestionDescription":"Constant
+        sum bars","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"EnforceRange":null,"Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":[],"ClarifyingSymbolType":"None","QuestionText_Unsafe":"Constant
+        sum bars"},"QID20":{"QuestionText":"Constant sum choices","DefaultChoices":false,"DataExportTag":"Q20","QuestionType":"CS","Selector":"VRTL","SubSelector":"TX","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Constant
+        sum choices","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"EnforceRange":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":[],"ClarifyingSymbolType":"None","QuestionID":"QID20","QuestionText_Unsafe":"Constant
+        sum choices"},"QID22":{"QuestionText":"Constant sum sliders","DefaultChoices":false,"DataExportTag":"Q22","QuestionID":"QID22","QuestionType":"CS","Selector":"HSLIDER","Configuration":{"QuestionDescriptionOption":"UseText","CSSliderMin":0,"CSSliderMax":100,"GridLines":10,"NumDecimals":"0","ShowValue":true,"CustomStart":false},"QuestionDescription":"Constant
+        sum sliders","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"EnforceRange":null,"Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":[],"ClarifyingSymbolType":"None","QuestionText_Unsafe":"Constant
+        sum sliders"},"QID23":{"QuestionText":"File upload","DefaultChoices":false,"DataExportTag":"Q23","QuestionType":"FileUpload","Selector":"FileUpload","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"File
+        upload","Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"ScreenCaptureText":"Capture
+        Screen","QuestionID":"QID23","QuestionText_Unsafe":"File upload"},"QID15":{"QuestionText":"Form
+        field","DefaultChoices":false,"DataExportTag":"Q15","QuestionType":"TE","Selector":"FORM","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Form
+        field","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":null}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"SearchSource":{"AllowFreeResponse":"false"},"QuestionID":"QID15","QuestionText_Unsafe":"Form
+        field"},"QID17":{"QuestionText":"How likely are you to recommend [INSERT COMPANY
+        NAME HERE] to a friend or colleague?","DefaultChoices":false,"DataExportTag":"Q17","QuestionType":"MC","Selector":"NPS","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"How
+        likely are you to recommend [INSERT COMPANY NAME HERE] to a friend or colleague?","Choices":[{"Display":"0"},{"Display":"1"},{"Display":"2"},{"Display":"3"},{"Display":"4"},{"Display":"5"},{"Display":"6"},{"Display":"7"},{"Display":"8"},{"Display":"9"},{"Display":"10"}],"ChoiceOrder":["0","1","2","3","4","5","6","7","8","9","10"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":11,"NextAnswerId":1,"ColumnLabels":[],"QuestionID":"QID17","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"How
+        likely are you to recommend [INSERT COMPANY NAME HERE] to a friend or colleague?"},"QID31":{"QuestionText":"Loop
+        and merge text ${lm://Field/1}","DefaultChoices":false,"DataExportTag":"Q31","QuestionType":"MC","Selector":"SAVR","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Loop
+        and merge text ${lm://Field/1}","Choices":{"1":{"Display":"Click to write
+        Choice 1","TextEntry":"true"},"2":{"Display":"Click to write Choice 2"},"3":{"Display":"Click
+        to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID31","DataVisibility":{"Private":false,"Hidden":false},"SubSelector":"TX","QuestionText_Unsafe":"Loop
+        and merge text ${lm://Field/1}"},"QID10":{"QuestionText":"Matrix table constant
+        sum","DefaultChoices":false,"DataExportTag":"Q10","QuestionID":"QID10","QuestionType":"Matrix","Selector":"CS","SubSelector":"WTB","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","MobileFirst":true},"QuestionDescription":"Matrix
+        table constant sum","Choices":{"1":{"Display":"Click to write Statement 1"},"2":{"Display":"Click
+        to write Statement 2"},"3":{"Display":"Click to write Statement 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"EnforceRange":"OFF","ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":4,"Answers":{"1":{"Display":"Click
+        to write Scale Point 1"},"2":{"Display":"Click to write Scale Point 2"},"3":{"Display":"Click
+        to write Scale Point 3"}},"AnswerOrder":["1","2","3"],"ChoiceDataExportTags":false,"ClarifyingSymbolType":"None","QuestionText_Unsafe":"Matrix
+        table constant sum"},"QID8":{"QuestionText":"Matrix table Likert bipolar","DefaultChoices":false,"DataExportTag":"Q8","QuestionID":"QID8","QuestionType":"Matrix","Selector":"Bipolar","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","WhiteSpace":"OFF","MobileFirst":true},"QuestionDescription":"Matrix
+        table Likert bipolar","Choices":{"1":{"Display":"Click to write Statement
+        1:Right"},"2":{"Display":"Click to write Statement 2:Right"},"3":{"Display":"Click
+        to write Statement 3:Right"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":6,"Answers":{"1":{"Display":"1"},"2":{"Display":"2"},"3":{"Display":"3"},"4":{"Display":"4"},"5":{"Display":"5"}},"AnswerOrder":["1","2","3","4","5"],"ChoiceDataExportTags":false,"AnswerColumns":5,"QuestionText_Unsafe":"Matrix
+        table Likert bipolar"},"QID3":{"QuestionText":"Matrix table Likert one answer","DefaultChoices":false,"DataExportTag":"Q3","QuestionType":"Matrix","Selector":"Likert","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","WhiteSpace":"OFF","MobileFirst":true,"Autoscale":{"XScale":{"Name":"hedonic","Type":"likert","Reverse":false}}},"QuestionDescription":"Matrix
+        table Likert one answer","Choices":{"1":{"Display":"Click to write Statement
+        1:Right"},"2":{"Display":"Click to write Statement 2:Right"},"3":{"Display":"Click
+        to write Statement 3:Right"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":6,"Answers":{"1":{"Display":"Dislike
+        a great deal"},"2":{"Display":"Dislike somewhat"},"3":{"Display":"Neither
+        like nor dislike"},"4":{"Display":"Like somewhat"},"5":{"Display":"Like a
+        great deal"}},"AnswerOrder":["1","2","3","4","5"],"ChoiceDataExportTags":false,"QuestionID":"QID3","AnswerColumns":5,"DataVisibility":{"Private":false,"Hidden":false},"SubSelector":"SingleAnswer","QuestionText_Unsafe":"Matrix
+        table Likert one answer"},"QID12":{"QuestionText":"Matrix table maxDiff","DefaultChoices":false,"DataExportTag":"Q12","QuestionID":"QID12","QuestionType":"Matrix","Selector":"MaxDiff","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","WhiteSpace":"OFF","MobileFirst":true},"QuestionDescription":"Matrix
+        table maxDiff","Choices":{"1":{"Display":"Click to write Statement 1","ExclusiveAnswer":true},"2":{"Display":"Click
+        to write Statement 2","ExclusiveAnswer":true},"3":{"Display":"Click to write
+        Statement 3","ExclusiveAnswer":true}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","ForceResponseType":"ON","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":3,"Answers":{"1":{"Display":"Click
+        to write Scale Point 1","ExclusiveAnswer":true},"2":{"Display":"Click to write
+        Scale Point 2","ExclusiveAnswer":true}},"AnswerOrder":[1,2],"ChoiceDataExportTags":false,"QuestionText_Unsafe":"Matrix
+        table maxDiff"},"QID7":{"QuestionText":"Matrix table multiple answer","DefaultChoices":false,"DataExportTag":"Q7","QuestionID":"QID7","QuestionType":"Matrix","Selector":"Likert","SubSelector":"MultipleAnswer","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","WhiteSpace":"OFF","MobileFirst":true,"Autoscale":{"XScale":{"Name":"hedonic","Type":"likert","Reverse":false}}},"QuestionDescription":"Matrix
+        table multiple answer","Choices":{"1":{"Display":"Click to write Statement
+        1"},"2":{"Display":"Click to write Statement 2"},"3":{"Display":"Click to
+        write Statement 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":6,"Answers":{"1":{"Display":"Symptom
+        1"},"2":{"Display":"Symptom 1"},"3":{"Display":"Symptom 1"},"4":{"Display":"Symptom
+        1"},"5":{"Display":"Symptom 1"}},"AnswerOrder":["1","2","3","4","5"],"ChoiceDataExportTags":false,"DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Matrix
+        table multiple answer"},"QID9":{"QuestionText":"Matrix table rank order","DefaultChoices":false,"DataExportTag":"Q9","QuestionID":"QID9","QuestionType":"Matrix","Selector":"RO","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","WhiteSpace":"OFF","MobileFirst":true},"QuestionDescription":"Matrix
+        table rank order","Choices":{"1":{"Display":"Click to write Statement 1"},"2":{"Display":"Click
+        to write Statement 2"},"3":{"Display":"Click to write Statement 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":4,"Answers":{"1":{"Display":"Click
+        to write Scale Point 1"},"2":{"Display":"Click to write Scale Point 2"},"3":{"Display":"Click
+        to write Scale Point 3"}},"AnswerOrder":["1","2","3"],"ChoiceDataExportTags":false,"QuestionText_Unsafe":"Matrix
+        table rank order"},"QID11":{"QuestionText":"Matrix table text entry","DefaultChoices":false,"DataExportTag":"Q11","QuestionID":"QID11","QuestionType":"Matrix","Selector":"TE","SubSelector":"Short","Configuration":{"QuestionDescriptionOption":"UseText","TextPosition":"inline","ChoiceColumnWidth":25,"RepeatHeaders":"none","MobileFirst":true},"QuestionDescription":"Matrix
+        table text entry","Choices":{"1":{"Display":"Click to write Statement 1"},"2":{"Display":"Click
+        to write Statement 2"},"3":{"Display":"Click to write Statement 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"EnforceRange":null,"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":4,"Answers":{"1":{"Display":"Click
+        to write Scale Point 1"},"2":{"Display":"Click to write Scale Point 2"},"3":{"Display":"Click
+        to write Scale Point 3"}},"AnswerOrder":["1","2","3"],"ChoiceDataExportTags":false,"ClarifyingSymbolType":"None","QuestionText_Unsafe":"Matrix
+        table text entry"},"QID6":{"QuestionText":"Multiple choice multiple answer
+        carryforward","DataExportTag":"Q6","QuestionType":"MC","Selector":"SAVR","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Multiple
+        choice multiple answer carryforward","Choices":[],"ChoiceOrder":[],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":1,"NextAnswerId":1,"QuestionID":"QID6","SubSelector":"TX","RecodeValues":{"x1":"1","x2":"2","x3":"3"},"DynamicChoices":{"DynamicType":"ChoiceGroup","Locator":"q://QID1/ChoiceGroup/UnselectedChoices","Type":"Dynamic"},"DynamicChoicesData":[],"DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Multiple
+        choice multiple answer carryforward"},"QID1":{"QuestionText":"Multiple choice
+        one answer","DataExportTag":"Q1","QuestionType":"MC","Selector":"SAVR","SubSelector":"TX","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Multiple
+        choice one answer","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3","TextEntry":"true"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"Language":[],"NextChoiceId":4,"NextAnswerId":1,"QuestionID":"QID1","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Multiple
+        choice one answer"},"QID24":{"QuestionText":"Pick, group and rank","DefaultChoices":false,"DataExportTag":"Q24","QuestionType":"PGR","Selector":"DragAndDrop","SubSelector":"NoColumns","Configuration":{"QuestionDescriptionOption":"UseText","Stack":false,"StackItemsInGroups":false},"QuestionDescription":"Pick,
+        group and rank","Choices":{"1":{"Display":"Click to write Item 1"},"2":{"Display":"Click
+        to write Item 2"},"3":{"Display":"Click to write Item 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":4,"Groups":["Click
+        to write Group 1","Click to write Group 2","Click to write Group 3"],"NumberOfGroups":3,"QuestionID":"QID24","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Pick,
+        group and rank"},"QID16":{"QuestionText":"Side by side","DefaultChoices":false,"DataExportTag":"Q16","QuestionType":"SBS","Selector":"SBSMatrix","Configuration":{"QuestionDescriptionOption":"UseText","RepeatHeaders":"none"},"QuestionDescription":"Side
+        by side","Choices":{"1":{"Display":"Click to write Statement 1"},"2":{"Display":"Click
+        to write Statement 2"},"3":{"Display":"Click to write Statement 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":3,"NumberOfQuestions":2,"AdditionalQuestions":{"1":{"Answers":{"1":{"Display":"Answer
+        1"},"2":{"Display":"Answer 2"}},"QuestionText":"Click to write Column 1","RecodeValues":[],"VariableNaming":[],"AnalyzeChoices":[],"QuestionType":"Matrix","Selector":"TE","SubSelector":"Medium","ChoiceColumnWidthPixels":null,"DataExportTag":"Q16#1","QuestionID":"QID16#1","Choices":{"1":{"Display":"Click
+        to write Statement 1"},"2":{"Display":"Click to write Statement 2"},"3":{"Display":"Click
+        to write Statement 3"}},"ChoiceDataExportTags":false,"QuestionDescription":"Click
+        to write Column 1","Configuration":{"QuestionDescriptionOption":"UseText"}},"2":{"Answers":{"1":{"Display":"Answer
+        1"},"2":{"Display":"Answer 2"}},"QuestionText":"Click to write Column 2","RecodeValues":[],"VariableNaming":[],"AnalyzeChoices":[],"QuestionType":"Matrix","Selector":"Likert","SubSelector":"SingleAnswer","ChoiceColumnWidthPixels":null,"DataExportTag":"Q16#2","QuestionID":"QID16#2","Choices":{"1":{"Display":"Click
+        to write Statement 1"},"2":{"Display":"Click to write Statement 2"},"3":{"Display":"Click
+        to write Statement 3"}},"ChoiceDataExportTags":false,"QuestionDescription":"Click
+        to write Column 2","Configuration":{"QuestionDescriptionOption":"UseText"}}},"ChoiceDataExportTags":false,"QuestionID":"QID16","QuestionText_Unsafe":"Side
+        by side"},"QID13":{"QuestionText":"Slider bars","DefaultChoices":false,"DataExportTag":"Q13","QuestionID":"QID13","QuestionType":"Slider","Selector":"HBAR","Configuration":{"QuestionDescriptionOption":"UseText","CSSliderMin":0,"CSSliderMax":100,"GridLines":10,"NumDecimals":"0","ShowValue":true,"CustomStart":false,"NotApplicable":false,"MobileFirst":true},"QuestionDescription":"Slider
+        bars","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":[],"QuestionText_Unsafe":"Slider
+        bars"},"QID4":{"QuestionText":"Slider sliders","DefaultChoices":false,"DataExportTag":"Q4","QuestionType":"Slider","Selector":"HSLIDER","Configuration":{"QuestionDescriptionOption":"UseText","CSSliderMin":0,"CSSliderMax":100,"GridLines":10,"SnapToGrid":false,"NumDecimals":"0","ShowValue":true,"CustomStart":false,"NotApplicable":false,"MobileFirst":true},"QuestionDescription":"Slider
+        sliders","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":[],"QuestionID":"QID4","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Slider
+        sliders"},"QID14":{"QuestionText":"Slider stars","DefaultChoices":false,"DataExportTag":"Q14","QuestionType":"Slider","Selector":"STAR","Configuration":{"QuestionDescriptionOption":"UseText","CSSliderMin":0,"CSSliderMax":100,"GridLines":10,"NumDecimals":"0","ShowValue":true,"StarCount":5,"StarType":"discrete"},"QuestionDescription":"Slider
+        stars","Choices":{"1":{"Display":"Click to write Choice 1"},"2":{"Display":"Click
+        to write Choice 2"},"3":{"Display":"Click to write Choice 3"}},"ChoiceOrder":["1","2","3"],"Validation":{"Settings":{"ForceResponse":"OFF","Type":"None"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"Labels":[],"QuestionID":"QID14","QuestionText_Unsafe":"Slider
+        stars"},"QID2":{"QuestionText":"Text","DefaultChoices":false,"DataExportTag":"Q2","QuestionType":"TE","Selector":"SL","Configuration":{"QuestionDescriptionOption":"UseText"},"QuestionDescription":"Text","Validation":{"Settings":{"ForceResponse":"OFF","ForceResponseType":"ON","Type":"None","MinChars":"1"}},"GradingData":[],"Language":[],"NextChoiceId":4,"NextAnswerId":1,"SearchSource":{"AllowFreeResponse":"false"},"QuestionID":"QID2","DataVisibility":{"Private":false,"Hidden":false},"QuestionText_Unsafe":"Text"},"QID18":{"QuestionText":"Timing","DefaultChoices":false,"DataExportTag":"Q18","QuestionType":"Timing","Selector":"PageTimer","Configuration":{"QuestionDescriptionOption":"UseText","MinSeconds":"0","MaxSeconds":"0"},"QuestionDescription":"Timing","Choices":{"1":{"Display":"First
+        Click"},"2":{"Display":"Last Click"},"3":{"Display":"Page Submit"},"4":{"Display":"Click
+        Count"}},"GradingData":[],"Language":[],"NextChoiceId":16,"NextAnswerId":1,"QuestionID":"QID18","QuestionText_Unsafe":"Timing"}},"Blocks":{"BL_eJoO9gHZSsFvXBI":{"Type":"Default","Description":"Default
+        Question Block","ID":"BL_eJoO9gHZSsFvXBI","BlockElements":[{"Type":"Question","QuestionID":"QID1"},{"Type":"Question","QuestionID":"QID43"},{"Type":"Question","QuestionID":"QID41"},{"Type":"Question","QuestionID":"QID42"},{"Type":"Question","QuestionID":"QID6"},{"Type":"Question","QuestionID":"QID32"},{"Type":"Question","QuestionID":"QID40"},{"Type":"Question","QuestionID":"QID39"},{"Type":"Question","QuestionID":"QID33"},{"Type":"Question","QuestionID":"QID38"},{"Type":"Question","QuestionID":"QID2"},{"Type":"Question","QuestionID":"QID37"},{"Type":"Question","QuestionID":"QID3"},{"Type":"Question","QuestionID":"QID7"},{"Type":"Question","QuestionID":"QID34"},{"Type":"Question","QuestionID":"QID35"},{"Type":"Question","QuestionID":"QID8"},{"Type":"Question","QuestionID":"QID9"},{"Type":"Question","QuestionID":"QID10"},{"Type":"Question","QuestionID":"QID11"},{"Type":"Question","QuestionID":"QID12"},{"Type":"Question","QuestionID":"QID4"},{"Type":"Question","QuestionID":"QID13"},{"Type":"Question","QuestionID":"QID14"},{"Type":"Question","QuestionID":"QID36"},{"Type":"Question","QuestionID":"QID15"},{"Type":"Question","QuestionID":"QID16"},{"Type":"Page
+        Break"},{"Type":"Question","QuestionID":"QID17"},{"Type":"Question","QuestionID":"QID18"},{"Type":"Question","QuestionID":"QID19"},{"Type":"Question","QuestionID":"QID20"},{"Type":"Question","QuestionID":"QID21"},{"Type":"Question","QuestionID":"QID22"},{"Type":"Question","QuestionID":"QID23"},{"Type":"Question","QuestionID":"QID24"},{"Type":"Question","QuestionID":"QID25"},{"Type":"Question","QuestionID":"QID26"},{"Type":"Question","QuestionID":"QID28"},{"Type":"Question","QuestionID":"QID29"}],"Options":{"BlockLocking":"false","RandomizeQuestions":"false","BlockVisibility":"Expanded"}},"BL_bJjQ45bkyQSKQXs":{"Type":"Trash","Description":"Trash
+        / Unused Questions","ID":"BL_bJjQ45bkyQSKQXs","BlockElements":[{"Type":"Question","QuestionID":"QID5"},{"Type":"Question","QuestionID":"QID30"},{"Type":"Question","QuestionID":"QID27"}]},"BL_06dlEES4T6Zch1Q":{"Type":"Standard","SubType":"","Description":"Block
+        2","ID":"BL_06dlEES4T6Zch1Q","Options":{"BlockLocking":"false","RandomizeQuestions":"false","Looping":"Question","LoopingOptions":{"Locator":"q://QID6/ChoiceGroup/SelectedChoices","QID":"QID6","ChoiceGroupLocator":"q://QID6/ChoiceGroup/SelectedChoices","Static":{"1":{"2":""},"2":{"2":""},"x1":{"2":""},"x2":{"2":""},"x3":{"2":""}},"Randomization":"None"}},"BlockElements":[{"Type":"Question","QuestionID":"QID31"}]}},"ResponseSets":{"RS_8eabOkW2G0HpIJE":"Default
+        Response Set"},"SurveyFlow":{"Flow":[{"ID":"BL_eJoO9gHZSsFvXBI","Type":"Block","FlowID":"FL_2"},{"ID":"BL_06dlEES4T6Zch1Q","Type":"Standard","FlowID":"FL_4"}],"Properties":{"Count":5},"FlowID":"FL_1","Type":"Root"},"Scoring":{"ScoringCategories":[],"ScoringCategoryGroups":[],"ScoringSummaryCategory":null,"ScoringSummaryAfterQuestions":0,"ScoringSummaryAfterSurvey":0,"DefaultScoringCategory":null,"AutoScoringCategory":null},"ProjectInfo":{"SurveyID":"SV_0AQg1pFepA0V2d0","ProjectCategory":"CORE","ProjectType":null,"CompositionType":null,"ContentBundle":null},"BrandBaseURL":"https://qualtrics.kcl.ac.uk"}}'
+  recorded_at: 2023-01-26 09:01:38 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
