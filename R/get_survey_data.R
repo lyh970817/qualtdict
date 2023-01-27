@@ -160,6 +160,7 @@ survey_var_recode <- function(var,
       labels <- c(labels, "Seen but not answered")
     }
   }
+
   # TE variables dont have levels or labels
   if (any(!is.na(levels))) {
     var <- set_labels(var, labels = setNames(levels, labels))
