@@ -95,6 +95,14 @@ paste_narm <- function(...) {
   do.call(paste, args)
 }
 
+unlist_nm <- function(list) {
+  # unlist that preserves names
+  names <- names(list)
+  v <- unlist(map(list, null_na)) %>%
+    setNames(names)
+  return(v)
+}
+
 order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
