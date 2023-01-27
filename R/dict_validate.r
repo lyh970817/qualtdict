@@ -8,6 +8,19 @@
 #' @param dict A variable dictionary returned by
 #' \code{\link[qualtdict]{dict_generate}}.
 #'
+#' @return
+#' If no mistake found in the dictionary, a dataframe containing the
+#' unique level-label pairings. If mistakes found in the dictionary,
+#' a list containing the above dataframe and a list with components
+#' \itemize{
+#'   \item non_unique_names  - A dataframe containing qids with non-unique
+#' names and their names
+#'   \item mistake - A dataframe containing qids with one of the following
+#'   mistakes and mistake code: not one-to-one mapping between labels and
+#'   levels (1), levels not increasing in step of 1 (2), duplicated levels
+#'   (3) and duplicated labels (4).
+#' }
+#'
 #' @export
 dict_validate <- function(dict) {
   message("Validating dictionary...")
