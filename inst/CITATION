@@ -1,0 +1,16 @@
+citHeader("To cite 'qualtdict' in publications use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "qualtdict: Generating Item Dictionaries and Labelled Data Exports of Qualtrics Surveys",
+  author   = as.person("Yuhao Lin"),
+  journal  = ,
+  year     = "2023",
+  volume   = ,
+  number   = ,
+  pages    = ,
+  url      = ,
+  textVersion = paste(
+
+  )
+)
