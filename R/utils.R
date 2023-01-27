@@ -1,16 +1,19 @@
 #' @import dplyr
+#' @importFrom stats setNames
 #' @import purrr
-#' @importFrom tibble tibble as_tibble tibble_row enframe
-#' @importFrom tidyr unnest unite
-#' @import stringr
+#' @importFrom tibble tibble as_tibble enframe
+#' @importFrom tidyr unite
 #' @importFrom stringi stri_count_words
-#' @importFrom stringdist amatch
+#' @import stringr
+#' @import slowraker
 #' @importFrom sjlabelled set_label set_labels
-#' @importFrom googlesheets4 read_sheet write_sheet
 #' @importFrom magrittr %>%
 #' @importFrom qualtRics fetch_survey metadata fetch_description
-#' @import slowraker
 #' @importFrom xml2 xml_text read_html
+#' @importFrom rlang :=
+#' @importFrom utils globalVariables
+#' @importFrom haven read_xpt
+#' @importFrom crul Async
 
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
