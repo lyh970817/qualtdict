@@ -1,0 +1,305 @@
+http_interactions:
+- request:
+    method: post
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/export-responses/
+    body:
+      encoding: ''
+      string: '{"format":"csv","useLabels":false,"timeZone":"Asia/Shanghai","includeDisplayOrder":true,"breakoutSets":true}'
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '954'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '174'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:03:44 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"result":{"progressId":"ES_6nde49Ch7TIWMK2","percentComplete":0.0,"status":"inProgress"},"meta":{"requestId":"49d77676-024d-41c7-839c-bfc6f4053a4f","httpStatus":"200
+        - OK"}}'
+  recorded_at: 2023-01-26 09:03:49 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/export-responses/ES_6nde49Ch7TIWMK2
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '200'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '140'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:03:44 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"result":{"percentComplete":0.0,"status":"inProgress"},"meta":{"requestId":"6e6386d1-507e-4f22-8de2-924f2823cb17","httpStatus":"200
+        - OK"}}'
+  recorded_at: 2023-01-26 09:03:49 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/export-responses/ES_6nde49Ch7TIWMK2
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '240'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '140'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:03:45 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"result":{"percentComplete":0.0,"status":"inProgress"},"meta":{"requestId":"f0a7e684-c671-41cc-9de5-d4b6711674ee","httpStatus":"200
+        - OK"}}'
+  recorded_at: 2023-01-26 09:03:49 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/export-responses/ES_6nde49Ch7TIWMK2
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '203'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '140'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:03:46 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"result":{"percentComplete":0.0,"status":"inProgress"},"meta":{"requestId":"f1bef789-e84c-45fb-9576-46b9f17bd8ee","httpStatus":"200
+        - OK"}}'
+  recorded_at: 2023-01-26 09:03:49 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/export-responses/ES_6nde49Ch7TIWMK2
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '637'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/json
+      content-length: '192'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:03:47 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      string: '{"result":{"fileId":"029d2917-3693-471f-8b27-a09aee9ab282-def","percentComplete":100.0,"status":"complete"},"meta":{"requestId":"0f387c7e-425a-4e5e-9a2c-9a701636d67c","httpStatus":"200
+        - OK"}}'
+  recorded_at: 2023-01-26 09:03:49 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
+- request:
+    method: get
+    uri: https://QUALTRICS_BASE_URL/API/v3/surveys/SV_0AQg1pFepA0V2d0/export-responses/029d2917-3693-471f-8b27-a09aee9ab282-def/file
+    body:
+      encoding: ''
+      string: ''
+    headers:
+      X-API-TOKEN: QUALTRICS_API_KEY
+      Content-Type: application/json
+      Accept: '*/*'
+      accept-encoding: gzip, deflate
+  response:
+    status:
+      status_code: 200
+      category: Success
+      reason: OK
+      message: 'Success: (200) OK'
+    headers:
+      request-time: '290'
+      x-frame-options: DENY
+      x-xss-protection: 1; mode=block
+      content-disposition: attachment; filename=Test.zip
+      x-permitted-cross-domain-policies: master-only
+      content-type: application/zip
+      content-length: '4201'
+      referrer-policy: strict-origin-when-cross-origin
+      x-content-type-options: nosniff
+      permissions-policy: camera=(), geolocation=(), microphone=()
+      date: Thu, 26 Jan 2023 09:03:48 GMT
+      content-security-policy-report-only: frame-ancestors 'self' *.qualtrics.com
+        *.my.salesforce.com *.visualforce.com *.visual.force.com *.lightning.force.com;
+        report-uri https://sjc1.qualtrics.com/csp-report
+      strict-transport-security: max-age=31536000; includeSubDomains; preload
+    body:
+      encoding: ''
+      file: no
+      base64_string: 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
+        AA==
+  recorded_at: 2023-01-26 09:03:49 GMT
+  recorded_with: vcr/1.2.0, webmockr/0.8.2
