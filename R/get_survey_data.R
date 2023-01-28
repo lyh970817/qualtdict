@@ -146,7 +146,6 @@ survey_var_recode <- function(var,
 
   } else if (nrow(var_dict) == 1) {
     # Single row means allowing for multiple answer
-    # levels <- 1
     if (!is.null(unanswer_recode_multi)) {
       levels <- c(levels, unanswer_recode_multi)
       labels <- c(labels, paste("Not", labels))
