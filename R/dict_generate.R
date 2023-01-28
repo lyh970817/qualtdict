@@ -17,8 +17,6 @@
 #' prefixes returned by \code{block_pattern}. Defaults to ".".
 #' @param split_by_block Logical. If \code{TRUE}, the function returns a
 #' list with each element being the dictionary for a single survey block.
-#' @param survey_name String Specified to add to attribute
-#' \code{survey_name}.
 #'
 #'
 #' @return
@@ -49,8 +47,7 @@ dict_generate <- function(surveyID,
                           block_pattern = NULL,
                           block_sep = ".",
                           preprocess = NULL,
-                          split_by_block = FALSE,
-                          survey_name = NULL) {
+                          split_by_block = FALSE) {
   name <- match.arg(name)
 
   easyname_gen <- ifelse(
@@ -69,12 +66,6 @@ dict_generate <- function(surveyID,
     "qid", "name", "block", "question",
     "item", "level", "label", "type", "selector", "sub_selector", "content_type"
   )]
-
-  # Add survey attributes
-  if (!is.null(survey_name)) {
-    attr(dict, "survey_name") <- survey_name
-  }
-
 
   if (split_by_block) {
     dict <- split(dict, dict$block)
