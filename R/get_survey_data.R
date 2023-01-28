@@ -7,10 +7,6 @@
 #'
 #' @param dict A variable dictionary returned by
 #' \code{\link[qualtdict]{dict_generate}}.
-#' @param surveyID String. A variable dictionary returned by
-#' \code{\link[qualtdict]{dict_generate}} has the survey ID as an
-#' attribute. If it is read from elsewhere, this needs to be specified
-#' manually. Defaults to \code{NULL}.
 #' @param keys A character vector containing variables to be added, if
 #' \code{split_by_block} is \code{TRUE}, to all individual block data sets.
 #' Can also be used to add variables (e.g. IP address) found on Qualtrics
@@ -46,7 +42,6 @@
 #' )
 #' }
 get_survey_data <- function(dict,
-                            surveyID = NULL,
                             keys = NULL,
                             split_by_block = FALSE,
                             skip = NULL,
