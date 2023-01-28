@@ -48,6 +48,13 @@ dict_generate <- function(surveyID,
                           block_sep = ".",
                           preprocess = NULL,
                           split_by_block = FALSE) {
+  checkarg_isstring(surveyID, null_okay = FALSE)
+  checkarg_isname(name)
+  checkarg_isfunction(block_pattern)
+  checkarg_isstring(block_sep, null_okay = FALSE)
+  checkarg_isfunction(preprocess)
+  checkarg_isboolean(split_by_block)
+
   name <- match.arg(name)
 
   easyname_gen <- ifelse(
