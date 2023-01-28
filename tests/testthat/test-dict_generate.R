@@ -1,8 +1,13 @@
 test_that("dict_generate", {
   vcr::use_cassette("dict_generate", {
-    suppressWarnings(x <- dict_generate("SV_0AQg1pFepA0V2d0", name="easy_name"))
+    suppressWarnings(
+      x <- dict_generate("SV_0AQg1pFepA0V2d0", name = "easy_name")
+    )
   })
-  expect_s3_class(x, c("spec_tbl_df", "tbl_df", "tbl", "data.frame"))
+  expect_s3_class(
+    x,
+    c("spec_tbl_df", "tbl_df", "tbl", "data.frame", "qualtdict")
+  )
   expect_equal(
     unique(x$qid),
     c(

@@ -20,7 +20,7 @@
 #'
 #'
 #' @return
-#' A dictionary dataframe or a list of dictionary dataframes (depending on
+#' A 'qualtdict' dataframe or a list of 'qualtdict' dataframes (depending on
 #' \code{split_by_block}.
 #'
 #' @export
@@ -66,6 +66,8 @@ dict_generate <- function(surveyID,
     "qid", "name", "block", "question",
     "item", "level", "label", "type", "selector", "sub_selector", "content_type"
   )]
+
+  attr(dict, "class") <- c("qualtdict", class(dict))
 
   if (split_by_block) {
     dict <- split(dict, dict$block)
