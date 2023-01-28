@@ -51,6 +51,11 @@ get_survey_data <- function(dict,
                             split_by_block = FALSE,
                             skip = NULL,
                             ...) {
+  checkarg_isqualtdict(dict)
+  checkarg_ischaracter(keys, null_okay = TRUE)
+  checkarg_isboolean(split_by_block)
+  checkarg_ischaracter(skip, null_okay = TRUE)
+
   args <- list(...)
   args$force_request <- TRUE
   args$surveyID <- attr(dict, "surveyID")
