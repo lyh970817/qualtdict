@@ -1,19 +1,11 @@
-#' @import dplyr
 #' @importFrom stats setNames
+#' @import dplyr
 #' @import purrr
-#' @importFrom tibble tibble as_tibble enframe
-#' @importFrom tidyr unite
-#' @importFrom stringi stri_count_words
 #' @import stringr
-#' @import slowraker
-#' @importFrom sjlabelled set_label set_labels
+#' @importFrom tibble tibble as_tibble enframe
 #' @importFrom magrittr %>%
-#' @importFrom qualtRics fetch_survey metadata fetch_description
-#' @importFrom xml2 xml_text read_html
-#' @importFrom rlang :=
-#' @importFrom utils globalVariables
-#' @importFrom haven read_xpt
 #' @importFrom crul Async
+#' @importFrom utils globalVariables
 
 globalVariables(c(
   ".", "label", "level", "pair",
@@ -21,6 +13,10 @@ globalVariables(c(
   "get_pos_tags", "handle_pos_error", "stop_pos_tags"
 ))
 
+#' Given a two-column dataframe find which row is not one-to-one
+#' @param cols A dataframe with two columns
+#' @importFrom rlang :=
+#' @keywords internal
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
     cols %>%
@@ -35,10 +31,16 @@ which_not_onetoone <- function(cols) {
   )
 }
 
+#' Given a two-column dataframe determine which row is one-to-one (logical)
+#' @param cols A dataframe with two columns
+#' @keywords internal
 is_onetoone <- function(cols) {
   !any(map_dbl(which_not_onetoone(cols), nrow) > 0)
 }
 
+#' Convert NULL or a list of NULLs to NA
+#' @param x NULL or a list of NULLs
+#' @keywords internal
 null_na <- function(x) {
   # A list created with NULL values will have lengths of all 0
   if (is.null(x) ||
@@ -49,6 +51,10 @@ null_na <- function(x) {
   }
 }
 
+#' Convert html special characeters
+#' @param data A dataframe
+#' @importFrom xml2 xml_text read_html
+#' @keywords internal
 convert_html <- function(data) {
   unescape_html <- function(x) {
     map_chr(
@@ -57,9 +63,9 @@ convert_html <- function(data) {
         if (is.na(x)) {
           NA
         } else {
-          xml2::xml_text(
+          xml_text(
             suppressMessages(
-              xml2::read_html(paste0("<x>", x, "</x>"))
+              read_html(paste0("<x>", x, "</x>"))
             )
           )
         }
@@ -93,7 +99,8 @@ survey_rename <- function(survey) {
 
   return(survey)
 }
-
+#' `paste` but with seperator associated with NA removed
+#' @keywords internal
 paste_narm <- function(...) {
   args <- list(...)
   is_null_na <- map_lgl(args, ~ is.null(.x) | all(is.na(.x)))
@@ -104,18 +111,24 @@ paste_narm <- function(...) {
   do.call(paste, args)
 }
 
+#' `unlist` that preserve names
+#' @keywords internal
 unlist_nm <- function(list) {
-  # unlist that preserves names
   names <- names(list)
   v <- unlist(map(list, null_na)) %>%
     setNames(names)
   return(v)
 }
 
+#' Order a list by name
+#' @keywords internal
 order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
 
+#' Function factory for maximum five times of retries when failed
+#' @param f A function
+#' @keywords internal
 retry <- function(f) {
   function(...) {
     r <- NULL
@@ -136,11 +149,19 @@ retry <- function(f) {
   }
 }
 
-
+#' Retry version of `fetch_survey`
+#' @importFrom qualtRics fetch_survey 
+#' @keywords internal
 fetch_survey2 <- retry(fetch_survey)
 
+#' Retry version of `metadata`
+#' @importFrom qualtRics metadata 
+#' @keywords internal
 metadata2 <- retry(metadata)
 
+#' Retry version of `fetch_description`
+#' @importFrom qualtRics fetch_description
+#' @keywords internal
 fetch_description2 <- retry(fetch_description)
 
 
