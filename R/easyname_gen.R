@@ -1,6 +1,7 @@
 #' Generate easy names from dictionary
 #' @importFrom tidyr unite
 #' @importFrom stringi stri_count_words
+#' @importFrom rlang hash
 #' @keywords internal
 easyname_gen <- function(json,
                          surveyID,
@@ -31,14 +32,14 @@ easyname_gen <- function(json,
   unique_texts <- unique(texts)
 
   # Generate temp file path
-  tmpfile_path <- paste0(tempdir(), "/", surveyID, "K.rds")
+  tmpfile_path <- paste0(tempdir(), "/", hash(unique_texts), ".rds")
 
   # Check if the same keywords have been saved in temp file path,
   # if not, generate them
   if (file.exists(tmpfile_path)) {
     keywords <- readRDS(tmpfile_path)
   }
-  if (!file.exists(tmpfile_path) || length(unique_texts) != length(keywords)) {
+  if (!file.exists(tmpfile_path)) {
     message("Generating easy names...")
 
     # Remove brackets and punctuations
