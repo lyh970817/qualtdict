@@ -121,7 +121,7 @@ checkarg_isfunction <- function(arg, null_okay = TRUE) {
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
-checkarg_isqualtdict <- function(arg, null_okay = TRUE) {
+checkarg_isqualtdict <- function(arg) {
   test <- any(class(arg) == "qualtdict")
 
   if (!test) {
