@@ -1,3 +1,7 @@
+#' Generate easy names from dictionary
+#' @importFrom tidyr unite
+#' @importFrom stringi stri_count_words
+#' @keywords internal
 easyname_gen <- function(json,
                          surveyID,
                          block_pattern,

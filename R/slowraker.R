@@ -1,3 +1,4 @@
+#' @import slowraker
 calc_keyword_scores <- function(cand_words, all_words) {
   # Get a list of unique words in each keyword so we don't double count (e.g.,
   # don't double count "vector" in "vector times vector").
