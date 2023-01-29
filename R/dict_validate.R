@@ -24,7 +24,6 @@
 #' @export
 dict_validate <- function(dict) {
   checkarg_isqualtdict(dict)
-
   message("Validating dictionary...")
 
   split_dict <- split(dict, factor(dict$qid))

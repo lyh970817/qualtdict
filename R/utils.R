@@ -92,13 +92,6 @@ unique_expand <- function(x, y) {
   recode(y, !!!setNames(x, unique(y)))
 }
 
-survey_rename <- function(survey) {
-  qid_cols_nosfx <- str_replace(colnames(survey), "(#[0-9])?_[0-9_]+", "")
-  qid_cols_all <- make.unique(qid_cols_nosfx)
-  colnames(survey) <- qid_cols_all
-
-  return(survey)
-}
 #' `paste` but with seperator associated with NA removed
 #' @keywords internal
 paste_narm <- function(...) {
