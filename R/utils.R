@@ -73,15 +73,15 @@ convert_html <- function(data) {
     )
 }
 
-unique_expand <- function(x, ...) {
-  # Suppose x = unique(x') and a one-to-one mapping between x and
-  # unique(paste(...)),
-  # expand x to the same length of ...
-  # and preserve the mapping
+#' Suppose x = f(unique(y)), find f(y)
+#' @param x A character vector
+#' @param y A character vector
+#' @keywords internal
+unique_expand <- function(x, y) {
   if (all(is.na(x))) {
     return(x)
   }
-  y <- paste(...)
+
   y[y == ""] <- " "
   recode(y, !!!setNames(x, unique(y)))
 }
