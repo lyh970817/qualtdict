@@ -138,6 +138,11 @@ sbs_qid <- function(qid,
                     label,
                     choice_len,
                     col_type) {
+  if (length(col_type) == 0) {
+    # Carried forward question
+    return(qid)
+  }
+
   names(choice_len) <- col_type
   paste(qid, sep = "#", seq(col_len)) %>%
     map2(length(item), rep) %>%
