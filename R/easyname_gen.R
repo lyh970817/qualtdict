@@ -43,8 +43,8 @@ easyname_gen <- function(json,
     message("Generating easy names...")
 
     # Remove brackets and punctuations
-    unique_texts <- str_remove_all(unique_texts, "\\(.+\\)")
-    unique_texts <- str_remove_all(unique_texts, "[[:punct:]]")
+    unique_texts <- str_remove_all(unique_texts, "\\(.+\\)") %>%
+      str_remove_all("[[:punct:]]")
 
     keywords <- slowrake(unique_texts,
       all_words = paste(texts, collapse = ""), stop_pos = NULL
