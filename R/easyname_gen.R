@@ -6,7 +6,7 @@ easyname_gen <- function(json,
   json_makename <- json
 
   if (!is.null(preprocess)) {
-    json <- preprocess(json_makename)
+    json_makename <- preprocess(json_makename)
   }
 
   # Extract relevant text
