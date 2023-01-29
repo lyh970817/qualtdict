@@ -41,7 +41,7 @@ is_onetoone <- function(cols) {
 
 null_na <- function(x) {
   # A list created with NULL values will have lengths of all 0
-  if (is.null(x) |
+  if (is.null(x) ||
     all(map_dbl(x, length) == 0)) {
     NA
   } else {
