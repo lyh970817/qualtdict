@@ -279,7 +279,7 @@ qid_recode <- function(qid,
       recode_func <- recode_list[[type]][[selector]]
     }
   } else {
-    recode_func <- recode_list[[type]][["MC"]]
+    recode_func <- recode_list[[type]]
   }
 
   if (is.null(recode_func)) {
