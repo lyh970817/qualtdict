@@ -4,23 +4,11 @@
 \alias{get_survey_data}
 \title{Download a labeled survey data set}
 \usage{
-get_survey_data(
-  dict,
-  surveyID = NULL,
-  keys = NULL,
-  split_by_block = FALSE,
-  skip = NULL,
-  ...
-)
+get_survey_data(dict, keys = NULL, split_by_block = FALSE, skip = NULL, ...)
 }
 \arguments{
 \item{dict}{A variable dictionary returned by
 \code{\link[qualtdict]{dict_generate}}.}
-
-\item{surveyID}{String. A variable dictionary returned by
-\code{\link[qualtdict]{dict_generate}} has the survey ID as an
-attribute. If it is read from elsewhere, this needs to be specified
-manually. Defaults to \code{NULL}.}
 
 \item{keys}{A character vector containing variables to be added, if
 \code{split_by_block} is \code{TRUE}, to all individual block data sets.

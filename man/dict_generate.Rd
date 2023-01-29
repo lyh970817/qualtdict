@@ -10,8 +10,7 @@ dict_generate(
   block_pattern = NULL,
   block_sep = ".",
   preprocess = NULL,
-  split_by_block = FALSE,
-  survey_name = NULL
+  split_by_block = FALSE
 )
 }
 \arguments{
@@ -35,12 +34,9 @@ Defaults to \code{NULL}.}
 
 \item{split_by_block}{Logical. If \code{TRUE}, the function returns a
 list with each element being the dictionary for a single survey block.}
-
-\item{survey_name}{String Specified to add to attribute
-\code{survey_name}.}
 }
 \value{
-A dictionary dataframe or a list of dictionary dataframes (depending on
+A 'qualtdict' dataframe or a list of 'qualtdict' dataframes (depending on
 \code{split_by_block}.
 }
 \description{
