@@ -1,0 +1,152 @@
+---
+title: "Introduction to qualtdict"
+output: rmarkdown::html_vignette
+author: Yuhao Lin
+vignette: >
+  %\VignetteIndexEntry{Introduction to qualtdict}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+[Qualtrics](https://www.qualtrics.com/) is an online survey and data
+collection software platform. The qualtdict R package builds on the
+[qualtRics](https://github.com/ropensci/qualtRics) R package which
+implements the retrieval of survey data using the Qualtrics API and aims to
+reduce the preprocessing steps needed in analyzing such surveys. The
+current package makes more comprehensive use of the survey metadata
+(retrieved via functions in
+[qualtRics](https://github.com/ropensci/qualtRics)) and generates a
+variable dictionary including most of the information essential for data
+processing and analysis. It also uses a modified version of the RAKE
+algorithm implemented in the package
+[slowraker](https://github.com/cran/slowraker) to generate meaningful names
+for all variables in the survey, as well as adding a comprehensive set of
+metadata attributes that uniquely identifies each variable.
+
+Note that your institution must support API access and that it must be
+enabled for your account. Whoever manages your Qualtrics account can help
+you with this. Please refer to the [Qualtrics
+documentation](https://api.qualtrics.com/) to find your API token.
+
+The authors and contributors for this R package are not affiliated with
+Qualtrics and Qualtrics does not offer support for this R package.
+
+## Usage
+
+* `dict_generate` to generate a `qualtdict`, a variable dictionary
+  dataframe that can be later used to download actual survey data, or
+  exported into a table file for provide straightforward overview of the
+  survey variables.
+
+* `dict_validate` to check for potential mistakes in the dictionary.
+
+* `get_survey_data` to retrieve
+  [sjlabelled](https://github.com/strengejacke/sjlabelled) survey data,
+  where each variable is labelled with question, recodes (levels) and
+  recode labels.
+
+## Registering Qualtrics credentials
+
+You need to first register your Qualtrics credentials with the function
+`qualtrics_api_credentials` exported from the package 
+[qualtRics](https://www.qualtrics.com/). 
+
+
+```{r, eval=FALSE}
+library(qualtdict)
+
+qualtrics_api_credentials(
+  api_key = "<YOUR-QUALTRICS_API_KEY>",
+  base_url = "<YOUR-QUALTRICS_BASE_URL>",
+  install = TRUE
+)
+```
+
+## Generating a dictionary
+
+You can then generate a variable dictionary.
+
+```{r, eval=FALSE}
+mydict <- dict_generate("SV_4YyAHbAxpdbzacl", var_name = "question_name")
+```
+
+Question names for each variable as set on Qualtrics will be used as
+variable names
+
+You may wish to generate meaningful variable names (if you don't already
+have them in the survey) in the dictionary. If doing so, preferably you
+would also want to define a function that extracts block prefixes from 
+block names.
+
+```{r, eval=FALSE}
+# Define a block prefix extraction function
+block_pattern <- function(x) {
+  # Use the first three characters of a block name
+  substring(x, 1, 3)
+}
+
+mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
+  var_name = "easy_name",
+  block_pattern = block_pattern,
+  block_sep = "."
+)
+```
+
+These "easy names" are generated through a modified version of the RAKE
+algorithm implemented in the package
+[slowraker](https://github.com/cran/slowraker). The rake algorithm was
+originally proposed as a method to extract keywords from documents [Rose.
+et al.](https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf). 
+It works by first selecting a series of candidate keywords, where each
+candidate keyword is a set of contiguous words that doesn’t contain a
+phrase delimiter or a meaningless stop word. Each single word within a
+keyword is then scored by degree/frequency, where degree equals the number
+of times that the word co-occurs with another word in another keyword, and
+frequency is the total number of times that the word occurs overall. Each
+candidate keyword is then scored by summing the scores of its member words.
+
+The key modification of the algorithm in this package is that while the
+candidate keywords for each variable are extracted from text components in
+the survey associated with that variable (e.g. the overarching question as
+well as the sub-question it belongs to, and for questions allowing for
+selecting multiple choices , the choice labels), word frequency is calculated
+as the number of times a word appears in the entire survey.
+
+## Dictioanry validation
+
+After downloading the dictionary, You might want to check for potential
+mistakes in the dictionary with `dict_validate`, which returns a list of qids
+with potential mistakes and mistake codes (explained in the function
+documentation of `dict_validate`, as well as a list of unique level-label
+pairing (numerals v.s. text labels), so that you can check that across a
+number of questions measured on supposedly the same scale, there isn't a
+question with distinct levels or labels to the others.
+
+```{r, eval=FALSE}
+dict_validate(mydict)
+```
+
+## Downloading survey with dictionary
+
+And use the dictionary to download
+[sjlabelled](https://github.com/strengejacke/sjlabelled) survey data
+labelled with the associated text components from the survey (e.g.
+question, recode labels and replacement strings in loop and merge
+questions).
+
+Extra parameters from `fetch_survey` in [qualtRics](https://github.com/ropensci/qualtRics) 
+can be specified (e.g. `unanswer_recode` and `unanswer_recode_multi`).
+
+```{r, eval=FALSE}
+survey_dat <- get_survey_data(mydict,
+  unanswer_recode = -77,
+  unanswer_recode_multi = 0
+)
+```
