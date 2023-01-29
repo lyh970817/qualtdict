@@ -1,5 +1,7 @@
 vcr::use_cassette("dict_generate", {
-  suppressWarnings(x <- dict_generate("SV_0AQg1pFepA0V2d0"))
+  suppressWarnings(
+    x <- dict_generate("SV_0AQg1pFepA0V2d0", name = "question_name")
+  )
 })
 
 test_that("get_survey_data", {
