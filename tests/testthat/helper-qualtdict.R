@@ -1,6 +1,7 @@
 library(vcr) # *Required* as vcr is set up on loading
-if (!nzchar(Sys.getenv("APIKEY"))) {
-  Sys.setenv("APIKEY" = "foobar")
+if (!nzchar(Sys.getenv("QUALTRICS_API_KEY"))) {
+  Sys.setenv("QUALTRICS_API_KEY" = "foobar")
+  Sys.setenv("QUALTRICS_BASE_URL" = "www.qualtrics.com")
 }
 
 invisible(vcr::vcr_configure(
