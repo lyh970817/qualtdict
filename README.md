@@ -1,6 +1,17 @@
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
 # qualtdict
 
 **License:** [MIT](https://opensource.org/licenses/MIT)
+
+<!-- badges: start -->
+
+[![Project Status: WIP – Initial development is in progress, but there
+has not yet been a stable, usable release suitable for the
+public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![R-CMD-check](https://github.com/lyh970817/qualtdict/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/R-CMD-check.yaml)
+<!-- badges: end -->
 
 [Qualtrics](https://www.qualtrics.com/) is an online survey and data
 collection software platform. The qualtdict R package builds on the
@@ -8,7 +19,7 @@ collection software platform. The qualtdict R package builds on the
 implements the retrieval of survey data using the Qualtrics API and aims
 to reduce the pre-processing steps needed in analyzing such surveys. The
 current package makes more comprehensive use of the survey metadata and
-generates a variable dictionary inlucding most of the information
+generates a variable dictionary including most of the information
 essential for data processing and analysis. It also uses a modified
 version of the RAKE algorithm implemented in the package
 [slowraker](https://github.com/cran/slowraker) to generate meaningful
@@ -25,7 +36,7 @@ install.packages("remotes")
 remotes::install_github("lyh970817/qultdict")
 ```
 
-## A demo workflow
+## Example
 
 You need to first register your Qualtrics credentials with the function
 `qualtrics_api_credentials` exported from the package
@@ -72,7 +83,8 @@ You might want to check for potential mistakes in the survey with
 dict_validate(mydict)
 ```
 
-And use the dictionary to download labelled survey data.
+And use the dictionary to download
+[sjlabelled](https://github.com/strengejacke/sjlabelled) survey data.
 
 ``` r
 survey_dat <- get_survey_data(mydict,
