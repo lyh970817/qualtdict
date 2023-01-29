@@ -229,10 +229,16 @@ qid_recode <- function(qid,
           MultipleAnswer = suf_item_suf_level_qid,
           DL = suf_item_rep_level_qid,
           SingleAnswer = item_or_level_qid,
-          DND = item_or_level_qid
+          DND = item_or_level_qid,
+          SACV = item_or_level_qid,
+          SACH = item_or_level_qid,
+          SACCOL = item_or_level_qid
         ),
         TE = list(Short = suf_item_suf_level_qid),
-        Profile = suf_item_rep_level_qid,
+        Profile = list(
+          SingleAnswer = suf_item_rep_level_qid,
+          DL = suf_item_rep_level_qid
+        ),
         Bipolar = suf_item_rep_level_qid,
         RO = suf_item_suf_level_qid,
         MaxDiff = suf_item_rep_level_qid,
@@ -264,7 +270,12 @@ qid_recode <- function(qid,
     Draw = list(Signature = file_upload_qid),
     HL = list(Text = suf_level_suf_item_qid),
     Meta = list(Browser = not_applicable_qid),
-    DB = list(TB = questiontext_qid)
+    DB = list(
+        TB = questiontext_qid,
+        PTB = questiontext_qid,
+        FLB = questiontext_qid,
+        GRB = list(WTXB = questiontext_qid)
+    )
   )
 
   if (type != "SBS") {
