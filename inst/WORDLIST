@@ -52,6 +52,7 @@ reprex
 rlang
 rmarkdown
 Roxygen
+roxygen
 RoxygenNote
 rstats
 rstudio
@@ -68,6 +69,7 @@ spdx
 stackoverflow
 stringi
 stringr
+styler
 SystemRequirements
 testthat
 tibble
