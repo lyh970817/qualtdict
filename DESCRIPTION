@@ -1,13 +1,12 @@
 Package: qualtdict
-Title: Generating Item Dictionaries and Labelled Data Exports of Qualtrics
-    Surveys
+Title: Generating Item Dictionaries and Labelled Data Exports of Qualtrics Surveys
 Version: 0.0.0.9000
 Authors@R:
     person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-6357-5731"))
 Description: Provides functions that generate item dictionaries from
-    Qualtrics surveys and clean and label survey data based on the
-    dictionary.
+    Qualtrics (https://www.qualtrics.com/) surveys and clean and label 
+    survey data based on the dictionary.
 License: MIT + file LICENSE
 Imports:
     crul,
