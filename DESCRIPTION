@@ -1,13 +1,19 @@
 Package: qualtdict
-Title: Generating Item Dictionaries and Labelled Data Exports of Qualtrics Surveys
+Title: Generating Item Dictionaries and Labelled Data Exports of Qualtrics
+    Surveys
 Version: 0.0.0.9000
 Authors@R:
     person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-6357-5731"))
-Description: Provides functions that generate item dictionaries from
-    Qualtrics (https://www.qualtrics.com/) surveys and clean and label 
-    survey data based on the dictionary.
+Description: Provides functions that generate variable dictionaries from
+    'Qualtrics' <https://www.qualtrics.com/about/> surveys and labelled
+    survey data based on the dictionary. This package is built upon the R
+    package 'qualtRics' <https://github.com/ropensci/qualtRics/> which
+    provides access to 'Qualtrics' survey metadata via the 'Qualtrics' API
+    <https://api.qualtrics.com/>.
 License: MIT + file LICENSE
+URL: https://github.com/lyh970817/qualtdict
+BugReports: https://github.com/lyh970817/qualtdict/issues
 Imports:
     crul,
     dplyr,
@@ -31,12 +37,11 @@ Suggests:
     rmarkdown,
     testthat (>= 3.0.0),
     vcr (>= 0.6.0)
+VignetteBuilder: 
+    knitr
 Config/testthat/edition: 3
-Config/testthat/start-first: dict_generate, get_survey_data
+Config/testthat/start-first: dict_generate, dict_validate, get_survey_data
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-URL: https://github.com/lyh970817/qualtdict
-BugReports: https://github.com/lyh970817/qualtdict/issues
-VignetteBuilder: knitr
