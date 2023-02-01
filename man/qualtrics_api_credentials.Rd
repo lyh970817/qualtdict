@@ -4,11 +4,13 @@
 \alias{qualtrics_api_credentials}
 \title{Install Qualtrics credentials in your \code{.Renviron} file for repeated use}
 \arguments{
-\item{api_key}{The API key provided to you from Qualtrics formatted in quotes.
-Learn more about Qualtrics API keys at \url{https://api.qualtrics.com/docs/}}
+\item{api_key}{The API key provided to you from Qualtrics formatted in
+quotes. Learn more about Qualtrics API keys at
+\url{https://api.qualtrics.com/docs/}}
 
-\item{base_url}{The institution-specific base URL for your Qualtrics account,
-formatted in quotes. Find your base URL at \url{https://api.qualtrics.com/docs/}}
+\item{base_url}{The institution-specific base URL for your Qualtrics
+account, formatted in quotes. Find your base URL at
+\url{https://api.qualtrics.com/docs/}}
 
 \item{install}{If TRUE, will install the key in your \code{.Renviron} file
 for use in future sessions.  Defaults to FALSE (single session use).}
