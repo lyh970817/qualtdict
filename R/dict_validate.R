@@ -21,6 +21,22 @@
 #'   (3) and duplicated labels (4).
 #' }
 #'
+#' @examples
+#' \dontrun{
+#'
+#' # Create a dictionary
+#' mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
+#'   name = "easy_name",
+#'   block_pattern = block_pattern,
+#'   block_sep = ".",
+#'   split_by_block = FALSE
+#' )
+#'
+#'
+#' # Validate the dictionary
+#' validation <- dict_validate(mydict)
+#' }
+#'
 #' @export
 dict_validate <- function(dict) {
   checkarg_isqualtdict(dict)
