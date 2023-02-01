@@ -24,7 +24,8 @@ calc_keyword_scores <- function(cand_words, all_words) {
   unlist(lapply(cand_words, function(x) sum(word_scores[x])))
 }
 
-slowrake_atomic <- function(txt, stop_words, all_words, word_min_char, stem, stop_pos,
+slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
+                            stem, stop_pos,
                             word_token_annotator, pos_annotator) {
   txt <- paste0(txt, ".")
 
