@@ -25,10 +25,12 @@ current package makes more comprehensive use of the survey metadata
 [qualtRics](https://github.com/ropensci/qualtRics)) and generates a
 variable dictionary including most of the information essential for data
 processing and analysis. It also uses a modified version of the RAKE
-algorithm implemented in the package
-[slowraker](https://github.com/cran/slowraker) to generate meaningful names
-for all variables in the survey, as well as adding a comprehensive set of
-metadata attributes that uniquely identifies each variable.
+algorithm by [Rose. et al.]
+(https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf)
+implemented in the package [slowraker](https://github.com/cran/slowraker)
+to generate meaningful names for all variables in the survey, as well as
+adding a comprehensive set of metadata attributes that uniquely identifies
+each variable.
 
 Note that your institution must support API access and that it must be
 enabled for your account. Whoever manages your Qualtrics account can help
@@ -101,7 +103,7 @@ mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
 
 These "easy names" are generated through a modified version of the RAKE
 algorithm implemented in the package
-[slowraker](https://github.com/cran/slowraker). The rake algorithm was
+[slowraker](https://github.com/cran/slowraker). The RAKE algorithm was
 originally proposed as a method to extract keywords from documents [Rose.
 et al.](https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf). 
 It works by first selecting a series of candidate keywords, where each
