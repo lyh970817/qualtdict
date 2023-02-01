@@ -29,3 +29,20 @@ names are unique; 2) For each variable, whether there is a unique
 mapping between level and label and whether the levels are consecutive;
 and extract unique level-label pairings.
 }
+\examples{
+\dontrun{
+
+# Create a dictionary
+mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
+  name = "easy_name",
+  block_pattern = block_pattern,
+  block_sep = ".",
+  split_by_block = FALSE
+)
+
+
+# Validate the dictionary
+validation <- dict_validate(mydict)
+}
+
+}
