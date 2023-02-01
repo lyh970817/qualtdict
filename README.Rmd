@@ -31,7 +31,8 @@ reduce the pre-processing steps needed in analyzing such surveys. The
 current package makes more comprehensive use of the survey metadata and
 generates a variable dictionary including most of the information essential
 for data processing and analysis. It also uses a modified version of the
-RAKE algorithm implemented in the package
+RAKE algorithm by [Rose. et al.]
+(https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf)implemented in the package
 [slowraker](https://github.com/cran/slowraker) to generate meaningful names
 for all variables in the survey, as well as adding a comprehensive set of
 metadata attributes that uniquely identifies each variable.
