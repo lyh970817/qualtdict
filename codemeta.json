@@ -35,6 +35,18 @@
   "softwareSuggestions": [
     {
       "@type": "SoftwareApplication",
+      "identifier": "covr",
+      "name": "covr",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=covr"
+    },
+    {
+      "@type": "SoftwareApplication",
       "identifier": "knitr",
       "name": "knitr",
       "provider": {
@@ -291,7 +303,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "734.754KB",
+  "fileSize": "728.166KB",
   "readme": "https://github.com/lyh970817/qualtdict/blob/master/README.md",
   "contIntegration": ["https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml", "https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml"],
   "developmentStatus": "https://www.repostatus.org/#wip",
