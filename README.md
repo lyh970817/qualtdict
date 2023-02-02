@@ -7,9 +7,9 @@
 
 <!-- badges: start -->
 
-[![Project Status: WIP – Initial development is in progress, but there
-has not yet been a stable, usable release suitable for the
-public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
+[![Project Status: Active – The project has reached a stable, usable
+state and is being actively
+developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![check-standard](https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml)
 [![test-coverage](https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml)
 [![Codecov test
@@ -24,12 +24,12 @@ to reduce the pre-processing steps needed in analyzing such surveys. The
 current package makes more comprehensive use of the survey metadata and
 generates a variable dictionary including most of the information
 essential for data processing and analysis. It also uses a modified
-version of the RAKE algorithm by \[Rose. et al.\]
-(<https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf)implemented>
-in the package [slowraker](https://github.com/cran/slowraker) to
-generate meaningful names for all variables in the survey, as well as
-adding a comprehensive set of metadata attributes that uniquely
-identifies each variable.
+version of the RAKE algorithm by [Rose. et
+al.](https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf)
+implemented in the package
+[slowraker](https://github.com/cran/slowraker) to generate meaningful
+names for all variables in the survey, as well as adding a comprehensive
+set of metadata attributes that uniquely identifies each variable.
 
 ## Installation
 

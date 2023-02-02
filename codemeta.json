@@ -303,9 +303,9 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "728.166KB",
+  "fileSize": "724.643KB",
   "readme": "https://github.com/lyh970817/qualtdict/blob/master/README.md",
-  "contIntegration": ["https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml", "https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml"],
-  "developmentStatus": "https://www.repostatus.org/#wip",
+  "contIntegration": ["https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml", "https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml", "https://app.codecov.io/gh/lyh970817/qualtdict?branch=master"],
+  "developmentStatus": "https://www.repostatus.org/#active",
   "keywords": ["r", "r-package", "rstats", "qualtrics", "qualtrics-api", "qualtrics-survey"]
 }
