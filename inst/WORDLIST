@@ -3,11 +3,13 @@ api
 aut
 BugReports
 CMD
+Codecov
 codemeta
 codeRepository
 ComputerLanguage
 Config
 contIntegration
+covr
 cran
 cre
 crul
