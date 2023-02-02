@@ -1,5 +1,6 @@
 #' Download metadata in json format and recode into dictionary format
 #' @keywords internal
+#' @noRd
 recode_json <- function(surveyID,
                         easyname_gen,
                         block_pattern,
