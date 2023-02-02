@@ -2,6 +2,7 @@
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
+#' @noRd
 checkarg_isboolean <-
   function(arg) {
     test <-
@@ -21,6 +22,7 @@ checkarg_isboolean <-
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
+#' @noRd
 checkarg_isstring <-
   function(arg, null_okay = TRUE) {
     if (null_okay && is.null(arg)) {
@@ -44,6 +46,7 @@ checkarg_isstring <-
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
+#' @noRd
 checkarg_ischaracter <-
   function(arg, null_okay = TRUE) {
     if (null_okay && is.null(arg)) {
@@ -79,6 +82,7 @@ checkarg_ischaracter <-
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
+#' @noRd
 checkarg_isname <- function(arg) {
   test <-
     length(arg) == 1 && !is.null(arg) &&
@@ -98,6 +102,7 @@ checkarg_isname <- function(arg) {
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
+#' @noRd
 checkarg_isfunction <- function(arg, null_okay = TRUE) {
   if (null_okay && is.null(arg)) {
     return()
@@ -121,6 +126,7 @@ checkarg_isfunction <- function(arg, null_okay = TRUE) {
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
+#' @noRd
 checkarg_isqualtdict <- function(arg) {
   test <- any(class(arg) == "qualtdict")
 

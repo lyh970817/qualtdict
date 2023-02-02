@@ -17,6 +17,7 @@ globalVariables(c(
 #' @param cols A dataframe with two columns
 #' @importFrom rlang :=
 #' @keywords internal
+#' @noRd
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
     cols %>%
@@ -34,6 +35,7 @@ which_not_onetoone <- function(cols) {
 #' Given a two-column dataframe determine which row is one-to-one (logical)
 #' @param cols A dataframe with two columns
 #' @keywords internal
+#' @noRd
 is_onetoone <- function(cols) {
   !any(map_dbl(which_not_onetoone(cols), nrow) > 0)
 }
@@ -41,6 +43,7 @@ is_onetoone <- function(cols) {
 #' Convert NULL or a list of NULLs to NA
 #' @param x NULL or a list of NULLs
 #' @keywords internal
+#' @noRd
 null_na <- function(x) {
   # A list created with NULL values will have lengths of all 0
   if (is.null(x) ||
@@ -55,6 +58,7 @@ null_na <- function(x) {
 #' @param data A dataframe
 #' @importFrom xml2 xml_text read_html
 #' @keywords internal
+#' @noRd
 convert_html <- function(data) {
   unescape_html <- function(x) {
     map_chr(
@@ -83,6 +87,7 @@ convert_html <- function(data) {
 #' @param x A character vector
 #' @param y A character vector
 #' @keywords internal
+#' @noRd
 unique_expand <- function(x, y) {
   if (all(is.na(x))) {
     return(x)
@@ -94,6 +99,7 @@ unique_expand <- function(x, y) {
 
 #' `paste` but with seperator associated with NA removed
 #' @keywords internal
+#' @noRd
 paste_narm <- function(...) {
   args <- list(...)
   is_null_na <- map_lgl(args, ~ is.null(.x) | all(is.na(.x)))
@@ -106,6 +112,7 @@ paste_narm <- function(...) {
 
 #' `unlist` that preserve names
 #' @keywords internal
+#' @noRd
 unlist_nm <- function(list) {
   names <- names(list)
   v <- unlist(map(list, null_na)) %>%
@@ -115,6 +122,7 @@ unlist_nm <- function(list) {
 
 #' Order a list by name
 #' @keywords internal
+#' @noRd
 order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
@@ -122,6 +130,7 @@ order_name <- function(list) {
 #' Function factory for maximum five times of retries when failed
 #' @param f A function
 #' @keywords internal
+#' @noRd
 retry <- function(f) {
   function(...) {
     r <- NULL
@@ -143,18 +152,21 @@ retry <- function(f) {
 }
 
 #' Retry version of `fetch_survey`
-#' @importFrom qualtRics fetch_survey 
+#' @importFrom qualtRics fetch_survey
 #' @keywords internal
+#' @noRd
 fetch_survey2 <- retry(fetch_survey)
 
 #' Retry version of `metadata`
-#' @importFrom qualtRics metadata 
+#' @importFrom qualtRics metadata
 #' @keywords internal
+#' @noRd
 metadata2 <- retry(metadata)
 
 #' Retry version of `fetch_description`
 #' @importFrom qualtRics fetch_description
 #' @keywords internal
+#' @noRd
 fetch_description2 <- retry(fetch_description)
 
 

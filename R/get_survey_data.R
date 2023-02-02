@@ -98,6 +98,7 @@ get_survey_data <- function(dict,
 
 #' Add labels to survey
 #' @keywords internal
+#' @noRd
 survey_recode <- function(dict,
                           dat,
                           keys,
@@ -130,6 +131,7 @@ survey_recode <- function(dict,
 #' @importFrom sjlabelled set_label set_labels
 #' @importFrom haven read_xpt
 #' @keywords internal
+#' @noRd
 survey_var_recode <- function(var,
                               var_dict,
                               unanswer_recode,

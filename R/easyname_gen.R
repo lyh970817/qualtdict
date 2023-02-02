@@ -3,6 +3,7 @@
 #' @importFrom stringi stri_count_words
 #' @importFrom rlang hash
 #' @keywords internal
+#' @noRd
 easyname_gen <- function(json,
                          surveyID,
                          block_pattern,
