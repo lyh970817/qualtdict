@@ -4,6 +4,7 @@ aut
 BugReports
 CMD
 Codecov
+codecov
 codemeta
 codeRepository
 ComputerLanguage
@@ -20,9 +21,11 @@ dplyr
 et
 familyName
 fileSize
+gh
 github
 givenName
 https
+io
 issueTracker
 kcl
 knitr
