@@ -1,6 +1,6 @@
 Package: qualtdict
-Title: Generating Item Dictionaries and Labelled Data Exports of Qualtrics
-    Surveys
+Title: Generating Variable Dictionaries and Labelled Data Exports of
+    Qualtrics Surveys
 Version: 0.0.0.9000
 Authors@R:
     person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre"),
