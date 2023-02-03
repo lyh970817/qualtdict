@@ -2,7 +2,7 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "identifier": "qualtdict",
-  "description": "Provides functions that generate variable dictionaries from 'Qualtrics' <https://www.qualtrics.com/about/> surveys and labelled survey data based on the dictionary. This package is built upon the R package 'qualtRics' <https://github.com/ropensci/qualtRics/> which provides access to 'Qualtrics' survey metadata via the 'Qualtrics' API <https://api.qualtrics.com/>.",
+  "description": "Provides functions that generate variable dictionaries from 'Qualtrics' <https://www.qualtrics.com/about/> surveys and labelled survey data based on the dictionary. This package is built upon the R package 'qualtRics' <https://github.com/ropensci/qualtRics/> which provides access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API <https://api.qualtrics.com/>.",
   "name": "qualtdict: Generating Variable Dictionaries and Labelled Data Exports of\n    Qualtrics Surveys",
   "codeRepository": "https://github.com/lyh970817/qualtdict",
   "issueTracker": "https://github.com/lyh970817/qualtdict/issues",
@@ -303,7 +303,7 @@
     },
     "SystemRequirements": null
   },
-  "fileSize": "724.633KB",
+  "fileSize": "724.642KB",
   "readme": "https://github.com/lyh970817/qualtdict/blob/master/README.md",
   "contIntegration": ["https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml", "https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml", "https://app.codecov.io/gh/lyh970817/qualtdict?branch=master"],
   "developmentStatus": "https://www.repostatus.org/#active",
