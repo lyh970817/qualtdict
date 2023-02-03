@@ -9,8 +9,8 @@ Description: Provides functions that generate variable dictionaries from
     'Qualtrics' <https://www.qualtrics.com/about/> surveys and labelled
     survey data based on the dictionary. This package is built upon the R
     package 'qualtRics' <https://github.com/ropensci/qualtRics/> which
-    provides access to 'Qualtrics' survey metadata via the 'Qualtrics' API
-    <https://api.qualtrics.com/>.
+    provides access to 'Qualtrics' survey data and metadata via the
+    'Qualtrics' API <https://api.qualtrics.com/>.
 License: MIT + file LICENSE
 URL: https://github.com/lyh970817/qualtdict
 BugReports: https://github.com/lyh970817/qualtdict/issues
