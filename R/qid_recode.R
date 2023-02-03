@@ -245,7 +245,7 @@ qid_recode <- function(qid,
         CS = list(WTB = suf_item_suf_level_qid)
       ),
     Slider = list(
-      HSLIDER = suf_level_qid,
+      HSLIDER = suf_item_rep_level_qid,
       HBAR = suf_level_qid,
       STAR = suf_level_qid
     ),
@@ -274,7 +274,10 @@ qid_recode <- function(qid,
         TB = questiontext_qid,
         PTB = questiontext_qid,
         FLB = questiontext_qid,
-        GRB = list(WTXB = questiontext_qid)
+        GRB = list(
+            WTXB = questiontext_qid,
+            WOTXB = questiontext_qid
+        )
     )
   )
 
