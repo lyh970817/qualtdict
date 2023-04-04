@@ -45,6 +45,12 @@ dict_validate <- function(dict) {
   split_dict <- split(dict, factor(dict$qid))
 
   level_label_pairs <- split_dict %>%
+   modify(function(x) {
+      # Remove names so they don't interfere with grouping
+      x$level <- setNames(x$level, NULL)
+      x$label <- setNames(x$label, NULL)
+      x
+    }) %>%
     map(select, label, level) %>%
     enframe(value = "pair") %>%
     group_by(pair) %>%
