@@ -147,10 +147,12 @@ sbs_qid <- function(qid,
   paste(qid, sep = "#", seq(col_len)) %>%
     map2(length(item), rep) %>%
     map(paste, names(item), sep = "_") %>%
-    map2(choice_len, ~ rep(.x, each = .y)) %>%
+    map2(choice_len, ~ rep_item(.x, item, .y) %>% unlist()) %>%
     map2(col_type, function(qids, type) {
       if (type == "TE") {
-        return(paste(qids, 1:choice_len[type], sep = "_"))
+        qids <- paste(qids, 1:choice_len[type], sep = "_") %>%
+          str_replace("_TEXT_\\d$", "_TEXT")
+        return(qids)
       } else {
         return(qids)
       }

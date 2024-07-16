@@ -162,12 +162,9 @@ recode_json <- function(surveyID,
         top_question <- qjson$questionText
         # Get questions in each column
         question <- map(qjson$columns, "questionText") %>%
-          # Repeat the question for the number of levels, separately for each
-          # column
-          map2(level_len, ~ rep(.x, each = .y)) %>%
+          map2(length(item), rep) %>%
+          map2(level_len, ~ rep_item(.x, item, .y) %>% unlist) %>%
           unlist() %>%
-          # Repeat for the number of items
-          rep(each = sub_q_len) %>%
           # Prepend the overarching question
           paste(top_question, ., sep = " ")
 
@@ -184,6 +181,7 @@ recode_json <- function(surveyID,
           map(~ map_chr(.x, "description"))
 
         item <- unlist(map(qjson$subQuestions, "description"))
+        item <- unlist(add_text(item, has_text_sub))
       }
     }
 
@@ -209,7 +207,7 @@ recode_json <- function(surveyID,
       block = block,
       question = question,
       looping_question = NA,
-      item = rep_item(item, level_len) %>% null_na(),
+      item = rep_item(item, item, level_len) %>% null_na(),
       level = rep_level(level, item) %>% null_na(),
       label = rep_level(label, item) %>% null_na(),
       type = type, selector = selector, content_type = content_type,
@@ -278,17 +276,17 @@ rep_qid <- function(qid, item, choice_len) {
     unlist()
 }
 
-rep_item <- function(item, choice_len) {
+rep_item <- function(x, item, choice_len) {
   map(choice_len, function(c) {
-    imap(item, function(itm, nam) {
-      if (!grepl("TEXT", nam)) {
-        return(rep(itm, each = c))
+    map2(item, x, function(itm, x) {
+      if (!grepl("TEXT", itm)) {
+        return(rep(x, each = c))
       } else {
-        return(itm)
+        return(x)
       }
-    })
-  })
-}
+    })%>%
+      unlist()
+  }) }
 
 rep_level <- function(level, item) {
   if (is.null(item)) {
@@ -302,8 +300,9 @@ rep_level <- function(level, item) {
       } else {
         return("TEXT")
       }
-    })
-  })
+    }) %>%
+    unlist(recursive = FALSE)
+  }) 
 }
 
 rep_loop <- function(x, question_meta) {
