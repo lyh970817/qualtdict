@@ -81,18 +81,29 @@ get_survey_data <- function(dict,
         select(keys, everything())
     )
 
-    return(map(block_dict, survey_recode,
-      dat = survey,
-      keys = keys,
-      unanswer_recode = args$unanswer_recode,
-      unanswer_recode_multi = args$unanswer_recode_multi
+    return(map(
+      block_dict,
+      function(dict) {
+        dat_recoded <- survey_recode(
+          dict = dict,
+          dat = survey,
+          keys = keys,
+          unanswer_recode = args$unanswer_recode,
+          unanswer_recode_multi = args$unanswer_recode_multi
+        )
+        attr(dat_recoded, "dict") <- dict
+        return(dat_recoded)
+      }
     ))
   } else {
-    return(survey_recode(dict,
+    dat_recoded <- survey_recode(dict,
       dat = survey, keys = keys,
       unanswer_recode = args$unanswer_recode,
       unanswer_recode_multi = args$unanswer_recode_multi
-    ))
+    )
+
+    attr(dat_recoded, "dict") <- dict
+    return(dat_recoded)
   }
 }
 
