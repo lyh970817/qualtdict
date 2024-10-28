@@ -269,7 +269,7 @@ qid_recode <- function(qid,
       STAR = suf_level_qid
     ),
     CS = list(
-      HR = list(TX = item_or_level_qid),
+      HR = list(TX = suf_nmlabel_qid),
       VRTL = list(TX = item_or_level_qid),
       HBAR = item_or_level_qid,
       HSLIDER = item_or_level_qid
