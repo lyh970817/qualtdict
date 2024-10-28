@@ -16,6 +16,14 @@ add_text_mc <- function(new_qid, level) {
   new_qid
 }
 
+sub_text_mc <- function(new_qid, qid, level) {
+  text_pos <- grep("TEXT", level)
+  if (!is.null(text_pos)) {
+    new_qid[text_pos] <- paste(qid, names(level), sep = "_")[text_pos]
+  }
+  new_qid
+}
+
 suf_level_qid <- function(qid,
                           col_len,
                           item,
@@ -23,7 +31,20 @@ suf_level_qid <- function(qid,
                           label,
                           choice_len,
                           col_type) {
-  add_text_mc(paste(qid, level, sep = "_"), level)
+  # Add recode values to the end of the QIDs and then add Qualtrics internal
+  # index to the end of QIDs with text options belonging to multiple choice
+  # questions allowing for only one choice
+  add_text_mc(paste(qid, level, sep = "_"), qid, level)
+}
+
+suf_level_qid_macol <- function(qid,
+                          col_len,
+                          item,
+                          level,
+                          label,
+                          choice_len,
+                          col_type) {
+  sub_text_mc(paste(qid, level, sep = "_"), qid, level)
 }
 
 suf_level_qid_mavr <- function(qid,
@@ -227,7 +248,7 @@ qid_recode <- function(qid,
   recode_list <- list(
     MC =
       list(
-        MACOL = list(TX = suf_level_qid),
+        MACOL = list(TX = suf_level_qid_macol),
         MAVR = list(TX = suf_level_qid_mavr),
         MAHR = list(TX = suf_level_qid),
         MSB = suf_level_qid,
