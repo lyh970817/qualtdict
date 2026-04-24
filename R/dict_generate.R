@@ -1,3 +1,6 @@
+#JZ: removed
+# @export
+
 #' Generate a variable dictionary for a survey
 #'
 #' Generate a variable dictionary for a Qualtrics survey survey
@@ -23,7 +26,6 @@
 #' A 'qualtdict' dataframe or a list of 'qualtdict' dataframes (depending on
 #' \code{split_by_block}.
 #'
-#' @export
 #' @examples
 #' \dontrun{
 #'
@@ -48,6 +50,12 @@ dict_generate <- function(surveyID,
                           block_sep = ".",
                           preprocess = NULL,
                           split_by_block = FALSE) {
+  
+  # surveyID = glad_ID,
+  # name = "easy_name"
+  # block_pattern = glad_block_fun
+  # split_by_block = T
+  
   checkarg_isstring(surveyID, null_okay = FALSE)
   checkarg_isname(name)
   checkarg_isfunction(block_pattern)
@@ -55,7 +63,7 @@ dict_generate <- function(surveyID,
   checkarg_isfunction(preprocess)
   checkarg_isboolean(split_by_block)
 
-  name <- match.arg(name)
+  #name <- match.arg(name)
 
   easyname_gen <- ifelse(
     name == "easy_name",

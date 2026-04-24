@@ -1,3 +1,6 @@
+#'@rawNamespace exportPattern("^[[:alpha:]]+") #JZ: added to export as default
+#'@rawNamespace import(data.table)
+
 #' @importFrom stats setNames
 #' @import dplyr
 #' @import purrr
@@ -19,16 +22,25 @@ globalVariables(c(
 #' @keywords internal
 #' @noRd
 which_not_onetoone <- function(cols) {
+  #cols<-json_makename[c("easyname", "qid")]
+  #cols[cols$easyname=="approximate_age_age_fine.txt",]
+  #cols[cols$easyname=="mhd.mdd",]
+  #cols[cols$easyname=="mhd.dont_know",]
+  
   which_not_oneto <- function(cols, from, to) {
-    cols %>%
+    # from<-"easyname"
+    # to<-"qid"
+    grouped<-cols %>%
       group_by(.data[[from]]) %>%
-      filter(length(unique(.data[[to]])) != 1) %>%
-      summarize(!!to := unique(.data[[to]]), .groups = "keep")
+      filter(length(unique(.data[[to]])) != 1)
+    #summarize(grouped,!!to := unique(grouped[[to]]), .groups = "keep")
+    summarize(grouped, .groups = "keep") #JZ: not sure this will do what we wanted to do here.
   }
   names_cols <- colnames(cols)
   map(
     names_cols,
-    ~ which_not_oneto(cols, from = .x, to = setdiff(names_cols, .x))
+    function(x){which_not_oneto(cols, from = x, to = setdiff(names_cols, x))}
+    #~ which_not_oneto(cols, from = .x, to = setdiff(names_cols, .x))
   )
 }
 
@@ -169,6 +181,6 @@ metadata2 <- retry(metadata)
 #' @noRd
 fetch_description2 <- retry(fetch_description)
 
+#'@export
 #' @importFrom qualtRics qualtrics_api_credentials
-#' @export
 qualtRics::qualtrics_api_credentials

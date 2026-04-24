@@ -1,3 +1,6 @@
+#JZ: removed
+# @export
+
 #' Download a labeled survey data set
 #'
 #' Download a survey data set from Qualtrics corresponding to a variable
@@ -24,7 +27,6 @@
 #' A dataframe containing survey data with question, items, levels and
 #' labels added as attributes to each column with \code{sjlabelled}.
 #'
-#' @export
 #' @examples
 #' \dontrun{
 #'
@@ -46,6 +48,10 @@ get_survey_data <- function(dict,
                             split_by_block = FALSE,
                             skip = NULL,
                             ...) {
+  # dict = mhd_glad
+  # unanswer_recode_multi = 0
+  # unanswer_recode = -77
+  
   checkarg_isqualtdict(dict)
   checkarg_ischaracter(keys, null_okay = TRUE)
   checkarg_isboolean(split_by_block)

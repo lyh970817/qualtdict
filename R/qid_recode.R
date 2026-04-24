@@ -34,7 +34,8 @@ suf_level_qid <- function(qid,
   # Add recode values to the end of the QIDs and then add Qualtrics internal
   # index to the end of QIDs with text options belonging to multiple choice
   # questions allowing for only one choice
-  add_text_mc(paste(qid, level, sep = "_"), qid, level)
+  #add_text_mc(paste(qid, level, sep = "_"), qid, level)
+  add_text_mc(paste(qid, level, sep = "_"), level)
 }
 
 suf_level_qid_macol <- function(qid,
@@ -244,6 +245,8 @@ qid_recode <- function(qid,
                        selector,
                        sub_selector,
                        is_qid) {
+  
+  #is_qid = TRUE
 
   recode_list <- list(
     MC =

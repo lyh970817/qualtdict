@@ -1,3 +1,6 @@
+#JZ: removed
+#@export
+
 #' Check for potential mistakes in the dictionary
 #'
 #' Check for potential mistakes in the dictionary: 1) Whether the variable
@@ -37,7 +40,6 @@
 #' validation <- dict_validate(mydict)
 #' }
 #'
-#' @export
 dict_validate <- function(dict) {
   checkarg_isqualtdict(dict)
   message("Validating dictionary...")

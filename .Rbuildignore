@@ -6,3 +6,5 @@
 ^codemeta\.json$
 ^helper-pkg\.R$
 ^scratch\.R$
+^.*\.Rproj$
+^\.Rproj\.user$
