@@ -253,8 +253,10 @@ recode_json <- function(surveyID,
   json$question[!is.na(looping_questions)] <-
     looping_questions[!is.na(looping_questions)]
 
-  attr(json, "survey_name") <- as.character(mt$metadata$name)
-  attr(json, "surveyID") <- surveyID
+  json$survey_name <- as.character(mt$metadata$name)
+  #attr(json, "survey_name") <- as.character(mt$metadata$name)
+  json$surveyID <- surveyID
+  #attr(json, "surveyID") <- surveyID
 
   return(json)
 }

@@ -51,7 +51,7 @@ dict_generate <- function(surveyID,
                           preprocess = NULL,
                           split_by_block = FALSE) {
   
-  # surveyID = glad_ID,
+  # surveyID = glad_ID
   # name = "easy_name"
   # block_pattern = glad_block_fun
   # split_by_block = T
@@ -63,23 +63,24 @@ dict_generate <- function(surveyID,
   checkarg_isfunction(preprocess)
   checkarg_isboolean(split_by_block)
 
-  #name <- match.arg(name)
+  #name <- match.arg(name) #JZ: no check because it screws up my testing
 
   easyname_gen <- ifelse(
     name == "easy_name",
     TRUE, FALSE
   )
 
-  dict <- recode_json(surveyID,
+  dictSurveyOriginal <- recode_json(surveyID,
     easyname_gen = easyname_gen,
     block_pattern = block_pattern,
     block_sep = block_sep,
     preprocess = preprocess
   )
 
-  dict <- dict[c(
+  dict <- dictSurveyOriginal[c(
     "qid", "name", "block", "question",
-    "item", "level", "label", "type", "selector", "sub_selector", "content_type"
+    "item", "level", "label", "type", "selector", "sub_selector", "content_type",
+    "survey_name","surveyID"
   )]
 
   attr(dict, "class") <- c("qualtdict", class(dict))
