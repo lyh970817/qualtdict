@@ -6,6 +6,13 @@ recode_json <- function(surveyID,
                         block_pattern,
                         block_sep,
                         preprocess) {
+  
+  # surveyID=surveyID
+  # easyname_gen = easyname_gen
+  # block_pattern = block_pattern
+  # block_sep = block_sep
+  # preprocess = preprocess
+  
   # Fetch metadata
   # Wrapper functions foo2 to retry when timeout
   mt <- metadata2(
@@ -95,8 +102,15 @@ recode_json <- function(surveyID,
       x["content_type"] <- y
       return(x)
     })
-
-  json <- imap(question_meta, function(qjson, qid) {
+  
+  mappingFunction <- function(qjson, qid) {
+    # qjson<-question_meta[1]$QID553
+    # qid<-1
+    # qjson<-question_meta[163]$QID552
+    # qid<-163
+    # qjson<-question_meta[164]$QID553
+    # qid<-164
+    
     # Clean the &nbsp; level/label fields (empty on Qualtrics)
     nbsps <- map(qjson$choices, "description") == "&nbsp;"
     # If there is only one nbsq, the question is a title
@@ -104,30 +118,30 @@ recode_json <- function(surveyID,
     if (length(nbsps) != 1) {
       qjson$choices <- qjson$choices[!nbsps]
     }
-
+    
     question_name <- qjson$questionName
     type <- qjson$questionType$type
     question <- qjson$questionText
     selector <- qjson$questionType$selector
     block <- qjson$block
     content_type <- qjson$content_type
-
+    
     # If no subquestion or choice, treat subquestion length as 1
     sub_q_len <- length(qjson$subQuestions) %>% ifelse(. > 0, ., 1)
-
+    
     # If no levels, treat level length as 1
     level_len <- length(qjson$choices) %>% ifelse(. > 0, ., 1)
-
+    
     # The rep_level function works on lists for dealing with SBS questions
     # For consistency we convert to lists for non-SBS questions
     level <- map(qjson$choices, "recode") %>%
       unlist_nm() %>%
       list()
-
+    
     label <- map(qjson$choices, "description") %>%
       unlist_nm() %>%
       list()
-
+    
     # Recode for text entry choices
     has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
     if (length(has_text) > 0) {
@@ -135,10 +149,10 @@ recode_json <- function(surveyID,
       level <- add_text(level, has_text)
       label <- add_text(label, has_text)
     }
-
+    
     item <- unlist(map(qjson$subQuestions, "choiceText"))
     sub_selector <- qjson$questionType$subSelector
-
+    
     # Recode for text entry item
     has_text_sub <- which(map_lgl(
       qjson$subQuestions, ~ "textEntry" %in% names(.x)
@@ -147,7 +161,7 @@ recode_json <- function(surveyID,
       item <- unlist(add_text(item, has_text_sub))
       sub_q_len <- sub_q_len + length(has_text_sub)
     }
-
+    
     if (type == "SBS") {
       # Get number of levels in each column
       level_len <- map(qjson$columns, "choices") %>% map_dbl(length)
@@ -157,7 +171,7 @@ recode_json <- function(surveyID,
       col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
       if (col_len != 0) {
         # Zero length columns means it's a carried forward question
-
+        
         # Get overacching question
         top_question <- qjson$questionText
         # Get questions in each column
@@ -167,7 +181,7 @@ recode_json <- function(surveyID,
           unlist() %>%
           # Prepend the overarching question
           paste(top_question, ., sep = " ")
-
+        
         level <- map(qjson$columns, "choices") %>%
           map(~ map_chr(.x, "recode")) %>%
           map2(col_type, function(level, type) {
@@ -176,31 +190,31 @@ recode_json <- function(surveyID,
             }
             level
           })
-
+        
         label <- map(qjson$columns, "choices") %>%
           map(~ map_chr(.x, "description"))
-
+        
         item <- unlist(map(qjson$subQuestions, "description"))
         item <- unlist(add_text(item, has_text_sub))
       }
     }
-
+    
     new_qid <- qid_recode(qid,
-      col_len = col_len, col_type = col_type,
-      item = item, level = level, label = label,
-      choice_len = level_len,
-      type = type, selector = selector,
-      sub_selector = sub_selector, is_qid = TRUE
+                          col_len = col_len, col_type = col_type,
+                          item = item, level = level, label = label,
+                          choice_len = level_len,
+                          type = type, selector = selector,
+                          sub_selector = sub_selector, is_qid = TRUE
     )
-
+    
     question_name <- qid_recode(question_name,
-      col_len = col_len, col_type = col_type,
-      item = item, level = level, label = label,
-      choice_len = level_len,
-      type = type, selector = selector,
-      sub_selector = sub_selector, is_qid = FALSE
+                                col_len = col_len, col_type = col_type,
+                                item = item, level = level, label = label,
+                                choice_len = level_len,
+                                type = type, selector = selector,
+                                sub_selector = sub_selector, is_qid = FALSE
     )
-
+    
     list_qid <- list(
       qid = new_qid,
       name = null_na(question_name),
@@ -216,9 +230,11 @@ recode_json <- function(surveyID,
       looping_option = NA,
       looping = all(!is.null(qjson$looping_qid))
     )
-
+    
     return(list_qid)
-  }) %>%
+  }
+
+  json <- imap(question_meta, mappingFunction) %>%
     discard(is.null) %>%
     rep_loop(question_meta) %>%
     to_dataframe() %>%
@@ -237,8 +253,10 @@ recode_json <- function(surveyID,
   json$question[!is.na(looping_questions)] <-
     looping_questions[!is.na(looping_questions)]
 
-  attr(json, "survey_name") <- as.character(mt$metadata$name)
-  attr(json, "surveyID") <- surveyID
+  json$survey_name <- as.character(mt$metadata$name)
+  #attr(json, "survey_name") <- as.character(mt$metadata$name)
+  json$surveyID <- surveyID
+  #attr(json, "surveyID") <- surveyID
 
   return(json)
 }

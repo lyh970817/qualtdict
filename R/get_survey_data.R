@@ -1,3 +1,6 @@
+#JZ: removed
+# @export
+
 #' Download a labeled survey data set
 #'
 #' Download a survey data set from Qualtrics corresponding to a variable
@@ -24,7 +27,6 @@
 #' A dataframe containing survey data with question, items, levels and
 #' labels added as attributes to each column with \code{sjlabelled}.
 #'
-#' @export
 #' @examples
 #' \dontrun{
 #'
@@ -46,17 +48,29 @@ get_survey_data <- function(dict,
                             split_by_block = FALSE,
                             skip = NULL,
                             ...) {
+  # dict = mhd_edgi
+  # unanswer_recode_multi = 0
+  # unanswer_recode = -77
+  
+  # dict = dict_edgi2
+  # unanswer_recode_multi = 0
+  # unanswer_recode = -77
+  
   checkarg_isqualtdict(dict)
   checkarg_ischaracter(keys, null_okay = TRUE)
   checkarg_isboolean(split_by_block)
   checkarg_ischaracter(skip, null_okay = TRUE)
 
   args <- list(...)
+  # args<-c()
+  
   args$force_request <- TRUE
-  args$surveyID <- attr(dict, "surveyID")
+  args$surveyID <- dict$surveyID[[1]] #JZ: take the first one
+  #args$surveyID <- attr(dict, "surveyID")
   args$import_id <- TRUE
   args$convert <- FALSE
   args$label <- FALSE
+  #args$include_embedded <- c("DiagnosisBN","DiagnosisAtypicalBN","ICDDiagnosisBN",) #JZ: We want the embedded data as well
 
   survey <- do.call(fetch_survey2, args)
 
@@ -67,50 +81,104 @@ get_survey_data <- function(dict,
   if (!is.null(skip)) {
     survey <- survey[!colnames(survey) %in% skip]
   }
+  
+  dat_recoded <- survey_recode(dict,
+     dat = survey, keys = keys,
+     unanswer_recode = args$unanswer_recode,
+     unanswer_recode_multi = args$unanswer_recode_multi
+   )
 
-  if (split_by_block == TRUE) {
-    keys <- unique(unlist(dict[dict[["name"]] %in% keys, "qid"]))
-    keys_dat <- dict[dict[["name"]] %in% keys, ]
+   attr(dat_recoded, "dict") <- dict
+   return(dat_recoded)
 
-    block_dict <- map(
-      split(dict, dict$block),
-      ~ bind_rows(
-        keys_dat[-match(keys_dat[["name"]], .x[["name"]])],
-        .x
-      ) %>%
-        select(keys, everything())
-    )
+  # if (split_by_block == TRUE) {
+  #   keys <- unique(unlist(dict[dict[["name"]] %in% keys, "qid"]))
+  #   keys_dat <- dict[dict[["name"]] %in% keys, ]
+  # 
+  #   block_dict <- map(
+  #     split(dict, dict$block),
+  #     ~ bind_rows(
+  #       keys_dat[-match(keys_dat[["name"]], .x[["name"]])],
+  #       .x
+  #     ) %>%
+  #       select(keys, everything())
+  #   )
+  # 
+  #   return(map(
+  #     block_dict,
+  #     function(dict) {
+  #       dat_recoded <- survey_recode(
+  #         dict = dict,
+  #         dat = survey,
+  #         keys = keys,
+  #         unanswer_recode = args$unanswer_recode,
+  #         unanswer_recode_multi = args$unanswer_recode_multi
+  #       )
+  #       attr(dat_recoded, "dict") <- dict
+  #       return(dat_recoded)
+  #     }
+  #   ))
+  # } else {
+  #   dat_recoded <- survey_recode(dict,
+  #     dat = survey, keys = keys,
+  #     unanswer_recode = args$unanswer_recode,
+  #     unanswer_recode_multi = args$unanswer_recode_multi
+  #   )
+  # 
+  #   attr(dat_recoded, "dict") <- dict
+  #   return(dat_recoded)
+  # }
+}
 
-    return(map(
-      block_dict,
-      function(dict) {
-        dat_recoded <- survey_recode(
-          dict = dict,
-          dat = survey,
-          keys = keys,
-          unanswer_recode = args$unanswer_recode,
-          unanswer_recode_multi = args$unanswer_recode_multi
-        )
-        attr(dat_recoded, "dict") <- dict
-        return(dat_recoded)
-      }
-    ))
-  } else {
-    dat_recoded <- survey_recode(dict,
-      dat = survey, keys = keys,
-      unanswer_recode = args$unanswer_recode,
-      unanswer_recode_multi = args$unanswer_recode_multi
-    )
-
-    attr(dat_recoded, "dict") <- dict
-    return(dat_recoded)
+#Very temporary solution. This only extracts the data without and recoding of values.
+#' Add labels to survey
+#' @keywords internal
+#' @noRd
+#' 
+survey_recode <- function(dict,
+                          dat,
+                          keys,
+                          unanswer_recode,
+                          unanswer_recode_multi) {
+  
+  #JZ: This is an updated recode fundtion aimed at the whole questionnaire, rather than blocks
+  
+  # in_dat <- dict[["qid"]] %in% colnames(dat)
+  # dict <- dict[in_dat, ]
+  unique_qids <- unique(dict[["qid"]],na.rm=T)
+  #unique_varnames <- unique(dict[["name"]],na.rm=T)
+  unique_quids_varnames <- unique(dict[,c("qid","name")],na.rm=T)
+  
+  if(length(unique_qids)!=nrow(unique_quids_varnames)){
+    stop("The number of QID's are not equal to the number of QID/Name pairs!")
   }
+
+  dtDict<-dict
+  setDT(dtDict)
+  
+  dNames.new<-data.frame(nameToRename=c(unique_quids_varnames$qid,keys),newName=NA_character_)
+  setDT(dNames.new)
+  dNames.new[dtDict, on=.(nameToRename=qid),c("newName"):=list(i.name)] #this just updates everything multiple times if duplicates in dict
+  dNames<-data.table(oldName=colnames(dat))
+  dNames[dNames.new, on=.(oldName=nameToRename),c("newName"):=list(i.newName)]
+  
+  # dat_cols <- c(stdNewNames, dict[["qid"]])
+  # dat_cols.newnames<-c(stdNewNames, dict[["name"]])
+  
+  dat2<-dat
+  colnames(dat2)[!is.na(dNames$newName)]<-dNames$newName[!is.na(dNames$newName)]
+  
+  #exclude incriminating columns
+  setDT(dat2)
+  dat2[,c("ipAddress","_recordId","recipientLastName","recipientFirstName","recipientEmail","locationLongitude","locationLatitude"):=list(NULL,NULL,NULL,NULL,NULL,NULL,NULL)]
+  
+  return(as.data.frame(dat2))
 }
 
 #' Add labels to survey
 #' @keywords internal
 #' @noRd
-survey_recode <- function(dict,
+survey_recode_old <- function(dict,
                           dat,
                           keys,
                           unanswer_recode,
@@ -119,22 +187,24 @@ survey_recode <- function(dict,
   dict <- dict[in_dat, ]
   unique_qids <- unique(dict[["qid"]])
   unique_varnames <- unique(dict[["name"]])
-
-  keys <- c("externalDataReference", "startDate", "endDate", keys)
+  
+  keys <- c(externalDataReference="externalDataReference", startDate="startDate", endDate="endDate", keys)
   dat_cols <- c(keys, unique_qids)
   varnames <- setNames(unique_qids, unique_varnames)
+  dat_cols.newnames<-c(keys, unique_qids)
+  
   dat <- rename(dat[dat_cols], !!!varnames)
-
+  
   # level = unique to preserve ordering
   split_dict <- split(dict, factor(dict$qid, levels = unique(dict$qid)))
   dat_vars <- map2_df(
     dat[unique_varnames], split_dict,
     ~ survey_var_recode(.x, .y,
-      unanswer_recode = unanswer_recode,
-      unanswer_recode_multi = unanswer_recode_multi
+                        unanswer_recode = unanswer_recode,
+                        unanswer_recode_multi = unanswer_recode_multi
     )
   )
-
+  
   bind_cols(dat[keys], dat_vars)
 }
 

@@ -33,7 +33,7 @@ easyname_gen <- function(json,
   unique_texts <- unique(texts)
 
   # Generate temp file path
-  tmpfile_path <- paste0(tempdir(), "/", hash(unique_texts), ".rds")
+  tmpfile_path <- paste0(tempdir(), "/", rlang::hash(unique_texts), ".rds")
 
   # Check if the same keywords have been saved in temp file path,
   # if not, generate them
@@ -60,7 +60,7 @@ easyname_gen <- function(json,
     if (all(is.na(x))) {
       # If no keywords generated, use original text
       nm <- unique_texts[i]
-    } else if (stri_count_words(unique(texts)[i]) < 8) {
+    } else if (stringi::stri_count_words(unique(texts)[i]) < 8) {
       # If original text shorter than 8 words, use original text
       nm <- unique_texts[i]
     } else {
@@ -153,12 +153,20 @@ easyname_gen <- function(json,
     duplicated_easynames,
     not_duplicated_easynames
   )
+  
+  #JZ: apologies for this. I just got confused by the tidyverse.
+  all_easynames<-as.data.frame(all_easynames)
+  data.table::setDT(all_easynames)
+  
+  json<-as.data.frame(json)
+  data.table::setDT(json)
+  json[all_easynames, on=c("qid"), name:=i.easyname]
+  
+  # json$name <-
+  #   recode(
+  #     json_makename$qid,
+  #     !!!setNames(all_easynames$easyname, all_easynames$qid)
+  #   )
 
-  json$name <-
-    recode(
-      json_makename$qid,
-      !!!setNames(all_easynames$easyname, all_easynames$qid)
-    )
-
-  json
+  as.data.frame(json)
 }
