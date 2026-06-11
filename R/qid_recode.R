@@ -5,10 +5,15 @@ questiontext_qid <- function(qid,
                              label,
                              choice_len,
                              col_type) {
+  # For texts without choices
+  # Return the original QID
   qid
 }
 
 add_text_mc <- function(new_qid, level) {
+  # For computed QIDs for multiple choice questions allowing for only one
+  # choice with text options, add Qualtrics internal index to the end of
+  # the QID for text options
   text_pos <- grep("TEXT", level)
   if (!is.null(text_pos)) {
     new_qid[text_pos] <- paste(new_qid, names(level), sep = "_")[text_pos]
@@ -34,7 +39,7 @@ suf_level_qid <- function(qid,
   # Add recode values to the end of the QIDs and then add Qualtrics internal
   # index to the end of QIDs with text options belonging to multiple choice
   # questions allowing for only one choice
-  add_text_mc(paste(qid, level, sep = "_"), qid, level)
+  add_text_mc(paste(qid, level, sep = "_"), level)
 }
 
 suf_level_qid_macol <- function(qid,
@@ -54,9 +59,6 @@ suf_level_qid_mavr <- function(qid,
                           label,
                           choice_len,
                           col_type) {
-  # Add recode values to the end of the QIDs and then add Qualtrics internal
-  # index to the end of QIDs with text options belonging to multiple choice
-  # questions allowing for only one choice
   paste(qid, level, sep = "_")
 }
 
@@ -67,8 +69,8 @@ suf_nmlabel_qid <- function(qid,
                             label,
                             choice_len,
                             col_type) {
-  # Same as level?
-  paste(qid, names(label), sep = "_")
+  # Add recode values to the end of the QID
+  paste(qid, names(level), sep = "_")
 }
 
 suf_text_qid <- function(qid,
@@ -244,7 +246,6 @@ qid_recode <- function(qid,
                        selector,
                        sub_selector,
                        is_qid) {
-
   recode_list <- list(
     MC =
       list(

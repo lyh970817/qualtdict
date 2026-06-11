@@ -231,6 +231,8 @@ recode_json <- function(surveyID,
   # Remove duplicated question text in item
   # This is useful in generating easy names
   json$item[json$item == json$question] <- NA
+  json$qid <- unname(json$qid)
+  json$name <- unname(json$name)
 
   # Add questions with loop and merge placeholders replaced with labels
   looping_questions <- json$looping_question
@@ -309,28 +311,47 @@ rep_loop <- function(x, question_meta) {
   looping_qids_meta <- unlist(map(question_meta, "looping_qid"))
   imap(x, function(qmeta, name) {
     if (qmeta$looping) {
-      looping_qmeta <- x[[looping_qids_meta[name]]]
+      looping_qid <- looping_qids_meta[name]
+      looping_qmeta <- x[[looping_qid]]
+      static_prefixes <- unlist(
+        question_meta[[name]][["looping_prefix"]],
+        use.names = FALSE
+      )
 
       # Get loop option and prefixes (names) generated
       # in `recode_json` (remove _TEXT)
       if (looping_qmeta[["type"]] == "Matrix") {
-        loop_options <- map(looping_qmeta[["item"]], ~ map_chr(.x, 1))
+        loop_options <- unlist(looping_qmeta[["item"]])
+        loop_prefixes <- sub(
+          paste0("^", looping_qids_meta[name], "_"),
+          "",
+          unlist(looping_qmeta[["qid"]])
+        )
+        keep <- !grepl("_TEXT", loop_prefixes) & !duplicated(loop_prefixes)
+        loop_options <- loop_options[keep]
+        names(loop_options) <- loop_prefixes[keep]
       } else {
-        loop_options <- map(looping_qmeta[["label"]], ~ map_chr(.x, 1))
+        loop_options <- map(looping_qmeta[["label"]], ~ map_chr(.x, 1)) %>%
+          unlist() %>%
+          discard(grepl("_TEXT", names(.)))
+
+        static_loop_options <- loop_options_from_static_choices(
+          question_meta[[looping_qid]][["choices"]],
+          static_prefixes
+        )
+        if (!is.null(static_loop_options)) {
+          loop_options <- static_loop_options
+        }
       }
 
-      loop_options <- loop_options %>%
-        unlist() %>%
-        discard(grepl("_TEXT", names(.)))
-
       imap(loop_options, function(option, prefix) {
-        qmeta[["qid"]] <- paste(prefix, qmeta[["qid"]], sep = "_")
+        qmeta[["qid"]] <- unname(paste(prefix, qmeta[["qid"]], sep = "_"))
         # What about second loop (field 2))?
         qmeta[["looping_question"]] <-
           gsub("\\$\\{lm://Field/1\\}", option, qmeta[["question"]])
         qmeta[["question"]] <-
           gsub("\\$\\{lm://Field/1\\}", "{}", qmeta[["question"]])
-        qmeta[["name"]] <- paste(prefix, qmeta[["name"]], sep = ".")
+        qmeta[["name"]] <- unname(paste(prefix, qmeta[["name"]], sep = "."))
         # To use in easyname_gen
         qmeta[["looping_option"]] <- option
         return(qmeta)
@@ -340,6 +361,25 @@ rep_loop <- function(x, question_meta) {
     }
   }) %>%
     unlist(recursive = FALSE)
+}
+
+loop_options_from_static_choices <- function(choices, static_prefixes) {
+  if (is.null(choices) ||
+    length(static_prefixes) == 0 ||
+    !all(static_prefixes %in% names(choices))) {
+    return(NULL)
+  }
+
+  loop_options <- vapply(static_prefixes, function(prefix) {
+    choice <- choices[[prefix]]
+    option <- choice[["description"]]
+    if (is.null(option) || is.na(option) || option == "") {
+      option <- choice[["choiceText"]]
+    }
+    as.character(option)
+  }, character(1))
+  names(loop_options) <- static_prefixes
+  loop_options
 }
 
 to_dataframe <- function(json) {
