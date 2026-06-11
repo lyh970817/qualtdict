@@ -11,7 +11,7 @@
 #' \code{split_by_block} is \code{TRUE}, to all individual block data sets.
 #' Can also be used to add variables (e.g. IP address) found on Qualtrics
 #' but not in the dictionary to the downloaded data sets.
-#' @param skip Logical. If \code{TRUE}, variables with potenetial
+#' @param skip Logical. If \code{TRUE}, variables with potential
 #' level-label mistakes will be removed from the data set.
 #' @param split_by_block Logical. If \code{TRUE}, the function returns a
 #' list with each element being the data set for a single survey block.
@@ -44,14 +44,22 @@
 get_survey_data <- function(dict,
                             keys = NULL,
                             split_by_block = FALSE,
-                            skip = NULL,
+                            skip = FALSE,
                             ...) {
   checkarg_isqualtdict(dict)
   checkarg_ischaracter(keys, null_okay = TRUE)
   checkarg_isboolean(split_by_block)
-  checkarg_ischaracter(skip, null_okay = TRUE)
+  checkarg_isboolean(skip)
 
   args <- list(...)
+  if (skip) {
+    args$include_questions <- skip_validation_mistakes(
+      include_questions = args$include_questions,
+      dict = dict,
+      keys = keys
+    )
+  }
+
   args$force_request <- TRUE
   args$surveyID <- attr(dict, "surveyID")
   args$import_id <- TRUE
@@ -63,10 +71,6 @@ get_survey_data <- function(dict,
   # Not sure why underscore is appended sometimes
   # when include_questions is specified
   colnames(survey) <- str_remove(colnames(survey), "_$")
-
-  if (!is.null(skip)) {
-    survey <- survey[!colnames(survey) %in% skip]
-  }
 
   if (split_by_block == TRUE) {
     keys <- unique(unlist(dict[dict[["name"]] %in% keys, "qid"]))
@@ -105,6 +109,25 @@ get_survey_data <- function(dict,
     attr(dat_recoded, "dict") <- dict
     return(dat_recoded)
   }
+}
+
+skip_validation_mistakes <- function(include_questions, dict, keys) {
+  skip_qids <- validation_mistake_qids(dict_validate(dict))
+  if (is.null(include_questions)) {
+    include_questions <- unique(c(dict[["qid"]], keys))
+  }
+
+  setdiff(include_questions, skip_qids)
+}
+
+validation_mistake_qids <- function(validation) {
+  if (!is.list(validation) ||
+    !"errors" %in% names(validation) ||
+    !"mistake" %in% names(validation[["errors"]])) {
+    return(character())
+  }
+
+  unique(validation[["errors"]][["mistake"]][["qid"]])
 }
 
 #' Add labels to survey

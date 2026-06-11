@@ -4,7 +4,7 @@
 \alias{get_survey_data}
 \title{Download a labeled survey data set}
 \usage{
-get_survey_data(dict, keys = NULL, split_by_block = FALSE, skip = NULL, ...)
+get_survey_data(dict, keys = NULL, split_by_block = FALSE, skip = FALSE, ...)
 }
 \arguments{
 \item{dict}{A variable dictionary returned by
@@ -18,7 +18,7 @@ but not in the dictionary to the downloaded data sets.}
 \item{split_by_block}{Logical. If \code{TRUE}, the function returns a
 list with each element being the data set for a single survey block.}
 
-\item{skip}{Logical. If \code{TRUE}, variables with potenetial
+\item{skip}{Logical. If \code{TRUE}, variables with potential
 level-label mistakes will be removed from the data set.}
 
 \item{...}{Other arguments passed to
