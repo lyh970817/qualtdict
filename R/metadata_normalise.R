@@ -127,6 +127,32 @@ unsupported_structure_findings <- function(x) {
   findings
 }
 
+#' Classify raw response columns that are not question dictionary rows
+#' @keywords internal
+#' @noRd
+classify_raw_response_columns <- function(raw_columns) {
+  classification <- rep(NA_character_, length(raw_columns))
+  details <- rep(NA_character_, length(raw_columns))
+
+  scoring <- grepl("^SC_", raw_columns) | grepl("_SCORE$", raw_columns)
+  classification[scoring] <- "scoring"
+  details[scoring] <-
+    "Qualtrics scoring column; not represented as a question dictionary row."
+
+  embedded_data <- is.na(classification) &
+    grepl("^[A-Za-z][A-Za-z0-9_]*$", raw_columns) &
+    !grepl("^QID[0-9]+", raw_columns)
+  classification[embedded_data] <- "embedded_data"
+  details[embedded_data] <-
+    "Embedded-data or user-defined metadata column; not represented as a question dictionary row."
+
+  tibble(
+    raw_column = raw_columns,
+    classification = classification,
+    details = details
+  )
+}
+
 #' Detect unsupported Loop and Merge shapes
 #' @keywords internal
 #' @noRd
@@ -375,6 +401,8 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
       level_len <- map(qjson$columns, "choices") %>% map_dbl(length)
       col_len <- length(qjson$columns)
       col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
+      attr(col_type, "sub_selector") <-
+        map_chr(qjson$columns, ~ scalar_character(.x$questionType$subSelector))
       if (col_len != 0) {
         # Zero length columns means it's a carried forward question.
         top_question <- qjson$questionText
