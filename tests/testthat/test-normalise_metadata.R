@@ -350,6 +350,53 @@ test_that("matrix response columns use Qualtrics subquestion IDs", {
   expect_equal(unname(dict$label), c("Low", "High", "Low", "High"))
 })
 
+test_that("multiple-answer response columns use Qualtrics x choice IDs", {
+  raw_metadata <- synthetic_mc_x_choice_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(
+    dict$response_column_id,
+    paste0("QID126879611_", c("x1", "x2", "x3", "x4", "x6"))
+  )
+  expect_equal(unname(dict$level), c("1", "2", "3", "4", "6"))
+  expect_equal(
+    unname(dict$label),
+    paste("Choice", c("1", "2", "3", "4", "6"))
+  )
+})
+
+test_that("SBS multiple-answer columns include column, row, and choice IDs", {
+  raw_metadata <- synthetic_sbs_multiple_answer_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_true(all(c("QID2#3_2_1", "QID2#3_4_1") %in%
+    dict$response_column_id))
+  expect_equal(
+    dict$response_column_id[grepl("^QID2#3_", dict$response_column_id)],
+    c("QID2#3_2_1", "QID2#3_4_1")
+  )
+  expect_equal(
+    unname(dict$level[grepl("^QID2#3_", dict$response_column_id)]),
+    c("1", "1")
+  )
+})
+
 test_that("normalised metadata renders supported Loop and Merge rows", {
   raw_metadata <- synthetic_loop_and_merge_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -405,6 +452,27 @@ test_that("looped MC text columns keep loop prefix before QID", {
   )
   expect_equal(target_rows$loop_option, rep(c("Apples", "Bananas"), each = 3))
   expect_equal(unname(target_rows$level), rep(c("1", "2", "2_TEXT"), 2))
+})
+
+test_that("numeric loop-prefixed text columns match raw export IDs", {
+  raw_metadata <- synthetic_numeric_looped_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID3", dict$response_column_id), ]
+
+  expect_equal(
+    target_rows$response_column_id,
+    paste0(1:12, "_QID3_TEXT")
+  )
+  expect_equal(target_rows$loop_option, paste("Loop", 1:12))
 })
 
 test_that("Labelled Survey Data matches loop-prefixed MC text columns", {
@@ -546,6 +614,35 @@ test_that("Labelled Survey Data uses variable_name matched by response column", 
   expect_equal(unname(as.vector(labelled_data$X1_Bad_Name)), 1)
   expect_equal(unname(as.vector(labelled_data[["X1_Bad_Name.1"]])), "Because")
   expect_equal(attr(labelled_data[["X1_Bad_Name.1"]], "label"), "Choose one")
+})
+
+test_that("known non-question raw columns are explicitly classified", {
+  raw_columns <- c(
+    "SC_abcdef",
+    "Cognitron_ID",
+    "GAD7_SCORE",
+    "PD_Eligible",
+    "test",
+    "QID126879611_x1"
+  )
+
+  classified <- classify_raw_response_columns(raw_columns)
+
+  expect_equal(
+    classified$classification,
+    c(
+      "scoring",
+      "embedded_data",
+      "scoring",
+      "embedded_data",
+      "embedded_data",
+      NA_character_
+    )
+  )
+  expect_equal(
+    classified$details[1],
+    "Qualtrics scoring column; not represented as a question dictionary row."
+  )
 })
 
 test_that("unsupported Loop and Merge fields produce findings", {

@@ -21,6 +21,15 @@ add_text_mc <- function(new_qid, level) {
   new_qid
 }
 
+mc_choice_ids <- function(level) {
+  choice_ids <- names(level)
+  if (is.null(choice_ids)) {
+    return(level)
+  }
+
+  ifelse(grepl("TEXT$", level), choice_ids, choice_ids)
+}
+
 sub_text_mc <- function(new_qid, qid, level) {
   text_pos <- grep("TEXT", level)
   if (!is.null(text_pos)) {
@@ -49,7 +58,7 @@ suf_level_qid_macol <- function(qid,
                           label,
                           choice_len,
                           col_type) {
-  sub_text_mc(paste(qid, level, sep = "_"), qid, level)
+  paste(qid, mc_choice_ids(level), sep = "_")
 }
 
 suf_level_qid_mavr <- function(qid,
@@ -59,7 +68,7 @@ suf_level_qid_mavr <- function(qid,
                           label,
                           choice_len,
                           col_type) {
-  paste(qid, level, sep = "_")
+  paste(qid, mc_choice_ids(level), sep = "_")
 }
 
 suf_nmlabel_qid <- function(qid,
@@ -179,19 +188,40 @@ sbs_qid <- function(qid,
     return(qid)
   }
 
-  names(choice_len) <- col_type
-  paste(qid, sep = "#", seq(col_len)) %>%
-    map2(length(item), rep) %>%
-    map(paste, names(item), sep = "_") %>%
-    map2(choice_len, ~ rep_item(.x, item, .y) %>% unlist()) %>%
-    map2(col_type, function(qids, type) {
-      if (type == "TE") {
-        qids <- paste(qids, 1:choice_len[type], sep = "_") %>%
-          str_replace("_TEXT_\\d$", "_TEXT")
-        return(qids)
-      } else {
-        return(qids)
+  col_sub_selector <- attr(col_type, "sub_selector", exact = TRUE)
+  if (is.null(col_sub_selector)) {
+    col_sub_selector <- rep(NA_character_, length(col_type))
+  }
+
+  seq_len(col_len) %>%
+    map(function(col_index) {
+      row_ids <- paste(
+        paste(qid, col_index, sep = "#"),
+        names(item),
+        sep = "_"
+      )
+      column_level <- level[[col_index]]
+      choice_ids <- names(column_level)
+      if (is.null(choice_ids)) {
+        choice_ids <- seq_len(choice_len[[col_index]])
       }
+
+      if (col_type[[col_index]] == "TE") {
+        return(
+          map(row_ids, ~ paste(.x, choice_ids, "TEXT", sep = "_")) %>%
+            unlist()
+        )
+      }
+
+      if (!is.na(col_sub_selector[[col_index]]) &&
+        col_sub_selector[[col_index]] == "MultipleAnswer") {
+        return(
+          map(row_ids, ~ paste(.x, choice_ids, sep = "_")) %>%
+            unlist()
+        )
+      }
+
+      rep(row_ids, each = choice_len[[col_index]])
     }) %>%
     unlist()
 }
