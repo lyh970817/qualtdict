@@ -121,8 +121,12 @@ rep_loop <- function(x, question_meta) {
         if ("response_column_id" %in% names(qmeta)) {
           qmeta[["response_column_id"]] <-
             unname(paste(prefix, qmeta[["response_column_id"]], sep = "_"))
+          qmeta[["response_column_id"]] <- loop_response_column_id(
+            qmeta[["response_column_id"]]
+          )
         } else if ("qid" %in% names(qmeta)) {
           qmeta[["qid"]] <- unname(paste(prefix, qmeta[["qid"]], sep = "_"))
+          qmeta[["qid"]] <- loop_response_column_id(qmeta[["qid"]])
         }
         if ("variable_name" %in% names(qmeta)) {
           qmeta[["variable_name"]] <-
@@ -144,6 +148,14 @@ rep_loop <- function(x, question_meta) {
     }
   }) %>%
     unlist(recursive = FALSE)
+}
+
+loop_response_column_id <- function(response_column_id) {
+  str_replace(
+    response_column_id,
+    "^([^_]+_QID[0-9]+)_[^_]+_TEXT$",
+    "\\1_TEXT"
+  )
 }
 
 loop_options_from_static_choices <- function(choices, static_prefixes) {

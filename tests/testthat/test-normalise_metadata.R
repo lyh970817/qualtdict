@@ -328,6 +328,28 @@ test_that("semantic-name Variable Dictionaries use final variable_name repair", 
   )
 })
 
+test_that("matrix response columns use Qualtrics subquestion IDs", {
+  raw_metadata <- synthetic_matrix_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(
+    unique(dict$response_column_id),
+    c("QID1_x1", "QID1_x2")
+  )
+  expect_equal(dict$qid, rep("QID1", 4))
+  expect_equal(unname(dict$item), c("Apples", "Apples", "Bananas", "Bananas"))
+  expect_equal(unname(dict$level), c("1", "2", "1", "2"))
+  expect_equal(unname(dict$label), c("Low", "High", "Low", "High"))
+})
+
 test_that("normalised metadata renders supported Loop and Merge rows", {
   raw_metadata <- synthetic_loop_and_merge_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -360,6 +382,77 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
   expect_equal(target_rows$selector, c("SL", "SL"))
   expect_equal(attr(dict, "survey_name"), "Loop Survey")
   expect_equal(attr(dict, "surveyID"), "SV_LOOP")
+})
+
+test_that("looped MC text columns keep loop prefix before QID", {
+  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+
+  expect_equal(
+    target_rows$response_column_id,
+    c("x1_QID2", "x1_QID2", "x1_QID2_TEXT",
+      "x2_QID2", "x2_QID2", "x2_QID2_TEXT")
+  )
+  expect_equal(target_rows$loop_option, rep(c("Apples", "Bananas"), each = 3))
+  expect_equal(unname(target_rows$level), rep(c("1", "2", "2_TEXT"), 2))
+})
+
+test_that("Labelled Survey Data matches loop-prefixed MC text columns", {
+  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    x1_QID2 = "2",
+    x1_QID2_TEXT = "Crisp",
+    x2_QID2 = "1",
+    x2_QID2_TEXT = NA_character_
+  )
+
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
+
+  expect_named(labelled_data, c(
+    "externalDataReference",
+    "startDate",
+    "endDate",
+    "Q2",
+    "Q2.1",
+    "Q2.2",
+    "Q2.3"
+  ))
+  expect_equal(unname(as.vector(labelled_data$Q2)), "2")
+  expect_equal(unname(as.vector(labelled_data[["Q2.1"]])), "Crisp")
+  expect_equal(unname(as.vector(labelled_data[["Q2.2"]])), "1")
+  expect_equal(
+    attr(labelled_data[["Q2.1"]], "label"),
+    "Explain your Apples answer"
+  )
 })
 
 test_that("Labelled Survey Data can match Loop and Merge response columns", {

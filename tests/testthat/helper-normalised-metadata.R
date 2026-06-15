@@ -136,3 +136,85 @@ synthetic_loop_and_merge_raw_metadata <- function(
     )
   )
 }
+
+synthetic_matrix_raw_metadata <- function() {
+  new_raw_qualtrics_metadata(
+    surveyID = "SV_MATRIX",
+    metadata = list(
+      metadata = list(name = "Matrix Survey"),
+      questions = list(
+        QID1 = list(
+          questionName = "Q1",
+          questionType = list(
+            type = "Matrix",
+            selector = "Likert",
+            subSelector = "SingleAnswer"
+          ),
+          questionText = "Rate each item",
+          blocks = list(),
+          columns = list(),
+          choices = list(
+            `1` = list(recode = "1", description = "Low"),
+            `2` = list(recode = "2", description = "High")
+          ),
+          subQuestions = list(
+            x1 = list(recode = "1", choiceText = "Apples"),
+            x2 = list(recode = "2", choiceText = "Bananas")
+          )
+        )
+      )
+    ),
+    description = list(
+      block = list(
+        BL_1 = list(
+          Description = "Main Block",
+          BlockElements = list(
+            list(QuestionID = "QID1")
+          ),
+          Options = list(
+            LoopingOptions = list(
+              Static = NULL,
+              QID = NULL
+            )
+          )
+        )
+      ),
+      question = list(
+        QID1 = list(
+          Validation = list(
+            Settings = list(ContentType = "ValidNumber")
+          )
+        )
+      )
+    )
+  )
+}
+
+synthetic_looped_mc_text_raw_metadata <- function() {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata(
+    "Explain your ${lm://Field/1} answer"
+  )
+
+  raw_metadata$metadata$questions$QID2 <- list(
+    questionName = "Q2",
+    questionType = list(
+      type = "MC",
+      selector = "SAVR",
+      subSelector = "TX"
+    ),
+    questionText = "Explain your ${lm://Field/1} answer",
+    blocks = list(),
+    columns = list(),
+    choices = list(
+      `1` = list(recode = "1", description = "Selected"),
+      `2` = list(
+        recode = "2",
+        description = "Other",
+        textEntry = TRUE
+      )
+    ),
+    subQuestions = list()
+  )
+
+  raw_metadata
+}
