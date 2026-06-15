@@ -382,7 +382,7 @@ unsupported_loop_structure_findings <- function(questions) {
       )))
     }
 
-    loop_fields <- loop_field_numbers(question$questionText)
+    loop_fields <- loop_field_numbers(question_fact_question_text(question))
     unsupported_fields <- setdiff(loop_fields, "1")
     if (length(unsupported_fields) > 0) {
       unsupported <- c(unsupported, list(unsupported_structure_finding(
