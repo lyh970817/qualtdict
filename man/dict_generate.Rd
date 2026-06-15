@@ -2,48 +2,73 @@
 % Please edit documentation in R/dict_generate.R
 \name{dict_generate}
 \alias{dict_generate}
-\title{Generate a variable dictionary for a survey}
+\title{Generate a Variable Dictionary for a survey}
 \usage{
 dict_generate(
   surveyID,
-  name = c("question_name", "easy_name"),
+  variable_name = c("question_name", "semantic_name"),
+  name = NULL,
   block_pattern = NULL,
   block_sep = ".",
-  preprocess = NULL,
-  split_by_block = FALSE
+  semantic_name_preprocess = NULL,
+  preprocess = NULL
 )
 }
 \arguments{
-\item{surveyID}{String. Unique ID for the survey you want to download.}
+\item{surveyID}{String. Unique Qualtrics survey ID. Live metadata retrieval
+requires Qualtrics credentials configured for \code{qualtRics}.}
 
-\item{name}{String. Which type of variable names to use in the dictionary,
-\code{question_name} for question names on Qualtrics, \code{easy_name}
-for easy names generated based on question text.}
+\item{variable_name}{String. Source for the final \code{variable_name}
+column in the Variable Dictionary. Use \code{question_name} for the raw
+Qualtrics Question Name or \code{semantic_name} for a generated Semantic
+Name based on question text and response metadata.}
+
+\item{name}{Deprecated compatibility alias for \code{variable_name}. The
+legacy \code{easy_name} value is accepted as \code{semantic_name} with a
+warning.}
 
 \item{block_pattern}{Function. A function that given the name of a
-survey block, returns a string to be appended to variable names
-in that block.
-Defaults to \code{NULL}.}
+Survey Block, returns a Block Prefix to prepend to Semantic Names in that
+block. Defaults to \code{NULL}.}
 
-\item{block_sep}{String. Seperator between variable names and block
+\item{block_sep}{String. Separator between variable names and block
 prefixes returned by \code{block_pattern}. Defaults to ".".}
 
-\item{preprocess}{Function. A function that given a dataframe with the
-column names as in a dictionary, does formatting for each column.
-Defaults to \code{NULL}.}
+\item{semantic_name_preprocess}{Function. An optional function that receives
+the full post-normalisation dictionary and returns a modified dictionary for
+Semantic Name generation. It runs only when
+\code{variable_name = "semantic_name"}. Temporary helper columns added by
+this function are not included in the returned Variable Dictionary.}
 
-\item{split_by_block}{Logical. If \code{TRUE}, the function returns a
-list with each element being the dictionary for a single survey block.}
+\item{preprocess}{Deprecated compatibility alias for
+\code{semantic_name_preprocess}.}
 }
 \value{
-A 'qualtdict' dataframe or a list of 'qualtdict' dataframes (depending on
-\code{split_by_block}.
+A Variable Dictionary: a \code{qualtdict} data frame.
 }
 \description{
-Generate a variable dictionary for a Qualtrics survey survey
+Generate a Variable Dictionary from Qualtrics survey metadata retrieved via
+\code{qualtRics}.
+}
+\details{
+The returned Variable Dictionary preserves \code{response_column_id} as the
+downloaded response-column key, \code{qid} as the bare Qualtrics question
+identifier, \code{question_name} as the raw Qualtrics naming reference, and
+\code{variable_name} as the final export-safe Dictionary Variable Name used
+by Labelled Survey Data.
+
+When \code{variable_name = "semantic_name"}, the Variable Dictionary also
+includes \code{semantic_name}. Semantic Names are readable best-effort
+conveniences generated from survey text and metadata; they are not stable
+guarantees across package versions or survey text changes.
+
+Unsupported Structure Findings found while normalising Qualtrics metadata
+travel with the Variable Dictionary and can be inspected with
+\code{\link[qualtdict]{unsupported_structure_findings}}.
 }
 \examples{
 \dontrun{
+survey_id <- "SV_XXXXXXXXXXXXXXXX"
 
 # Create a function for \code{block_pattern}
 # that returns the first three letters of a string
@@ -52,11 +77,10 @@ block_pattern <- function(x) {
 }
 
 
-mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
-  name = "easy_name",
+mydict <- dict_generate(survey_id,
+  variable_name = "semantic_name",
   block_pattern = block_pattern,
-  block_sep = ".",
-  split_by_block = FALSE
+  block_sep = "."
 )
 }
 

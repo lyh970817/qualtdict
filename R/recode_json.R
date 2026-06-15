@@ -2,247 +2,20 @@
 #' @keywords internal
 #' @noRd
 recode_json <- function(surveyID,
-                        easyname_gen,
+                        use_semantic_name,
                         block_pattern,
                         block_sep,
-                        preprocess) {
-  # Fetch metadata
-  # Wrapper functions foo2 to retry when timeout
-  mt <- metadata2(
-    surveyID,
-    c(
-      "questions",
-      "metadata",
-      "blocks",
-      "responsecounts",
-      "flow",
-      "comments"
-    )
+                        semantic_name_preprocess) {
+  survey_metadata <- fetch_dictionary_metadata(surveyID)
+  normalised_metadata <- normalise_qualtrics_metadata(survey_metadata)
+
+  variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = use_semantic_name,
+    block_pattern = block_pattern,
+    block_sep = block_sep,
+    semantic_name_preprocess = semantic_name_preprocess
   )
-
-  mt_d <- fetch_description2(
-    surveyID,
-    c(
-      "questions",
-      "metadata",
-      "blocks",
-      "flow"
-    )
-  )
-
-  # Extract useful block metadata
-  blocks <- mt_d$block
-  block_meta <- map(blocks, function(block) {
-    list(
-      description = block$Description,
-      qid = unlist(map(block$BlockElements, "QuestionID")),
-      looping_prefix = names(block$Options$LoopingOptions$Static),
-      looping_qid = block$Options$LoopingOptions$QID
-    )
-  }) %>%
-    map(function(block) {
-      map(block$qid, ~ list(
-        qid = .x,
-        description = block$description,
-        looping_prefix = block$looping_prefix,
-        looping_qid = block$looping_qid
-      ))
-    }) %>%
-    # Use 'c' to combine multiple lists into one list
-    # Previously the lists are nested in block and then QID
-    do.call(c, .) %>%
-    setNames(map_chr(., ~ .x$qid))
-
-  # Extract question metadata
-  question_meta <- map(
-    mt$questions, `[`,
-    c(
-      "questionName",
-      "questionType", "questionText",
-      "blocks", "columns",
-      "choices", "subQuestions"
-    )
-  )
-
-  content_type_meta <- mt_d$question %>%
-    map("Validation") %>%
-    map("Settings") %>%
-    map("ContentType") %>%
-    map(null_na) %>%
-    map(str_remove, "Valid")
-
-  # Order the metadatas by QID name and use only those
-  # in question_meta so that the questions match
-  qids <- names(question_meta)
-  question_meta <- question_meta[qids] %>%
-    order_name()
-
-
-  block_meta <- block_meta[qids] %>%
-    order_name()
-
-  content_type_meta <- content_type_meta[qids] %>%
-    order_name()
-
-  # Combine two metadata
-  question_meta <- map2(question_meta, block_meta, function(x, y) {
-    x["block"] <- y["description"]
-    x["looping_prefix"] <- y["looping_prefix"]
-    x["looping_qid"] <- y["looping_qid"]
-    return(x)
-  }) %>%
-    map2(content_type_meta, function(x, y) {
-      x["content_type"] <- y
-      return(x)
-    })
-
-  json <- imap(question_meta, function(qjson, qid) {
-    # Clean the &nbsp; level/label fields (empty on Qualtrics)
-    nbsps <- map(qjson$choices, "description") == "&nbsp;"
-    # If there is only one nbsq, the question is a title
-    # No need to clean
-    if (length(nbsps) != 1) {
-      qjson$choices <- qjson$choices[!nbsps]
-    }
-
-    question_name <- qjson$questionName
-    type <- qjson$questionType$type
-    question <- qjson$questionText
-    selector <- qjson$questionType$selector
-    block <- qjson$block
-    content_type <- qjson$content_type
-
-    # If no subquestion or choice, treat subquestion length as 1
-    sub_q_len <- length(qjson$subQuestions) %>% ifelse(. > 0, ., 1)
-
-    # If no levels, treat level length as 1
-    level_len <- length(qjson$choices) %>% ifelse(. > 0, ., 1)
-
-    # The rep_level function works on lists for dealing with SBS questions
-    # For consistency we convert to lists for non-SBS questions
-    level <- map(qjson$choices, "recode") %>%
-      unlist_nm() %>%
-      list()
-
-    label <- map(qjson$choices, "description") %>%
-      unlist_nm() %>%
-      list()
-
-    # Recode for text entry choices
-    has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
-    if (length(has_text) > 0) {
-      # Add text level and labels directly after the non-text level
-      level <- add_text(level, has_text)
-      label <- add_text(label, has_text)
-    }
-
-    item <- unlist(map(qjson$subQuestions, "choiceText"))
-    sub_selector <- qjson$questionType$subSelector
-
-    # Recode for text entry item
-    has_text_sub <- which(map_lgl(
-      qjson$subQuestions, ~ "textEntry" %in% names(.x)
-    ))
-    if (length(has_text_sub) > 0) {
-      item <- unlist(add_text(item, has_text_sub))
-      sub_q_len <- sub_q_len + length(has_text_sub)
-    }
-
-    if (type == "SBS") {
-      # Get number of levels in each column
-      level_len <- map(qjson$columns, "choices") %>% map_dbl(length)
-      # Calculate column length
-      col_len <- length(qjson$columns)
-      # Get column types
-      col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
-      if (col_len != 0) {
-        # Zero length columns means it's a carried forward question
-
-        # Get overacching question
-        top_question <- qjson$questionText
-        # Get questions in each column
-        question <- map(qjson$columns, "questionText") %>%
-          map2(length(item), rep) %>%
-          map2(level_len, ~ rep_item(.x, item, .y) %>% unlist) %>%
-          unlist() %>%
-          # Prepend the overarching question
-          paste(top_question, ., sep = " ")
-
-        level <- map(qjson$columns, "choices") %>%
-          map(~ map_chr(.x, "recode")) %>%
-          map2(col_type, function(level, type) {
-            if (type == "TE") {
-              level <- paste(level, "TEXT", sep = "_")
-            }
-            level
-          })
-
-        label <- map(qjson$columns, "choices") %>%
-          map(~ map_chr(.x, "description"))
-
-        item <- unlist(map(qjson$subQuestions, "description"))
-        item <- unlist(add_text(item, has_text_sub))
-      }
-    }
-
-    new_qid <- qid_recode(qid,
-      col_len = col_len, col_type = col_type,
-      item = item, level = level, label = label,
-      choice_len = level_len,
-      type = type, selector = selector,
-      sub_selector = sub_selector, is_qid = TRUE
-    )
-
-    question_name <- qid_recode(question_name,
-      col_len = col_len, col_type = col_type,
-      item = item, level = level, label = label,
-      choice_len = level_len,
-      type = type, selector = selector,
-      sub_selector = sub_selector, is_qid = FALSE
-    )
-
-    list_qid <- list(
-      qid = new_qid,
-      name = null_na(question_name),
-      block = block,
-      question = question,
-      looping_question = NA,
-      item = rep_item(item, item, level_len) %>% null_na(),
-      level = rep_level(level, item) %>% null_na(),
-      label = rep_level(label, item) %>% null_na(),
-      type = type, selector = selector, content_type = content_type,
-      sub_selector = null_na(sub_selector),
-      # To use in rep_loop
-      looping_option = NA,
-      looping = all(!is.null(qjson$looping_qid))
-    )
-
-    return(list_qid)
-  }) %>%
-    discard(is.null) %>%
-    rep_loop(question_meta) %>%
-    to_dataframe() %>%
-    convert_html()
-
-  if (easyname_gen) {
-    json <- easyname_gen(json, surveyID, block_pattern, block_sep, preprocess)
-  }
-
-  # Remove duplicated question text in item
-  # This is useful in generating easy names
-  json$item[json$item == json$question] <- NA
-  json$qid <- unname(json$qid)
-  json$name <- unname(json$name)
-
-  # Add questions with loop and merge placeholders replaced with labels
-  looping_questions <- json$looping_question
-  json$question[!is.na(looping_questions)] <-
-    looping_questions[!is.na(looping_questions)]
-
-  attr(json, "survey_name") <- as.character(mt$metadata$name)
-  attr(json, "surveyID") <- surveyID
-
-  return(json)
 }
 
 add_text <- function(x, has_text, label = FALSE) {
@@ -345,14 +118,24 @@ rep_loop <- function(x, question_meta) {
       }
 
       imap(loop_options, function(option, prefix) {
-        qmeta[["qid"]] <- unname(paste(prefix, qmeta[["qid"]], sep = "_"))
+        if ("response_column_id" %in% names(qmeta)) {
+          qmeta[["response_column_id"]] <-
+            unname(paste(prefix, qmeta[["response_column_id"]], sep = "_"))
+        } else if ("qid" %in% names(qmeta)) {
+          qmeta[["qid"]] <- unname(paste(prefix, qmeta[["qid"]], sep = "_"))
+        }
+        if ("variable_name" %in% names(qmeta)) {
+          qmeta[["variable_name"]] <-
+            unname(paste(prefix, qmeta[["variable_name"]], sep = "."))
+        } else if ("name" %in% names(qmeta)) {
+          qmeta[["name"]] <- unname(paste(prefix, qmeta[["name"]], sep = "."))
+        }
         # What about second loop (field 2))?
         qmeta[["looping_question"]] <-
           gsub("\\$\\{lm://Field/1\\}", option, qmeta[["question"]])
         qmeta[["question"]] <-
           gsub("\\$\\{lm://Field/1\\}", "{}", qmeta[["question"]])
-        qmeta[["name"]] <- unname(paste(prefix, qmeta[["name"]], sep = "."))
-        # To use in easyname_gen
+        # To use in Semantic Name generation.
         qmeta[["looping_option"]] <- option
         return(qmeta)
       })

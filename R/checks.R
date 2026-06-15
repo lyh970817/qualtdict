@@ -78,7 +78,7 @@ checkarg_ischaracter <-
     }
   }
 
-#' Is one of `c("question_name", "easy_name")`
+#' Is deprecated variable_name alias
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal
@@ -86,19 +86,45 @@ checkarg_ischaracter <-
 checkarg_isname <- function(arg) {
   test <-
     length(arg) == 1 && !is.null(arg) &&
-      arg %in% c("question_name", "easy_name")
+      arg %in% c("question_name", "semantic_name", "easy_name")
 
   if (!test) {
     rlang::abort(
       c(
         glue::glue("Error in argument '{deparse(substitute(arg))}':"),
-        "Argument must be one of `c(\"question_name\", \"easy_name\")`."
+        paste0(
+          "Argument must be one of ",
+          "`c(\"question_name\", \"semantic_name\")`."
+        )
       )
     )
   }
 }
 
-#' Is one of `c("question_name", "easy_name")`
+#' Is one of `c("question_name", "semantic_name")`
+#' @importFrom rlang abort
+#' @importFrom glue glue
+#' @keywords internal
+#' @noRd
+checkarg_isvariable_name <- function(arg) {
+  test <-
+    length(arg) == 1 && !is.null(arg) &&
+      arg %in% c("question_name", "semantic_name")
+
+  if (!test) {
+    rlang::abort(
+      c(
+        glue::glue("Error in argument '{deparse(substitute(arg))}':"),
+        paste0(
+          "Argument must be one of ",
+          "`c(\"question_name\", \"semantic_name\")`."
+        )
+      )
+    )
+  }
+}
+
+#' Is function
 #' @importFrom rlang abort
 #' @importFrom glue glue
 #' @keywords internal

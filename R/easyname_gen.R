@@ -1,18 +1,19 @@
-#' Generate easy names from dictionary
+#' Generate Semantic Names from dictionary
 #' @importFrom tidyr unite
 #' @importFrom stringi stri_count_words
 #' @importFrom rlang hash
 #' @keywords internal
 #' @noRd
-easyname_gen <- function(json,
-                         surveyID,
-                         block_pattern,
-                         block_sep,
-                         preprocess) {
+semantic_name_gen <- function(json,
+                              surveyID,
+                              block_pattern,
+                              block_sep,
+                              semantic_name_preprocess) {
   json_makename <- json
+  response_column_id <- dict_response_column_id(json)
 
-  if (!is.null(preprocess)) {
-    json_makename <- preprocess(json_makename)
+  if (!is.null(semantic_name_preprocess)) {
+    json_makename <- semantic_name_preprocess(json_makename)
   }
 
   # Extract relevant text
@@ -41,7 +42,7 @@ easyname_gen <- function(json,
     keywords <- readRDS(tmpfile_path)
   }
   if (!file.exists(tmpfile_path)) {
-    message("Generating easy names...")
+    message("Generating Semantic Names...")
 
     # Remove brackets and punctuations
     unique_texts <- str_remove_all(unique_texts, "\\(.+\\)") %>%
@@ -55,8 +56,8 @@ easyname_gen <- function(json,
     saveRDS(keywords, file = tmpfile_path)
   }
 
-  # Generate easy variable name for each unique question text
-  easyquestion_single <- imap_chr(keywords, function(x, i) {
+  # Generate Semantic Name component for each unique question text.
+  semantic_question_single <- imap_chr(keywords, function(x, i) {
     if (all(is.na(x))) {
       # If no keywords generated, use original text
       nm <- unique_texts[i]
@@ -85,23 +86,24 @@ easyname_gen <- function(json,
       NA
     }
 
-  # Expand easy variable names and block prefixes to repeat the right
+  # Expand Semantic Name components and block prefixes to repeat the right
   # number of times
-  json_makename$easyquestion <- unique_expand(easyquestion_single, texts)
-  json_makename$easyblock <-
+  json_makename$semantic_question <-
+    unique_expand(semantic_question_single, texts)
+  json_makename$semantic_block <-
     unique_expand(tolower(block_single), json_makename$block)
 
   json_makename <- json_makename %>%
-    unite(easyname, easyblock, easyquestion,
+    unite(semantic_name, semantic_block, semantic_question,
       sep = block_sep, na.rm = TRUE
     ) %>%
-    mutate(easyname = easyname) %>%
-    select(easyname, everything())
+    mutate(semantic_name = semantic_name) %>%
+    select(semantic_name, everything())
 
   # Add txt to text questions
-  txt_qs <- grep("_TEXT", json_makename$qid)
-  json_makename$easyname[txt_qs] <-
-    paste(json_makename$easyname[txt_qs], ".txt")
+  txt_qs <- grep("_TEXT", response_column_id)
+  json_makename$semantic_name[txt_qs] <-
+    paste(json_makename$semantic_name[txt_qs], ".txt")
 
   label_to_sfx <- function(x) {
     str_remove_all(str_replace_all(
@@ -116,15 +118,15 @@ easyname_gen <- function(json,
       json_makename$selector == "Likert" &
       json_makename$sub_selector == "MultipleAnswer"
 
-  json_makename$easyname[add_label_qs] <-
-    paste(json_makename$easyname[add_label_qs],
+  json_makename$semantic_name[add_label_qs] <-
+    paste(json_makename$semantic_name[add_label_qs],
       label_to_sfx(json_makename$label[add_label_qs]),
       sep = "."
     )
 
   # Add item to sbs matrix with single answers
-  json_makename$easyname[sbs_matrix] <-
-    paste(json_makename$easyname[sbs_matrix],
+  json_makename$semantic_name[sbs_matrix] <-
+    paste(json_makename$semantic_name[sbs_matrix],
       label_to_sfx(json_makename$item[sbs_matrix]),
       sep = "."
     )
@@ -133,32 +135,15 @@ easyname_gen <- function(json,
   add_loop_option_qs <- as.logical(json_makename$looping)
   loop_json <- json_makename[add_loop_option_qs, ]
   loop_options <- label_to_sfx(json_makename$looping_option[add_loop_option_qs])
-  json_makename$easyname[add_loop_option_qs] <-
-    paste(loop_json$easyname, loop_options, sep = ".")
+  json_makename$semantic_name[add_loop_option_qs] <-
+    paste(loop_json$semantic_name, loop_options, sep = ".")
 
   # Remove symbols
-  json_makename$easyname <-
-    str_remove_all(json_makename$easyname, "[^0-9A-Za-z_\\.]")
+  json_makename$semantic_name <-
+    str_remove_all(json_makename$semantic_name, "[^0-9A-Za-z_\\.]")
 
-  # Make unique duplicated easynames
-  duplicated_easynames <-
-    which_not_onetoone(json_makename[c("easyname", "qid")])[[1]]
-  duplicated_easynames["easyname"] <- make.unique(duplicated_easynames[["easyname"]]) # nolint # nolint
-
-  not_duplicated_easynames <-
-    json_makename[!json_makename$qid %in%
-      duplicated_easynames$qid, c("easyname", "qid")]
-
-  all_easynames <- bind_rows(
-    duplicated_easynames,
-    not_duplicated_easynames
-  )
-
-  json$name <-
-    recode(
-      json_makename$qid,
-      !!!setNames(all_easynames$easyname, all_easynames$qid)
-    )
+  json$semantic_name <- json_makename$semantic_name
+  json$variable_name <- json$semantic_name
 
   json
 }

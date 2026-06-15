@@ -9,7 +9,10 @@
 
 globalVariables(c(
   ".", "label", "level", "pair",
-  "name", "easyname", "easyblock", "easyquestion",
+  "name", "variable_name", "semantic_name", "semantic_block",
+  "semantic_question",
+  "response_column_id", "original_candidate", "repaired_candidate",
+  "reason",
   "get_pos_tags", "handle_pos_error", "stop_pos_tags"
 ))
 
@@ -23,7 +26,7 @@ which_not_onetoone <- function(cols) {
     cols %>%
       group_by(.data[[from]]) %>%
       filter(length(unique(.data[[to]])) != 1) %>%
-      summarize(!!to := unique(.data[[to]]), .groups = "keep")
+      reframe(!!to := unique(.data[[to]]))
   }
   names_cols <- colnames(cols)
   map(
