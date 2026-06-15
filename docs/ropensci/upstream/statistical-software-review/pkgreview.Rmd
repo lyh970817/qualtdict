@@ -5,7 +5,7 @@ The current chapter should be considered an extension of the corresponding
 rOpenSci's "Dev Guide". The principles for reviewing packages described there
 also apply to statistical packages, with this chapter describing additional
 processes and practices for review of packages submitted to the statistical
-software peer review system. Reviews of statistical software should 
+software peer review system. Reviews of statistical software should
 first assess compliance against [our
 standards](#standards),
 and then proceed to a more general review, as described in the following two
@@ -120,7 +120,7 @@ disagree, primarily either because of:
    used a tag of `@srrstatsNA`, but a reviewer believes that standard ought to
    apply to the software.
 
-The 
+The
 [`srr_report()`](https://ropensci-review-tools.github.io/srr/reference/srr_report.html)
 function returns the same content in markdown format, and may be used by
 reviewers as an initial checklist against which to assess compliance. All
@@ -171,7 +171,7 @@ software. For example, software designed to accept sparse matrix inputs from
 the [`Matrix`
 package](https://cran.r-project.org/web/packages/Matrix/index.html) will be
 unable to conform with many of the standards for general rectangular input
-forms. 
+forms.
 
 These three categories of necessary, currently, and potentially applicable
 standards can then be used by reviewers to roughly assess the quantitative

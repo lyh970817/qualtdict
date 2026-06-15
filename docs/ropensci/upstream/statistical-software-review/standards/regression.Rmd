@@ -261,7 +261,7 @@ to process, categorical grouping variables:
 
 Beyond the [*General Standards*](#general-standards) for documentation,
 Regression Software should explicitly describe the following aspects, and
-ideally provide extended documentation including summary graphical reports of: 
+ideally provide extended documentation including summary graphical reports of:
 
 - [**RE5.0**]{#RE5_0} *Scaling relationships between sizes of input data
   (numbers of observations, with potential extension to numbers of

@@ -90,4 +90,3 @@ copy of part of document contained in initial exploratory work on defining categ
 204. [`CTLmapping`](https://joss.theoj.org/papers/10.21105/joss.00087): correlation, ANCOVA; input: application-specific data format; output: summary statistics
 205. [`edarf`](https://joss.theoj.org/papers/10.21105/joss.00092): EDA, random forests, covariates, trees; input: data.frame; output: model prediction
 213. [`gwdegree`](https://joss.theoj.org/papers/10.21105/joss.00036): networks, maximum entropy; input: application-specific data format; output: summary statistics
-

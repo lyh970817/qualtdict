@@ -32,11 +32,11 @@ This section contains guidance for when you develop a package interacting with a
 Say your package needs an API key for making requests on behalf of users of your package.
 
 - In your package documentation, guide the user so the API key doesn't end up in the .Rhistory/script of users of your package.
-  
+
   - Encourage the use of environment variables to store the API key (or even remove the possibility to pass it as an argument to the functions?). You could link [to this intro to startup files](https://rstats.wtf/r-startup.html) and [`usethis::edit_r_environ()`](https://usethis.r-lib.org/reference/edit.html).
-  
+
   - Or your package could depend on, or encourage the use of, [`keyring` to help user store variables](https://github.com/r-lib/keyring#readme) in the specific OS' credential stores (more secure than .Renviron): i.e. you'd create a function for setting the key, and have another one for retrieving the key; or the user would write `Sys.setenv(SUPERSECRETKEY = keyring::key_get("myservice"))` at the beginning of their script.
-  
+
   - Do not print the API key even in verbose mode in any message, warning, or error.
 
 - In the GitHub issue template, it should be stated not to share any credentials. If a user of your package accidentally shares credentials in an issue, make sure they're aware of that so they can revoke the key (i.e. ask them explicitly in an answer whether they realized they shared their key).
@@ -84,5 +84,3 @@ Useful security resources:
 - [the security-related projects of unconf18](https://ropensci.org/blog/2018/06/06/unconf18_recap_2/);
 
 - [`gargle` article "Managing tokens securely"](gargle.r-lib.org/articles/articles/managing-tokens-securely.html)
-
-

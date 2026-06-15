@@ -123,7 +123,7 @@ After transfer to rOpenSci's "ropensci" GitHub organization, a pkgdown website w
 
 - Once per month.
 
-You can find the status of these builds at `https://ropensci.r-universe.dev/ui#packages` and in the [commit status](https://ropensci.org/blog/2021/09/03/runiverse-docs/#how-it-works). The website build will use your pkgdown config file if you have one, except for the styling that will use the [`rotemplate` package](https://github.com/ropensci-org/rotemplate/). 
+You can find the status of these builds at `https://ropensci.r-universe.dev/ui#packages` and in the [commit status](https://ropensci.org/blog/2021/09/03/runiverse-docs/#how-it-works). The website build will use your pkgdown config file if you have one, except for the styling that will use the [`rotemplate` package](https://github.com/ropensci-org/rotemplate/).
 
 If your documentation includes code that relies on, for instance, credentials, here's how to ensure pkgdown docs are rendered in the best possible way.
 
@@ -141,5 +141,3 @@ knitr::opts_chunk$set(
 - In the case of vignettes/articles performing HTTP requests, you can use specific R packages like [vcr](https://docs.ropensci.org/vcr/reference/setup_knitr.html) to cache responses. Example: [nettskjemar](https://github.com/capro-uio/nettskjemar/blob/261260e2510f51d8dc0af5e4c9c386a7e459de4b/vignettes/metadata.Rmd#L22).
 
 Please report bugs, questions and feature requests about the central builds and about the template at [https://github.com/ropensci-org/rotemplate/](https://github.com/ropensci-org/rotemplate/).
-
-
