@@ -1,16 +1,17 @@
 Package: qualtdict
-Title: Generating Variable Dictionaries and Labelled Data Exports of
+Title: Generate Variable Dictionaries and Labelled Survey Data for
     Qualtrics Surveys
 Version: 0.0.0.9000
 Authors@R:
     person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-6357-5731"))
-Description: Provides functions that generate variable dictionaries from
-    'Qualtrics' <https://www.qualtrics.com/about/> surveys and labelled
-    survey data based on the dictionary. This package is built upon the R
-    package 'qualtRics' <https://github.com/ropensci/qualtRics/> which
-    provides access to 'Qualtrics' survey data and metadata via the
-    'Qualtrics' API <https://api.qualtrics.com/>.
+Description: Generates Variable Dictionaries from 'Qualtrics'
+    <https://www.qualtrics.com/about/> survey metadata and applies those
+    dictionaries to create Labelled Survey Data. This package is a metadata
+    and labelled-export companion to 'qualtRics'
+    <https://github.com/ropensci/qualtRics/>, which provides access to
+    'Qualtrics' survey data and metadata via the 'Qualtrics' API
+    <https://api.qualtrics.com/>.
 License: MIT + file LICENSE
 URL: https://github.com/lyh970817/qualtdict
 BugReports: https://github.com/lyh970817/qualtdict/issues

@@ -15,140 +15,203 @@ knitr::opts_chunk$set(
 )
 ```
 
-[Qualtrics](https://www.qualtrics.com/) is an online survey and data
-collection software platform. The qualtdict R package builds on the
-[qualtRics](https://github.com/ropensci/qualtRics) R package which
-implements the retrieval of survey data using the Qualtrics API and aims to
-reduce the preprocessing steps needed in analyzing such surveys. The
-current package makes more comprehensive use of the survey metadata
-(retrieved via functions in
-[qualtRics](https://github.com/ropensci/qualtRics)) and generates a
-variable dictionary including most of the information essential for data
-processing and analysis. It also uses a modified version of the RAKE
-algorithm by [Rose. et al.]
-(https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf)
-implemented in the package [slowraker](https://github.com/cran/slowraker)
-to generate meaningful names for all variables in the survey, as well as
-adding a comprehensive set of metadata attributes that uniquely identifies
-each variable.
-
-Note that your institution must support API access and that it must be
-enabled for your account. Whoever manages your Qualtrics account can help
-you with this. Please refer to the [Qualtrics
-documentation](https://api.qualtrics.com/) to find your API token.
+`qualtdict` is a metadata and labelled-export companion to
+[qualtRics](https://github.com/ropensci/qualtRics) for
+[Qualtrics](https://www.qualtrics.com/) surveys. `qualtRics` owns API access:
+authentication, metadata retrieval, and response downloads from Qualtrics.
+`qualtdict` owns the package workflow that turns that metadata and those
+import-ID response exports into a Variable Dictionary, Validation Findings,
+Unsupported Structure Findings, and Labelled Survey Data.
 
 The authors and contributors for this R package are not affiliated with
-Qualtrics and Qualtrics does not offer support for this R package.
+Qualtrics, and Qualtrics does not offer support for this R package.
 
-## Usage
+## Main Workflow
 
-* `dict_generate` to generate a `qualtdict`, a variable dictionary
-  dataframe that can be later used to download actual survey data, or
-  exported into a table file for provide straightforward overview of the
-  survey variables.
+The core workflow is:
 
-* `dict_validate` to check for potential mistakes in the dictionary.
+1. Use `dict_generate()` to build a Variable Dictionary.
+2. Use `dict_validate()` and `unsupported_structure_findings()` to inspect
+   Validation Findings and Unsupported Structure Findings.
+3. Use `get_survey_data()` to create Labelled Survey Data.
 
-* `get_survey_data` to retrieve
-  [sjlabelled](https://github.com/strengejacke/sjlabelled) survey data,
-  where each variable is labelled with question, recodes (levels) and
-  recode labels.
+A Variable Dictionary preserves several distinct identifiers:
 
-## Registering Qualtrics credentials
+- `response_column_id`: the downloaded response column used to match raw
+  Qualtrics response data to dictionary rows.
+- `qid`: the bare Qualtrics question identifier, such as `QID1`.
+- `question_name`: the raw Qualtrics Question Name.
+- `variable_name`: the final export-safe Dictionary Variable Name used in
+  Labelled Survey Data.
+- `semantic_name`: a generated naming reference, present only when requested.
 
-You need to first register your Qualtrics credentials with the function
-`qualtrics_api_credentials` exported from the package 
-[qualtRics](https://www.qualtrics.com/). 
+This vignette avoids private survey data. The live workflow chunks use a
+placeholder survey ID and are not evaluated. The small table below shows the
+shape of a safe simulated Variable Dictionary.
 
+```{r}
+example_dict <- data.frame(
+  response_column_id = c("QID1", "QID1_3_TEXT"),
+  qid = c("QID1", "QID1"),
+  question_name = c("Q1", "Q1"),
+  variable_name = c("Q1", "Q1.1"),
+  block = c("Main Block", "Main Block"),
+  question = c("Choose one", "Choose one"),
+  item = c(NA, NA),
+  level = c("1", "3_TEXT"),
+  label = c("Yes", "Other_TEXT"),
+  type = c("MC", "MC"),
+  selector = c("SAVR", "SAVR"),
+  sub_selector = c("TX", "TX"),
+  content_type = c(NA, NA)
+)
+
+example_dict
+```
+
+## Credentials
+
+Live calls to `dict_generate()` and `get_survey_data()` require Qualtrics API
+credentials because they call Qualtrics through `qualtRics`. Your institution
+must support API access and it must be enabled for your account. The person who
+manages your Qualtrics account can help you find your API token and base URL.
 
 ```{r, eval=FALSE}
 library(qualtdict)
 
-qualtrics_api_credentials(
+qualtRics::qualtrics_api_credentials(
   api_key = "<YOUR-QUALTRICS_API_KEY>",
   base_url = "<YOUR-QUALTRICS_BASE_URL>",
   install = TRUE
 )
 ```
 
-## Generating a dictionary
+Validation, dictionary schema checks, block splitting, and labelled-export
+mechanics can be tested offline with synthetic dictionaries or recorded,
+scrubbed fixtures. Only live metadata and response downloads require
+credentials.
 
-You can then generate a variable dictionary.
+## Variable Dictionary
+
+Generate a Variable Dictionary from a Qualtrics survey ID:
 
 ```{r, eval=FALSE}
-mydict <- dict_generate("SV_4YyAHbAxpdbzacl", var_name = "question_name")
+survey_id <- "SV_XXXXXXXXXXXXXXXX"
+
+dict <- dict_generate(
+  survey_id,
+  variable_name = "question_name"
+)
 ```
 
-Question names for each variable as set on Qualtrics will be used as
-variable names
+With `variable_name = "question_name"`, `variable_name` is derived from the raw
+Qualtrics Question Name and repaired as needed so Labelled Survey Data columns
+are export-safe and unique. The original `question_name` remains in the
+Variable Dictionary as a reference.
 
-You may wish to generate meaningful variable names (if you don't already
-have them in the survey) in the dictionary. If doing so, preferably you
-would also want to define a function that extracts block prefixes from 
-block names.
+If Qualtrics Question Names are not suitable as analysis names, request
+Semantic Names:
 
 ```{r, eval=FALSE}
-# Define a block prefix extraction function
-block_pattern <- function(x) {
-  # Use the first three characters of a block name
-  substring(x, 1, 3)
+block_pattern <- function(block) {
+  substring(block, 1, 3)
 }
 
-mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
-  var_name = "easy_name",
+dict <- dict_generate(
+  survey_id,
+  variable_name = "semantic_name",
   block_pattern = block_pattern,
   block_sep = "."
 )
 ```
 
-These "easy names" are generated through a modified version of the RAKE
-algorithm implemented in the package
-[slowraker](https://github.com/cran/slowraker). The RAKE algorithm was
-originally proposed as a method to extract keywords from documents [Rose.
-et al.](https://media.wiley.com/product_data/excerpt/22/04707498/0470749822.pdf). 
-It works by first selecting a series of candidate keywords, where each
-candidate keyword is a set of contiguous words that doesn’t contain a
-phrase delimiter or a meaningless stop word. Each single word within a
-keyword is then scored by degree/frequency, where degree equals the number
-of times that the word co-occurs with another word in another keyword, and
-frequency is the total number of times that the word occurs overall. Each
-candidate keyword is then scored by summing the scores of its member words.
+Semantic Names are best-effort readable conveniences generated from survey
+text, block information, and response metadata. They are not stable guarantees
+across package versions or survey text changes. Use them when they improve
+analysis ergonomics, but do not treat them as permanent identifiers.
 
-The key modification of the algorithm in this package is that while the
-candidate keywords for each variable are extracted from text components in
-the survey associated with that variable (e.g. the overarching question as
-well as the sub-question it belongs to, and for questions allowing for
-selecting multiple choices , the choice labels), word frequency is calculated
-as the number of times a word appears in the entire survey.
-
-## Dictioanry validation
-
-After downloading the dictionary, You might want to check for potential
-mistakes in the dictionary with `dict_validate`, which returns a list of qids
-with potential mistakes and mistake codes (explained in the function
-documentation of `dict_validate`, as well as a list of unique level-label
-pairing (numerals v.s. text labels), so that you can check that across a
-number of questions measured on supposedly the same scale, there isn't a
-question with distinct levels or labels to the others.
+You can also preprocess the text used only for Semantic Name generation:
 
 ```{r, eval=FALSE}
-dict_validate(mydict)
+drop_intro_text <- function(dict) {
+  dict$question <- sub("^Please answer: ", "", dict$question)
+  dict
+}
+
+dict <- dict_generate(
+  survey_id,
+  variable_name = "semantic_name",
+  semantic_name_preprocess = drop_intro_text
+)
 ```
 
-## Downloading survey with dictionary
+`semantic_name_preprocess` receives the full post-normalisation dictionary and
+runs only on the Semantic Name path. Temporary helper columns created by the
+function are not included in the returned Variable Dictionary.
 
-And use the dictionary to download
-[sjlabelled](https://github.com/strengejacke/sjlabelled) survey data
-labelled with the associated text components from the survey (e.g.
-question, recode labels and replacement strings in loop and merge
-questions).
+## Findings
 
-Extra parameters from `fetch_survey` in [qualtRics](https://github.com/ropensci/qualtRics) 
-can be specified (e.g. `unanswer_recode` and `unanswer_recode_multi`).
+`dict_validate()` returns a stable validation object with two components:
+`validation_findings` and `level_label_pairs`.
 
 ```{r, eval=FALSE}
-survey_dat <- get_survey_data(mydict,
+validation <- dict_validate(dict)
+
+validation$validation_findings
+validation$level_label_pairs
+```
+
+Validation Findings cover consistency issues in the generated Variable
+Dictionary, including repaired `variable_name` values, non-unique or unsafe
+Dictionary Variable Names, and level-label coding findings.
+
+Unsupported Structure Findings are separate. They describe Qualtrics
+structures that `qualtdict` could not fully represent while normalising
+metadata.
+
+```{r, eval=FALSE}
+unsupported_structure_findings(dict)
+```
+
+## Labelled Survey Data
+
+Create Labelled Survey Data from a Variable Dictionary:
+
+```{r, eval=FALSE}
+survey_dat <- get_survey_data(
+  dict,
+  extra_columns = c("externalDataReference", "startDate", "endDate"),
+  exclude_findings = "none",
   unanswer_recode = -77,
   unanswer_recode_multi = 0
 )
+```
+
+`get_survey_data()` calls `qualtRics::fetch_survey()` with the settings needed
+for reliable matching to `response_column_id`: `import_id = TRUE`,
+`label = FALSE`, `convert = FALSE`, and `breakout_sets = TRUE`. You may pass
+filtering arguments such as `include_questions`, but not arguments that would
+override the response-column naming, labelling, conversion, or breakout
+contract owned by `qualtdict`.
+
+By default, variables with Validation Findings or Unsupported Structure
+Findings remain in the Labelled Survey Data. Use `exclude_findings` only when
+you explicitly want to drop those variables after download.
+
+```{r, eval=FALSE}
+survey_dat_clean <- get_survey_data(
+  dict,
+  exclude_findings = "all"
+)
+```
+
+## Survey Block Views
+
+`dict_generate()` returns one Variable Dictionary and `get_survey_data()`
+returns one Labelled Survey Data object. Use explicit helpers when you want
+block-specific views:
+
+```{r, eval=FALSE}
+dict_by_block <- dict_split_blocks(dict)
+data_by_block <- survey_split_blocks(survey_dat)
 ```
