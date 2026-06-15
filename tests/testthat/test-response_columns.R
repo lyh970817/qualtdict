@@ -107,6 +107,26 @@ test_that("render_response_columns renders MC rows with aligned facts", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
+test_that("render_response_columns accepts package-owned normalised facts", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
+  question$questionName <- NULL
+  question$questionText <- NULL
+  question$questionType <- NULL
+  question$block <- NULL
+  question$choices <- NULL
+  question$subQuestions <- NULL
+  question$columns <- NULL
+
+  rendered <- render_response_columns(question, "QID1")
+
+  expect_equal(
+    rendered$response_column_id,
+    c("QID1", "QID1", "QID1", "QID1_3_TEXT")
+  )
+  expect_equal(unname(rendered$question), rep("Choose one", 4))
+})
+
 test_that("render_response_columns preserves already-prefixed loop qids", {
   raw_metadata <- synthetic_looped_mc_text_raw_metadata()
   question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID2

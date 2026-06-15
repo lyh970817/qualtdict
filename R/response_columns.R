@@ -16,10 +16,10 @@ render_response_columns <- function(question, qid = NULL) {
   }
 
   shape <- response_column_shape(question)
-  question_type <- question$questionType
+  question_type <- question_fact_question_type(question)
   type <- question_type$type
   selector <- question_type$selector
-  sub_selector <- question_type$subSelector
+  sub_selector <- question_type$sub_selector
 
   response_column_id <- qid_recode(qid,
     col_len = shape$col_len,
@@ -104,29 +104,31 @@ response_column_row_vector <- function(x, row_count = length(x)) {
 response_column_shape <- function(question) {
   question <- remove_empty_choice_labels(question)
 
-  type <- question$questionType$type
-  question_text <- question$questionText
+  type <- question_fact_question_type(question)$type
+  question_text <- question_fact_question_text(question)
+  response_choices <- question_fact_response_choices(question)
+  response_items <- question_fact_response_items(question)
 
-  level_len <- length(question$choices) %>% ifelse(. > 0, ., 1)
+  level_len <- length(response_choices) %>% ifelse(. > 0, ., 1)
 
-  level <- map(question$choices, "recode") %>%
+  level <- map(response_choices, "level") %>%
     unlist_nm() %>%
     list()
 
-  label <- map(question$choices, "description") %>%
+  label <- map(response_choices, "label") %>%
     unlist_nm() %>%
     list()
 
-  has_text <- which(map_lgl(question$choices, ~ "textEntry" %in% names(.x)))
+  has_text <- which(map_lgl(response_choices, "text_entry"))
   if (length(has_text) > 0) {
     level <- add_text(level, has_text)
     label <- add_text(label, has_text)
   }
 
-  item <- unlist(map(question$subQuestions, "choiceText"))
+  item <- unlist(map(response_items, "item_text"))
   has_text_sub <- which(map_lgl(
-    question$subQuestions,
-    ~ "textEntry" %in% names(.x)
+    response_items,
+    "text_entry"
   ))
   if (length(has_text_sub) > 0) {
     item <- unlist(add_text(item, has_text_sub))
@@ -166,9 +168,11 @@ response_column_shape <- function(question) {
 #' @keywords internal
 #' @noRd
 remove_empty_choice_labels <- function(question) {
-  nbsps <- map(question$choices, "description") == "&nbsp;"
+  response_choices <- question_fact_response_choices(question)
+  nbsps <- map(response_choices, "label") == "&nbsp;"
   if (length(nbsps) != 1) {
-    question$choices <- question$choices[!nbsps]
+    question$response_choices <- response_choices[!nbsps]
+    question$choices <- question$response_choices
   }
 
   question
@@ -181,25 +185,28 @@ response_column_sbs_shape <- function(question,
                                       question_text,
                                       item,
                                       has_text_sub) {
-  level_len <- map(question$columns, "choices") %>% map_dbl(length)
-  col_len <- length(question$columns)
-  col_type <- map_chr(question$columns, ~ .x$questionType$selector)
-  attr(col_type, "sub_selector") <-
-    map_chr(question$columns, ~ scalar_character(.x$questionType$subSelector))
+  column_facts <- question_fact_column_facts(question)
+  response_items <- question_fact_response_items(question)
 
-  item <- unlist(map(question$subQuestions, "description"))
+  level_len <- map(column_facts, "response_choices") %>% map_dbl(length)
+  col_len <- length(column_facts)
+  col_type <- map_chr(column_facts, ~ .x$question_type$selector)
+  attr(col_type, "sub_selector") <-
+    map_chr(column_facts, ~ scalar_character(.x$question_type$sub_selector))
+
+  item <- unlist(map(response_items, "item_label"))
   item <- unlist(add_text(item, has_text_sub))
 
   if (col_len != 0) {
-    top_question <- question$questionText
-    question_text <- map(question$columns, "questionText") %>%
+    top_question <- question_fact_question_text(question)
+    question_text <- map(column_facts, "question_text") %>%
       map2(length(item), rep) %>%
       map2(level_len, ~ rep_item(.x, item, .y) %>% unlist) %>%
       unlist() %>%
       paste(top_question, ., sep = " ")
 
-    level <- map(question$columns, "choices") %>%
-      map(~ map_chr(.x, "recode")) %>%
+    level <- map(column_facts, "response_choices") %>%
+      map(~ map_chr(.x, "level")) %>%
       map2(col_type, function(level, type) {
         if (type == "TE") {
           level <- paste(level, "TEXT", sep = "_")
@@ -207,8 +214,8 @@ response_column_sbs_shape <- function(question,
         level
       })
 
-    label <- map(question$columns, "choices") %>%
-      map(~ map_chr(.x, "description"))
+    label <- map(column_facts, "response_choices") %>%
+      map(~ map_chr(.x, "label"))
   } else if (length(item) > 0) {
     level_len <- rep(1, length(item))
     level <- as.list(rep(NA_character_, length(item)))
