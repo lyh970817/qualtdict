@@ -195,33 +195,35 @@ sbs_qid <- function(qid,
 
   seq_len(col_len) %>%
     map(function(col_index) {
-      row_ids <- paste(
-        paste(qid, col_index, sep = "#"),
-        names(item),
-        sep = "_"
-      )
+      row_names <- names(item)
+      text_rows <- grepl("TEXT$", row_names)
+      row_ids <- paste(paste(qid, col_index, sep = "#"), row_names, sep = "_")
+      base_row_ids <- str_replace(row_ids, "_TEXT$", "")
       column_level <- level[[col_index]]
       choice_ids <- names(column_level)
       if (is.null(choice_ids)) {
         choice_ids <- seq_len(choice_len[[col_index]])
       }
 
-      if (col_type[[col_index]] == "TE") {
-        return(
-          map(row_ids, ~ paste(.x, choice_ids, "TEXT", sep = "_")) %>%
-            unlist()
-        )
-      }
+      map(seq_along(base_row_ids), function(row_index) {
+        if (text_rows[[row_index]]) {
+          return(paste0(base_row_ids[[row_index]], "_TEXT"))
+        }
 
-      if (!is.na(col_sub_selector[[col_index]]) &&
-        col_sub_selector[[col_index]] == "MultipleAnswer") {
-        return(
-          map(row_ids, ~ paste(.x, choice_ids, sep = "_")) %>%
-            unlist()
-        )
-      }
+        if (col_type[[col_index]] == "TE") {
+          return(paste(base_row_ids[[row_index]], choice_ids, "TEXT",
+            sep = "_"
+          ))
+        }
 
-      rep(row_ids, each = choice_len[[col_index]])
+        if (!is.na(col_sub_selector[[col_index]]) &&
+          col_sub_selector[[col_index]] == "MultipleAnswer") {
+          return(paste(base_row_ids[[row_index]], choice_ids, sep = "_"))
+        }
+
+        rep(base_row_ids[[row_index]], each = choice_len[[col_index]])
+      }) %>%
+        unlist()
     }) %>%
     unlist()
 }

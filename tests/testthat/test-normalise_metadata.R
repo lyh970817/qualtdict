@@ -385,15 +385,82 @@ test_that("SBS multiple-answer columns include column, row, and choice IDs", {
     semantic_name_preprocess = NULL
   )
 
-  expect_true(all(c("QID2#3_2_1", "QID2#3_4_1") %in%
+  expect_true(all(c(
+    "QID2#3_2_1", "QID2#3_2_2",
+    "QID2#3_4_1", "QID2#3_4_2"
+  ) %in%
     dict$response_column_id))
   expect_equal(
     dict$response_column_id[grepl("^QID2#3_", dict$response_column_id)],
-    c("QID2#3_2_1", "QID2#3_4_1")
+    c("QID2#3_2_1", "QID2#3_2_2", "QID2#3_4_1", "QID2#3_4_2")
   )
   expect_equal(
     unname(dict$level[grepl("^QID2#3_", dict$response_column_id)]),
-    c("1", "1")
+    c("1", "2", "1", "2")
+  )
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
+test_that("SBS text-entry subquestions keep row metadata lengths aligned", {
+  raw_metadata <- synthetic_sbs_text_subquestion_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expect_no_error(
+    dict <- variable_dictionary_from_normalised_metadata(
+      normalised_metadata,
+      use_semantic_name = FALSE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    )
+  )
+
+  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_equal(
+    dict$response_column_id,
+    c(
+      "QID2#1_2_1_TEXT",
+      "QID2#1_4_1_TEXT",
+      "QID2#1_4_TEXT",
+      "QID2#1_9_1_TEXT",
+      "QID2#2_2",
+      "QID2#2_2",
+      "QID2#2_4",
+      "QID2#2_4",
+      "QID2#2_4_TEXT",
+      "QID2#2_9",
+      "QID2#2_9",
+      "QID2#3_2",
+      "QID2#3_2",
+      "QID2#3_4",
+      "QID2#3_4",
+      "QID2#3_4_TEXT",
+      "QID2#3_9",
+      "QID2#3_9"
+    )
+  )
+  expect_equal(
+    unname(dict$item),
+    c(
+      "Second row",
+      "Fourth row",
+      "Fourth row_TEXT",
+      "Ninth row",
+      "Second row",
+      "Second row",
+      "Fourth row",
+      "Fourth row",
+      "Fourth row_TEXT",
+      "Ninth row",
+      "Ninth row",
+      "Second row",
+      "Second row",
+      "Fourth row",
+      "Fourth row",
+      "Fourth row_TEXT",
+      "Ninth row",
+      "Ninth row"
+    )
   )
 })
 
