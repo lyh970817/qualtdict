@@ -1,0 +1,505 @@
+test_that("raw Qualtrics metadata normalises into package-owned metadata", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_s3_class(normalised_metadata, "qualtdict_normalised_metadata")
+  expect_named(normalised_metadata, c(
+    "surveyID",
+    "survey_name",
+    "questions",
+    "unsupported_structure_findings"
+  ))
+  expect_equal(normalised_metadata$surveyID, "SV_SYNTHETIC")
+  expect_equal(normalised_metadata$survey_name, "Synthetic Survey")
+  expect_s3_class(
+    normalised_metadata$questions,
+    "qualtdict_normalised_questions"
+  )
+  expect_equal(names(normalised_metadata$questions), "QID1")
+
+  question <- normalised_metadata$questions$QID1
+  expect_equal(question$block, "Main Block")
+  expect_equal(question$content_type, "Number")
+  expect_null(question$looping_qid)
+  expect_equal(nrow(normalised_metadata$unsupported_structure_findings), 0)
+  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
+})
+
+test_that("normalised metadata renders the current Variable Dictionary rows", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  dict_subset <- dict[c(
+    "response_column_id",
+    "qid",
+    "question_name",
+    "variable_name",
+    "block",
+    "question",
+    "item",
+    "level",
+    "label",
+    "type",
+    "selector",
+    "sub_selector",
+    "content_type"
+  )]
+
+  expect_equal(
+    dict_subset$response_column_id,
+    c("QID1", "QID1", "QID1", "QID1_3_TEXT")
+  )
+  expect_equal(dict_subset$qid, rep("QID1", 4))
+  expect_equal(
+    dict_subset$question_name,
+    c("Q1", "Q1", "Q1", "Q1")
+  )
+  expect_equal(
+    dict_subset$variable_name,
+    c("Q1", "Q1", "Q1", "Q1.1")
+  )
+  expect_equal(dict_subset$block, rep("Main Block", 4))
+  expect_equal(dict_subset$question, rep("Choose one", 4))
+  expect_true(all(is.na(dict_subset$item)))
+  expect_equal(unname(dict_subset$level), c("1", "2", "3", "3_TEXT"))
+  expect_equal(
+    unname(dict_subset$label),
+    c("Yes", "No", "Other", "Other_TEXT")
+  )
+  expect_equal(dict_subset$type, rep("MC", 4))
+  expect_equal(dict_subset$selector, rep("SAVR", 4))
+  expect_equal(dict_subset$sub_selector, rep("TX", 4))
+  expect_equal(dict_subset$content_type, rep("Number", 4))
+  expect_equal(attr(dict, "survey_name"), "Synthetic Survey")
+  expect_equal(attr(dict, "surveyID"), "SV_SYNTHETIC")
+  expect_equal(nrow(unsupported_structure_findings(dict)), 0)
+})
+
+test_that("question-name Variable Dictionaries repair only variable_name", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionName <- "1 Bad Name"
+  raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
+  raw_metadata$metadata$questions$QID2$questionName <- "1 Bad Name"
+  raw_metadata$description$block$BL_1$BlockElements <- list(
+    list(QuestionID = "QID1"),
+    list(QuestionID = "QID2")
+  )
+  raw_metadata$description$question$QID2 <-
+    raw_metadata$description$question$QID1
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  findings <- dict_validate(dict)$validation_findings
+  findings <- findings[findings$finding == "repaired_variable_name", ]
+
+  first_rows <- !duplicated(dict$response_column_id)
+
+  expect_equal(
+    dict$question_name[first_rows],
+    c("1 Bad Name", "1 Bad Name", "1 Bad Name", "1 Bad Name")
+  )
+  expect_equal(
+    dict$variable_name[first_rows],
+    c("X1_Bad_Name", "X1_Bad_Name.1", "X1_Bad_Name.2",
+      "X1_Bad_Name.3")
+  )
+  expect_named(
+    findings,
+    c(
+      "finding",
+      "response_column_id",
+      "variable_name",
+      "original_candidate",
+      "reason",
+      "item_name",
+      "mistake",
+      "label",
+      "level"
+    )
+  )
+  expect_equal(
+    findings$finding,
+    rep("repaired_variable_name", 4)
+  )
+  expect_equal(
+    findings$response_column_id,
+    c("QID1", "QID1_3_TEXT", "QID2", "QID2_3_TEXT")
+  )
+  expect_equal(
+    findings$original_candidate,
+    c("1 Bad Name", "1 Bad Name", "1 Bad Name", "1 Bad Name")
+  )
+  expect_equal(findings$variable_name, dict$variable_name[first_rows])
+  expect_equal(
+    findings$reason,
+    c("unsafe", "unsafe;duplicate", "unsafe;duplicate", "unsafe;duplicate")
+  )
+})
+
+test_that("Semantic Names are generated only on the semantic naming path", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  question_name_dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  semantic_name_dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_false("semantic_name" %in% names(question_name_dict))
+  expect_equal(
+    question_name_dict$variable_name,
+    c("Q1", "Q1", "Q1", "Q1.1")
+  )
+  expect_true("semantic_name" %in% names(semantic_name_dict))
+  expect_true(any(!is.na(semantic_name_dict$semantic_name)))
+  expect_equal(
+    semantic_name_dict$semantic_name,
+    c("choose_one", "choose_one", "choose_one", "choose_one.txt")
+  )
+  expect_equal(
+    semantic_name_dict$variable_name,
+    c("choose_one", "choose_one", "choose_one", "choose_one.txt")
+  )
+})
+
+test_that("semantic_name_preprocess runs only for semantic naming", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  calls <- 0
+  semantic_name_preprocess <- function(dict) {
+    calls <<- calls + 1
+    dict$question <- "Renamed by hook"
+    dict
+  }
+
+  variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = semantic_name_preprocess
+  )
+  expect_equal(calls, 0)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = semantic_name_preprocess
+  )
+
+  expect_equal(calls, 1)
+  expect_true(all(grepl("^renamed_by_hook", dict$semantic_name)))
+})
+
+test_that("semantic_name_preprocess receives the full post-normalisation dictionary", { # nolint
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  seen_names <- NULL
+  seen_loop_rows <- NULL
+  semantic_name_preprocess <- function(dict) {
+    seen_names <<- names(dict)
+    seen_loop_rows <<- dict[dict$looping, c(
+      "qid", "response_column_id", "question_name", "block", "question",
+      "looping_option", "item", "label", "type", "selector", "sub_selector",
+      "content_type"
+    )]
+    dict
+  }
+
+  variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = semantic_name_preprocess
+  )
+
+  expect_true(all(c(
+    "qid", "response_column_id", "question_name", "block", "question",
+    "looping_question", "item", "level", "label", "type", "selector",
+    "content_type", "sub_selector", "looping_option", "looping"
+  ) %in% seen_names))
+  expect_equal(
+    seen_loop_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_equal(seen_loop_rows$question_name, c("Q2", "Q2"))
+  expect_equal(seen_loop_rows$looping_option, c("Apples", "Bananas"))
+})
+
+test_that("temporary semantic_name_preprocess columns do not leak", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  semantic_name_preprocess <- function(dict) {
+    dict$temporary_helper <- "helper"
+    dict$question <- dict$temporary_helper
+    dict
+  }
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = semantic_name_preprocess
+  )
+
+  expect_true(all(grepl("^helper", dict$semantic_name)))
+  expect_false("temporary_helper" %in% names(dict))
+})
+
+test_that("semantic-name Variable Dictionaries use final variable_name repair", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionText <- "123 bad name"
+  raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
+  raw_metadata$metadata$questions$QID2$questionName <- "Q2"
+  raw_metadata$description$block$BL_1$BlockElements <- list(
+    list(QuestionID = "QID1"),
+    list(QuestionID = "QID2")
+  )
+  raw_metadata$description$question$QID2 <-
+    raw_metadata$description$question$QID1
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  first_rows <- !duplicated(dict$response_column_id)
+  findings <- dict_validate(dict)$validation_findings
+  findings <- findings[findings$finding == "repaired_variable_name", ]
+
+  expect_equal(
+    dict$semantic_name[first_rows],
+    c("123_bad_name", "123_bad_name.txt", "123_bad_name",
+      "123_bad_name.txt")
+  )
+  expect_equal(
+    dict$variable_name[first_rows],
+    c("X123_bad_name", "X123_bad_name.txt", "X123_bad_name.1",
+      "X123_bad_name.txt.1")
+  )
+  expect_equal(
+    findings$response_column_id,
+    c("QID1", "QID1_3_TEXT", "QID2", "QID2_3_TEXT")
+  )
+  expect_equal(
+    findings$finding,
+    rep("repaired_variable_name", 4)
+  )
+  expect_equal(findings$original_candidate, dict$semantic_name[first_rows])
+  expect_equal(findings$variable_name, dict$variable_name[first_rows])
+  expect_equal(
+    findings$reason,
+    c("unsafe", "unsafe", "unsafe;duplicate", "unsafe;duplicate")
+  )
+})
+
+test_that("normalised metadata renders supported Loop and Merge rows", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+
+  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
+  expect_equal(
+    target_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_equal(target_rows$qid, c("QID2", "QID2"))
+  expect_equal(target_rows$question_name, c("Q2", "Q2"))
+  expect_equal(target_rows$variable_name, c("Q2", "Q2.1"))
+  expect_equal(
+    target_rows$question,
+    c("Why did you choose Apples?", "Why did you choose Bananas?")
+  )
+  expect_equal(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_true(all(is.na(target_rows$item)))
+  expect_equal(target_rows$type, c("TE", "TE"))
+  expect_equal(target_rows$selector, c("SL", "SL"))
+  expect_equal(attr(dict, "survey_name"), "Loop Survey")
+  expect_equal(attr(dict, "surveyID"), "SV_LOOP")
+})
+
+test_that("Labelled Survey Data can match Loop and Merge response columns", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    x1_QID2_TEXT = "Because they are crisp",
+    x2_QID2_TEXT = "Because they are sweet"
+  )
+
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
+
+  expect_named(labelled_data, c(
+    "externalDataReference",
+    "startDate",
+    "endDate",
+    "Q2",
+    "Q2.1"
+  ))
+  expect_equal(
+    unname(as.vector(labelled_data[["Q2"]])),
+    "Because they are crisp"
+  )
+  expect_equal(
+    unname(as.vector(labelled_data[["Q2.1"]])),
+    "Because they are sweet"
+  )
+  expect_equal(
+    attr(labelled_data[["Q2"]], "label"),
+    "Why did you choose Apples?"
+  )
+  expect_equal(
+    attr(labelled_data[["Q2.1"]], "label"),
+    "Why did you choose Bananas?"
+  )
+})
+
+test_that("Labelled Survey Data uses variable_name matched by response column", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionName <- "1 Bad Name"
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    QID1 = "1",
+    QID1_3_TEXT = "Because"
+  )
+
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
+
+  expect_named(labelled_data, c(
+    "externalDataReference",
+    "startDate",
+    "endDate",
+    "X1_Bad_Name",
+    "X1_Bad_Name.1"
+  ))
+  expect_equal(unname(as.vector(labelled_data$X1_Bad_Name)), 1)
+  expect_equal(unname(as.vector(labelled_data[["X1_Bad_Name.1"]])), "Because")
+  expect_equal(attr(labelled_data[["X1_Bad_Name.1"]], "label"), "Choose one")
+})
+
+test_that("unsupported Loop and Merge fields produce findings", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata(
+    "Compare ${lm://Field/1} with ${lm://Field/2}"
+  )
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  findings <- unsupported_structure_findings(normalised_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(nrow(findings), 1)
+  expect_equal(findings$qid, "QID2")
+  expect_equal(findings$type, "TE")
+  expect_equal(findings$selector, "SL")
+  expect_equal(findings$finding, "unsupported_loop_field")
+  expect_match(findings$details, "Field/1")
+  expect_match(findings$details, "2")
+  expect_false(any(grepl("QID2", dict$response_column_id)))
+  expect_equal(unsupported_structure_findings(dict), findings)
+})
+
+test_that("missing Loop and Merge sources produce findings", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  raw_metadata$metadata$questions$QID1 <- NULL
+  raw_metadata$description$question$QID1 <- NULL
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  findings <- unsupported_structure_findings(normalised_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(nrow(findings), 1)
+  expect_equal(findings$qid, "QID2")
+  expect_equal(findings$finding, "missing_loop_source")
+  expect_match(findings$details, "QID1")
+  expect_equal(nrow(dict), 0)
+  expect_equal(unsupported_structure_findings(dict), findings)
+})

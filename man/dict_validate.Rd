@@ -2,43 +2,44 @@
 % Please edit documentation in R/dict_validate.R
 \name{dict_validate}
 \alias{dict_validate}
-\title{Check for potential mistakes in the dictionary}
+\title{Return Validation Findings for a Variable Dictionary}
 \usage{
 dict_validate(dict)
 }
 \arguments{
-\item{dict}{A variable dictionary returned by
+\item{dict}{A Variable Dictionary returned by
 \code{\link[qualtdict]{dict_generate}}.}
 }
 \value{
-If no mistake found in the dictionary, a dataframe containing the
-unique level-label pairings. If mistakes found in the dictionary,
-a list containing the above dataframe and a list with components
+A \code{qualtdict_validation} object. This is a list with stable components:
 \itemize{
-\item non_unique_names  - A dataframe containing qids with non-unique
-names and their names
-\item mistake - A dataframe containing qids with one of the following
-mistakes and mistake code: not one-to-one mapping between labels and
-levels (1), levels not increasing in step of 1 (2), duplicated levels
-(3) and duplicated labels (4).
+\item \code{validation_findings} - A data frame of Validation Findings for
+Variable Dictionary consistency issues, including repaired variable names,
+non-unique or unsafe final \code{variable_name} values, and level-label coding
+findings.
+\item \code{level_label_pairs} - A data frame containing the unique level-label
+pairings.
 }
+
+Validation Findings are separate from Unsupported Structure Findings.
+Unsupported Structure Findings describe Qualtrics structures that
+\code{qualtdict} could not fully represent while normalising metadata; use
+\code{\link[=unsupported_structure_findings]{unsupported_structure_findings()}} to inspect them on the Variable
+Dictionary.
 }
 \description{
-Check for potential mistakes in the dictionary: 1) Whether the variable
-names are unique; 2) For each variable, whether there is a unique
-mapping between level and label and whether the levels are consecutive;
-and extract unique level-label pairings.
+Validate Variable Dictionary consistency and return a stable validation
+object. Validation Findings report repaired \code{variable_name} values,
+non-unique or unsafe Dictionary Variable Names, and level-label coding
+issues. The validation result is a consistency screen, not proof that the
+source Qualtrics metadata is correct.
 }
 \examples{
 \dontrun{
+survey_id <- "SV_XXXXXXXXXXXXXXXX"
 
 # Create a dictionary
-mydict <- dict_generate("SV_4YyAHbAxpdbzacl",
-  name = "easy_name",
-  block_pattern = block_pattern,
-  block_sep = ".",
-  split_by_block = FALSE
-)
+mydict <- dict_generate(survey_id, variable_name = "question_name")
 
 
 # Validate the dictionary
