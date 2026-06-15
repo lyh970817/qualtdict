@@ -373,6 +373,30 @@ test_that("multiple-answer response columns use Qualtrics x choice IDs", {
   )
 })
 
+test_that("multiple-answer response columns use recodes when choice IDs are numeric", { # nolint
+  raw_metadata <- synthetic_mc_recode_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(
+    dict$response_column_id,
+    c("QID1_1", "QID1_2", "QID1_-88", "QID1_-99", "QID1_0",
+      "QID1_9_TEXT")
+  )
+  expect_equal(
+    unname(dict$level),
+    c("1", "2", "-88", "-99", "0", "0_TEXT")
+  )
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
 test_that("SBS multiple-answer columns include column, row, and choice IDs", {
   raw_metadata <- synthetic_sbs_multiple_answer_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -401,6 +425,26 @@ test_that("SBS multiple-answer columns include column, row, and choice IDs", {
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
+test_that("carried-forward SBS rows use subquestion response column IDs", {
+  raw_metadata <- synthetic_sbs_carried_forward_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(
+    dict$response_column_id,
+    c("QID2_x1", "QID2_x2", "QID2_x3")
+  )
+  expect_equal(unname(dict$item), c("First row", "Second row", "Third row"))
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
 test_that("SBS text-entry subquestions keep row metadata lengths aligned", {
   raw_metadata <- synthetic_sbs_text_subquestion_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -419,10 +463,10 @@ test_that("SBS text-entry subquestions keep row metadata lengths aligned", {
   expect_equal(
     dict$response_column_id,
     c(
-      "QID2#1_2_1_TEXT",
-      "QID2#1_4_1_TEXT",
+      "QID2#1_2_1",
+      "QID2#1_4_1",
       "QID2#1_4_TEXT",
-      "QID2#1_9_1_TEXT",
+      "QID2#1_9_1",
       "QID2#2_2",
       "QID2#2_2",
       "QID2#2_4",
@@ -462,6 +506,23 @@ test_that("SBS text-entry subquestions keep row metadata lengths aligned", {
       "Ninth row"
     )
   )
+})
+
+test_that("horizontal sliders generate one response column per slider item", {
+  raw_metadata <- synthetic_slider_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(dict$response_column_id, c("QID1_1", "QID1_2", "QID1_3"))
+  expect_equal(unname(dict$level), c("1", "2", "3"))
+  expect_true(all(lengths(dict) == nrow(dict)))
 })
 
 test_that("normalised metadata renders supported Loop and Merge rows", {
@@ -514,8 +575,8 @@ test_that("looped MC text columns keep loop prefix before QID", {
 
   expect_equal(
     target_rows$response_column_id,
-    c("x1_QID2", "x1_QID2", "x1_QID2_TEXT",
-      "x2_QID2", "x2_QID2", "x2_QID2_TEXT")
+    c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT",
+      "x2_QID2", "x2_QID2", "x2_QID2_2_TEXT")
   )
   expect_equal(target_rows$loop_option, rep(c("Apples", "Bananas"), each = 3))
   expect_equal(unname(target_rows$level), rep(c("1", "2", "2_TEXT"), 2))
@@ -542,6 +603,53 @@ test_that("numeric loop-prefixed text columns match raw export IDs", {
   expect_equal(target_rows$loop_option, paste("Loop", 1:12))
 })
 
+test_that("static numeric loop prefixes do not fall back to source QIDs", {
+  raw_metadata <- synthetic_static_numeric_looped_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID3", dict$response_column_id), ]
+
+  expect_equal(
+    target_rows$response_column_id,
+    paste0(1:12, "_QID3_TEXT")
+  )
+  expect_false(any(grepl("^QID[0-9]+_QID3_TEXT$", target_rows$response_column_id))) # nolint
+  expect_equal(target_rows$loop_option, as.character(1:12))
+})
+
+test_that("matrix source Loop and Merge prefixes use source response rows", {
+  raw_metadata <- synthetic_matrix_source_looped_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+
+  expect_equal(
+    target_rows$response_column_id,
+    c("1_QID2_TEXT", "2_QID2_TEXT", "3_QID2_TEXT")
+  )
+  expect_false(any(grepl("^QID1_QID2_TEXT$", target_rows$response_column_id)))
+  expect_equal(
+    target_rows$loop_option,
+    c("Condition 1", "Condition 2", "Condition 3")
+  )
+})
+
 test_that("Labelled Survey Data matches loop-prefixed MC text columns", {
   raw_metadata <- synthetic_looped_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -559,9 +667,9 @@ test_that("Labelled Survey Data matches loop-prefixed MC text columns", {
     startDate = "2026-06-01",
     endDate = "2026-06-01",
     x1_QID2 = "2",
-    x1_QID2_TEXT = "Crisp",
+    x1_QID2_2_TEXT = "Crisp",
     x2_QID2 = "1",
-    x2_QID2_TEXT = NA_character_
+    x2_QID2_2_TEXT = NA_character_
   )
 
   labelled_data <- survey_recode(
@@ -690,6 +798,8 @@ test_that("known non-question raw columns are explicitly classified", {
     "GAD7_SCORE",
     "PD_Eligible",
     "test",
+    "QID1_TEXT_ANALYSIS_SENTIMENT",
+    "QID1_4_TEXT_ANALYSIS_TOPICS",
     "QID126879611_x1"
   )
 
@@ -703,6 +813,8 @@ test_that("known non-question raw columns are explicitly classified", {
       "scoring",
       "embedded_data",
       "embedded_data",
+      "text_analysis",
+      "text_analysis",
       NA_character_
     )
   )

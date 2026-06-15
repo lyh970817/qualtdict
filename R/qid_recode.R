@@ -15,8 +15,20 @@ add_text_mc <- function(new_qid, level) {
   # choice with text options, add Qualtrics internal index to the end of
   # the QID for text options
   text_pos <- grep("TEXT", level)
-  if (!is.null(text_pos)) {
-    new_qid[text_pos] <- paste(new_qid, names(level), sep = "_")[text_pos]
+  if (length(text_pos) > 0 && !is.null(names(level))) {
+    for (pos in text_pos) {
+      level_suffix <- paste0("_", level[[pos]])
+      if (endsWith(new_qid[[pos]], level_suffix)) {
+        prefix <- substr(
+          new_qid[[pos]],
+          1,
+          nchar(new_qid[[pos]]) - nchar(level_suffix)
+        )
+      } else {
+        prefix <- new_qid[[pos]]
+      }
+      new_qid[[pos]] <- paste(prefix, names(level)[[pos]], sep = "_")
+    }
   }
   new_qid
 }
@@ -27,7 +39,15 @@ mc_choice_ids <- function(level) {
     return(level)
   }
 
-  ifelse(grepl("TEXT$", level), choice_ids, choice_ids)
+  if (all(grepl("^x[0-9]+(_TEXT)?$", choice_ids))) {
+    return(choice_ids)
+  }
+
+  response_choice_ids <- unname(level)
+  text_choice_ids <- grepl("TEXT$", level)
+  response_choice_ids[text_choice_ids] <- choice_ids[text_choice_ids]
+
+  response_choice_ids
 }
 
 sub_text_mc <- function(new_qid, qid, level) {
@@ -48,7 +68,7 @@ suf_level_qid <- function(qid,
   # Add recode values to the end of the QIDs and then add Qualtrics internal
   # index to the end of QIDs with text options belonging to multiple choice
   # questions allowing for only one choice
-  add_text_mc(paste(qid, level, sep = "_"), level)
+  add_text_mc(paste(qid, mc_choice_ids(level), sep = "_"), level)
 }
 
 suf_level_qid_macol <- function(qid,
@@ -109,6 +129,7 @@ suf_item_suf_level_qid <- function(qid,
                                    label,
                                    choice_len,
                                    col_type) {
+  level <- mc_choice_ids(level)
   paste_narm(qid, names(item), sep = "_") %>%
     map(paste, level, sep = "_") %>%
     unlist()
@@ -121,6 +142,7 @@ suf_level_suf_item_qid <- function(qid,
                                    label,
                                    choice_len,
                                    col_type) {
+  level <- mc_choice_ids(level)
   paste_narm(qid, level, sep = "_") %>%
     map(paste, names(item), sep = "_") %>%
     unlist()
@@ -185,6 +207,9 @@ sbs_qid <- function(qid,
                     col_type) {
   if (length(col_type) == 0) {
     # Carried forward question
+    if (!is.null(item) && length(item) > 0) {
+      return(paste_narm(qid, names(item), sep = "_"))
+    }
     return(qid)
   }
 
@@ -195,33 +220,42 @@ sbs_qid <- function(qid,
 
   seq_len(col_len) %>%
     map(function(col_index) {
+      column_id <- names(level)[[col_index]]
+      if (is.null(column_id) || is.na(column_id) || column_id == "") {
+        column_id <- col_index
+      }
       row_names <- names(item)
-      text_rows <- grepl("TEXT$", row_names)
-      row_ids <- paste(paste(qid, col_index, sep = "#"), row_names, sep = "_")
-      base_row_ids <- str_replace(row_ids, "_TEXT$", "")
+      row_ids <- paste(paste(qid, column_id, sep = "#"), row_names, sep = "_")
       column_level <- level[[col_index]]
-      choice_ids <- names(column_level)
-      if (is.null(choice_ids)) {
+      choice_ids <- mc_choice_ids(column_level)
+      choice_ids <- str_replace(choice_ids, "_TEXT$", "")
+      if (col_type[[col_index]] == "TE") {
+        choice_ids <- seq_along(choice_ids)
+      }
+      if (is.null(choice_ids) || length(choice_ids) == 0) {
         choice_ids <- seq_len(choice_len[[col_index]])
       }
 
-      map(seq_along(base_row_ids), function(row_index) {
-        if (text_rows[[row_index]]) {
-          return(paste0(base_row_ids[[row_index]], "_TEXT"))
+      map(seq_along(row_ids), function(row_index) {
+        if (col_type[[col_index]] == "TE") {
+          if (grepl("TEXT$", row_names[[row_index]])) {
+            return(row_ids[[row_index]])
+          }
+
+          base_row_id <- str_replace(row_ids[[row_index]], "_TEXT$", "")
+          return(paste(base_row_id, choice_ids, sep = "_"))
         }
 
-        if (col_type[[col_index]] == "TE") {
-          return(paste(base_row_ids[[row_index]], choice_ids, "TEXT",
-            sep = "_"
-          ))
+        if (grepl("TEXT$", row_names[[row_index]])) {
+          return(row_ids[[row_index]])
         }
 
         if (!is.na(col_sub_selector[[col_index]]) &&
           col_sub_selector[[col_index]] == "MultipleAnswer") {
-          return(paste(base_row_ids[[row_index]], choice_ids, sep = "_"))
+          return(paste(row_ids[[row_index]], choice_ids, sep = "_"))
         }
 
-        rep(base_row_ids[[row_index]], each = choice_len[[col_index]])
+        rep(row_ids[[row_index]], each = choice_len[[col_index]])
       }) %>%
         unlist()
     }) %>%
@@ -318,7 +352,7 @@ qid_recode <- function(qid,
         CS = list(WTB = suf_item_suf_level_qid)
       ),
     Slider = list(
-      HSLIDER = suf_item_rep_level_qid,
+      HSLIDER = suf_level_qid,
       HBAR = suf_level_qid,
       STAR = suf_level_qid
     ),

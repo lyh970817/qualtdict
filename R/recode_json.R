@@ -81,10 +81,9 @@ rep_level <- function(level, item) {
 }
 
 rep_loop <- function(x, question_meta) {
-  looping_qids_meta <- unlist(map(question_meta, "looping_qid"))
   imap(x, function(qmeta, name) {
     if (qmeta$looping) {
-      looping_qid <- looping_qids_meta[name]
+      looping_qid <- question_meta[[name]][["looping_qid"]]
       looping_qmeta <- x[[looping_qid]]
       static_prefixes <- unlist(
         question_meta[[name]][["looping_prefix"]],
@@ -95,10 +94,15 @@ rep_loop <- function(x, question_meta) {
       # in `recode_json` (remove _TEXT)
       if (looping_qmeta[["type"]] == "Matrix") {
         loop_options <- unlist(looping_qmeta[["item"]])
-        loop_prefixes <- sub(
-          paste0("^", looping_qids_meta[name], "_"),
-          "",
+        looping_response_ids <- if ("response_column_id" %in% names(looping_qmeta)) {
+          unlist(looping_qmeta[["response_column_id"]])
+        } else {
           unlist(looping_qmeta[["qid"]])
+        }
+        loop_prefixes <- sub(
+          paste0("^", looping_qid, "_"),
+          "",
+          looping_response_ids
         )
         keep <- !grepl("_TEXT", loop_prefixes) & !duplicated(loop_prefixes)
         loop_options <- loop_options[keep]
@@ -109,6 +113,7 @@ rep_loop <- function(x, question_meta) {
           discard(grepl("_TEXT", names(.)))
 
         static_loop_options <- loop_options_from_static_choices(
+          question_meta[[name]][["looping_prefix"]],
           question_meta[[looping_qid]][["choices"]],
           static_prefixes
         )
@@ -153,15 +158,41 @@ rep_loop <- function(x, question_meta) {
 loop_response_column_id <- function(response_column_id) {
   str_replace(
     response_column_id,
-    "^([^_]+_QID[0-9]+)_[^_]+_TEXT$",
+    "^([^_]+_QID[0-9]+)_[^_]+_TEXT_TEXT$",
     "\\1_TEXT"
   )
 }
 
-loop_options_from_static_choices <- function(choices, static_prefixes) {
-  if (is.null(choices) ||
-    length(static_prefixes) == 0 ||
-    !all(static_prefixes %in% names(choices))) {
+loop_options_from_static_choices <- function(looping_prefixes,
+                                             choices,
+                                             static_prefixes) {
+  if (is.null(choices) || length(static_prefixes) == 0) {
+    return(NULL)
+  }
+
+  if (!is.null(looping_prefixes) && length(looping_prefixes) > 0) {
+    choice_recodes <- map_chr(choices, ~ scalar_character(.x$recode))
+    choice_by_recode <- setNames(choices, choice_recodes)
+    static_choices <- map(static_prefixes, function(prefix) {
+      if (prefix %in% names(choices)) {
+        return(choices[[prefix]])
+      }
+      if (prefix %in% names(choice_by_recode)) {
+        return(choice_by_recode[[prefix]])
+      }
+      NULL
+    })
+    if (all(map_lgl(static_choices, ~ !is.null(.x)))) {
+      choices <- setNames(static_choices, static_prefixes)
+    } else {
+      choices <- setNames(
+        lapply(static_prefixes, function(prefix) {
+          list(description = prefix, choiceText = prefix)
+        }),
+        static_prefixes
+      )
+    }
+  } else if (!all(static_prefixes %in% names(choices))) {
     return(NULL)
   }
 
