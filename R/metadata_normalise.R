@@ -107,14 +107,7 @@ normalise_question_fact <- function(qid, question, block, content_type) {
       response_items = response_items,
       column_facts = column_facts,
       looping_prefix = looping_prefix,
-      looping_qid = looping_qid,
-      questionName = question_name,
-      questionText = question_text,
-      questionType = question_fact_question_type_legacy(question_type),
-      block = survey_block,
-      choices = response_choices,
-      subQuestions = response_items,
-      columns = column_facts
+      looping_qid = looping_qid
     ),
     class = c("qualtdict_normalised_question", "list")
   )
@@ -176,11 +169,7 @@ normalise_column_facts <- function(columns) {
       question_text = scalar_character(column$question_text %||%
         column$questionText),
       question_type = question_type,
-      response_choices = normalise_response_choices(column$choices),
-      questionText = scalar_character(column$question_text %||%
-        column$questionText),
-      questionType = question_fact_question_type_legacy(question_type),
-      choices = normalise_response_choices(column$choices)
+      response_choices = normalise_response_choices(column$choices)
     )
   })
 }
@@ -230,23 +219,6 @@ question_fact_question_type <- function(question) {
         NULL
       } else {
         scalar_character(sub_selector)
-      }
-  )
-}
-
-#' Return a compatibility question type alias
-#' @keywords internal
-#' @noRd
-question_fact_question_type_legacy <- function(question_type) {
-  list(
-    type = question_type$type,
-    selector = question_type$selector,
-    subSelector = if (is.null(question_type$sub_selector) ||
-      (length(question_type$sub_selector) == 1 &&
-        is.na(question_type$sub_selector))) {
-        NULL
-      } else {
-        question_type$sub_selector
       }
   )
 }
