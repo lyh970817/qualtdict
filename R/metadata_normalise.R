@@ -139,6 +139,12 @@ classify_raw_response_columns <- function(raw_columns) {
   details[scoring] <-
     "Qualtrics scoring column; not represented as a question dictionary row."
 
+  text_analysis <- is.na(classification) &
+    grepl("^(.+_)?QID[0-9]+(_[0-9]+)?_TEXT_.+", raw_columns)
+  classification[text_analysis] <- "text_analysis"
+  details[text_analysis] <-
+    "Qualtrics text-analysis sidecar column; not represented as a question dictionary row."
+
   embedded_data <- is.na(classification) &
     grepl("^[A-Za-z][A-Za-z0-9_]*$", raw_columns) &
     !grepl("^QID[0-9]+", raw_columns)
@@ -349,112 +355,35 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
   }
 
   json <- imap(question_meta, function(qjson, qid) {
-    # Clean the &nbsp; level/label fields (empty on Qualtrics). If there is only
-    # one nbsp, the question is a title and does not need cleaning.
-    nbsps <- map(qjson$choices, "description") == "&nbsp;"
-    if (length(nbsps) != 1) {
-      qjson$choices <- qjson$choices[!nbsps]
-    }
-
     question_name <- qjson$questionName
     type <- qjson$questionType$type
-    question <- qjson$questionText
     selector <- qjson$questionType$selector
     block <- qjson$block
     content_type <- qjson$content_type
-
-    # If no subquestion or choice, treat the length as 1.
-    sub_q_len <- length(qjson$subQuestions) %>% ifelse(. > 0, ., 1)
-    level_len <- length(qjson$choices) %>% ifelse(. > 0, ., 1)
-
-    # The rep_level function works on lists for dealing with SBS questions. For
-    # consistency we convert to lists for non-SBS questions.
-    level <- map(qjson$choices, "recode") %>%
-      unlist_nm() %>%
-      list()
-
-    label <- map(qjson$choices, "description") %>%
-      unlist_nm() %>%
-      list()
-
-    has_text <- which(map_lgl(qjson$choices, ~ "textEntry" %in% names(.x)))
-    if (length(has_text) > 0) {
-      # Add text level and labels directly after the non-text level.
-      level <- add_text(level, has_text)
-      label <- add_text(label, has_text)
-    }
-
-    item <- unlist(map(qjson$subQuestions, "choiceText"))
     sub_selector <- qjson$questionType$subSelector
+    response_columns <- render_response_columns(qjson, qid)
 
-    has_text_sub <- which(map_lgl(
-      qjson$subQuestions,
-      ~ "textEntry" %in% names(.x)
-    ))
-    if (length(has_text_sub) > 0) {
-      item <- unlist(add_text(item, has_text_sub))
-      sub_q_len <- sub_q_len + length(has_text_sub)
-    }
-
-    if (type == "SBS") {
-      # Get number of levels in each column.
-      level_len <- map(qjson$columns, "choices") %>% map_dbl(length)
-      col_len <- length(qjson$columns)
-      col_type <- map_chr(qjson$columns, ~ .x$questionType$selector)
-      attr(col_type, "sub_selector") <-
-        map_chr(qjson$columns, ~ scalar_character(.x$questionType$subSelector))
-      if (col_len != 0) {
-        # Zero length columns means it's a carried forward question.
-        top_question <- qjson$questionText
-        question <- map(qjson$columns, "questionText") %>%
-          map2(length(item), rep) %>%
-          map2(level_len, ~ rep_item(.x, item, .y) %>% unlist) %>%
-          unlist() %>%
-          paste(top_question, ., sep = " ")
-
-        level <- map(qjson$columns, "choices") %>%
-          map(~ map_chr(.x, "recode")) %>%
-          map2(col_type, function(level, type) {
-            if (type == "TE") {
-              level <- paste(level, "TEXT", sep = "_")
-            }
-            level
-          })
-
-        label <- map(qjson$columns, "choices") %>%
-          map(~ map_chr(.x, "description"))
-
-        item <- unlist(map(qjson$subQuestions, "description"))
-        item <- unlist(add_text(item, has_text_sub))
-      }
-    }
-
-    response_column_id <- qid_recode(qid,
-      col_len = col_len, col_type = col_type,
-      item = item, level = level, label = label,
-      choice_len = level_len,
-      type = type, selector = selector,
-      sub_selector = sub_selector, is_qid = TRUE
+    question_name <- rep(
+      question_name,
+      length(response_columns$response_column_id)
     )
 
-    question_name <- rep(question_name, length(response_column_id))
-
     list(
-      qid = rep(qid, length(response_column_id)),
-      response_column_id = response_column_id,
+      qid = rep(qid, length(response_columns$response_column_id)),
+      response_column_id = response_columns$response_column_id,
       question_name = null_na(question_name),
       block = block,
-      question = question,
+      question = response_columns$question,
       looping_question = NA,
-      item = rep_item(item, item, level_len) %>% null_na(),
-      level = rep_level(level, item) %>% null_na(),
-      label = rep_level(label, item) %>% null_na(),
+      item = response_columns$item,
+      level = response_columns$level,
+      label = response_columns$label,
       type = type,
       selector = selector,
       content_type = content_type,
       sub_selector = null_na(sub_selector),
       looping_option = NA,
-      looping = all(!is.null(qjson$looping_qid))
+      looping = !is.na(scalar_character(qjson$looping_qid))
     )
   }) %>%
     discard(is.null) %>%
