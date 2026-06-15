@@ -29,3 +29,17 @@ Recent commits use short imperative summaries, for example `Fix question type CS
 ## Security & Configuration Tips
 
 Do not commit Qualtrics API keys, `.Renviron`, `.Rhistory`, `.RData`, `.Rds`, or downloaded private survey data. Use `qualtRics::qualtrics_api_credentials()` locally for credentials. The pre-commit hooks block common R artifacts, but contributors should still inspect staged files before committing.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for `lyh970817/qualtdict`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage labels use this repo's GitHub labels, with `question` for needs-info and `help wanted` for ready-for-human. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context repo: use root `CONTEXT.md` and root `docs/adr/` when present. See `docs/agents/domain.md`.
