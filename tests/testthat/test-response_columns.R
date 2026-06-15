@@ -210,9 +210,9 @@ test_that("render_response_columns renders SBS and sidecar columns", {
 test_that("render_response_columns warns and falls back for unsupported shapes", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
-  question$questionType$type <- "Meta"
-  question$questionType$selector <- "Browser"
-  question$questionType$subSelector <- NULL
+  question$question_type$type <- "Meta"
+  question$question_type$selector <- "Browser"
+  question$question_type$sub_selector <- NULL
 
   expect_warning(
     rendered <- render_response_columns(question, "QID1"),

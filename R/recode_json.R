@@ -114,7 +114,7 @@ rep_loop <- function(x, question_meta) {
 
         static_loop_options <- loop_options_from_static_choices(
           question_meta[[name]][["looping_prefix"]],
-          question_meta[[looping_qid]][["choices"]],
+          question_fact_response_choices(question_meta[[looping_qid]]),
           static_prefixes
         )
         if (!is.null(static_loop_options)) {
