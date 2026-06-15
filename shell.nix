@@ -37,6 +37,8 @@ in
 pkgs.mkShell {
   buildInputs = [
     pkgs.R
+    pkgs.pandoc
+    pkgs.qpdf
   ] ++ rPackages;
 
   shellHook = ''
