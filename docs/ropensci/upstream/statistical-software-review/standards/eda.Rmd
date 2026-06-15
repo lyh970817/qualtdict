@@ -165,10 +165,10 @@ attr (x, "vector attribute") <- runif (5)
 attributes (x)
 #> $class
 #> [1] "notvector"
-#> 
+#>
 #> $extra_attribute
 #> [1] "another attribute"
-#> 
+#>
 #> $`vector attribute`
 #> [1] 0.03521663 0.49418081 0.60129563 0.75804346 0.16073301
 ```
@@ -279,7 +279,7 @@ Dynamic visualization routines are commonly implemented as interfaces to
 internal part of an R package, standards shall not be considered to apply to
 the code itself, rather only to decisions present as user-controlled parameters
 exposed within the R environment. That said, one standard may nevertheless be
-applied, which aims to maximise inter-operability between packages. 
+applied, which aims to maximise inter-operability between packages.
 
 - [**EA5.6**]{#EA5_6} *Any packages which internally bundle libraries used for
   dynamic visualization and which are also bundled in other, pre-existing

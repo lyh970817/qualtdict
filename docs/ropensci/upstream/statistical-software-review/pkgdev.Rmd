@@ -60,7 +60,7 @@ for.
   Software* (JStatSoft)](https://www.jstatsoft.org/index) already [recommends
   that developers refer to our standards](https://www.jstatsoft.org/authors).
   In our experience code peer-review is looked on favorably by reviewers of
-  software papers at many journals. 
+  software papers at many journals.
 - In regulated environments and other fields where strong demonstration of
   quality and compliance is needed, approval by peer-review provides strong
   evidence of software quality rarely available for statistical software. Our
@@ -241,7 +241,7 @@ srr_stats_roxygen (category = c ("<category-1>", "<category-2>"))
 That will insert a new file into the `R/` directory of your package called (by
 default) `srr-stats-standards.R`. All standards initially have
 a [`roxygen2`](https://roxygen2.r-lib.org) tag of `@srrstatsTODO`, to indicate
-that these standards are yet to be addressed. These tags are processed by the 
+that these standards are yet to be addressed. These tags are processed by the
 [`srr` roclet](https://ropensci-review-tools.github.io/srr/) which needs to be
 connected with your package by modifying the `Roxygen` line of your
 `DESCRIPTION` file to the following form:

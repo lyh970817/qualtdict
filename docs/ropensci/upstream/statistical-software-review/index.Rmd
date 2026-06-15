@@ -39,7 +39,7 @@ You are invited to contribute to this project by participating in our [GitHub
 Discussions](https://github.com/ropensci/statistical-software-review-book/discussions),
 or filing suggestions as [issues in the book's GitHub
 repository](https://github.com/ropensci/statistical-software-review-book/issues).
-Feedback on standards is particularly welcome, for which 
+Feedback on standards is particularly welcome, for which
 [the Discussions](https://github.com/ropensci/statistical-software-review-book/discussions)
 have dedicated pages for each category of standards.
 

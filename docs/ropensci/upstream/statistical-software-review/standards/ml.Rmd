@@ -38,7 +38,7 @@ dependent upon envisioned areas of application. For example, the workflow
 presumes input data to be too large to be stored as a single entity in local
 memory. Adaptation to situations in which all training data can be loaded into
 memory may mean that some of the following workflow stages, and therefore
-corresponding standards, may not apply. 
+corresponding standards, may not apply.
 
 Just as typical workflows are potentially very diverse, so are outputs of ML
 software, which depend on areas of application and intended purpose of
@@ -48,7 +48,7 @@ connote any and all forms of "response variable" and other "pre-specified
 outputs" such as categorical labels or validation data, along with outputs
 which may not necessarily be able to be pre-specified in simple uni- or
 multi-variate form, such as measures of distance between sets of training and
-validation data. 
+validation data.
 
 Such "desired outputs" are presumed to be quantified in terms of a "loss" or
 "cost" function (hereafter, simply "loss function") quantifying some measure of
@@ -261,7 +261,7 @@ generally expected to be read from either local or remote connections.
   connections). Labelling should in all cases adhere to **ML1.1**, above.*
 
 The following standard applies to all ML software regardless of the
-applicability or otherwise of the preceding three standards. 
+applicability or otherwise of the preceding three standards.
 
 - [**ML1.5**]{#ML1_5} *ML software should implement a single function which
   summarises the contents of test and training (and other) data sets, minimally
@@ -331,7 +331,7 @@ rectangular image files which may be of different sizes.
   optionally record transformations applied to each input file.*
 
 Beyond broadcasting and dimensional transformations, the following standards
-apply to the pre-processing stages of ML software. 
+apply to the pre-processing stages of ML software.
 
 - [**ML2.2**]{#ML2_2} *ML software which requires or relies upon numeric
   transformations of input data (such as change in mean values or variances)

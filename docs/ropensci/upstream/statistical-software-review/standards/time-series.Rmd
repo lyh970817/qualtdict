@@ -227,7 +227,7 @@ Statistical software which implements forecasting routines should:
       post-processing function, or via an input parameter to a primary analytic
       function.*
 
-      
+
 ### Return Results
 
 For (functions within) Time Series Software which return time series data:
@@ -288,7 +288,7 @@ only the third as a last resort.
       standard error values).*
     - [**TS4.6c**]{#TS4_6c} *Some more general indication of error associated
       with forecast estimates.*
-      
+
 Beyond these particular standards for return objects, Time Series Software
 which implements or otherwise enables forecasting should:
 
@@ -315,8 +315,8 @@ Time Series Software should:
   on the horizontal axis.*
 - [**TS5.3**]{#TS5_3} *Ensure that units of the time, frequency, or index
   variable are printed by default on the axis.*
-- [**TS5.4**]{#TS5_4} *For frequency visualization, abscissa spanning 
-  $[-\pi, \pi]$ should be avoided in favour of positive units of $[0, 2\pi]$ or 
+- [**TS5.4**]{#TS5_4} *For frequency visualization, abscissa spanning
+  $[-\pi, \pi]$ should be avoided in favour of positive units of $[0, 2\pi]$ or
   $[0, 0.5]$, in all cases with appropriate additional explanation of units.*
 - [**TS5.5**]{#TS5_5} *Provide options to determine whether plots of data with
   missing values should generate continuous or broken lines.*

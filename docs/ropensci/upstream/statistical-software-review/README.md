@@ -44,7 +44,7 @@ Salmon](https://github.com/maelle), itself started using [Sean
 Kross's](https://github.com/seankross) [minimal bookdown
 example](https://github.com/seankross/bookdown-start).
 
-All of the content of this repository is licensed 
+All of the content of this repository is licensed
 [CC0-1.0](https://creativecommons.org/publicdomain/zero/1.0/).
 
 

@@ -169,7 +169,7 @@ Systems like those demonstrated in that vignette provide a very effective way
 to ensure that software remains robust to diverse and unexpected classes and
 types of input data. Packages such
 [`checkmate`](https://mllg.github.io/checkmate/index.html) enable direct and
-simple ways to check and assert input structures. 
+simple ways to check and assert input structures.
 
 #### Uni-variate (Vector) Input
 
@@ -336,7 +336,7 @@ class (x [, 1, drop = FALSE]) # default
 - Extracting a single column from a `data.frame` returns a `vector` by default,
   and a `data.frame` if `drop = FALSE`.
 - Extracting a single column from a `tibble` returns a single-column `tibble`
-  by default, and a `vector` if `drop = TRUE`. 
+  by default, and a `vector` if `drop = TRUE`.
 - Extracting a single column from a `data.table` always returns a `data.table`,
   and the `drop` argument has no effect.
 
@@ -442,7 +442,7 @@ listed here need not necessarily be listed as `Imports` to a package.
   to local files should parse parameters specifying file names to ensure
   appropriate file suffixes are automatically generated where not provided.*
 
-### Testing 
+### Testing
 
 All packages should follow rOpenSci standards on
 [testing](https://devguide.ropensci.org/building.html#testing) and [continuous
@@ -543,7 +543,7 @@ defaulting to the value defined by `base::all_equal()` of
 
 #### Extended tests
 
-Thorough testing of statistical software may require tests on large data sets, 
+Thorough testing of statistical software may require tests on large data sets,
 tests with many permutations, or other conditions leading to long-running
 tests. In such cases it may be neither possible nor advisable to execute tests
 continuously, or with every code change. Software should nevertheless test any
@@ -553,11 +553,11 @@ should adhere to the following standards:
 - [**G5.10**]{#G5_10} *Extended tests should included and run under a common
   framework with other tests but be switched on by flags such as as
   a `<MYPKG>_EXTENDED_TESTS="true"` environment variable.*
-    - The extended tests can be then run automatically by GitHub Actions for 
+    - The extended tests can be then run automatically by GitHub Actions for
       example by adding the following to the `env` section of the workflow:
-      
+
       `MYPKG_EXTENDED_TESTS: ${{contains(github.event.head_commit.message, 'run-extended')}}`
-      
+
       Extended tests will then be run in response to any commit message which contains the phrase `run-extended`.
 - [**G5.11**]{#G5_11} *Where extended tests require large data sets or other
   assets, these should be provided for downloading and fetched as part of the

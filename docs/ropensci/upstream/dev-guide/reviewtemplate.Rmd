@@ -25,5 +25,3 @@ cat(readLines("templates/review.md"), sep = "\n")
 ```
 
 :::
-
-

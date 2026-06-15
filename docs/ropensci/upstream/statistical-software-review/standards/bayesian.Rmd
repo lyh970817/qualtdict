@@ -96,23 +96,23 @@ following documentation of how to specify inputs:
   single objects representing independent and dependent data, and potentially
   more complicated cases of multiple independent data inputs.*
 - [**BS1.2**]{#BS1_2} *Description of how to specify prior distributions, both
-  in textual form describing the general principles of specifying prior 
+  in textual form describing the general principles of specifying prior
   distributions, along with more applied descriptions and examples, within:*
     - [**BS1.2a**]{#BS1_2a} *The main package `README`, either as textual
-      description or example code* 
-    - [**BS1.2b**]{#BS1_2b} *At least one package vignette, both as general and 
-      applied textual descriptions, and example code* 
-    - [**BS1.2c**]{#BS1_2c} *Function-level documentation, preferably with code 
-      included in examples* 
-- [**BS1.3**]{#BS1_3} *Description of all parameters which control the 
-  computational process (typically those determining aspects such as 
+      description or example code*
+    - [**BS1.2b**]{#BS1_2b} *At least one package vignette, both as general and
+      applied textual descriptions, and example code*
+    - [**BS1.2c**]{#BS1_2c} *Function-level documentation, preferably with code
+      included in examples*
+- [**BS1.3**]{#BS1_3} *Description of all parameters which control the
+  computational process (typically those determining aspects such as
   numbers and lengths of sampling processes,
   seeds used to start them, thinning parameters determining post-hoc
   sampling from simulated values, and convergence criteria). In
   particular:*
     - [**BS1.3a**]{#BS1_3a} *Bayesian Software should document, both in text
       and examples, how to use the output of previous simulations as starting
-      points of subsequent simulations.* 
+      points of subsequent simulations.*
     - [**BS1.3b**]{#BS1_3b} *Where
       applicable, Bayesian software should document, both in text and examples,
       how to use different sampling algorithms for a given model.*
@@ -120,7 +120,7 @@ following documentation of how to specify inputs:
   enables convergence checkers, documentation should explicitly describe
   and provide examples of use with and without convergence checkers.*
 - [**BS1.5**]{#BS1_5} *For Bayesian Software which implements or otherwise
-  enables multiple convergence checkers, differences between these should be 
+  enables multiple convergence checkers, differences between these should be
   explicitly tested.*
 
 
@@ -253,7 +253,7 @@ x <- utils::getParseData (p)
 params <- unique (x$text [x$token == "SYMBOL"])
 lens <- vapply (params, function (i) vector_length (x, i), integer (1))
 lens
-#>  y  p  x 
+#>  y  p  x
 #> NA  3 NA
 ```
 

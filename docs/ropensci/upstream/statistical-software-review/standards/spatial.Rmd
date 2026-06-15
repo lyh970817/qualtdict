@@ -34,7 +34,7 @@ Data"](https://cran.r-project.org/web/views/Spatial.html), have been primarily
 focussed on geographic data; that is, data quantifying positions, structures,
 and relationships on the Earth and other planets. Spatial analyses are
 nevertheless both broader and more general than geography alone. In particular,
-spatial software may be *geometric* -- that is, concerned with 
+spatial software may be *geometric* -- that is, concerned with
 positions, structures, and relationships in space in any general or specific
 sense, not necessarily confined to geographic systems alone.
 
@@ -61,7 +61,7 @@ patterns, including multitype/marked points, in any spatial region." Routines
 from this package are thus generally applicable to two-dimensional Cartesian
 data only, even through the final phrase might be interpreted to indicate
 a comprehensive generality. `spatstat` routines may not necessarily give
-accurate results when applied in curvilinear space. 
+accurate results when applied in curvilinear space.
 
 These considerations motivate the first standard for spatial software:
 
@@ -77,7 +77,7 @@ of dimensionality should be interpreted to refer explicitly to the
 dimensionality of independent spatial coordinates. Elevation is a third spatial
 dimension, and time may also be considered an additional dimension. Beyond
 those two, other attributes measured at spatial locations do not represent
-additional dimensions. 
+additional dimensions.
 
 - [**SP1.1**]{#SP1_1} *Spatial software should explicitly indicate its
   dimensional domain of applicability, in particular through identifying
@@ -205,7 +205,7 @@ for the [`rgdal` package](https://cran.r-project.org/web/packages/rgdal/). The
 "breaking" nature of these updates partly reflects analogous "breaking changes"
 associated with updates in the ["Well-Known Text"
 (WKT)](http://docs.opengeospatial.org/is/12-063r5/12-063r5.html) system for
-representing coordinate reference systems. 
+representing coordinate reference systems.
 
 The following standard applies to software which directly or indirectly relies
 on geographic data which uses or relies upon coordinate reference systems.
@@ -351,7 +351,7 @@ distinction might be temporal rather than spatial. Adherence to this standard
 merely requires that the potential for any such confounding effects be
 explicitly documented (and possibly tested as well).
 
-      
+
 ### Return Results
 
 For (functions within) Spatial Software which return spatial data:

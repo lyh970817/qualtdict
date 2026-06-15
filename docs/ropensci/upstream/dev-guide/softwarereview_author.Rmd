@@ -57,9 +57,9 @@ This concise guide presents the software peer review process for you as a packag
 ### Accompanying manuscript (optional)
 
 If you intend to submit an accompanying manuscript for your package, rOpenSci has a collaborative partnership with the [Journal of Open-Source Software](https://joss.theoj.org/) and [Methods in Ecology and Evolution](https://besjournals.onlinelibrary.wiley.com/journal/2041210X):
-  
+
 - For a submission to Journal of Open-Source Software (JOSS), do not submit it to JOSS consideration until after the rOpenSci review process is over: if your package is deemed in scope by JOSS editors, only the accompanying short paper would be reviewed, (not the software that will have been extended reviewed by rOpenSci by that time). Not all rOpenSci packages will meet the criteria for JOSS.
-  
+
 - For a submission to Methods in Ecology and Evolution (MEE), submit it to MEE only after the rOpenSci reviewers have submitted their reviews, either before or after the package has been accepted. The review collaboration with MEE was introduced in a [blog post](https://ropensci.org/blog/2017/11/29/review-collaboration-mee/). The relevant article type for MEE is [Application](https://besjournals.onlinelibrary.wiley.com/hub/journal/2041210X/features/applicationpapers) for more details.
 
 ## The Submission Process {#the-submission-process}
@@ -87,5 +87,3 @@ If you intend to submit an accompanying manuscript for your package, rOpenSci ha
 - Once your package is approved, we will provide further instructions about the transfer of your repository to the rOpenSci repository.
 
 Our [code of conduct](#code-of-conduct) is mandatory for everyone involved in our review process.
-
-
