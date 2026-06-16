@@ -29,8 +29,7 @@ into:
 - a **Variable Dictionary** with `response_column_id`, `qid`,
   `question_name`, `variable_name`, and survey metadata needed for
   analysis;
-- **Validation Findings** and **Unsupported Structure Findings** that
-  make dictionary consistency and unsupported Qualtrics structures
+- **Validation Findings** that make dictionary consistency issues
   visible; and
 - **Labelled Survey Data** whose Export Variables are renamed to
   `variable_name` and labelled from the Variable Dictionary.
@@ -89,15 +88,11 @@ dict <- dict_generate(
 )
 ```
 
-Use `dict_validate()` to return structured Validation Findings, and use
-`unsupported_structure_findings()` to inspect Unsupported Structure
-Findings that were attached while normalising Qualtrics metadata.
+Use `dict_validate()` to return structured Validation Findings.
 
 ``` r
 validation <- dict_validate(dict)
 validation$validation_findings
-
-unsupported_structure_findings(dict)
 ```
 
 Then create Labelled Survey Data. `qualtdict` calls

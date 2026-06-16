@@ -18,8 +18,6 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
                                                          block_sep,
                                                          semantic_name_preprocess) {
   question_meta <- normalised_metadata$questions
-  unsupported_qids <- normalised_metadata$unsupported_structure_findings$qid
-  question_meta <- question_meta[!names(question_meta) %in% unsupported_qids]
   question_meta <- expand_loop_question_facts(question_meta)
   if (length(question_meta) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
@@ -101,8 +99,6 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
 
   attr(json, "survey_name") <- normalised_metadata$survey_name
   attr(json, "surveyID") <- normalised_metadata$surveyID
-  attr(json, "unsupported_structure_findings") <-
-    normalised_metadata$unsupported_structure_findings
   json <- repair_variable_dictionary_names(json)
 
   json
@@ -151,8 +147,6 @@ empty_variable_dictionary_from_normalised_metadata <- function(
 
   attr(json, "survey_name") <- normalised_metadata$survey_name
   attr(json, "surveyID") <- normalised_metadata$surveyID
-  attr(json, "unsupported_structure_findings") <-
-    normalised_metadata$unsupported_structure_findings
   attr(json, "variable_name_findings") <- empty_variable_name_findings()
 
   json

@@ -65,7 +65,6 @@ test_that("README documents the qualtRics boundary and main workflow", {
   expect_match(readme, "semantic_name", fixed = TRUE)
   expect_match(readme, "variable_name", fixed = TRUE)
   expect_match(readme, "Validation Findings", fixed = TRUE)
-  expect_match(readme, "Unsupported Structure Findings", fixed = TRUE)
   expect_match(readme, "Labelled Survey Data", fixed = TRUE)
   expect_match(readme, "not stable", fixed = TRUE)
   expect_match(readme, "tested offline", fixed = TRUE)
@@ -105,8 +104,7 @@ test_that("exported function docs use canonical public terminology", {
     "question_name",
     "semantic_name",
     "variable_name",
-    "Validation Findings",
-    "Unsupported Structure Findings"
+    "Validation Findings"
   )
 
   for (term in canonical_terms) {

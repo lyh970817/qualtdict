@@ -8,8 +8,7 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
   expect_named(normalised_metadata, c(
     "surveyID",
     "survey_name",
-    "questions",
-    "unsupported_structure_findings"
+    "questions"
   ))
   expect_equal(normalised_metadata$surveyID, "SV_SYNTHETIC")
   expect_equal(normalised_metadata$survey_name, "Synthetic Survey")
@@ -32,8 +31,6 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
   expect_equal(names(question$response_choices), c("1", "2", "3"))
   expect_equal(length(question$response_items), 0)
   expect_equal(length(question$column_facts), 0)
-  expect_equal(nrow(normalised_metadata$unsupported_structure_findings), 0)
-  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
 })
 
 test_that("normalised metadata renders the current Variable Dictionary rows", {
@@ -91,7 +88,6 @@ test_that("normalised metadata renders the current Variable Dictionary rows", {
   expect_equal(dict_subset$content_type, rep("Number", 4))
   expect_equal(attr(dict, "survey_name"), "Synthetic Survey")
   expect_equal(attr(dict, "surveyID"), "SV_SYNTHETIC")
-  expect_equal(nrow(unsupported_structure_findings(dict)), 0)
 })
 
 test_that("question-name Variable Dictionaries repair only variable_name", {
@@ -548,7 +544,6 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
 
   target_rows <- dict[grepl("QID2", dict$response_column_id), ]
 
-  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
   expect_equal(
     target_rows$response_column_id,
     c("x1_QID2_TEXT", "x2_QID2_TEXT")
@@ -582,7 +577,6 @@ test_that("normalised metadata renders supported extra Loop and Merge fields", {
 
   target_rows <- dict[grepl("QID2", dict$response_column_id), ]
 
-  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
   expect_equal(
     target_rows$response_column_id,
     c("x1_QID2_TEXT", "x2_QID2_TEXT")
@@ -608,7 +602,6 @@ test_that("normalised metadata renders static Loop and Merge rows", {
 
   target_rows <- dict[grepl("QID2", dict$response_column_id), ]
 
-  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
   expect_equal(
     target_rows$response_column_id,
     c("1_QID2_TEXT", "2_QID2_TEXT")
@@ -883,53 +876,4 @@ test_that("known non-question raw columns are explicitly classified", {
     classified$details[1],
     "Qualtrics scoring column; not represented as a question dictionary row."
   )
-})
-
-test_that("unsupported Loop and Merge fields produce findings", {
-  raw_metadata <- synthetic_loop_and_merge_raw_metadata(
-    "Compare ${lm://Field/1} with ${lm://Field/2}"
-  )
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-  findings <- unsupported_structure_findings(normalised_metadata)
-
-  dict <- variable_dictionary_from_normalised_metadata(
-    normalised_metadata,
-    use_semantic_name = FALSE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = NULL
-  )
-
-  expect_equal(nrow(findings), 1)
-  expect_equal(findings$qid, "QID2")
-  expect_equal(findings$type, "TE")
-  expect_equal(findings$selector, "SL")
-  expect_equal(findings$finding, "unsupported_loop_field")
-  expect_match(findings$details, "could not be resolved")
-  expect_match(findings$details, "2")
-  expect_false(any(grepl("QID2", dict$response_column_id)))
-  expect_equal(unsupported_structure_findings(dict), findings)
-})
-
-test_that("missing Loop and Merge sources produce findings", {
-  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
-  raw_metadata$metadata$questions$QID1 <- NULL
-  raw_metadata$description$question$QID1 <- NULL
-
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-  findings <- unsupported_structure_findings(normalised_metadata)
-  dict <- variable_dictionary_from_normalised_metadata(
-    normalised_metadata,
-    use_semantic_name = FALSE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = NULL
-  )
-
-  expect_equal(nrow(findings), 1)
-  expect_equal(findings$qid, "QID2")
-  expect_equal(findings$finding, "missing_loop_source")
-  expect_match(findings$details, "QID1")
-  expect_equal(nrow(dict), 0)
-  expect_equal(unsupported_structure_findings(dict), findings)
 })

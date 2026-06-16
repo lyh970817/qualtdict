@@ -37,18 +37,15 @@ prepare_fetch_survey_args <- function(args, dict) {
 }
 
 exclude_dict_findings <- function(dict,
-                                  exclude_findings = c(
-                                    "none", "validation", "unsupported", "all"
-                                  )) {
+                                  exclude_findings = c("none", "validation")) {
   exclude_findings <- match.arg(exclude_findings)
   if (exclude_findings == "none") {
     return(dict)
   }
 
   excluded_response_column_ids <- character()
-  excluded_qids <- character()
 
-  if (exclude_findings %in% c("validation", "all")) {
+  if (exclude_findings == "validation") {
     validation_findings <- dict_validate(dict)$validation_findings
     excluded_response_column_ids <- c(
       excluded_response_column_ids,
@@ -56,29 +53,12 @@ exclude_dict_findings <- function(dict,
     )
   }
 
-  if (exclude_findings %in% c("unsupported", "all")) {
-    unsupported_findings <- unsupported_structure_findings(dict)
-    if ("response_column_id" %in% names(unsupported_findings)) {
-      excluded_response_column_ids <- c(
-        excluded_response_column_ids,
-        unsupported_findings$response_column_id
-      )
-    }
-    if ("qid" %in% names(unsupported_findings)) {
-      excluded_qids <- c(excluded_qids, unsupported_findings$qid)
-    }
-  }
-
   excluded_response_column_ids <- unique(
     excluded_response_column_ids[!is.na(excluded_response_column_ids)]
   )
-  excluded_qids <- unique(excluded_qids[!is.na(excluded_qids)])
 
   exclude_rows <- dict_response_column_id(dict) %in%
     excluded_response_column_ids
-  if ("qid" %in% names(dict)) {
-    exclude_rows <- exclude_rows | dict$qid %in% excluded_qids
-  }
 
   copy_qualtdict_attrs(dict[!exclude_rows, ], dict)
 }
@@ -87,40 +67,12 @@ copy_qualtdict_attrs <- function(dict, source) {
   attr(dict, "class") <- attr(source, "class")
   attr(dict, "surveyID") <- attr(source, "surveyID", exact = TRUE)
   attr(dict, "survey_name") <- attr(source, "survey_name", exact = TRUE)
-  attr(dict, "unsupported_structure_findings") <-
-    filter_unsupported_findings(
-      unsupported_structure_findings(source),
-      dict
-    )
   attr(dict, "variable_name_findings") <-
     filter_variable_findings(
       attr(source, "variable_name_findings", exact = TRUE),
       dict
     )
   dict
-}
-
-filter_unsupported_findings <- function(findings, dict) {
-  if (is.null(findings) || nrow(findings) == 0) {
-    return(empty_unsupported_structure_findings())
-  }
-
-  keep <- rep(FALSE, nrow(findings))
-  has_identity <- FALSE
-  if ("response_column_id" %in% names(findings)) {
-    keep <- keep |
-      findings$response_column_id %in% unique(dict_response_column_id(dict))
-    has_identity <- TRUE
-  }
-  if ("qid" %in% names(findings) && "qid" %in% names(dict)) {
-    keep <- keep | findings$qid %in% unique(dict$qid)
-    has_identity <- TRUE
-  }
-  if (!has_identity) {
-    keep <- rep(TRUE, nrow(findings))
-  }
-
-  findings[keep, ]
 }
 
 filter_variable_findings <- function(findings, dict) {

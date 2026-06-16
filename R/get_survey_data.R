@@ -15,9 +15,7 @@
 #' Use \code{NULL} to retain no extra columns.
 #' @param exclude_findings Which findings to exclude after survey download.
 #' \code{"none"} keeps all downloaded variables represented in the Variable
-#' Dictionary. \code{"validation"} excludes rows with Validation Findings,
-#' \code{"unsupported"} excludes rows with Unsupported Structure Findings, and
-#' \code{"all"} excludes both.
+#' Dictionary. \code{"validation"} excludes rows with Validation Findings.
 #' @param ... Other arguments passed to
 #' \code{\link[qualtRics]{fetch_survey}}. Filtering arguments such as
 #' \code{include_questions} may be passed through. qualtdict owns
@@ -33,9 +31,9 @@
 #' \code{breakout_sets = TRUE}. User-supplied passthrough arguments cannot
 #' override those settings.
 #'
-#' By default, Labelled Survey Data includes variables with Validation Findings
-#' or Unsupported Structure Findings. Use \code{exclude_findings} when you want
-#' to explicitly remove them after download.
+#' By default, Labelled Survey Data includes variables with Validation Findings.
+#' Use \code{exclude_findings} when you want to explicitly remove them after
+#' download.
 #'
 #' @return
 #' Labelled Survey Data: a data frame whose Export Variables are renamed to
@@ -57,9 +55,7 @@ get_survey_data <- function(dict,
                             extra_columns = c(
                               "externalDataReference", "startDate", "endDate"
                             ),
-                            exclude_findings = c(
-                              "none", "validation", "unsupported", "all"
-                            ),
+                            exclude_findings = c("none", "validation"),
                             ...) {
   checkarg_isqualtdict(dict)
   extra_columns_user_supplied <- !missing(extra_columns)

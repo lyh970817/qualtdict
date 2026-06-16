@@ -135,35 +135,6 @@ test_that("exclude_findings removes validation findings after download", {
   expect_equal(attr(dat, "dict")$response_column_id, "QID1")
 })
 
-test_that("exclude_findings removes unsupported findings by dictionary row", {
-  dict <- minimal_export_dict()
-  attr(dict, "unsupported_structure_findings") <- tibble::tibble(
-    qid = "QID2",
-    type = "TE",
-    selector = "SL",
-    sub_selector = NA_character_,
-    finding = "unsupported_loop_field",
-    details = "Unsupported Loop and Merge field."
-  )
-
-  local_mocked_bindings(
-    fetch_survey2 = function(...) {
-      minimal_survey_data()
-    }
-  )
-
-  dat <- get_survey_data(dict, exclude_findings = "unsupported")
-
-  expect_named(dat, c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "q1"
-  ))
-  expect_equal(attr(dat, "dict")$response_column_id, "QID1")
-  expect_equal(nrow(unsupported_structure_findings(attr(dat, "dict"))), 0)
-})
-
 test_that("extra_columns distinguish user-specified columns from defaults", {
   dict <- minimal_export_dict(
     response_column_id = "QID1",

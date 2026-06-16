@@ -20,12 +20,6 @@
 #'   pairings.
 #' }
 #'
-#' Validation Findings are separate from Unsupported Structure Findings.
-#' Unsupported Structure Findings describe Qualtrics structures that
-#' \code{qualtdict} could not fully represent while normalising metadata; use
-#' [unsupported_structure_findings()] to inspect them on the Variable
-#' Dictionary.
-#'
 #' @examples
 #' \dontrun{
 #' survey_id <- "SV_XXXXXXXXXXXXXXXX"

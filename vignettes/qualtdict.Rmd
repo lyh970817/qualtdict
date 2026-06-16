@@ -20,8 +20,8 @@ knitr::opts_chunk$set(
 [Qualtrics](https://www.qualtrics.com/) surveys. `qualtRics` owns API access:
 authentication, metadata retrieval, and response downloads from Qualtrics.
 `qualtdict` owns the package workflow that turns that metadata and those
-import-ID response exports into a Variable Dictionary, Validation Findings,
-Unsupported Structure Findings, and Labelled Survey Data.
+import-ID response exports into a Variable Dictionary, Validation Findings, and
+Labelled Survey Data.
 
 The authors and contributors for this R package are not affiliated with
 Qualtrics, and Qualtrics does not offer support for this R package.
@@ -31,8 +31,7 @@ Qualtrics, and Qualtrics does not offer support for this R package.
 The core workflow is:
 
 1. Use `dict_generate()` to build a Variable Dictionary.
-2. Use `dict_validate()` and `unsupported_structure_findings()` to inspect
-   Validation Findings and Unsupported Structure Findings.
+2. Use `dict_validate()` to inspect Validation Findings.
 3. Use `get_survey_data()` to create Labelled Survey Data.
 
 A Variable Dictionary preserves several distinct identifiers:
@@ -165,14 +164,6 @@ Validation Findings cover consistency issues in the generated Variable
 Dictionary, including repaired `variable_name` values, non-unique or unsafe
 Dictionary Variable Names, and level-label coding findings.
 
-Unsupported Structure Findings are separate. They describe Qualtrics
-structures that `qualtdict` could not fully represent while normalising
-metadata.
-
-```{r, eval=FALSE}
-unsupported_structure_findings(dict)
-```
-
 ## Labelled Survey Data
 
 Create Labelled Survey Data from a Variable Dictionary:
@@ -194,14 +185,14 @@ filtering arguments such as `include_questions`, but not arguments that would
 override the response-column naming, labelling, conversion, or breakout
 contract owned by `qualtdict`.
 
-By default, variables with Validation Findings or Unsupported Structure
-Findings remain in the Labelled Survey Data. Use `exclude_findings` only when
-you explicitly want to drop those variables after download.
+By default, variables with Validation Findings remain in the Labelled Survey
+Data. Use `exclude_findings` only when you explicitly want to drop those
+variables after download.
 
 ```{r, eval=FALSE}
 survey_dat_clean <- get_survey_data(
   dict,
-  exclude_findings = "all"
+  exclude_findings = "validation"
 )
 ```
 
