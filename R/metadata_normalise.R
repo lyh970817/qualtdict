@@ -2,9 +2,7 @@
 #'
 #' The normalised metadata model is internal and question-level for this tracer
 #' bullet. It owns the merged question, block, loop, and content-type metadata
-#' that dictionary row generation consumes. Future slices can extend this
-#' object with Loop Option details and Unsupported Structure Findings without
-#' changing `dict_generate()`.
+#' that dictionary row generation consumes.
 #'
 #' @keywords internal
 #' @noRd
@@ -13,16 +11,12 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     raw_metadata$metadata,
     raw_metadata$description
   )
-  unsupported_structure_findings <- unsupported_loop_structure_findings(
-    questions
-  )
 
   structure(
     list(
       surveyID = raw_metadata$surveyID,
       survey_name = raw_metadata$survey_name,
-      questions = questions,
-      unsupported_structure_findings = unsupported_structure_findings
+      questions = questions
     ),
     class = c("qualtdict_normalised_metadata", "list")
   )

@@ -62,9 +62,6 @@ includes \code{semantic_name}. Semantic Names are readable best-effort
 conveniences generated from survey text and metadata; they are not stable
 guarantees across package versions or survey text changes.
 
-Unsupported Structure Findings found while normalising Qualtrics metadata
-travel with the Variable Dictionary and can be inspected with
-\code{\link[qualtdict]{unsupported_structure_findings}}.
 }
 \examples{
 \dontrun{

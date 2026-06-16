@@ -3,10 +3,10 @@
 qualtdict is a metadata and labelled-export companion to qualtRics for Qualtrics
 surveys. qualtRics owns API access; qualtdict owns the package-specific language
 around survey metadata dictionaries, validation, naming, and labelled exports.
-It promises to preserve response-column identity, expose validation and
-unsupported-structure findings, and support Qualtrics Loop and Merge structures;
-it does not promise to be a general Qualtrics downloader, survey cleaning
-framework, or stable semantic-name generator.
+It promises to preserve response-column identity, expose validation findings,
+and support Qualtrics Loop and Merge structures; it does not promise to be a
+general Qualtrics downloader, survey cleaning framework, or stable semantic-name
+generator.
 
 ## Language
 
@@ -93,20 +93,13 @@ levels, or non-one-to-one level-label mappings. A clean validation result is a
 consistency screen, not proof that the survey metadata is correct.
 _Avoid_: Mistake, error, invalid dictionary
 
-**Unsupported Structure Finding**:
-A finding that qualtdict could not fully represent a Qualtrics question
-structure while normalising Qualtrics metadata. Unsupported Structure Findings
-are separate from Validation Findings, which concern the generated Variable
-Dictionary.
-_Avoid_: Unsupported warning, not applicable question
-
 **Labelled Export Finding**:
 A finding detected while matching a Variable Dictionary to downloaded survey
 data during Labelled Export, such as a Response Column ID represented by the
 Variable Dictionary but absent from the downloaded data. Labelled Export
-Findings are separate from Unsupported Structure Findings because they are
-detected after metadata normalisation, while assembling Labelled Survey Data.
-_Avoid_: Export error, unsupported structure finding
+Findings are separate from Validation Findings because they are detected after
+metadata normalisation, while assembling Labelled Survey Data.
+_Avoid_: Export error
 
 **Labelled Survey Data**:
 Survey response data whose Export Variables have been renamed and annotated

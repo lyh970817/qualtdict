@@ -21,11 +21,6 @@ findings.
 pairings.
 }
 
-Validation Findings are separate from Unsupported Structure Findings.
-Unsupported Structure Findings describe Qualtrics structures that
-\code{qualtdict} could not fully represent while normalising metadata; use
-\code{\link[=unsupported_structure_findings]{unsupported_structure_findings()}} to inspect them on the Variable
-Dictionary.
 }
 \description{
 Validate Variable Dictionary consistency and return a stable validation

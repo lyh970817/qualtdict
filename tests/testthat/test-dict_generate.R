@@ -11,7 +11,6 @@ test_that("dict_generate", {
     "content_type"
   )
   snapshot_x <- x[legacy_columns]
-  attr(snapshot_x, "unsupported_structure_findings") <- NULL
   attr(snapshot_x, "variable_name_findings") <- NULL
 
   expect_s3_class(snapshot_x, "data.frame")

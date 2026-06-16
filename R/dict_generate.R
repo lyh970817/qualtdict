@@ -36,10 +36,6 @@
 #' conveniences generated from survey text and metadata; they are not stable
 #' guarantees across package versions or survey text changes.
 #'
-#' Unsupported Structure Findings found while normalising Qualtrics metadata
-#' travel with the Variable Dictionary and can be inspected with
-#' \code{\link[qualtdict]{unsupported_structure_findings}}.
-#'
 #' @return
 #' A Variable Dictionary: a \code{qualtdict} data frame.
 #'
@@ -132,15 +128,12 @@ dict_generate <- function(surveyID,
   if (use_semantic_name) {
     dict_columns <- append(dict_columns, "semantic_name", after = 4)
   }
-  unsupported_structure_findings <- unsupported_structure_findings(dict)
   variable_name_findings <- attr(dict, "variable_name_findings", exact = TRUE)
   if (is.null(variable_name_findings)) {
     variable_name_findings <- empty_variable_name_findings()
   }
 
   dict <- dict[dict_columns]
-  attr(dict, "unsupported_structure_findings") <-
-    unsupported_structure_findings
   attr(dict, "variable_name_findings") <- variable_name_findings
 
   attr(dict, "class") <- c("qualtdict", class(dict))

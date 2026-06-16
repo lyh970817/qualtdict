@@ -7,7 +7,7 @@
 get_survey_data(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
-  exclude_findings = c("none", "validation", "unsupported", "all"),
+  exclude_findings = c("none", "validation"),
   ...
 )
 }
@@ -23,9 +23,7 @@ Use \code{NULL} to retain no extra columns.}
 
 \item{exclude_findings}{Which findings to exclude after survey download.
 \code{"none"} keeps all downloaded variables represented in the Variable
-Dictionary. \code{"validation"} excludes rows with Validation Findings,
-\code{"unsupported"} excludes rows with Unsupported Structure Findings, and
-\code{"all"} excludes both.}
+Dictionary. \code{"validation"} excludes rows with Validation Findings.}
 
 \item{...}{Other arguments passed to
 \code{\link[qualtRics]{fetch_survey}}. Filtering arguments such as
@@ -54,9 +52,9 @@ Variable-Dictionary-to-response-column matching:
 \code{breakout_sets = TRUE}. User-supplied passthrough arguments cannot
 override those settings.
 
-By default, Labelled Survey Data includes variables with Validation Findings
-or Unsupported Structure Findings. Use \code{exclude_findings} when you want
-to explicitly remove them after download.
+By default, Labelled Survey Data includes variables with Validation Findings.
+Use \code{exclude_findings} when you want to explicitly remove them after
+download.
 }
 \examples{
 \dontrun{

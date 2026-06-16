@@ -92,53 +92,6 @@ test_that("dict_validate reports repaired names as Validation Findings", {
   expect_equal(findings$reason, "unsafe")
 })
 
-test_that("dict_validate does not mix Unsupported Structure Findings", {
-  dict <- minimal_validation_dict(
-    response_column_id = "QID1",
-    variable_name = "q1",
-    label = "A",
-    level = "1"
-  )
-  attr(dict, "unsupported_structure_findings") <- tibble::tibble(
-    qid = "QID2",
-    type = "TE",
-    selector = "SL",
-    sub_selector = NA_character_,
-    finding = "unsupported_loop_field",
-    details = "Unsupported Loop and Merge field."
-  )
-
-  validation <- dict_validate(dict)
-
-  expect_equal(nrow(validation$validation_findings), 0)
-  expect_equal(
-    unsupported_structure_findings(dict)$finding,
-    "unsupported_loop_field"
-  )
-})
-
-test_that("dict_validate handles empty dictionaries with unsupported findings", {
-  dict <- minimal_validation_dict()[0, ]
-  attr(dict, "unsupported_structure_findings") <- tibble::tibble(
-    qid = "QID2",
-    type = "TE",
-    selector = "SL",
-    sub_selector = NA_character_,
-    finding = "missing_loop_source",
-    details = "Loop and Merge source question was not found."
-  )
-
-  validation <- dict_validate(dict)
-
-  expect_s3_class(validation, "qualtdict_validation")
-  expect_equal(nrow(validation$validation_findings), 0)
-  expect_equal(nrow(validation$level_label_pairs), 0)
-  expect_equal(
-    unsupported_structure_findings(dict)$finding,
-    "missing_loop_source"
-  )
-})
-
 test_that("dict_validate preserves level-label mistake findings", {
   dict <- minimal_validation_dict(
     response_column_id = c("QID1", "QID1", "QID1"),
