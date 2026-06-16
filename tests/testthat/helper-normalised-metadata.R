@@ -137,6 +137,36 @@ synthetic_loop_and_merge_raw_metadata <- function(
   )
 }
 
+synthetic_multi_field_loop_and_merge_raw_metadata <- function() {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata(
+    "Compare ${lm://Field/1} with ${lm://Field/2}"
+  )
+
+  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$Static <- list(
+    x1 = list(`1` = "", `2` = "Red fruit"),
+    x2 = list(`1` = "", `2` = "Yellow fruit")
+  )
+
+  raw_metadata
+}
+
+synthetic_static_loop_and_merge_raw_metadata <- function() {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata(
+    "Compare ${lm://Field/1} with ${lm://Field/2}"
+  )
+
+  raw_metadata$metadata$questions$QID1 <- NULL
+  raw_metadata$description$question$QID1 <- NULL
+  raw_metadata$description$block$BL_SOURCE <- NULL
+  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$QID <- NULL
+  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$Static <- list(
+    `1` = list(`1` = "Apples", `2` = "Red fruit"),
+    `2` = list(`1` = "Bananas", `2` = "Yellow fruit")
+  )
+
+  raw_metadata
+}
+
 synthetic_matrix_raw_metadata <- function() {
   new_raw_qualtrics_metadata(
     surveyID = "SV_MATRIX",

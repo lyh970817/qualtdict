@@ -66,6 +66,42 @@ test_that("get_survey_data returns one labelled data frame", {
   expect_true(captured_args$breakout_sets)
 })
 
+test_that("get_survey_data reports missing Response Column IDs", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        QID1 = "1"
+      )
+    }
+  )
+
+  dat <- get_survey_data(minimal_export_dict())
+  findings <- labelled_export_findings(dat)
+
+  expect_named(dat, c(
+    "externalDataReference",
+    "startDate",
+    "endDate",
+    "q1"
+  ))
+  expect_named(findings, c(
+    "finding",
+    "response_column_id",
+    "qid",
+    "variable_name",
+    "reason"
+  ))
+  expect_equal(nrow(findings), 1)
+  expect_equal(findings$finding, "missing_response_column_id")
+  expect_equal(findings$response_column_id, "QID2")
+  expect_equal(findings$qid, "QID2")
+  expect_equal(findings$variable_name, "q2")
+  expect_equal(findings$reason, "not_found_in_downloaded_survey_data")
+})
+
 test_that("exclude_findings removes validation findings after download", {
   captured_args <- NULL
   local_mocked_bindings(

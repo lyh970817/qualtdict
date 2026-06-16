@@ -4,7 +4,7 @@
 #' @importFrom rlang hash
 #' @keywords internal
 #' @noRd
-semantic_name_gen <- function(json,
+generate_semantic_names <- function(json,
                               surveyID,
                               block_pattern,
                               block_sep,
@@ -22,7 +22,7 @@ semantic_name_gen <- function(json,
   texts[is.na(texts)] <- json_makename$question[is.na(texts)]
 
   # For these questions each chioce (with a label) is exported as variable,
-  # thus the easy name should depend on the label
+  # thus the Semantic Name should depend on the label
   ma_lgl <- json_makename$selector %in% c("MACOL", "MAVR", "MAHR", "MSB")
   texts[ma_lgl] <- json_makename$label[ma_lgl]
 
