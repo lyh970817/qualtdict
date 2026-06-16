@@ -651,7 +651,9 @@ not_applicable_qid <- function(qid,
                                choice_len,
                                col_type) {
   warn_msg <- paste0(
-    qid, " is an unsupported type of question."
+    qid,
+    " uses a question type without a specific response-column renderer; ",
+    "falling back to the bare QID."
   )
   warning(warn_msg)
   qid

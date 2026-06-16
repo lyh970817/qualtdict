@@ -207,7 +207,7 @@ test_that("render_response_columns renders SBS and sidecar columns", {
   )
 })
 
-test_that("render_response_columns warns and falls back for unsupported shapes", {
+test_that("render_response_columns warns and falls back for unrendered shapes", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
   question$question_type$type <- "Meta"
@@ -216,7 +216,7 @@ test_that("render_response_columns warns and falls back for unsupported shapes",
 
   expect_warning(
     rendered <- render_response_columns(question, "QID1"),
-    "unsupported type of question"
+    "without a specific response-column renderer"
   )
   expect_equal(rendered$response_column_id, "QID1")
 })
