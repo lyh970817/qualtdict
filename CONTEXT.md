@@ -32,6 +32,15 @@ The bare Qualtrics question identifier for a survey question, such as `QID1` or
 `QID16`. One QID can produce multiple response columns.
 _Avoid_: Question ID, question name, response column ID
 
+**Normalised Question Fact**:
+The package-owned representation of one Qualtrics question after raw metadata
+normalisation and before Variable Dictionary row rendering. It carries stable
+question-level facts such as the QID, Question Name, question text, Survey
+Block, question type, response choices, response items, column facts, and Loop
+and Merge source references. It is the input shape for Response Column ID
+Rendering and the intended upstream shape for Loop and Merge expansion.
+_Avoid_: Raw Qualtrics question, dictionary row, response column
+
 **Response Column ID**:
 The downloaded response column identifier used to match Labelled Survey Data
 columns to Variable Dictionary rows. It is the provenance key for a dictionary
@@ -39,6 +48,17 @@ row. In current qualtdict exports this comes from
 `qualtRics::fetch_survey(import_id = TRUE)`, and may include choice, item, text,
 timing, column, or loop information.
 _Avoid_: QID, question ID, column name
+
+**Response Column ID Rendering**:
+The package-owned capability that turns already-normalised question facts into
+the concrete Response Column IDs used in Variable Dictionaries and Labelled
+Survey Data matching. It owns Qualtrics response-column string grammar for
+question shapes, choices, items, text entries, timing fields, and file-upload
+fields. Loop and Merge expansion sits upstream: rendered question facts may
+already include loop-derived prefixes or Loop Option context, but this
+capability does not choose Loop Options or substitute Loop and Merge question
+text.
+_Avoid_: QID recoding, column-name generation, loop expansion
 
 **Dictionary Variable Name**:
 The analyst-facing variable name assigned by qualtdict. Stored in the Variable
@@ -80,6 +100,14 @@ are separate from Validation Findings, which concern the generated Variable
 Dictionary.
 _Avoid_: Unsupported warning, not applicable question
 
+**Labelled Export Finding**:
+A finding detected while matching a Variable Dictionary to downloaded survey
+data during Labelled Export, such as a Response Column ID represented by the
+Variable Dictionary but absent from the downloaded data. Labelled Export
+Findings are separate from Unsupported Structure Findings because they are
+detected after metadata normalisation, while assembling Labelled Survey Data.
+_Avoid_: Export error, unsupported structure finding
+
 **Labelled Survey Data**:
 Survey response data whose Export Variables have been renamed and annotated
 with labels from a Variable Dictionary.
@@ -112,3 +140,12 @@ _Avoid_: Partial loop handling
 A value in a Qualtrics Loop and Merge structure that can expand one survey
 question into distinct Variable Dictionary rows and Export Variables.
 _Avoid_: Loop label, loop prefix
+
+**Loop-expanded Question Fact**:
+A normalised question fact after the Loop and Merge expansion adapter has
+resolved one Loop Option for a looped question. It preserves the bare QID,
+records the loop source QID, loop prefix, and Loop Option, and carries question
+text with supported Loop and Merge placeholders already substituted. Response
+Column ID Rendering consumes Loop-expanded Question Facts as ordinary question
+facts; it does not choose Loop Options or substitute Loop and Merge text.
+_Avoid_: looped dictionary row, patched row
