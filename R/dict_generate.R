@@ -105,7 +105,11 @@ dict_generate <- function(surveyID,
 
   use_semantic_name <- variable_name == "semantic_name"
 
-  dict <- recode_json(surveyID,
+  survey_metadata <- fetch_dictionary_metadata(surveyID)
+  normalised_metadata <- normalise_qualtrics_metadata(survey_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
     use_semantic_name = use_semantic_name,
     block_pattern = block_pattern,
     block_sep = block_sep,

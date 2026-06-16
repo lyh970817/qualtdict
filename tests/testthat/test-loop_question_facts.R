@@ -1,0 +1,91 @@
+test_that("Loop and Merge adapter expands static source question facts", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  looped <- expanded[
+    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+  ]
+
+  expect_length(looped, 2)
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "qid")),
+    c("QID2", "QID2")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    c("x1_QID2", "x2_QID2")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "looping_option")),
+    c("Apples", "Bananas")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "looping_question")),
+    c("Why did you choose Apples?", "Why did you choose Bananas?")
+  )
+})
+
+test_that("Loop and Merge adapter expands matrix source question facts", {
+  raw_metadata <- synthetic_matrix_source_looped_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  looped <- expanded[
+    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+  ]
+
+  expect_length(looped, 3)
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    c("1_QID2", "2_QID2", "3_QID2")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "looping_option")),
+    c("Condition 1", "Condition 2", "Condition 3")
+  )
+})
+
+test_that("Loop and Merge adapter substitutes supported extra fields", {
+  raw_metadata <- synthetic_multi_field_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  looped <- expanded[
+    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+  ]
+
+  expect_length(looped, 2)
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "looping_question")),
+    c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "question_text")),
+    c("Compare {} with {}", "Compare {} with {}")
+  )
+})
+
+test_that("Loop and Merge adapter expands static rows without source", {
+  raw_metadata <- synthetic_static_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  looped <- expanded[
+    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+  ]
+
+  expect_length(looped, 2)
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    c("1_QID2", "2_QID2")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "looping_option")),
+    c("Apples", "Bananas")
+  )
+  expect_equal(
+    unname(vapply(looped, `[[`, character(1), "looping_question")),
+    c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
+  )
+})

@@ -568,6 +568,58 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
   expect_equal(attr(dict, "surveyID"), "SV_LOOP")
 })
 
+test_that("normalised metadata renders supported extra Loop and Merge fields", {
+  raw_metadata <- synthetic_multi_field_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+
+  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
+  expect_equal(
+    target_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_equal(
+    target_rows$question,
+    c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
+  )
+  expect_equal(target_rows$loop_option, c("Apples", "Bananas"))
+})
+
+test_that("normalised metadata renders static Loop and Merge rows", {
+  raw_metadata <- synthetic_static_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+
+  expect_equal(nrow(unsupported_structure_findings(normalised_metadata)), 0)
+  expect_equal(
+    target_rows$response_column_id,
+    c("1_QID2_TEXT", "2_QID2_TEXT")
+  )
+  expect_equal(
+    target_rows$question,
+    c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
+  )
+  expect_equal(target_rows$loop_option, c("Apples", "Bananas"))
+})
+
 test_that("looped MC text columns keep loop prefix before QID", {
   raw_metadata <- synthetic_looped_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -853,7 +905,7 @@ test_that("unsupported Loop and Merge fields produce findings", {
   expect_equal(findings$type, "TE")
   expect_equal(findings$selector, "SL")
   expect_equal(findings$finding, "unsupported_loop_field")
-  expect_match(findings$details, "Field/1")
+  expect_match(findings$details, "could not be resolved")
   expect_match(findings$details, "2")
   expect_false(any(grepl("QID2", dict$response_column_id)))
   expect_equal(unsupported_structure_findings(dict), findings)
