@@ -8,7 +8,8 @@ generate_semantic_names <- function(json,
                               surveyID,
                               block_pattern,
                               block_sep,
-                              semantic_name_preprocess) {
+                              semantic_name_preprocess,
+                              quiet = TRUE) {
   json_makename <- json
   response_column_id <- dict_response_column_id(json)
 
@@ -42,14 +43,19 @@ generate_semantic_names <- function(json,
     keywords <- readRDS(tmpfile_path)
   }
   if (!file.exists(tmpfile_path)) {
-    message("Generating Semantic Names...")
+    if (!quiet) {
+      message("Generating Semantic Names...")
+    }
 
     # Remove brackets and punctuations
     unique_texts <- str_remove_all(unique_texts, "\\(.+\\)") %>%
       str_remove_all("[[:punct:]]")
 
-    keywords <- slowrake(unique_texts,
-      all_words = paste(texts, collapse = ""), stop_pos = NULL
+    keywords <- slowrake(
+      unique_texts,
+      all_words = paste(texts, collapse = ""),
+      stop_pos = NULL,
+      quiet = quiet
     )
 
     # Save in temp folder

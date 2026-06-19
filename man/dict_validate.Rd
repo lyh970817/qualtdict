@@ -4,11 +4,14 @@
 \alias{dict_validate}
 \title{Return Validation Findings for a Variable Dictionary}
 \usage{
-dict_validate(dict)
+dict_validate(dict, quiet = TRUE)
 }
 \arguments{
 \item{dict}{A Variable Dictionary returned by
 \code{\link[qualtdict]{dict_generate}}.}
+
+\item{quiet}{Boolean. If \code{TRUE}, suppress routine validation messages.
+Defaults to \code{TRUE}.}
 }
 \value{
 A \code{qualtdict_validation} object. This is a list with stable components:
@@ -20,7 +23,6 @@ findings.
 \item \code{level_label_pairs} - A data frame containing the unique level-label
 pairings.
 }
-
 }
 \description{
 Validate Variable Dictionary consistency and return a stable validation

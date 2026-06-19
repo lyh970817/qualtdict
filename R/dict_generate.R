@@ -22,6 +22,8 @@
 #' this function are not included in the returned Variable Dictionary.
 #' @param preprocess Deprecated compatibility alias for
 #' \code{semantic_name_preprocess}.
+#' @param quiet Boolean. If \code{TRUE}, suppress routine progress messages and
+#' progress bars. Defaults to \code{TRUE}.
 #' @param block_sep String. Separator between variable names and block
 #' prefixes returned by \code{block_pattern}. Defaults to ".".
 #' @details
@@ -64,12 +66,14 @@ dict_generate <- function(surveyID,
                           block_pattern = NULL,
                           block_sep = ".",
                           semantic_name_preprocess = NULL,
-                          preprocess = NULL) {
+                          preprocess = NULL,
+                          quiet = TRUE) {
   checkarg_isstring(surveyID, null_okay = FALSE)
   checkarg_isfunction(block_pattern)
   checkarg_isstring(block_sep, null_okay = FALSE)
   checkarg_isfunction(semantic_name_preprocess)
   checkarg_isfunction(preprocess)
+  checkarg_isboolean(quiet)
 
   if (!is.null(name)) {
     checkarg_isname(name)
@@ -109,7 +113,8 @@ dict_generate <- function(surveyID,
     use_semantic_name = use_semantic_name,
     block_pattern = block_pattern,
     block_sep = block_sep,
-    semantic_name_preprocess = semantic_name_preprocess
+    semantic_name_preprocess = semantic_name_preprocess,
+    quiet = quiet
   )
 
   dict_columns <- c(

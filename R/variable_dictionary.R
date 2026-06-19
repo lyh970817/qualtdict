@@ -16,7 +16,8 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
                                                          use_semantic_name,
                                                          block_pattern,
                                                          block_sep,
-                                                         semantic_name_preprocess) {
+                                                         semantic_name_preprocess,
+                                                         quiet = TRUE) {
   question_meta <- normalised_metadata$questions
   question_meta <- expand_loop_question_facts(question_meta)
   if (length(question_meta) == 0) {
@@ -76,7 +77,8 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
       normalised_metadata$surveyID,
       block_pattern,
       block_sep,
-      semantic_name_preprocess
+      semantic_name_preprocess,
+      quiet = quiet
     )
   }
 

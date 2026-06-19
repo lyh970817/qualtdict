@@ -194,6 +194,50 @@ test_that("Semantic Names are generated only on the semantic naming path", {
   )
 })
 
+test_that("Semantic Name generation is quiet by default with opt-in progress messages", { # nolint
+  quiet_metadata <- synthetic_mc_text_raw_metadata()
+  quiet_metadata$metadata$questions$QID1$questionText <-
+    "Quiet semantic naming check"
+  quiet_metadata <- normalise_qualtrics_metadata(quiet_metadata)
+
+  expect_silent(
+    variable_dictionary_from_normalised_metadata(
+      quiet_metadata,
+      use_semantic_name = TRUE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    )
+  )
+
+  verbose_metadata <- synthetic_mc_text_raw_metadata()
+  verbose_metadata$metadata$questions$QID1$questionText <-
+    "Verbose semantic naming check"
+  verbose_metadata <- normalise_qualtrics_metadata(verbose_metadata)
+
+  expect_message(
+    variable_dictionary_from_normalised_metadata(
+      verbose_metadata,
+      use_semantic_name = TRUE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL,
+      quiet = FALSE
+    ),
+    "Generating Semantic Names"
+  )
+})
+
+test_that("Semantic Name keyword extraction suppresses progress bars by default", {
+  expect_silent(
+    slowrake(
+      c("First progress check", "Second progress check"),
+      all_words = "First progress check Second progress check",
+      stop_pos = NULL
+    )
+  )
+})
+
 test_that("semantic_name_preprocess runs only for semantic naming", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)

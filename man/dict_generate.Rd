@@ -11,7 +11,8 @@ dict_generate(
   block_pattern = NULL,
   block_sep = ".",
   semantic_name_preprocess = NULL,
-  preprocess = NULL
+  preprocess = NULL,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -42,6 +43,9 @@ this function are not included in the returned Variable Dictionary.}
 
 \item{preprocess}{Deprecated compatibility alias for
 \code{semantic_name_preprocess}.}
+
+\item{quiet}{Boolean. If \code{TRUE}, suppress routine progress messages and
+progress bars. Defaults to \code{TRUE}.}
 }
 \value{
 A Variable Dictionary: a \code{qualtdict} data frame.
@@ -61,7 +65,6 @@ When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 includes \code{semantic_name}. Semantic Names are readable best-effort
 conveniences generated from survey text and metadata; they are not stable
 guarantees across package versions or survey text changes.
-
 }
 \examples{
 \dontrun{
