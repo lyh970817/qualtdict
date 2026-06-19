@@ -8,6 +8,8 @@
 #'
 #' @param dict A Variable Dictionary returned by
 #' \code{\link[qualtdict]{dict_generate}}.
+#' @param quiet Boolean. If \code{TRUE}, suppress routine validation messages.
+#' Defaults to \code{TRUE}.
 #'
 #' @return
 #' A `qualtdict_validation` object. This is a list with stable components:
@@ -33,9 +35,12 @@
 #' }
 #'
 #' @export
-dict_validate <- function(dict) {
+dict_validate <- function(dict, quiet = TRUE) {
   checkarg_isqualtdict(dict)
-  message("Validating dictionary...")
+  checkarg_isboolean(quiet)
+  if (!quiet) {
+    message("Validating dictionary...")
+  }
 
   split_dict <- split(
     dict,
@@ -45,19 +50,19 @@ dict_validate <- function(dict) {
   level_label_pairs <- validation_level_label_pairs(split_dict)
 
   repaired_names <- repaired_name_validation_findings(dict)
-  if (nrow(repaired_names) > 0) {
+  if (!quiet && nrow(repaired_names) > 0) {
     message("Variable names were repaired for export.")
   }
 
   variable_name_findings <- variable_name_validation_findings(dict)
-  if (nrow(variable_name_findings) > 0) {
+  if (!quiet && nrow(variable_name_findings) > 0) {
     message("Variable names are not export-safe and unique.")
   }
 
   mistake <- check_json(split_dict)
   level_label_findings <- level_label_validation_findings(mistake)
 
-  if (nrow(level_label_findings) > 0) {
+  if (!quiet && nrow(level_label_findings) > 0) {
     message("There are variables with potential incorrect level-label codings.")
   }
 

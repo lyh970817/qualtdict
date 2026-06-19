@@ -41,6 +41,21 @@ test_that("dict_validate always returns a stable validation object", {
   expect_s3_class(validation$level_label_pairs, "data.frame")
 })
 
+test_that("dict_validate is quiet by default with opt-in progress messages", {
+  dict <- minimal_validation_dict(
+    response_column_id = c("QID1", "QID2", "QID3"),
+    variable_name = c("bad name", "dup", "dup"),
+    label = c("A", "B", "C"),
+    level = c("1", "1", "1")
+  )
+
+  expect_silent(dict_validate(dict))
+  expect_message(
+    dict_validate(dict, quiet = FALSE),
+    "Validating dictionary"
+  )
+})
+
 test_that("dict_validate validates final variable_name export consistency", {
   dict <- minimal_validation_dict(
     response_column_id = c("QID1", "QID2", "QID3"),

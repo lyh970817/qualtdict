@@ -83,7 +83,8 @@ slowrake <- function(txt,
                      stop_words = smart_words,
                      stop_pos = c("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"),
                      word_min_char = 3,
-                     stem = TRUE) {
+                     stem = TRUE,
+                     quiet = TRUE) {
   num_docs <- length(txt)
   one_doc <- num_docs == 1
 
@@ -92,8 +93,9 @@ slowrake <- function(txt,
     word_token_annotator <- openNLP::Maxent_Word_Token_Annotator()
   }
 
-  if (!one_doc) {
+  if (!one_doc && !quiet) {
     prog_bar <- utils::txtProgressBar(min = 0, max = num_docs, style = 3)
+    on.exit(close(prog_bar), add = TRUE)
   }
 
   all_out <- vector(mode = "list", length = num_docs)
@@ -118,7 +120,9 @@ slowrake <- function(txt,
       pos_annotator = pos_annotator,
       word_token_annotator = word_token_annotator
     )
-    if (!one_doc) utils::setTxtProgressBar(prog_bar, i)
+    if (!one_doc && !quiet) {
+      utils::setTxtProgressBar(prog_bar, i)
+    }
   }
 
   structure(all_out, class = c(class(all_out), "rakelist"))
