@@ -221,7 +221,7 @@ loop_field_values_for_question <- function(question, prefixes) {
     prefixes
   )
 
-  modifyList(column_field_values, field_values)
+  utils::modifyList(column_field_values, field_values)
 }
 
 #' Resolve Loop and Merge fields from block Static rows
