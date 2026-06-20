@@ -5,3 +5,4 @@ tmp/
 .Renviron
 .nix/
 .R-lib/
+.direnv/

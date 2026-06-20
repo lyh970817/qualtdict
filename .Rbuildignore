@@ -13,7 +13,9 @@
 ^\.Rproj\.user$
 ^\.agents$
 ^\.codex$
+^\.envrc$
 ^\.github$
+^\.lintr$
 ^\.pre-commit-config\.yaml$
 ^codecov\.yml$
 ^codemeta\.json$
