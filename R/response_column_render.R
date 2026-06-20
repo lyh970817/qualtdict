@@ -275,7 +275,8 @@ response_column_sbs_shape <- function(question,
     top_question <- question_fact_question_text(question)
     question_text <- map(column_facts, "question_text") %>%
       map2(length(item), rep) %>%
-      map2(level_len, ~ rep_item(.x, item, .y) %>% unlist) %>%
+      map2(level_len, ~ rep_item(.x, item, .y) %>%
+        unlist()) %>%
       unlist() %>%
       paste(top_question, ., sep = " ")
 
