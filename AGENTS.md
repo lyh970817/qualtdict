@@ -30,6 +30,11 @@ Tests use `testthat` edition 3 and run through `tests/testthat.R`. Name new test
 
 Recent commits use short imperative summaries, for example `Fix question type CS-HR-TX` or `Add qid recode for text fields in SBS questions`. Keep commit subjects concise and focused on the user-visible or package behavior change. For pull requests, follow `.github/CONTRIBUTING.md`: open an issue for larger changes, include a minimal reprex for bugs, run `devtools::check()`, and link issues with `Fixes #<issue-number>`. Include tests for changed behavior and update documentation or generated files when roxygen or README sources change.
 
+Do not commit local planning issue files under `docs/issues/` unless the user
+explicitly asks for those files to be committed. Treat them as working context
+by default and keep implementation commits focused on code, tests,
+documentation, and generated artifacts required for the behavior change.
+
 ## Security & Configuration Tips
 
 Do not commit Qualtrics API keys, `.Renviron`, `.Rhistory`, `.RData`, `.Rds`, or downloaded private survey data. Use `qualtRics::qualtrics_api_credentials()` locally for credentials. The pre-commit hooks block common R artifacts, but contributors should still inspect staged files before committing.
