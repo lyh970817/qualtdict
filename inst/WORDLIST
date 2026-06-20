@@ -17,6 +17,7 @@ crul
 developmentStatus
 Dictioanry
 doi
+downloader
 dplyr
 et
 familyName
@@ -31,15 +32,19 @@ kcl
 knitr
 Labelled
 labelled
+labelling
 LazyData
 lin
 lyh
 magrittr
 md
+normalisation
 openNLP
 ORCID
 orcid
+passthrough
 pre
+preprocess
 programmingLanguage
 propsed
 purrr

@@ -7,8 +7,8 @@ Authors@R:
            comment = c(ORCID = "0000-0001-6357-5731"))
 Description: Generates Variable Dictionaries from 'Qualtrics'
     <https://www.qualtrics.com/about/> survey metadata and applies those
-    dictionaries to create Labelled Survey Data. This package is a metadata
-    and labelled-export companion to 'qualtRics'
+    dictionaries to create Labelled Survey Data. This package is a
+    metadata and labelled-export companion to 'qualtRics'
     <https://github.com/ropensci/qualtRics/>, which provides access to
     'Qualtrics' survey data and metadata via the 'Qualtrics' API
     <https://api.qualtrics.com/>.
