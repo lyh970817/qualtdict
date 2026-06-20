@@ -14,6 +14,10 @@ This is an R package for generating Qualtrics variable dictionaries and labelled
 - `Rscript -e 'rmarkdown::render("README.Rmd")'`: update `README.md` after README source changes.
 - `pre-commit run --all-files`: run configured hooks, including roxygen, lintr, spelling, dependency checks, and README rendering.
 
+`devtools` and `testthat` are available through `shell.nix`; enter
+`nix-shell` before running the development commands above if they are missing
+from the ambient R environment.
+
 ## Coding Style & Naming Conventions
 
 Follow tidyverse R style: two-space indentation, clear snake_case names, and readable pipe chains. Keep exported functions documented with roxygen2 Markdown comments. Prefer helpers in `R/utils.R` or nearby feature files when they are feature-specific. Do not restyle unrelated code. The pre-commit configuration runs `lintr`, `parsable-R`, `no-browser-statement`, and `no-debug-statement`; code should pass these before review.

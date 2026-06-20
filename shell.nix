@@ -30,6 +30,7 @@ let
 
     # Development tools
     devtools
+    lintr
     roxygen2
     usethis
   ];
