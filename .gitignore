@@ -3,3 +3,5 @@ scratch.R
 inst/doc
 tmp/
 .Renviron
+.nix/
+.R-lib/

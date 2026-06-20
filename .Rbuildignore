@@ -3,9 +3,13 @@
 ^CONTEXT\.md$
 ^LICENSE\.md$
 ^README\.Rmd$
+^\.R-lib$
+^\.R-lib/
 ^\.RData$
 ^\.Renviron$
 ^\.Rhistory$
+^\.nix$
+^\.nix/
 ^\.Rproj\.user$
 ^\.agents$
 ^\.codex$
