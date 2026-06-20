@@ -123,14 +123,19 @@ in
 pkgs.mkShell {
   buildInputs = [
     pkgs.R
+    pkgs.bzip2
     pkgs.curl
     pkgs.icu
     pkgs.jdk
+    pkgs.libarchive
     pkgs.libxml2
+    pkgs.libuv
     pkgs.openssl
     pkgs.pandoc
+    pkgs.pkg-config
     pkgs.pre-commit
     pkgs.qpdf
+    pkgs.xz
     pkgs.zlib
   ] ++ rPackages;
 
