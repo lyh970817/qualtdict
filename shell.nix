@@ -119,8 +119,19 @@ let
     usethis
     vcr
   ];
+
 in
 pkgs.mkShell {
+  LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+    pkgs.bzip2
+    pkgs.icu
+    pkgs.jdk
+    pkgs.libarchive
+    pkgs.openssl
+    pkgs.xz
+    pkgs.zlib
+  ];
+
   buildInputs = [
     pkgs.R
     pkgs.bzip2

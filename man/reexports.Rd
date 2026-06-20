@@ -11,6 +11,6 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
-  \item{qualtRics}{\code{\link[qualtRics]{qualtrics_api_credentials}}}
+  \item{qualtRics}{\code{\link[qualtRics:qualtrics_api_credentials]{qualtrics_api_credentials()}}}
 }}
 

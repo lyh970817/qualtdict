@@ -1,8 +1,75 @@
 # All available hooks: https://pre-commit.com/hooks.html
-# R package hooks run through tools/pre-commit.R in the project Nix shell.
+# R specific hooks: https://github.com/lorenzwalthert/precommit
 default_install_hook_types: [pre-commit, pre-push]
 
 repos:
+-   repo: https://github.com/lorenzwalthert/precommit
+    rev: v0.4.3.9026
+    hooks:
+    -   id: roxygenize
+        additional_dependencies:
+        -   crul
+        -   dplyr
+        -   glue
+        -   haven
+        -   magrittr
+        -   openNLP
+        -   purrr
+        -   qualtRics
+        -   rlang
+        -   sjlabelled
+        -   slowraker
+        -   SnowballC
+        -   stringi
+        -   stringr
+        -   tibble
+        -   tidyr
+        -   xml2
+        -   vctrs
+    -   id: use-tidy-description
+    -   id: spell-check
+        files: '^(DESCRIPTION|README\.md|README\.Rmd|man/|vignettes/)'
+        exclude: >
+          (?x)^(
+          .*\.[rR]|
+          .*\.feather|
+          .*\.jpeg|
+          .*\.pdf|
+          .*\.png|
+          .*\.py|
+          .*\.RData|
+          .*\.rds|
+          .*\.Rds|
+          .*\.Rproj|
+          .*\.sh|
+          (.*/|)\.gitignore|
+          (.*/|)\.gitlab-ci\.yml|
+          (.*/|)\.lintr|
+          (.*/|)\.pre-commit-.*|
+          (.*/|)\.Rbuildignore|
+          (.*/|)\.Renviron|
+          (.*/|)\.Rprofile|
+          (.*/|)\.travis\.yml|
+          (.*/|)appveyor\.yml|
+          (.*/|)NAMESPACE|
+          (.*/|)renv/settings\.dcf|
+          (.*/|)renv\.lock|
+          (.*/|)WORDLIST|
+          \.github/workflows/.*|
+          data/.*|
+          tests/.*|
+          )$
+    -   id: lintr
+        files: '^(R|tests)/.*\.[rR]$'
+    -   id: readme-rmd-rendered
+    -   id: parsable-R
+        files: '^(R|tests)/.*\.[rR]$|^README\.Rmd$|^vignettes/.*\.[Rr]md$'
+    -   id: no-browser-statement
+        files: '^(R|tests)/.*\.[rR]$'
+    -   id: no-debug-statement
+        files: '^(R|tests)/.*\.[rR]$'
+    -   id: deps-in-desc
+        files: '^(R|tests)/.*\.[rR]$|^README\.Rmd$|^vignettes/.*\.[Rr]md$'
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks: 
@@ -19,57 +86,6 @@ repos:
     -   id: check-pre-commit-ci-config
 -   repo: local
     hooks:
-    -   id: roxygenize
-        name: roxygenize
-        entry: Rscript tools/pre-commit.R roxygenize
-        language: system
-        pass_filenames: false
-        files: '^(R/|DESCRIPTION$|NAMESPACE$)'
-    -   id: use-tidy-description
-        name: use tidy DESCRIPTION
-        entry: Rscript tools/pre-commit.R tidy_description
-        language: system
-        pass_filenames: false
-        files: '^DESCRIPTION$'
-    -   id: spell-check
-        name: spell check package
-        entry: Rscript tools/pre-commit.R spell_check
-        language: system
-        pass_filenames: false
-        files: '^(R/|README\.Rmd$|vignettes/|inst/WORDLIST$)'
-    -   id: lintr
-        name: lint R package
-        entry: Rscript tools/pre-commit.R lintr
-        language: system
-        pass_filenames: false
-        types: [r]
-    -   id: readme-rmd-rendered
-        name: README.Rmd rendered
-        entry: Rscript tools/pre-commit.R readme_rendered
-        language: system
-        pass_filenames: false
-        files: '^README\.Rmd$'
-    -   id: parsable-R
-        name: R files are parsable
-        entry: Rscript tools/pre-commit.R parsable_R
-        language: system
-        types: [r]
-    -   id: no-browser-statement
-        name: no browser statements
-        entry: '\bbrowser\s*\('
-        language: pygrep
-        types: [r]
-    -   id: no-debug-statement
-        name: no debug statements
-        entry: '\b(debug|debugonce|trace)\s*\('
-        language: pygrep
-        types: [r]
-    -   id: deps-in-desc
-        name: "packages used with :: are in DESCRIPTION"
-        entry: Rscript tools/pre-commit.R deps_in_desc
-        language: system
-        pass_filenames: false
-        types: [r]
     -   id: forbid-to-commit
         name: Don't commit common R artifacts
         entry: Cannot commit .Rhistory, .RData, .Rds or .rds.
@@ -78,23 +94,23 @@ repos:
         # `exclude: <regex>` to allow committing specific files
     -   id: testthat
         name: Run testthat suite
-        entry: Rscript tools/pre-commit.R testthat
+        entry: Rscript -e 'devtools::test()'
         language: system
         pass_filenames: false
         stages: [pre-commit]
     -   id: pkgcheck
-        name: Run rOpenSci pkgcheck
-        entry: Rscript tools/pre-commit.R pkgcheck
+        name: Run rOpenSci pkgcheck audit
+        entry: Rscript -e 'checks <- pkgcheck::pkgcheck(); print(checks); summary <- pkgcheck:::summarise_all_checks(checks); quit(save = "no", status = if (isTRUE(attr(summary, "checks_okay"))) 0 else 1)'
         language: system
         pass_filenames: false
-        stages: [pre-push]
+        stages: [manual]
     -   id: r-cmd-check
         name: Run R CMD check
-        entry: Rscript tools/pre-commit.R r_cmd_check
+        entry: Rscript -e 'devtools::check(args = "--no-manual")'
         language: system
         pass_filenames: false
         stages: [pre-push]
 
 ci:
     autoupdate_schedule: monthly
-    skip: [roxygenize, use-tidy-description, spell-check, lintr, readme-rmd-rendered, parsable-R, no-browser-statement, no-debug-statement, deps-in-desc, testthat, pkgcheck, r-cmd-check]
+    skip: [testthat, pkgcheck, r-cmd-check]
