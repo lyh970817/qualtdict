@@ -6,17 +6,12 @@ This is an R package for generating Qualtrics variable dictionaries and labelled
 
 ## Build, Test, and Development Commands
 
-- `nix-shell`: enter the project R development environment defined by `shell.nix`.
 - `Rscript -e 'devtools::install_dev_deps()'`: install package development dependencies.
 - `Rscript -e 'devtools::document()'`: regenerate `NAMESPACE` and `man/*.Rd` from roxygen comments.
 - `Rscript -e 'devtools::test()'`: run the `testthat` suite.
 - `Rscript -e 'devtools::check()'`: run the local equivalent of R CMD check.
 - `Rscript -e 'rmarkdown::render("README.Rmd")'`: update `README.md` after README source changes.
 - `pre-commit run --all-files`: run configured hooks, including roxygen, lintr, spelling, dependency checks, and README rendering.
-
-`devtools` and `testthat` are available through `shell.nix`; enter
-`nix-shell` before running the development commands above if they are missing
-from the ambient R environment.
 
 ## Coding Style & Naming Conventions
 
