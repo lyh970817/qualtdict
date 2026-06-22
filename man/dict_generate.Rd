@@ -64,7 +64,9 @@ by Labelled Survey Data.
 When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 includes \code{semantic_name}. Semantic Names are readable best-effort
 conveniences generated from survey text and metadata; they are not stable
-guarantees across package versions or survey text changes.
+guarantees across package versions or survey text changes. For long text,
+Semantic Names select important words from ranked keywords and preserve those
+selected words in the order they appear in the naming text.
 }
 \examples{
 \dontrun{
