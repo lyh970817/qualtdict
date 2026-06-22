@@ -1,7 +1,10 @@
 import { codex, type AgentProvider } from "@ai-hero/sandcastle";
 import type { Options } from "./args.mts";
 
-export type CodexOptions = Pick<Options, "model" | "effort" | "sandbox" | "networkAccess">;
+export type CodexOptions = Pick<Options, "model" | "effort" | "networkAccess"> & {
+  yolo?: boolean;
+  sandbox?: "read-only" | "workspace-write" | "danger-full-access";
+};
 
 const shellArg = (value: string): string => `'${value.replace(/'/g, "'\\''")}'`;
 
@@ -20,10 +23,14 @@ export const codexWithSandbox = (options: CodexOptions): AgentProvider => {
         ? ` -c ${shellArg(`model_reasoning_effort="${options.effort}"`)}`
         : "";
       const networkFlag = ` -c ${shellArg(`network_access="${options.networkAccess}"`)}`;
+      const permissionFlags =
+        options.yolo === false
+          ? ` --ask-for-approval never --sandbox ${shellArg(options.sandbox ?? "read-only")}`
+          : " --yolo";
 
       return {
         command:
-          `codex exec --json --ask-for-approval never --sandbox ${shellArg(options.sandbox)}` +
+          `codex exec --json${permissionFlags}` +
           `${networkFlag}${modelFlag}${effortFlag} -`,
         stdin: prompt,
       };
@@ -34,6 +41,7 @@ export const codexWithSandbox = (options: CodexOptions): AgentProvider => {
 export const plannerCodexOptions = (options: Options): CodexOptions => ({
   model: options.model,
   effort: options.effort,
-  sandbox: "read-only",
   networkAccess: options.networkAccess,
+  yolo: false,
+  sandbox: "read-only",
 });
