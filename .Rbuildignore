@@ -19,10 +19,16 @@
 ^\.nix$
 ^\.nix/
 ^\.pre-commit-config\.yaml$
+^\.sandcastle$
+^\.sandcastle/
 ^codecov\.yml$
 ^codemeta\.json$
 ^docs$
 ^helper-pkg\.R$
+^node_modules$
+^node_modules/
+^package-lock\.json$
+^package\.json$
 ^qualtdict\.Rcheck$
 ^qualtdict_.*[.]tar[.]gz$
 ^scratch\.R$

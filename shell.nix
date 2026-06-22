@@ -141,6 +141,7 @@ pkgs.mkShell {
     pkgs.libarchive
     pkgs.libxml2
     pkgs.libuv
+    pkgs.nodejs
     pkgs.openssl
     pkgs.pandoc
     pkgs.pkg-config
