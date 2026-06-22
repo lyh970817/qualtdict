@@ -33,9 +33,15 @@ generate_semantic_names <- function(json,
 
   # Extract unique text
   unique_texts <- unique(texts)
+  cleaned_unique_texts <- clean_semantic_name_text(unique_texts)
+  all_words <- paste(texts, collapse = " ")
 
   # Generate temp file path
-  tmpfile_path <- paste0(tempdir(), "/", hash(unique_texts), ".rds")
+  tmpfile_path <- paste0(tempdir(), "/", hash(list(
+    algorithm = "semantic-name-source-order-v1",
+    unique_texts = cleaned_unique_texts,
+    all_words = all_words
+  )), ".rds")
 
   # Check if the same keywords have been saved in temp file path,
   # if not, generate them
@@ -47,13 +53,9 @@ generate_semantic_names <- function(json,
       message("Generating Semantic Names...")
     }
 
-    # Remove brackets and punctuations
-    unique_texts <- str_remove_all(unique_texts, "\\(.+\\)") %>%
-      str_remove_all("[[:punct:]]")
-
     keywords <- slowrake(
-      unique_texts,
-      all_words = paste(texts, collapse = ""),
+      cleaned_unique_texts,
+      all_words = all_words,
       stop_pos = NULL,
       quiet = quiet
     )
@@ -66,18 +68,13 @@ generate_semantic_names <- function(json,
   semantic_question_single <- imap_chr(keywords, function(x, i) {
     if (all(is.na(x))) {
       # If no keywords generated, use original text
-      nm <- unique_texts[i]
+      nm <- cleaned_unique_texts[i]
     } else if (stri_count_words(unique(texts)[i]) < 8) {
       # If original text shorter than 8 words, use original text
-      nm <- unique_texts[i]
+      nm <- cleaned_unique_texts[i]
     } else {
-      # Else use the firt four keywords
-      nm <- paste(x[[1]], collapse = " ") %>%
-        str_split(" ") %>%
-        unlist() %>%
-        .[1:4] %>%
-        discard(is.na) %>%
-        paste(collapse = "_")
+      # Else use the first four selected keyword words in source order.
+      nm <- semantic_name_source_order_component(x, cleaned_unique_texts[i])
     }
 
     tolower(str_replace_all(nm, "\\s", "_"))
@@ -152,4 +149,33 @@ generate_semantic_names <- function(json,
   json$variable_name <- json$semantic_name
 
   json
+}
+
+clean_semantic_name_text <- function(text) {
+  str_remove_all(text, "\\(.+\\)") %>%
+    str_remove_all("[[:punct:]]")
+}
+
+semantic_name_source_order_component <- function(keywords, source_text,
+                                                 max_words = 4) {
+  keyword_words <- character()
+  keyword_values <- keywords$keyword %||% keywords[[1]]
+
+  for (keyword in keyword_values) {
+    keyword_words <- c(keyword_words, unlist(str_split(keyword, "\\s+")))
+    keyword_words <- unique(discard(keyword_words, ~ .x == ""))
+
+    if (length(keyword_words) >= max_words) {
+      break
+    }
+  }
+
+  source_words <- unlist(str_split(tolower(source_text), "\\s+"))
+  keyword_words <- tolower(keyword_words)
+  source_position <- match(keyword_words, source_words)
+  source_position[is.na(source_position)] <- Inf
+
+  keyword_words <-
+    keyword_words[order(source_position, seq_along(keyword_words))]
+  paste(head(keyword_words, max_words), collapse = "_")
 }

@@ -238,6 +238,93 @@ test_that("Semantic Name keyword extraction suppresses progress bars by default"
   )
 })
 
+test_that("Semantic Names preserve source order for selected keywords", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionText <-
+    "Felt like I had a lot of energy"
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_equal(
+    dict$semantic_name,
+    c("felt_lot_energy", "felt_lot_energy", "felt_lot_energy",
+      "felt_lot_energy.txt")
+  )
+})
+
+test_that("Semantic Name keyword cache keys include the scoring corpus", {
+  semantic_json <- function(questions) {
+    tibble(
+      qid = paste0("QID", seq_along(questions)),
+      response_column_id = paste0("QID", seq_along(questions)),
+      question_name = paste0("Q", seq_along(questions)),
+      block = "Main Block",
+      question = questions,
+      looping_question = NA_character_,
+      item = NA_character_,
+      level = NA_character_,
+      label = NA_character_,
+      type = "MC",
+      selector = "SAVR",
+      content_type = "Number",
+      sub_selector = "TX",
+      looping_option = NA_character_,
+      looping = FALSE
+    )
+  }
+  cache_path <- function(questions) {
+    texts <- questions
+    unique_texts <- clean_semantic_name_text(unique(texts))
+    all_words <- paste(texts, collapse = " ")
+
+    paste0(tempdir(), "/", hash(list(
+      algorithm = "semantic-name-source-order-v1",
+      unique_texts = unique_texts,
+      all_words = all_words
+    )), ".rds")
+  }
+
+  target <- paste(
+    "Alpha and beta and gamma and delta and epsilon and zeta and eta",
+    "and theta"
+  )
+  first_questions <- c(target, "Alpha repeated context")
+  second_questions <- c(
+    target,
+    "Alpha repeated context",
+    "Alpha repeated context"
+  )
+  first_cache_path <- cache_path(first_questions)
+  second_cache_path <- cache_path(second_questions)
+  unlink(c(first_cache_path, second_cache_path))
+
+  generate_semantic_names(
+    semantic_json(first_questions),
+    surveyID = "SV_TEST",
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  expect_true(file.exists(first_cache_path))
+  expect_false(file.exists(second_cache_path))
+
+  generate_semantic_names(
+    semantic_json(second_questions),
+    surveyID = "SV_TEST",
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  expect_true(file.exists(second_cache_path))
+})
+
 test_that("semantic_name_preprocess runs only for semantic naming", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
