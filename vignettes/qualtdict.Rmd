@@ -126,8 +126,10 @@ dict <- dict_generate(
 
 Semantic Names are best-effort readable conveniences generated from survey
 text, block information, and response metadata. They are not stable guarantees
-across package versions or survey text changes. Use them when they improve
-analysis ergonomics, but do not treat them as permanent identifiers.
+across package versions or survey text changes. For long text, Semantic Names
+select important words from ranked keywords and preserve those selected words
+in the order they appear in the naming text. Use them when they improve analysis
+ergonomics, but do not treat them as permanent identifiers.
 
 You can also preprocess the text used only for Semantic Name generation:
 

@@ -78,7 +78,8 @@ _Avoid_: Question label, question text, question ID
 A best-effort Dictionary Variable Name generated from survey text, block
 information, and response metadata when Qualtrics question names are not
 suitable for analysis. A Semantic Name is a readable convenience when present,
-not a stability guarantee.
+not a stability guarantee; when it derives words from naming text, it preserves
+their source order.
 _Avoid_: Easy name, stable name, canonical name
 
 **Export Variable**:

@@ -114,7 +114,10 @@ survey_dat <- get_survey_data(
 If Qualtrics Question Names are not suitable as analysis names, you can
 ask `qualtdict` to generate Semantic Names. Semantic Names are readable
 conveniences generated from survey text and metadata; they are not
-stable guarantees across package versions or survey text changes.
+stable guarantees across package versions or survey text changes. For
+long text, Semantic Names select important words from ranked keywords
+and preserve those selected words in the order they appear in the naming
+text.
 
 ``` r
 block_pattern <- function(block) {
