@@ -4,8 +4,8 @@ This repo uses Sandcastle to run local Codex agents against GitHub issues
 created by the project issue workflow.
 
 The Sandcastle sandbox provider is `noSandbox()`. Sandcastle creates git
-worktrees for named branches, while Codex handles edit permissions through its
-own sandbox flags.
+worktrees for named branches. Implementation and review agents run Codex with
+`--yolo`; planner agents stay read-only.
 
 ## Issue Contract
 

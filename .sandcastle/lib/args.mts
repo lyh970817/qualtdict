@@ -13,7 +13,6 @@ export type Options = {
   maxIterations?: number;
   model?: string;
   effort?: "low" | "medium" | "high" | "xhigh";
-  sandbox: "read-only" | "workspace-write" | "danger-full-access";
   networkAccess: "enabled" | "disabled";
   baseBranch?: string;
   runId?: string;
@@ -29,7 +28,6 @@ const parseArgsUnsafe = (argv: string[], mode: Mode): Options => {
     schedule: "wave",
     maxIssues: 100,
     maxParallel: 3,
-    sandbox: "workspace-write",
     networkAccess: "enabled",
   };
 
@@ -93,14 +91,6 @@ const parseArgsUnsafe = (argv: string[], mode: Mode): Options => {
           throw new Error("--effort must be one of: low, medium, high, xhigh");
         }
         options.effort = effort as Options["effort"];
-        break;
-      }
-      case "--sandbox": {
-        const sandbox = next();
-        if (!["read-only", "workspace-write", "danger-full-access"].includes(sandbox)) {
-          throw new Error("--sandbox must be one of: read-only, workspace-write, danger-full-access");
-        }
-        options.sandbox = sandbox as Options["sandbox"];
         break;
       }
       case "--network-access": {
@@ -187,7 +177,6 @@ Options:
   --plan-only              Run planner only, then exit before implementation.
   --model <model>          Override local Codex default model.
   --effort <level>         Set reasoning effort: low, medium, high, or xhigh.
-  --sandbox <mode>         Codex sandbox for write agents. Default: workspace-write.
   --network-access <mode>  Codex network_access value. Default: enabled.
   --base-branch <name>     Base branch for review diffs and scheduled batches.
   --run-id <id>            Override generated run artifact id.${singleOnly}${parallelOnly}
