@@ -3,6 +3,8 @@ scratch.R
 inst/doc
 tmp/
 node_modules/
+tools/
+docs/pr-0010-merge-review.md
 .sandcastle/logs/
 .sandcastle/runs/
 .sandcastle/worktrees/
