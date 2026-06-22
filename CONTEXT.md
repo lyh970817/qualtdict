@@ -19,7 +19,9 @@ _Avoid_: Downloader replacement, preprocessing framework
 **Variable Dictionary**:
 A tabular representation of a Qualtrics survey's variable metadata, including
 variable identifiers, question text, item text, levels, labels, blocks, and
-question type information.
+question type information. A Variable Dictionary can include rows for
+question-backed export variables and for metadata-defined export variables such
+as Embedded Data Fields, Scoring Variables, and Text-analysis Sidecars.
 _Avoid_: Metadata, survey dictionary, codebook
 
 **qualtdict object**:
@@ -27,10 +29,32 @@ The R representation of a Variable Dictionary: a data frame with class
 `qualtdict`.
 _Avoid_: qualtdict dictionary, metadata object
 
+**Dictionary Row Source**:
+The kind of metadata fact that produced a Variable Dictionary row. It separates
+ordinary question-backed rows from metadata-defined export variables while
+preserving Response Column ID as the row provenance key. Expected sources
+include `question`, `embedded_data`, `scoring`, and `text_analysis`.
+_Avoid_: Row type, column type, source column
+
 **QID**:
 The bare Qualtrics question identifier for a survey question, such as `QID1` or
 `QID16`. One QID can produce multiple response columns.
 _Avoid_: Question ID, question name, response column ID
+
+**Metadata-defined Export Variable**:
+An export variable represented by Qualtrics survey metadata but not produced by
+ordinary question response rendering. Metadata-defined Export Variables belong
+in the Variable Dictionary when Qualtrics metadata defines them. They still use
+Response Column ID as their exported-column identifier and Dictionary Row Source
+to describe their origin.
+_Avoid_: Extra column, raw response column, unmatched column
+
+**Non-question Export Variable**:
+A Metadata-defined Export Variable that is not an ordinary question-backed
+response variable. Embedded Data Fields and Scoring Variables are Non-question
+Export Variables. Text-analysis Sidecars are question-adjacent but should still
+be distinguished from primary question response rows by Dictionary Row Source.
+_Avoid_: Raw response column, ignored column, unknown sidecar
 
 **Normalised Question Fact**:
 The package-owned representation of one Qualtrics question after raw metadata
@@ -44,9 +68,10 @@ _Avoid_: Raw Qualtrics question, dictionary row, response column
 **Response Column ID**:
 The downloaded response column identifier used to match Labelled Survey Data
 columns to Variable Dictionary rows. It is the provenance key for a dictionary
-row. In current qualtdict exports this comes from
-`qualtRics::fetch_survey(import_id = TRUE)`, and may include choice, item, text,
-timing, column, or loop information.
+row. In current qualtdict question-backed exports this corresponds to
+`qualtRics::fetch_survey(import_id = TRUE)` and may include choice, item, text,
+timing, column, or loop information. Metadata-defined Export Variables also use
+Response Column ID for their exported-column identifier.
 _Avoid_: QID, question ID, column name
 
 **Response Column ID Rendering**:
@@ -86,6 +111,28 @@ _Avoid_: Easy name, stable name, canonical name
 A column in labelled survey data after qualtdict has matched a Response Column
 ID, renamed it to its Dictionary Variable Name, and attached variable metadata.
 _Avoid_: Dictionary row, QID
+
+**Embedded Data Field**:
+A Qualtrics embedded data field defined by survey metadata or survey flow and
+represented as a Metadata-defined Export Variable in the Variable Dictionary.
+Embedded Data Fields are not QIDs and should not be treated as question-backed
+rows, but they can still be matched to Labelled Survey Data by Response Column
+ID.
+_Avoid_: Embedded variable, extra column, user metadata column
+
+**Scoring Variable**:
+A Qualtrics scoring output defined by scoring metadata and represented as a
+Metadata-defined Export Variable in the Variable Dictionary. Scoring Variables
+are not ordinary question responses even when their values are derived from
+question answers.
+_Avoid_: Score column, scoring sidecar, calculated raw column
+
+**Text-analysis Sidecar**:
+A metadata-defined export variable derived from Qualtrics text-analysis
+settings for a text response. A Text-analysis Sidecar is question-adjacent and
+may refer to a parent QID, but it is distinct from the primary text response
+row.
+_Avoid_: Text column, raw sidecar, analysis column
 
 **Validation Finding**:
 A potential structural inconsistency detected in a Variable Dictionary, such as
