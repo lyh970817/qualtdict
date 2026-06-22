@@ -1,0 +1,17 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sandcastle": "npm run sandcastle:single --",
+    "sandcastle:single": "tsx .sandcastle/single.mts",
+    "sandcastle:sequential-review": "tsx .sandcastle/sequential-review.mts",
+    "sandcastle:parallel": "tsx .sandcastle/parallel-planner.mts",
+    "sandcastle:parallel-review": "tsx .sandcastle/parallel-planner-with-review.mts"
+  },
+  "devDependencies": {
+    "@ai-hero/sandcastle": "0.10.0",
+    "@types/node": "^26.0.0",
+    "tsx": "4.22.4",
+    "zod": "^4.1.13"
+  }
+}
