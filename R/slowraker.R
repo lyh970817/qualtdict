@@ -35,8 +35,8 @@ slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
   }
 
   if (!is.null(stop_pos)) {
-    tryCatch(
-      pos_word_df <- get_pos_tags(txt, word_token_annotator, pos_annotator),
+    pos_word_df <- tryCatch(
+      get_pos_tags(txt, word_token_annotator, pos_annotator),
       error = handle_pos_error
     )
     txt <- stop_pos_tags(pos_word_df, stop_pos)
@@ -59,7 +59,7 @@ slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
 
   # Convert word vectors into keywords (a word vector contains the words in a
   # keyword)
-  collapse <- function(x) paste0(x, collapse = " ")
+  collapse <- function(x) paste(x, collapse = " ")
   keyword <- vapply(cand_words, collapse, character(1))
 
   if (stem) cand_words <- lapply(cand_words, SnowballC::wordStem)
@@ -104,7 +104,7 @@ slowrake <- function(txt,
   all_words <- slowraker2$get_cand_words(all_words, stop_words)
   all_words <- slowraker2$filter_words(all_words, word_min_char)
 
-  collapse <- function(x) paste0(x, collapse = " ")
+  collapse <- function(x) paste(x, collapse = " ")
   all_words <- vapply(all_words, collapse, character(1))
 
   if (stem) all_words <- lapply(all_words, SnowballC::wordStem)
@@ -135,5 +135,5 @@ slowraker2 <- structure(
     function(.internals, i) getFromNamespace(i, "slowraker"),
     .internals, .internals
   ),
-  class = c("internal")
+  class = "internal"
 )

@@ -1,7 +1,5 @@
 to_dataframe <- function(json) {
-  map_df(json, function(qmeta) {
-    map_df(qmeta, unlist)
-  })
+  map_df(json, map_df, unlist)
 }
 
 #' Generate dictionary rows from normalised metadata
@@ -12,12 +10,14 @@ to_dataframe <- function(json) {
 #'
 #' @keywords internal
 #' @noRd
-variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
-                                                         use_semantic_name,
-                                                         block_pattern,
-                                                         block_sep,
-                                                         semantic_name_preprocess,
-                                                         quiet = TRUE) {
+variable_dictionary_from_normalised_metadata <- function(
+  normalised_metadata,
+  use_semantic_name,
+  block_pattern,
+  block_sep,
+  semantic_name_preprocess,
+  quiet = TRUE
+) {
   question_meta <- normalised_metadata$questions
   question_meta <- expand_loop_question_facts(question_meta)
   if (length(question_meta) == 0) {

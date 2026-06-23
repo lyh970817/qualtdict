@@ -141,9 +141,10 @@ retry <- function(f) {
     while (is.null(r) && attempt <= 5) {
       # Don't cummulate count with endless attempts
       attempt <- attempt + 1
-      try(
-        r <- f(...)
-      )
+      try_result <- try(f(...))
+      if (!inherits(try_result, "try-error")) {
+        r <- try_result
+      }
     }
 
     if (is.null(r)) {

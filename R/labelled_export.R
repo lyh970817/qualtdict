@@ -18,12 +18,11 @@ owned_fetch_survey_args <- function() {
 prepare_fetch_survey_args <- function(args, dict) {
   blocked_args <- intersect(names(args), owned_fetch_survey_args())
   if (length(blocked_args) > 0) {
+    blocked_arg_names <- paste0("`", blocked_args, "`")
+    blocked_message <- toString(blocked_arg_names)
     rlang::abort(c(
       "These `fetch_survey()` arguments are owned by qualtdict.",
-      i = paste(
-        "Remove:",
-        paste(sprintf("`%s`", blocked_args), collapse = ", ")
-      )
+      i = paste0("Remove: ", blocked_message)
     ))
   }
 
@@ -155,22 +154,22 @@ resolve_extra_columns <- function(dat,
 
   missing_extra_columns <- setdiff(extra_columns, colnames(dat))
   if (length(missing_extra_columns) > 0) {
-    missing_message <- paste(
-      sprintf("`%s`", missing_extra_columns),
+    missing_message <- paste0(
+      "`",
+      missing_extra_columns,
+      "`",
       collapse = ", "
     )
     if (extra_columns_user_supplied) {
       rlang::abort(c(
         "Missing user-specified `extra_columns` in downloaded survey data.",
-        i = paste("Missing:", missing_message)
+        i = paste0("Missing: ", missing_message)
       ))
     }
 
     warning(
-      paste(
-        "Missing default `extra_columns` in downloaded survey data:",
-        missing_message
-      ),
+      "Missing default `extra_columns` in downloaded survey data: ",
+      missing_message,
       call. = FALSE
     )
   }
@@ -270,11 +269,11 @@ survey_var_recode <- function(var,
   }
 
   # TE variables dont have levels or labels
-  if (any(!is.na(levels))) {
-    var <- set_labels(var, labels = setNames(levels, labels))
-  } else {
+  if (all(is.na(levels))) {
     text_label <- unique(paste_narm(var_dict[["question"]], var_dict[["item"]]))
     var <- set_label(var, label = text_label)
+  } else {
+    var <- set_labels(var, labels = setNames(levels, labels))
   }
 
 

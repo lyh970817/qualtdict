@@ -171,10 +171,8 @@ check_item <- function(dat, response_column_id) {
   cols <- dat[c("label", "level")]
 
   # Here recode is sometimes "none" and will cause a warning
-  col2_pos <- suppressWarnings(
-    as.numeric(cols[[2]]) %>%
-      subset(. >= 0)
-  )
+  col2_numeric <- suppressWarnings(as.numeric(cols[[2]]))
+  col2_pos <- subset(col2_numeric, col2_numeric >= 0)
 
   has_mistake <- c(
     # Check correspondence
