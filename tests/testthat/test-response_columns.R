@@ -98,12 +98,15 @@ test_that("render_response_columns renders MC rows with aligned facts", {
 
   rendered <- render_response_columns(question, "QID1")
 
-  expect_equal(
+  expect_identical(
     rendered$response_column_id,
     c("QID1", "QID1", "QID1", "QID1_3_TEXT")
   )
-  expect_equal(unname(rendered$level), c("1", "2", "3", "3_TEXT"))
-  expect_equal(unname(rendered$label), c("Yes", "No", "Other", "Other_TEXT"))
+  expect_identical(unname(rendered$level), c("1", "2", "3", "3_TEXT"))
+  expect_identical(
+    unname(rendered$label),
+    c("Yes", "No", "Other", "Other_TEXT")
+  )
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
@@ -120,11 +123,11 @@ test_that("render_response_columns accepts package-owned normalised facts", {
 
   rendered <- render_response_columns(question, "QID1")
 
-  expect_equal(
+  expect_identical(
     rendered$response_column_id,
     c("QID1", "QID1", "QID1", "QID1_3_TEXT")
   )
-  expect_equal(unname(rendered$question), rep("Choose one", 4))
+  expect_identical(unname(rendered$question), rep("Choose one", 4))
 })
 
 test_that("render_response_columns preserves already-prefixed loop qids", {
@@ -133,11 +136,11 @@ test_that("render_response_columns preserves already-prefixed loop qids", {
 
   rendered <- render_response_columns(question, "x1_QID2")
 
-  expect_equal(
+  expect_identical(
     rendered$response_column_id,
     c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT")
   )
-  expect_equal(unname(rendered$level), c("1", "2", "2_TEXT"))
+  expect_identical(unname(rendered$level), c("1", "2", "2_TEXT"))
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
@@ -147,13 +150,16 @@ test_that("render_response_columns renders matrix rows in stable order", {
 
   rendered <- render_response_columns(question, "QID1")
 
-  expect_equal(
+  expect_identical(
     rendered$response_column_id,
     c("QID1_x1", "QID1_x1", "QID1_x2", "QID1_x2")
   )
-  expect_equal(unname(rendered$item), c("Apples", "Apples", "Bananas", "Bananas"))
-  expect_equal(unname(rendered$level), c("1", "2", "1", "2"))
-  expect_equal(unname(rendered$label), c("Low", "High", "Low", "High"))
+  expect_identical(
+    unname(rendered$item),
+    c("Apples", "Apples", "Bananas", "Bananas")
+  )
+  expect_identical(unname(rendered$level), c("1", "2", "1", "2"))
+  expect_identical(unname(rendered$label), c("Low", "High", "Low", "High"))
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
@@ -172,7 +178,7 @@ test_that("render_response_columns renders SBS and sidecar columns", {
   timing_rendered <- render_response_columns(timing_question, "QID1")
   file_upload_rendered <- render_response_columns(file_upload_question, "QID1")
 
-  expect_equal(
+  expect_identical(
     sbs_rendered$response_column_id,
     c(
       "QID2#1_2_1",
@@ -195,28 +201,38 @@ test_that("render_response_columns renders SBS and sidecar columns", {
       "QID2#3_9"
     )
   )
-  expect_true(all(vapply(sbs_rendered, length, integer(1)) == nrow(sbs_rendered)))
-
-  expect_equal(
-    timing_rendered$response_column_id,
-    c("QID1_FIRST_CLICK", "QID1_LAST_CLICK", "QID1_PAGE_SUBMIT", "QID1_CLICK_COUNT")
+  expect_true(
+    all(vapply(sbs_rendered, length, integer(1)) == nrow(sbs_rendered))
   )
-  expect_equal(
+
+  expect_identical(
+    timing_rendered$response_column_id,
+    c(
+      "QID1_FIRST_CLICK",
+      "QID1_LAST_CLICK",
+      "QID1_PAGE_SUBMIT",
+      "QID1_CLICK_COUNT"
+    )
+  )
+  expect_identical(
     file_upload_rendered$response_column_id,
     c("QID1_FILE_ID", "QID1_FILE_NAME", "QID1_FILE_SIZE", "QID1_FILE_TYPE")
   )
 })
 
-test_that("render_response_columns warns and falls back for unrendered shapes", {
-  raw_metadata <- synthetic_mc_text_raw_metadata()
-  question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
-  question$question_type$type <- "Meta"
-  question$question_type$selector <- "Browser"
-  question$question_type$sub_selector <- NULL
+test_that(
+  "render_response_columns warns and falls back for unrendered shapes",
+  {
+    raw_metadata <- synthetic_mc_text_raw_metadata()
+    question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
+    question$question_type$type <- "Meta"
+    question$question_type$selector <- "Browser"
+    question$question_type$sub_selector <- NULL
 
-  expect_warning(
-    rendered <- render_response_columns(question, "QID1"),
-    "without a specific response-column renderer"
-  )
-  expect_equal(rendered$response_column_id, "QID1")
-})
+    expect_warning(
+      rendered <- render_response_columns(question, "QID1"),
+      "without a specific response-column renderer"
+    )
+    expect_identical(rendered$response_column_id, "QID1")
+  }
+)

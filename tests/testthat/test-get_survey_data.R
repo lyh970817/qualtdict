@@ -36,10 +36,10 @@ minimal_survey_data <- function() {
 }
 
 test_that("get_survey_data returns one labelled data frame", {
-  captured_args <- NULL
+  captured_args <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
-      captured_args <<- list(...)
+      captured_args$value <- list(...)
       minimal_survey_data()
     }
   )
@@ -58,12 +58,12 @@ test_that("get_survey_data returns one labelled data frame", {
     "q2"
   ))
   expect_s3_class(attr(dat, "dict"), "qualtdict")
-  expect_equal(captured_args$include_questions, "QID1")
-  expect_equal(captured_args$surveyID, "SV_TEST")
-  expect_true(captured_args$import_id)
-  expect_false(captured_args$convert)
-  expect_false(captured_args$label)
-  expect_true(captured_args$breakout_sets)
+  expect_identical(captured_args$value$include_questions, "QID1")
+  expect_identical(captured_args$value$surveyID, "SV_TEST")
+  expect_true(captured_args$value$import_id)
+  expect_false(captured_args$value$convert)
+  expect_false(captured_args$value$label)
+  expect_true(captured_args$value$breakout_sets)
 })
 
 test_that("get_survey_data reports missing Response Column IDs", {
@@ -94,19 +94,19 @@ test_that("get_survey_data reports missing Response Column IDs", {
     "variable_name",
     "reason"
   ))
-  expect_equal(nrow(findings), 1)
-  expect_equal(findings$finding, "missing_response_column_id")
-  expect_equal(findings$response_column_id, "QID2")
-  expect_equal(findings$qid, "QID2")
-  expect_equal(findings$variable_name, "q2")
-  expect_equal(findings$reason, "not_found_in_downloaded_survey_data")
+  expect_identical(nrow(findings), 1L)
+  expect_identical(findings$finding, "missing_response_column_id")
+  expect_identical(findings$response_column_id, "QID2")
+  expect_identical(findings$qid, "QID2")
+  expect_identical(findings$variable_name, "q2")
+  expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 
 test_that("exclude_findings removes validation findings after download", {
-  captured_args <- NULL
+  captured_args <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
-      captured_args <<- list(...)
+      captured_args$value <- list(...)
       minimal_survey_data()
     },
     dict_validate = function(dict) {
@@ -125,14 +125,14 @@ test_that("exclude_findings removes validation findings after download", {
     include_questions = c("QID1", "QID2")
   )
 
-  expect_equal(captured_args$include_questions, c("QID1", "QID2"))
+  expect_identical(captured_args$value$include_questions, c("QID1", "QID2"))
   expect_named(dat, c(
     "externalDataReference",
     "startDate",
     "endDate",
     "q1"
   ))
-  expect_equal(attr(dat, "dict")$response_column_id, "QID1")
+  expect_identical(attr(dat, "dict")$response_column_id, "QID1")
 })
 
 test_that("extra_columns distinguish user-specified columns from defaults", {
@@ -186,13 +186,13 @@ test_that("dict_split_blocks returns block-specific Variable Dictionaries", {
 
   expect_named(block_dicts, c("Block A", "Block B"))
   expect_s3_class(block_dicts[["Block A"]], "qualtdict")
-  expect_equal(block_dicts[["Block A"]]$response_column_id, "QID1")
-  expect_equal(block_dicts[["Block B"]]$response_column_id, "QID2")
-  expect_equal(
+  expect_identical(block_dicts[["Block A"]]$response_column_id, "QID1")
+  expect_identical(block_dicts[["Block B"]]$response_column_id, "QID2")
+  expect_identical(
     nrow(attr(block_dicts[["Block A"]], "variable_name_findings")),
-    0
+    0L
   )
-  expect_equal(
+  expect_identical(
     attr(
       block_dicts[["Block B"]],
       "variable_name_findings"
