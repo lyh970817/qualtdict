@@ -13,15 +13,19 @@ classify_raw_response_columns <- function(raw_columns) {
   text_analysis <- is.na(classification) &
     grepl("^(.+_)?QID[0-9]+(_[0-9]+)?_TEXT_.+", raw_columns)
   classification[text_analysis] <- "text_analysis"
-  details[text_analysis] <-
-    "Qualtrics text-analysis sidecar column; not represented as a question dictionary row."
+  details[text_analysis] <- paste0(
+    "Qualtrics text-analysis sidecar column; ",
+    "not represented as a question dictionary row."
+  )
 
   embedded_data <- is.na(classification) &
     grepl("^[A-Za-z][A-Za-z0-9_]*$", raw_columns) &
     !grepl("^QID[0-9]+", raw_columns)
   classification[embedded_data] <- "embedded_data"
-  details[embedded_data] <-
-    "Embedded-data or user-defined metadata column; not represented as a question dictionary row."
+  details[embedded_data] <- paste0(
+    "Embedded-data or user-defined metadata column; ",
+    "not represented as a question dictionary row."
+  )
 
   tibble(
     raw_column = raw_columns,

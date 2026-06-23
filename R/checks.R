@@ -66,7 +66,7 @@ checkarg_ischaracter <-
     }
 
     test_missing <-
-      all(!is.na(arg))
+      !anyNA(arg)
 
     if (!test_missing) {
       rlang::abort(

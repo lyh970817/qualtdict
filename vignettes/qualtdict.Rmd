@@ -49,7 +49,7 @@ placeholder survey ID and are not evaluated. The small table below shows the
 shape of a safe simulated Variable Dictionary.
 
 ```{r}
-example_dict <- data.frame(
+example_dict <- tibble::tibble(
   response_column_id = c("QID1", "QID1_3_TEXT"),
   qid = c("QID1", "QID1"),
   question_name = c("Q1", "Q1"),

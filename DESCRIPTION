@@ -8,9 +8,8 @@ Authors@R:
 Description: Generates Variable Dictionaries from 'Qualtrics'
     <https://www.qualtrics.com/about/> survey metadata and applies those
     dictionaries to create Labelled Survey Data. This package is a
-    metadata and labelled-export companion to 'qualtRics'
-    <https://github.com/ropensci/qualtRics/>, which provides access to
-    'Qualtrics' survey data and metadata via the 'Qualtrics' API
+    metadata and labelled-export companion to 'qualtRics', which provides
+    access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API
     <https://api.qualtrics.com/>.
 License: MIT + file LICENSE
 URL: https://github.com/lyh970817/qualtdict

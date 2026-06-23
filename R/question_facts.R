@@ -133,7 +133,11 @@ question_fact_value <- function(question, owned_name, legacy_name = NULL) {
 #' @keywords internal
 #' @noRd
 question_fact_question_type <- function(question) {
-  question_type <- question_fact_value(question, "question_type", "questionType")
+  question_type <- question_fact_value(
+    question,
+    "question_type",
+    "questionType"
+  )
   if (is.null(question_type)) {
     return(list(type = NULL, selector = NULL, sub_selector = NULL))
   }

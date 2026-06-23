@@ -82,11 +82,11 @@ add_text <- function(x, has_text, label = FALSE) {
       text <- names(x)[pos]
       text_nm <- x[pos]
       x <- append(x,
-        paste(text_nm, sep = "_", "TEXT"),
+        paste0(text_nm, "_TEXT"),
         after = pos
       )
 
-      names(x)[pos + 1] <- paste(text, sep = "_", "TEXT")
+      names(x)[pos + 1] <- paste0(text, "_TEXT")
     }
     return(list(x))
   }
@@ -100,11 +100,10 @@ rep_qid <- function(qid, item, choice_len) {
     return(rep(qid, times = choice_len))
   }
   map2(qid, names(item), function(id, nam) {
-    if (!grepl("TEXT", nam, fixed = TRUE)) {
-      return(rep(id, each = choice_len))
-    } else {
+    if (grepl("TEXT", nam, fixed = TRUE)) {
       return(id)
     }
+    return(rep(id, each = choice_len))
   }) %>%
     unlist()
 }
@@ -115,11 +114,10 @@ rep_qid <- function(qid, item, choice_len) {
 rep_item <- function(x, item, choice_len) {
   map(choice_len, function(c) {
     map2(item, x, function(itm, x) {
-      if (!grepl("TEXT", itm, fixed = TRUE)) {
-        return(rep(x, each = c))
-      } else {
+      if (grepl("TEXT", itm, fixed = TRUE)) {
         return(x)
       }
+      return(rep(x, each = c))
     }) %>%
       unlist()
   })
@@ -135,11 +133,10 @@ rep_level <- function(level, item) {
 
   map(level, function(l) {
     imap(item, function(itm, nam) {
-      if (!grepl("TEXT", nam, fixed = TRUE)) {
-        return(l)
-      } else {
+      if (grepl("TEXT", nam, fixed = TRUE)) {
         return("TEXT")
       }
+      return(l)
     }) %>%
       unlist(recursive = FALSE)
   })
@@ -183,7 +180,7 @@ response_column_shape <- function(question) {
   response_choices <- question_fact_response_choices(question)
   response_items <- question_fact_response_items(question)
 
-  level_len <- length(response_choices) %>% ifelse(. > 0, ., 1)
+  level_len <- ifelse(length(response_choices) > 0, length(response_choices), 1)
 
   level <- map(response_choices, "level") %>%
     unlist_nm() %>%
@@ -275,13 +272,15 @@ response_column_sbs_shape <- function(question,
     top_question <- question_fact_question_text(question)
     question_text <- map(column_facts, "question_text") %>%
       map2(length(item), rep) %>%
-      map2(level_len, ~ rep_item(.x, item, .y) %>%
-        unlist()) %>%
+      map2(level_len, function(question_text, level_len) {
+        repeated_items <- rep_item(question_text, item, level_len)
+        unlist(repeated_items)
+      }) %>%
       unlist() %>%
       paste(top_question, ., sep = " ")
 
     level <- map(column_facts, "response_choices") %>%
-      map(~ map_chr(.x, "level")) %>%
+      map(map_chr, "level") %>%
       map2(col_type, function(level, type) {
         if (type == "TE") {
           level <- paste(level, "TEXT", sep = "_")
@@ -290,7 +289,7 @@ response_column_sbs_shape <- function(question,
       })
 
     label <- map(column_facts, "response_choices") %>%
-      map(~ map_chr(.x, "label"))
+      map(map_chr, "label")
   } else if (length(item) > 0) {
     level_len <- rep(1, length(item))
     level <- as.list(rep(NA_character_, length(item)))

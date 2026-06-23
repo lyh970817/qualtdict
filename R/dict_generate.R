@@ -124,7 +124,7 @@ dict_generate <- function(surveyID,
     "block", "question",
     "item", "level", "label", "type", "selector", "sub_selector", "content_type"
   )
-  if ("loop_option" %in% names(dict) && any(!is.na(dict$loop_option))) {
+  if ("loop_option" %in% names(dict) && !all(is.na(dict$loop_option))) {
     dict_columns <- c(
       "response_column_id", "qid", "question_name", "variable_name",
       "block", "question",
