@@ -37,7 +37,7 @@ test_that("dict_validate always returns a stable validation object", {
     "label",
     "level"
   ))
-  expect_equal(nrow(validation$validation_findings), 0)
+  expect_identical(nrow(validation$validation_findings), 0L)
   expect_s3_class(validation$level_label_pairs, "data.frame")
 })
 
@@ -71,17 +71,17 @@ test_that("dict_validate validates final variable_name export consistency", {
   ]
   unsafe_findings <- findings[findings$finding == "unsafe_variable_name", ]
 
-  expect_equal(
+  expect_identical(
     duplicate_findings$response_column_id,
     c("QID2", "QID3")
   )
-  expect_equal(
+  expect_identical(
     duplicate_findings$reason,
     c("variable_name_not_unique", "variable_name_not_unique")
   )
-  expect_equal(unsafe_findings$response_column_id, "QID1")
-  expect_equal(unsafe_findings$variable_name, "bad name")
-  expect_equal(unsafe_findings$reason, "unsafe")
+  expect_identical(unsafe_findings$response_column_id, "QID1")
+  expect_identical(unsafe_findings$variable_name, "bad name")
+  expect_identical(unsafe_findings$reason, "unsafe")
 })
 
 test_that("dict_validate reports repaired names as Validation Findings", {
@@ -100,11 +100,11 @@ test_that("dict_validate reports repaired names as Validation Findings", {
 
   findings <- dict_validate(dict)$validation_findings
 
-  expect_equal(findings$finding, "repaired_variable_name")
-  expect_equal(findings$response_column_id, "QID1")
-  expect_equal(findings$original_candidate, "bad name")
-  expect_equal(findings$variable_name, "bad_name")
-  expect_equal(findings$reason, "unsafe")
+  expect_identical(findings$finding, "repaired_variable_name")
+  expect_identical(findings$response_column_id, "QID1")
+  expect_identical(findings$original_candidate, "bad name")
+  expect_identical(findings$variable_name, "bad_name")
+  expect_identical(findings$reason, "unsafe")
 })
 
 test_that("dict_validate preserves level-label mistake findings", {
@@ -118,12 +118,12 @@ test_that("dict_validate preserves level-label mistake findings", {
   findings <- dict_validate(dict)$validation_findings
   mistake_findings <- findings[findings$finding == "level_label_mistake", ]
 
-  expect_equal(nrow(mistake_findings), 3)
-  expect_equal(unique(mistake_findings$response_column_id), "QID1")
-  expect_equal(unique(mistake_findings$variable_name), "q1")
-  expect_equal(unique(mistake_findings$mistake), "234")
-  expect_equal(mistake_findings$label, c("A", "A", "B"))
-  expect_equal(mistake_findings$level, c("1", "1", "3"))
+  expect_identical(nrow(mistake_findings), 3L)
+  expect_identical(unique(mistake_findings$response_column_id), "QID1")
+  expect_identical(unique(mistake_findings$variable_name), "q1")
+  expect_identical(unique(mistake_findings$mistake), "234")
+  expect_identical(mistake_findings$label, c("A", "A", "B"))
+  expect_identical(mistake_findings$level, c("1", "1", "3"))
 })
 
 vcr::use_cassette("dict_generate", {

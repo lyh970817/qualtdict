@@ -8,19 +8,19 @@ test_that("Loop and Merge adapter expands static source question facts", {
   ]
 
   expect_length(looped, 2)
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "qid")),
     c("QID2", "QID2")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "response_column_qid")),
     c("x1_QID2", "x2_QID2")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "looping_option")),
     c("Apples", "Bananas")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "looping_question")),
     c("Why did you choose Apples?", "Why did you choose Bananas?")
   )
@@ -36,11 +36,11 @@ test_that("Loop and Merge adapter expands matrix source question facts", {
   ]
 
   expect_length(looped, 3)
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "response_column_qid")),
     c("1_QID2", "2_QID2", "3_QID2")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "looping_option")),
     c("Condition 1", "Condition 2", "Condition 3")
   )
@@ -56,11 +56,11 @@ test_that("Loop and Merge adapter substitutes supported extra fields", {
   ]
 
   expect_length(looped, 2)
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "looping_question")),
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "question_text")),
     c("Compare {} with {}", "Compare {} with {}")
   )
@@ -76,15 +76,15 @@ test_that("Loop and Merge adapter expands static rows without source", {
   ]
 
   expect_length(looped, 2)
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "response_column_qid")),
     c("1_QID2", "2_QID2")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "looping_option")),
     c("Apples", "Bananas")
   )
-  expect_equal(
+  expect_identical(
     unname(vapply(looped, `[[`, character(1), "looping_question")),
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )

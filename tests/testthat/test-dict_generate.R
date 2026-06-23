@@ -19,7 +19,7 @@ test_that("dict_generate", {
   expect_true("question_name" %in% names(x))
   expect_true("variable_name" %in% names(x))
   expect_true("loop_option" %in% names(x))
-  expect_true(any(!is.na(x$loop_option)))
+  expect_false(all(is.na(x$loop_option)))
 })
 
 test_that("dict_generate accepts variable_name question_name", {
@@ -34,9 +34,9 @@ test_that("dict_generate accepts variable_name question_name", {
 
   expect_true("question_name" %in% names(x))
   expect_true("variable_name" %in% names(x))
-  expect_true(all(!is.na(x$question_name)))
-  expect_equal(
+  expect_false(anyNA(x$question_name))
+  expect_identical(
     anyDuplicated(unique(x[c("response_column_id", "variable_name")])),
-    0
+    0L
   )
 })
