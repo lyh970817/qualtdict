@@ -16,7 +16,7 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
     normalised_metadata$questions,
     "qualtdict_normalised_questions"
   )
-  expect_equal(names(normalised_metadata$questions), "QID1")
+  expect_named(normalised_metadata$questions, "QID1")
 
   question <- normalised_metadata$questions$QID1
   expect_s3_class(question, "qualtdict_normalised_question")
@@ -28,9 +28,9 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
   expect_equal(question$question_type$type, "MC")
   expect_equal(question$question_type$selector, "SAVR")
   expect_equal(question$question_type$sub_selector, "TX")
-  expect_equal(names(question$response_choices), c("1", "2", "3"))
-  expect_equal(length(question$response_items), 0)
-  expect_equal(length(question$column_facts), 0)
+  expect_named(question$response_choices, c("1", "2", "3"))
+  expect_length(question$response_items, 0)
+  expect_length(question$column_facts, 0)
 })
 
 test_that("normalised metadata renders the current Variable Dictionary rows", {
