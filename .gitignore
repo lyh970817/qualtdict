@@ -14,3 +14,4 @@ docs/pr-0010-merge-review.md
 .nix/
 .R-lib/
 .direnv/
+.lavish/
