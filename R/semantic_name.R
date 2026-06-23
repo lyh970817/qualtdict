@@ -105,7 +105,7 @@ generate_semantic_names <- function(json,
     select(semantic_name, everything())
 
   # Add txt to text questions
-  txt_qs <- grep("_TEXT", response_column_id)
+  txt_qs <- grep("_TEXT", response_column_id, fixed = TRUE)
   json_makename$semantic_name[txt_qs] <-
     paste(json_makename$semantic_name[txt_qs], ".txt")
 

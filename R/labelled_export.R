@@ -240,7 +240,7 @@ survey_var_recode <- function(var,
   content_type <- var_dict[["content_type"]][[1]]
   levels <- var_dict[["level"]]
   labels <- var_dict[["label"]]
-  is_text_var <- type == "TE" || any(grepl("_TEXT", levels))
+  is_text_var <- type == "TE" || any(grepl("_TEXT", levels, fixed = TRUE))
 
   if (!is_text_var && !is.na(content_type) && content_type == "Number") {
     # Check for content_type numeric,
@@ -261,8 +261,8 @@ survey_var_recode <- function(var,
     }
   } else if (nrow(var_dict) > 1) {
     # If multiple rows it's ordinal
-    labels <- grep("TEXT", labels, invert = TRUE, value = TRUE)
-    levels <- grep("TEXT", levels, invert = TRUE, value = TRUE)
+    labels <- grep("TEXT", labels, invert = TRUE, value = TRUE, fixed = TRUE)
+    levels <- grep("TEXT", levels, invert = TRUE, value = TRUE, fixed = TRUE)
     if (!is.null(unanswer_recode)) {
       levels <- c(levels, unanswer_recode)
       labels <- c(labels, "Seen but not answered")

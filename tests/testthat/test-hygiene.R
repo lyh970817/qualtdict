@@ -18,7 +18,9 @@ test_that("recorded Qualtrics fixtures are scrubbed for review", {
     value = TRUE
   )
   expect_true(
-    all(grepl("X-API-TOKEN: QUALTRICS_API_KEY", api_token_headers)),
+    all(grepl("X-API-TOKEN: QUALTRICS_API_KEY", api_token_headers,
+      fixed = TRUE
+    )),
     info = "VCR fixtures must retain only the QUALTRICS_API_KEY placeholder."
   )
 

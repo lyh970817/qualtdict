@@ -673,7 +673,7 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
@@ -706,7 +706,7 @@ test_that("normalised metadata renders supported extra Loop and Merge fields", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
@@ -731,7 +731,7 @@ test_that("normalised metadata renders static Loop and Merge rows", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
@@ -756,7 +756,7 @@ test_that("looped MC text columns keep loop prefix before QID", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
@@ -779,7 +779,7 @@ test_that("numeric loop-prefixed text columns match raw export IDs", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID3", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID3", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
@@ -800,7 +800,7 @@ test_that("static numeric loop prefixes do not fall back to source QIDs", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID3", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID3", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
@@ -822,7 +822,7 @@ test_that("matrix source Loop and Merge prefixes use source response rows", {
     semantic_name_preprocess = NULL
   )
 
-  target_rows <- dict[grepl("QID2", dict$response_column_id), ]
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
 
   expect_equal(
     target_rows$response_column_id,
