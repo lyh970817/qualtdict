@@ -100,7 +100,7 @@ repos:
         stages: [pre-commit]
     -   id: pkgcheck
         name: Run rOpenSci pkgcheck audit
-        entry: Rscript -e 'checks <- pkgcheck::pkgcheck(); print(checks); summary <- pkgcheck:::summarise_all_checks(checks); quit(save = "no", status = if (isTRUE(attr(summary, "checks_okay"))) 0 else 1)'
+        entry: env _R_CHECK_SYSTEM_CLOCK_=FALSE Rscript -e 'checks <- pkgcheck::pkgcheck(); print(checks); summary <- pkgcheck:::summarise_all_checks(checks); quit(save = "no", status = if (isTRUE(attr(summary, "checks_okay"))) 0 else 1)'
         language: system
         pass_filenames: false
         stages: [pre-commit]
