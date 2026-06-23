@@ -2,6 +2,7 @@
 #' @importFrom tidyr unite
 #' @importFrom stringi stri_count_words
 #' @importFrom rlang hash
+#' @importFrom utils head
 #' @keywords internal
 #' @noRd
 generate_semantic_names <- function(json,

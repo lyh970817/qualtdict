@@ -8,6 +8,15 @@
 #'
 #' @return A named list of Variable Dictionaries, one per Survey Block.
 #' @export
+#' @examples
+#' dict <- data.frame(
+#'   response_column_id = c("QID1", "QID2"),
+#'   variable_name = c("q1", "q2"),
+#'   block = c("Block A", "Block B")
+#' )
+#' class(dict) <- c("qualtdict", class(dict))
+#'
+#' dict_split_blocks(dict)
 dict_split_blocks <- function(dict) {
   checkarg_isqualtdict(dict)
 
@@ -35,6 +44,24 @@ dict_split_blocks <- function(dict) {
 #'
 #' @return A named list of data frames, one per Survey Block.
 #' @export
+#' @examples
+#' dict <- data.frame(
+#'   response_column_id = c("QID1", "QID2"),
+#'   variable_name = c("q1", "q2"),
+#'   block = c("Block A", "Block B")
+#' )
+#' class(dict) <- c("qualtdict", class(dict))
+#'
+#' dat <- data.frame(
+#'   externalDataReference = "R_1",
+#'   startDate = "2026-06-01",
+#'   endDate = "2026-06-01",
+#'   q1 = "1",
+#'   q2 = "2"
+#' )
+#' attr(dat, "dict") <- dict
+#'
+#' survey_split_blocks(dat)
 survey_split_blocks <- function(dat,
                                 dict = attr(dat, "dict", exact = TRUE),
                                 extra_columns = c(

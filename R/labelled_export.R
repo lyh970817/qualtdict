@@ -104,6 +104,17 @@ empty_labelled_export_findings <- function() {
 #'
 #' @return A data frame of Labelled Export Findings.
 #' @export
+#' @examples
+#' dat <- data.frame(q1 = "1")
+#' attr(dat, "labelled_export_findings") <- data.frame(
+#'   finding = "missing_response_column_id",
+#'   response_column_id = "QID2",
+#'   qid = "QID2",
+#'   variable_name = "q2",
+#'   reason = "not_found_in_downloaded_survey_data"
+#' )
+#'
+#' labelled_export_findings(dat)
 labelled_export_findings <- function(x) {
   findings <- attr(x, "labelled_export_findings", exact = TRUE)
   if (is.null(findings)) {

@@ -30,3 +30,22 @@ A named list of data frames, one per Survey Block.
 Create block-specific views of Labelled Survey Data without changing the
 return type of \code{\link[qualtdict]{get_survey_data}}.
 }
+\examples{
+dict <- data.frame(
+  response_column_id = c("QID1", "QID2"),
+  variable_name = c("q1", "q2"),
+  block = c("Block A", "Block B")
+)
+class(dict) <- c("qualtdict", class(dict))
+
+dat <- data.frame(
+  externalDataReference = "R_1",
+  startDate = "2026-06-01",
+  endDate = "2026-06-01",
+  q1 = "1",
+  q2 = "2"
+)
+attr(dat, "dict") <- dict
+
+survey_split_blocks(dat)
+}
