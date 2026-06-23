@@ -100,7 +100,7 @@ rep_qid <- function(qid, item, choice_len) {
     return(rep(qid, times = choice_len))
   }
   map2(qid, names(item), function(id, nam) {
-    if (!grepl("TEXT", nam)) {
+    if (!grepl("TEXT", nam, fixed = TRUE)) {
       return(rep(id, each = choice_len))
     } else {
       return(id)
@@ -115,7 +115,7 @@ rep_qid <- function(qid, item, choice_len) {
 rep_item <- function(x, item, choice_len) {
   map(choice_len, function(c) {
     map2(item, x, function(itm, x) {
-      if (!grepl("TEXT", itm)) {
+      if (!grepl("TEXT", itm, fixed = TRUE)) {
         return(rep(x, each = c))
       } else {
         return(x)
@@ -135,7 +135,7 @@ rep_level <- function(level, item) {
 
   map(level, function(l) {
     imap(item, function(itm, nam) {
-      if (!grepl("TEXT", nam)) {
+      if (!grepl("TEXT", nam, fixed = TRUE)) {
         return(l)
       } else {
         return("TEXT")
@@ -371,7 +371,7 @@ add_text_mc <- function(new_qid, level) {
   # For computed QIDs for multiple choice questions allowing for only one
   # choice with text options, add Qualtrics internal index to the end of
   # the QID for text options
-  text_pos <- grep("TEXT", level)
+  text_pos <- grep("TEXT", level, fixed = TRUE)
   if (length(text_pos) > 0 && !is.null(names(level))) {
     for (pos in text_pos) {
       level_suffix <- paste0("_", level[[pos]])
@@ -408,7 +408,7 @@ mc_choice_ids <- function(level) {
 }
 
 sub_text_mc <- function(new_qid, qid, level) {
-  text_pos <- grep("TEXT", level)
+  text_pos <- grep("TEXT", level, fixed = TRUE)
   if (!is.null(text_pos)) {
     new_qid[text_pos] <- paste(qid, names(level), sep = "_")[text_pos]
   }
