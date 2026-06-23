@@ -15,6 +15,8 @@
 ^\.direnv/
 ^\.envrc$
 ^\.github$
+^\.lavish$
+^\.lavish/
 ^\.lintr$
 ^\.nix$
 ^\.nix/
