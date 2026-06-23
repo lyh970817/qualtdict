@@ -1,4 +1,5 @@
 #' @import slowraker
+#' @noRd
 calc_keyword_scores <- function(cand_words, all_words) {
   # Get a list of unique words in each keyword so we don't double count (e.g.,
   # don't double count "vector" in "vector times vector").
@@ -67,8 +68,7 @@ slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
 
   keyword_df <- data.frame(
     keyword = keyword,
-    score = score,
-    stringsAsFactors = FALSE
+    score = score
   )
 
   if (stem) {

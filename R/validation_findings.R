@@ -182,8 +182,8 @@ check_item <- function(dat, response_column_id) {
     # Check constant step == 1
     !(all(diff(sort(col2_pos)) == 1) | length(diff(col2_pos)) == 0),
     # Check duplication
-    any(duplicated(cols[[1]])),
-    any(duplicated(cols[[2]]))
+    anyDuplicated(cols[[1]]) > 0,
+    anyDuplicated(cols[[2]]) > 0
   )
 
   if (any(has_mistake)) {
