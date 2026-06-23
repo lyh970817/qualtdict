@@ -113,4 +113,3 @@ repos:
 
 ci:
     autoupdate_schedule: monthly
-    skip: [testthat, pkgcheck, r-cmd-check]
