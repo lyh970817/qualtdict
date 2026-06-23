@@ -103,10 +103,16 @@ repos:
         entry: Rscript -e 'checks <- pkgcheck::pkgcheck(); print(checks); summary <- pkgcheck:::summarise_all_checks(checks); quit(save = "no", status = if (isTRUE(attr(summary, "checks_okay"))) 0 else 1)'
         language: system
         pass_filenames: false
-        stages: [manual]
+        stages: [pre-commit]
+    -   id: r-cmd-check-no-manual
+        name: Run R CMD check without manual
+        entry: Rscript -e 'devtools::check(args = "--no-manual")'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
     -   id: r-cmd-check
         name: Run R CMD check
-        entry: Rscript -e 'devtools::check(args = "--no-manual")'
+        entry: Rscript -e 'devtools::check()'
         language: system
         pass_filenames: false
         stages: [pre-push]
