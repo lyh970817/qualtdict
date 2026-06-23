@@ -9,6 +9,7 @@ docs/pr-0010-merge-review.md
 .sandcastle/runs/
 .sandcastle/worktrees/
 .sandcastle/.env
+.sandcastle/gitconfig
 .Renviron
 .nix/
 .R-lib/
