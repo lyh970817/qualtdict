@@ -109,12 +109,6 @@ repos:
         entry: Rscript -e 'devtools::check(args = "--no-manual", env_vars = c(NOT_CRAN = "true", `_R_CHECK_SYSTEM_CLOCK_` = "FALSE"))'
         language: system
         pass_filenames: false
-        stages: [pre-commit]
-    -   id: r-cmd-check
-        name: Run R CMD check
-        entry: Rscript -e 'devtools::check(env_vars = c(NOT_CRAN = "true", `_R_CHECK_SYSTEM_CLOCK_` = "FALSE"))'
-        language: system
-        pass_filenames: false
         stages: [pre-push]
 
 ci:
