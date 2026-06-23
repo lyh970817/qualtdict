@@ -120,6 +120,10 @@ let
     vcr
   ];
 
+  texlive = pkgs.texlive.combine {
+    inherit (pkgs.texlive) inconsolata scheme-small;
+  };
+
 in
 pkgs.mkShell {
   LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
@@ -147,6 +151,7 @@ pkgs.mkShell {
     pkgs.pkg-config
     pkgs.pre-commit
     pkgs.qpdf
+    texlive
     pkgs.xz
     pkgs.zlib
   ] ++ rPackages;
