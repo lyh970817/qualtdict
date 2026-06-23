@@ -16,3 +16,15 @@ A data frame of Labelled Export Findings.
 Labelled Export Findings describe issues detected while matching a Variable
 Dictionary to downloaded survey data.
 }
+\examples{
+dat <- data.frame(q1 = "1")
+attr(dat, "labelled_export_findings") <- data.frame(
+  finding = "missing_response_column_id",
+  response_column_id = "QID2",
+  qid = "QID2",
+  variable_name = "q2",
+  reason = "not_found_in_downloaded_survey_data"
+)
+
+labelled_export_findings(dat)
+}
