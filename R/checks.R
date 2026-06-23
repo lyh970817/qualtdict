@@ -154,7 +154,7 @@ checkarg_isfunction <- function(arg, null_okay = TRUE) {
 #' @keywords internal
 #' @noRd
 checkarg_isqualtdict <- function(arg) {
-  test <- any(class(arg) == "qualtdict")
+  test <- inherits(arg, "qualtdict")
 
   if (!test) {
     rlang::abort(
