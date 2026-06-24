@@ -115,19 +115,6 @@ R/response_column_render.R:175
 Likely fix: split the longest functions around existing domain seams. This is a
 refactor and should be handled separately from audit configuration.
 
-### High cyclomatic complexity
-
-`goodpractice` reports:
-
-```text
-sbs_qid (28)
-loop_field_values_from_column_names (21)
-loop_options_from_static_choices (21)
-```
-
-Likely fix: extract decision branches into named helpers and add targeted tests
-before refactoring.
-
 ### Unused internal functions
 
 `goodpractice` reports unused internal functions, including:
@@ -209,5 +196,4 @@ planning.
 4. Add package website metadata.
 5. Fix low-risk documentation issues such as duplicate parameter docs with
    `@inheritParams`.
-6. Treat high-complexity and long-function findings as refactor tickets, not
-   one-off lint cleanup.
+6. Treat long-function findings as refactor tickets, not one-off lint cleanup.
