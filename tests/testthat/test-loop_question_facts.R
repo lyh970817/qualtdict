@@ -89,3 +89,62 @@ test_that("Loop and Merge adapter expands static rows without source", {
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
 })
+
+test_that("Loop and Merge options resolve direct source choice IDs", {
+  choices <- list(
+    a = list(recode = "3", description = "Alpha"),
+    b = list(recode = "4", choiceText = "Bravo")
+  )
+
+  expect_identical(
+    loop_options_from_static_choices(NULL, choices, c("a", "b")),
+    c(a = "Alpha", b = "Bravo")
+  )
+})
+
+test_that("Loop and Merge options resolve source choice recodes", {
+  choices <- list(
+    a = list(recode = "3", description = "Three"),
+    b = list(recode = "4", choiceText = "Four")
+  )
+
+  expect_identical(
+    loop_options_from_static_choices(c("3", "4"), choices, c("3", "4")),
+    c(`3` = "Three", `4` = "Four")
+  )
+})
+
+test_that("Loop and Merge options fall back only for prefixed sources", {
+  choices <- list(
+    x1 = list(recode = "1", description = "One")
+  )
+
+  expect_identical(
+    loop_options_from_static_choices(
+      c("x1", "missing"),
+      choices,
+      c("x1", "missing")
+    ),
+    c(x1 = "x1", missing = "missing")
+  )
+  expect_null(
+    loop_options_from_static_choices(NULL, choices, c("x1", "missing"))
+  )
+})
+
+test_that("Loop and Merge field values parse valid column name records", {
+  column_names <- list(
+    field1 = c("A", "B"),
+    field2 = c("", NA),
+    field3 = c("C"),
+    other = c("X", "Y")
+  )
+
+  expect_identical(
+    loop_field_values_from_column_names(column_names, c("x1", "x2")),
+    list(
+      x1 = list(`1` = "A"),
+      x2 = list(`1` = "B")
+    )
+  )
+})
