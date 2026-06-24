@@ -136,7 +136,7 @@ test_that("Loop and Merge field values parse valid column name records", {
   column_names <- list(
     field1 = c("A", "B"),
     field2 = c("", NA),
-    field3 = c("C"),
+    field3 = "C",
     other = c("X", "Y")
   )
 
