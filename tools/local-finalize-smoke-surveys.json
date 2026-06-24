@@ -1,0 +1,12 @@
+{
+  "surveys": [
+    {
+      "alias": "survey_a",
+      "survey_id": "SV_REPLACE_WITH_FIRST_SURVEY_ID"
+    },
+    {
+      "alias": "survey_b",
+      "survey_id": "SV_REPLACE_WITH_SECOND_SURVEY_ID"
+    }
+  ]
+}
