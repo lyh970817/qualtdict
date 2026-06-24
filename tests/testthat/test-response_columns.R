@@ -220,6 +220,43 @@ test_that("render_response_columns renders SBS and sidecar columns", {
   )
 })
 
+test_that("render_response_columns renders carried-forward SBS row IDs", {
+  question <- normalise_qualtrics_metadata(
+    synthetic_sbs_carried_forward_raw_metadata()
+  )$questions$QID2
+
+  rendered <- render_response_columns(question, "QID2")
+
+  expect_identical(
+    rendered$response_column_id,
+    c("QID2_x1", "QID2_x2", "QID2_x3")
+  )
+  expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
+})
+
+test_that("render_response_columns renders mixed SBS column cases", {
+  question <- normalise_qualtrics_metadata(
+    synthetic_sbs_multiple_answer_raw_metadata()
+  )$questions$QID2
+
+  rendered <- render_response_columns(question, "QID2")
+
+  expect_identical(
+    rendered$response_column_id,
+    c(
+      "QID2#1_2_1",
+      "QID2#1_4_1",
+      "QID2#2_2",
+      "QID2#2_4",
+      "QID2#3_2_1",
+      "QID2#3_2_2",
+      "QID2#3_4_1",
+      "QID2#3_4_2"
+    )
+  )
+  expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
+})
+
 test_that(
   "render_response_columns warns and falls back for unrendered shapes",
   {
