@@ -1,9 +1,13 @@
 test_that("dict_generate", {
-  vcr::use_cassette("dict_generate", {
-    suppressWarnings(
-      x <- dict_generate("SV_0AQg1pFepA0V2d0", variable_name = "semantic_name")
-    )
-  })
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_loop_and_merge_raw_metadata()
+    }
+  )
+
+  suppressWarnings(
+    x <- dict_generate("SV_SYNTHETIC", variable_name = "semantic_name")
+  )
 
   legacy_columns <- c(
     "response_column_id", "qid", "question_name", "variable_name", "block",
@@ -23,14 +27,18 @@ test_that("dict_generate", {
 })
 
 test_that("dict_generate accepts variable_name question_name", {
-  vcr::use_cassette("dict_generate", {
-    suppressWarnings(
-      x <- dict_generate(
-        "SV_0AQg1pFepA0V2d0",
-        variable_name = "question_name"
-      )
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_mc_text_raw_metadata()
+    }
+  )
+
+  suppressWarnings(
+    x <- dict_generate(
+      "SV_SYNTHETIC",
+      variable_name = "question_name"
     )
-  })
+  )
 
   expect_true("question_name" %in% names(x))
   expect_true("variable_name" %in% names(x))

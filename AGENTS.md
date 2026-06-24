@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This is an R package for generating Qualtrics variable dictionaries and labelled data exports. Core code lives in `R/`, with one file per main feature or helper area, such as `R/dict_generate.R`, `R/dict_validate.R`, and `R/get_survey_data.R`. Package metadata is in `DESCRIPTION`, exports are in `NAMESPACE`, and generated help files are in `man/`. Tests live under `tests/testthat/`; snapshots are in `tests/testthat/_snaps/`, and recorded API fixtures are in `tests/fixtures/`. Vignettes are in `vignettes/`, and `README.md` is generated from `README.Rmd`, so edit the `.Rmd` source.
+This is an R package for generating Qualtrics variable dictionaries and labelled data exports. Core code lives in `R/`, with one file per main feature or helper area, such as `R/dict_generate.R`, `R/dict_validate.R`, and `R/get_survey_data.R`. Package metadata is in `DESCRIPTION`, exports are in `NAMESPACE`, and generated help files are in `man/`. Tests live under `tests/testthat/`; snapshots are in `tests/testthat/_snaps/`. Vignettes are in `vignettes/`, and `README.md` is generated from `README.Rmd`, so edit the `.Rmd` source.
 
 ## Build, Test, and Development Commands
 
@@ -19,7 +19,7 @@ Follow tidyverse R style: two-space indentation, clear snake_case names, and rea
 
 ## Testing Guidelines
 
-Tests use `testthat` edition 3 and run through `tests/testthat.R`. Name new tests `tests/testthat/test-<feature>.R`. For stable structured output, add or update snapshots in `tests/testthat/_snaps/`. API-dependent tests should use `vcr::use_cassette()` and store fixtures under `tests/fixtures/`; avoid tests that require live Qualtrics credentials in CI.
+Tests use `testthat` edition 3 and run through `tests/testthat.R`. Name new tests `tests/testthat/test-<feature>.R`. For stable structured output, add or update snapshots in `tests/testthat/_snaps/`. Keep ordinary tests offline with synthetic dictionaries and synthetic metadata. Do not commit Qualtrics API cassettes or Participant Response Data; live Qualtrics checks belong in explicit local-only finalization tooling, not CI.
 
 ## Commit & Pull Request Guidelines
 

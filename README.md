@@ -68,7 +68,7 @@ qualtRics::qualtrics_api_credentials(
 Package tests and documentation examples avoid private survey data.
 Validation, dictionary schema checks, block splitting, and
 labelled-export mechanics can be tested offline with synthetic
-dictionaries or recorded fixtures. Only live Qualtrics metadata or
+dictionaries and synthetic metadata. Only live Qualtrics metadata or
 response downloads require credentials.
 
 ## Variable Dictionary To Labelled Survey Data

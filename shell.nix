@@ -117,7 +117,6 @@ let
     spelling
     testthat
     usethis
-    vcr
   ];
 
   texlive = pkgs.texlive.combine {

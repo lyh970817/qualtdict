@@ -70,23 +70,21 @@ Primary reference:
 
 - [ ] Unit tests cover dictionary generation, validation, JSON recoding,
   labelled export behavior, and error cases.
-- [x] API-dependent tests use recorded fixtures and do not require live Qualtrics
+- [x] Ordinary tests use synthetic metadata and do not require live Qualtrics
   credentials in CI.
-- [x] Recorded requests are scrubbed of secrets and private survey content.
+- [x] Qualtrics API cassettes and Participant Response Data are not committed.
 - [ ] CI runs checks across the expected R platforms.
 - [ ] Coverage is tracked, with gaps justified for live-service or fixture-heavy
   behavior.
 - [ ] Local `devtools::check()` passes before submission.
 
-2026-06-15 audit note: API-dependent tests use `vcr::use_cassette()` and
-`tests/testthat/helper-qualtdict.R` injects placeholder Qualtrics credentials
-only when none are set, so CI does not need live Qualtrics credentials. Recorded
-cassettes under `tests/fixtures/` were reviewed; request credentials and base
-URLs are placeholders, and account-specific owner, division, response-set, block,
-organisation, and brand URL identifiers were scrubbed from
-`tests/fixtures/dict_generate.yml`. `tests/testthat/test-hygiene.R` now guards
-that scrub. CI runs R CMD check on macOS, Windows, Ubuntu devel, Ubuntu release,
-and Ubuntu oldrel-1, plus coverage on Ubuntu. Local checks still need to be run
+2026-06-24 audit note: ordinary tests avoid Qualtrics API cassettes because
+recorded response exports can contain Participant Response Data. Dictionary
+generation, validation, response-column rendering, block splitting, and labelled
+export behavior are covered with synthetic dictionaries and synthetic metadata.
+`tests/testthat/test-hygiene.R` guards against committed Qualtrics cassette YAML
+files. CI runs R CMD check on macOS, Windows, Ubuntu devel, Ubuntu release, and
+Ubuntu oldrel-1, plus coverage on Ubuntu. Local checks still need to be run
 inside `nix-shell` or another environment with package development dependencies
 installed.
 

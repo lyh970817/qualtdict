@@ -125,20 +125,3 @@ test_that("dict_validate preserves level-label mistake findings", {
   expect_identical(mistake_findings$label, c("A", "A", "B"))
   expect_identical(mistake_findings$level, c("1", "1", "3"))
 })
-
-vcr::use_cassette("dict_generate", {
-  suppressWarnings(
-    x <- dict_generate("SV_0AQg1pFepA0V2d0", variable_name = "question_name")
-  )
-})
-
-test_that("dict_validate exposes recorded level-label findings", {
-  x_validate <- dict_validate(x)
-  expect_s3_class(x_validate, "qualtdict_validation")
-  expect_true("level_label_pairs" %in% names(x_validate))
-  expect_true("validation_findings" %in% names(x_validate))
-  expect_true(any(
-    x_validate$validation_findings$finding == "level_label_mistake"
-  ))
-  expect_true("response_column_id" %in% names(x_validate$validation_findings))
-})
