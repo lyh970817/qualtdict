@@ -165,46 +165,97 @@ loop_response_column_id <- function(response_column_id) {
 loop_options_from_static_choices <- function(looping_prefixes,
                                              choices,
                                              static_prefixes) {
+  source <- loop_choice_source(looping_prefixes, choices, static_prefixes)
+  if (loop_choice_source_is_missing(source)) {
+    return(NULL)
+  }
+
+  loop_options_from_choice_source(source, static_prefixes)
+}
+
+loop_choice_source <- function(looping_prefixes, choices, static_prefixes) {
   if (is.null(choices) || length(static_prefixes) == 0) {
-    return(NULL)
+    return(new_loop_choice_source("missing"))
   }
 
-  if (!is.null(looping_prefixes) && length(looping_prefixes) > 0) {
-    choice_recodes <- map_chr(choices, ~ scalar_character(.x$recode))
-    choice_by_recode <- setNames(choices, choice_recodes)
-    static_choices <- map(static_prefixes, function(prefix) {
-      if (prefix %in% names(choices)) {
-        return(choices[[prefix]])
-      }
-      if (prefix %in% names(choice_by_recode)) {
-        return(choice_by_recode[[prefix]])
-      }
-      NULL
-    })
-    if (all(map_lgl(static_choices, ~ !is.null(.x)))) {
-      choices <- setNames(static_choices, static_prefixes)
-    } else {
-      choices <- setNames(
-        lapply(static_prefixes, function(prefix) {
-          list(description = prefix, choiceText = prefix)
-        }),
-        static_prefixes
-      )
+  if (has_looping_prefixes(looping_prefixes)) {
+    return(loop_choice_source_from_prefixes(choices, static_prefixes))
+  }
+
+  loop_choice_source_from_direct_ids(choices, static_prefixes)
+}
+
+new_loop_choice_source <- function(type, choices = NULL) {
+  list(type = type, choices = choices)
+}
+
+loop_choice_source_is_missing <- function(source) {
+  identical(source$type, "missing")
+}
+
+has_looping_prefixes <- function(looping_prefixes) {
+  !is.null(looping_prefixes) && length(looping_prefixes) > 0
+}
+
+loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
+  resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
+  if (all(map_lgl(resolved_choices, Negate(is.null)))) {
+    return(new_loop_choice_source(
+      "resolved",
+      setNames(resolved_choices, static_prefixes)
+    ))
+  }
+
+  new_loop_choice_source("fallback", fallback_static_choices(static_prefixes))
+}
+
+loop_choice_source_from_direct_ids <- function(choices, static_prefixes) {
+  if (!all(static_prefixes %in% names(choices))) {
+    return(new_loop_choice_source("missing"))
+  }
+
+  new_loop_choice_source("direct", choices)
+}
+
+static_choices_by_id_or_recode <- function(choices, static_prefixes) {
+  choice_recodes <- map_chr(choices, ~ scalar_character(.x$recode))
+  choice_by_recode <- setNames(choices, choice_recodes)
+
+  map(static_prefixes, function(prefix) {
+    if (prefix %in% names(choices)) {
+      return(choices[[prefix]])
     }
-  } else if (!all(static_prefixes %in% names(choices))) {
-    return(NULL)
-  }
+    if (prefix %in% names(choice_by_recode)) {
+      return(choice_by_recode[[prefix]])
+    }
+    NULL
+  })
+}
 
+fallback_static_choices <- function(static_prefixes) {
+  setNames(
+    lapply(static_prefixes, function(prefix) {
+      list(description = prefix, choiceText = prefix)
+    }),
+    static_prefixes
+  )
+}
+
+loop_options_from_choice_source <- function(source, static_prefixes) {
   loop_options <- vapply(static_prefixes, function(prefix) {
-    choice <- choices[[prefix]]
-    option <- choice[["description"]]
-    if (is.null(option) || is.na(option) || option == "") {
-      option <- choice[["choiceText"]]
-    }
-    as.character(option)
+    loop_option_label(source$choices[[prefix]])
   }, character(1))
   names(loop_options) <- static_prefixes
   loop_options
+}
+
+loop_option_label <- function(choice) {
+  option <- choice[["description"]]
+  if (is.null(option) || is.na(option) || option == "") {
+    option <- choice[["choiceText"]]
+  }
+
+  as.character(option)
 }
 
 #' Resolve Loop and Merge field values beyond the primary option
@@ -249,26 +300,64 @@ loop_field_values_from_static <- function(looping_static, prefixes) {
 #' @noRd
 loop_field_values_from_column_names <- function(column_names, prefixes) {
   if (is.null(column_names) || length(prefixes) == 0) {
-    return(setNames(vector("list", length(prefixes)), prefixes))
+    return(empty_loop_field_values(prefixes))
   }
 
-  values_by_prefix <- setNames(vector("list", length(prefixes)), prefixes)
-  for (field_name in names(column_names)) {
-    field_number <- str_match(field_name, "^field([0-9]+)$")[, 2]
-    if (is.na(field_number)) {
-      next
-    }
+  loop_field_values_from_records(
+    records = loop_column_field_records(column_names, prefixes),
+    prefixes = prefixes
+  )
+}
 
-    values <- unlist(column_names[[field_name]], use.names = FALSE)
-    if (length(values) != length(prefixes)) {
-      next
-    }
+empty_loop_field_values <- function(prefixes) {
+  setNames(vector("list", length(prefixes)), prefixes)
+}
 
-    for (index in seq_along(prefixes)) {
-      value <- scalar_character(values[[index]])
-      if (!is.na(value) && value != "") {
-        values_by_prefix[[prefixes[[index]]]][[field_number]] <- value
-      }
+loop_column_field_records <- function(column_names, prefixes) {
+  records <- lapply(names(column_names), function(field_name) {
+    loop_column_field_record(field_name, column_names[[field_name]])
+  })
+
+  Filter(
+    function(record) valid_loop_column_field_record(record, prefixes),
+    records
+  )
+}
+
+loop_column_field_record <- function(field_name, values) {
+  list(
+    field_number = loop_column_field_number(field_name),
+    values = unlist(values, use.names = FALSE)
+  )
+}
+
+loop_column_field_number <- function(field_name) {
+  str_match(field_name, "^field([0-9]+)$")[, 2]
+}
+
+valid_loop_column_field_record <- function(record, prefixes) {
+  !is.na(record$field_number) && length(record$values) == length(prefixes)
+}
+
+loop_field_values_from_records <- function(records, prefixes) {
+  values_by_prefix <- empty_loop_field_values(prefixes)
+
+  for (record in records) {
+    values_by_prefix <- add_loop_field_record_values(
+      values_by_prefix,
+      prefixes,
+      record
+    )
+  }
+
+  values_by_prefix
+}
+
+add_loop_field_record_values <- function(values_by_prefix, prefixes, record) {
+  for (index in seq_along(prefixes)) {
+    value <- scalar_character(record$values[[index]])
+    if (!is.na(value) && value != "") {
+      values_by_prefix[[prefixes[[index]]]][[record$field_number]] <- value
     }
   }
 
