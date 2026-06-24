@@ -562,60 +562,156 @@ sbs_qid <- function(qid,
                     choice_len,
                     col_type) {
   if (length(col_type) == 0) {
-    # Carried forward question
-    if (!is.null(item) && length(item) > 0) {
-      return(paste_narm(qid, names(item), sep = "_"))
-    }
-    return(qid)
+    return(render_carried_forward_sbs_qids(qid, item))
   }
 
+  sbs_rendering_columns(
+    qid = qid,
+    col_len = col_len,
+    item = item,
+    level = level,
+    choice_len = choice_len,
+    col_type = col_type
+  ) %>%
+    map(render_sbs_column_qids) %>%
+    unlist()
+}
+
+render_carried_forward_sbs_qids <- function(qid, item) {
+  if (!is.null(item) && length(item) > 0) {
+    return(paste_narm(qid, names(item), sep = "_"))
+  }
+
+  qid
+}
+
+sbs_rendering_columns <- function(qid,
+                                  col_len,
+                                  item,
+                                  level,
+                                  choice_len,
+                                  col_type) {
+  col_sub_selector <- sbs_column_sub_selectors(col_type)
+  row_names <- names(item)
+
+  lapply(seq_len(col_len), function(col_index) {
+    column_id <- sbs_column_id(level, col_index)
+    row_ids <- paste(paste(qid, column_id, sep = "#"), row_names, sep = "_")
+    column_level <- level[[col_index]]
+
+    list(
+      column_type = col_type[[col_index]],
+      column_sub_selector = col_sub_selector[[col_index]],
+      row_ids = row_ids,
+      row_names = row_names,
+      choice_ids = sbs_column_choice_ids(
+        column_level,
+        col_type[[col_index]],
+        choice_len[[col_index]]
+      ),
+      choice_count = choice_len[[col_index]]
+    )
+  })
+}
+
+sbs_column_sub_selectors <- function(col_type) {
   col_sub_selector <- attr(col_type, "sub_selector", exact = TRUE)
   if (is.null(col_sub_selector)) {
-    col_sub_selector <- rep(NA_character_, length(col_type))
+    return(rep(NA_character_, length(col_type)))
   }
 
-  seq_len(col_len) %>%
-    map(function(col_index) {
-      column_id <- names(level)[[col_index]]
-      if (is.null(column_id) || is.na(column_id) || column_id == "") {
-        column_id <- col_index
-      }
-      row_names <- names(item)
-      row_ids <- paste(paste(qid, column_id, sep = "#"), row_names, sep = "_")
-      column_level <- level[[col_index]]
-      choice_ids <- mc_choice_ids(column_level)
-      choice_ids <- str_replace(choice_ids, "_TEXT$", "")
-      if (col_type[[col_index]] == "TE") {
-        choice_ids <- seq_along(choice_ids)
-      }
-      if (is.null(choice_ids) || length(choice_ids) == 0) {
-        choice_ids <- seq_len(choice_len[[col_index]])
-      }
+  col_sub_selector
+}
 
-      map(seq_along(row_ids), function(row_index) {
-        if (col_type[[col_index]] == "TE") {
-          if (grepl("TEXT$", row_names[[row_index]])) {
-            return(row_ids[[row_index]])
-          }
+sbs_column_id <- function(level, col_index) {
+  column_id <- names(level)[[col_index]]
+  if (is.null(column_id) || is.na(column_id) || column_id == "") {
+    return(col_index)
+  }
 
-          base_row_id <- str_replace(row_ids[[row_index]], "_TEXT$", "")
-          return(paste(base_row_id, choice_ids, sep = "_"))
-        }
+  column_id
+}
 
-        if (grepl("TEXT$", row_names[[row_index]])) {
-          return(row_ids[[row_index]])
-        }
+sbs_column_choice_ids <- function(column_level, column_type, choice_count) {
+  choice_ids <- mc_choice_ids(column_level)
+  choice_ids <- str_replace(choice_ids, "_TEXT$", "")
 
-        if (!is.na(col_sub_selector[[col_index]]) &&
-          col_sub_selector[[col_index]] == "MultipleAnswer") {
-          return(paste(row_ids[[row_index]], choice_ids, sep = "_"))
-        }
+  if (column_type == "TE") {
+    choice_ids <- seq_along(choice_ids)
+  }
+  if (is.null(choice_ids) || length(choice_ids) == 0) {
+    choice_ids <- seq_len(choice_count)
+  }
 
-        rep(row_ids[[row_index]], each = choice_len[[col_index]])
-      }) %>%
-        unlist()
-    }) %>%
+  choice_ids
+}
+
+render_sbs_column_qids <- function(column) {
+  map(seq_along(column$row_ids), function(row_index) {
+    render_sbs_row_qid(sbs_row_context(column, row_index))
+  }) %>%
     unlist()
+}
+
+sbs_row_context <- function(column, row_index) {
+  list(
+    row_id = column$row_ids[[row_index]],
+    row_name = column$row_names[[row_index]],
+    column_type = column$column_type,
+    column_sub_selector = column$column_sub_selector,
+    choice_ids = column$choice_ids,
+    choice_count = column$choice_count
+  )
+}
+
+render_sbs_row_qid <- function(row) {
+  if (sbs_row_is_text_entry_column(row)) {
+    return(render_sbs_text_entry_column_row(row))
+  }
+
+  if (sbs_row_is_text_entry_item(row)) {
+    return(render_sbs_text_entry_item_row(row))
+  }
+
+  if (sbs_row_is_multiple_answer_column(row)) {
+    return(render_sbs_multiple_answer_row(row))
+  }
+
+  render_sbs_single_answer_row(row)
+}
+
+sbs_row_is_text_entry_column <- function(row) {
+  row$column_type == "TE"
+}
+
+sbs_row_is_text_entry_item <- function(row) {
+  grepl("TEXT$", row$row_name)
+}
+
+sbs_row_is_multiple_answer_column <- function(row) {
+  !is.na(row$column_sub_selector) &&
+    row$column_sub_selector == "MultipleAnswer"
+}
+
+render_sbs_text_entry_column_row <- function(row) {
+  if (sbs_row_is_text_entry_item(row)) {
+    return(row$row_id)
+  }
+
+  base_row_id <- str_replace(row$row_id, "_TEXT$", "")
+  paste(base_row_id, row$choice_ids, sep = "_")
+}
+
+render_sbs_text_entry_item_row <- function(row) {
+  row$row_id
+}
+
+render_sbs_multiple_answer_row <- function(row) {
+  paste(row$row_id, row$choice_ids, sep = "_")
+}
+
+render_sbs_single_answer_row <- function(row) {
+  rep(row$row_id, each = row$choice_count)
 }
 
 timing_qid <- function(qid,
