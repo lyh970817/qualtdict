@@ -109,6 +109,7 @@ let
     # Development and review tools.
     covr
     devtools
+    jsonlite
     knitr
     lintr
     pkgcheck

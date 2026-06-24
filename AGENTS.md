@@ -21,6 +21,20 @@ Follow tidyverse R style: two-space indentation, clear snake_case names, and rea
 
 Tests use `testthat` edition 3 and run through `tests/testthat.R`. Name new tests `tests/testthat/test-<feature>.R`. For stable structured output, add or update snapshots in `tests/testthat/_snaps/`. Keep ordinary tests offline with synthetic dictionaries and synthetic metadata. Do not commit Qualtrics API cassettes or Participant Response Data; live Qualtrics checks belong in explicit local-only finalization tooling, not CI.
 
+## Local Finalization Smoke Check
+
+For feature work that changes or could affect exported behavior, after
+`devtools::test()` passes and after any requested review is complete, run the
+local finalization smoke check when local smoke artifacts are available:
+
+`Rscript tools/local-finalize-smoke.R check`
+
+Missing artifacts are not a failure of the feature work; report that the smoke
+check could not be run. Hash mismatches are expected for intentional behavior
+changes and require inspection followed by an explicit baseline update with:
+
+`Rscript tools/local-finalize-smoke.R bless`
+
 ## Commit & Pull Request Guidelines
 
 Recent commits use short imperative summaries, for example `Fix question type CS-HR-TX` or `Add qid recode for text fields in SBS questions`. Keep commit subjects concise and focused on the user-visible or package behavior change. For pull requests, follow `.github/CONTRIBUTING.md`: open an issue for larger changes, include a minimal reprex for bugs, run `devtools::check()`, and link issues with `Fixes #<issue-number>`. Include tests for changed behavior and update documentation or generated files when roxygen or README sources change.
