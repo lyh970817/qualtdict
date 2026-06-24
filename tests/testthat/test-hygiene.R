@@ -1,44 +1,17 @@
-test_that("recorded Qualtrics fixtures are scrubbed for review", {
+test_that("recorded Qualtrics cassettes are not committed", {
   fixture_files <- list.files(
     test_path("../fixtures"),
     pattern = "[.]yml$",
     full.names = TRUE
   )
 
-  expect_gt(length(fixture_files), 0)
-
-  fixture_text <- unlist(
-    lapply(fixture_files, readLines, warn = FALSE),
-    use.names = FALSE
-  )
-
-  api_token_headers <- grep(
-    "^\\s*X-API-TOKEN:",
-    fixture_text,
-    value = TRUE
-  )
-  expect_true(
-    all(grepl("X-API-TOKEN: QUALTRICS_API_KEY", api_token_headers,
-      fixed = TRUE
-    )),
-    info = "VCR fixtures must retain only the QUALTRICS_API_KEY placeholder."
-  )
-
-  forbidden_patterns <- c(
-    "qualtrics[.]kcl[.]ac[.]uk",
-    "UR_cYCFQWCwckGHpf7",
-    "DV_bxf8drkuO8NR2sZ",
-    "RS_8eabOkW2G0HpIJE",
-    "BL_eJoO9gHZSsFvXBI",
-    "BL_bJjQ45bkyQSKQXs",
-    "BL_06dlEES4T6Zch1Q",
-    "\\bkcliop\\b"
-  )
-
-  fixture_blob <- paste(fixture_text, collapse = "\n")
-  expect_false(
-    any(grepl(paste(forbidden_patterns, collapse = "|"), fixture_blob)),
-    info = "VCR fixtures contain account-specific Qualtrics identifiers."
+  expect_equal(
+    length(fixture_files),
+    0L,
+    info = paste(
+      "Do not commit VCR cassettes for Qualtrics API calls;",
+      "they can contain Participant Response Data."
+    )
   )
 })
 

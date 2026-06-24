@@ -86,9 +86,8 @@ qualtRics::qualtrics_api_credentials(
 ```
 
 Validation, dictionary schema checks, block splitting, and labelled-export
-mechanics can be tested offline with synthetic dictionaries or recorded,
-scrubbed fixtures. Only live metadata and response downloads require
-credentials.
+mechanics can be tested offline with synthetic dictionaries and synthetic
+metadata. Only live metadata and response downloads require credentials.
 
 ## Variable Dictionary
 

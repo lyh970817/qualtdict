@@ -150,9 +150,17 @@ metadata normalisation, while assembling Labelled Survey Data.
 _Avoid_: Export error
 
 **Labelled Survey Data**:
-Survey response data whose Export Variables have been renamed and annotated
-with labels from a Variable Dictionary.
+Participant Response Data whose Export Variables have been renamed and
+annotated with labels from a Variable Dictionary.
 _Avoid_: Labeled survey data, raw survey data
+
+**Participant Response Data**:
+Record-level data submitted by or associated with survey participants, whether
+downloaded directly from Qualtrics or transformed into Labelled Survey Data.
+Variable Dictionaries, survey metadata, question text, response choices,
+Response Column IDs, Validation Findings, and Labelled Export Findings are not
+Participant Response Data unless they contain row-level participant values.
+_Avoid_: Responses, raw data
 
 **Labelled Export**:
 The workflow or product category in which qualtdict applies a Variable
