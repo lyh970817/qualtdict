@@ -575,7 +575,7 @@ response_column_renderer_table <- function() {
 }
 
 questiontext_qid <- function(context) {
-  context$response_column_qid
+  character()
 }
 
 add_text_mc <- function(new_qid, level) {
