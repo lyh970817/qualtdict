@@ -1,12 +1,32 @@
 {
   "surveys": [
     {
-      "alias": "survey_a",
-      "survey_id": "SV_REPLACE_WITH_FIRST_SURVEY_ID"
+      "alias": "glad_sa8_signup",
+      "survey_id": "SV_2noq1YmOTZdDIsC"
     },
     {
-      "alias": "survey_b",
-      "survey_id": "SV_REPLACE_WITH_SECOND_SURVEY_ID"
+      "alias": "edgi_signup_official",
+      "survey_id": "SV_9YPHwpzPl0OXbzT"
+    },
+    {
+      "alias": "glad_sa7_optional",
+      "survey_id": "SV_4TOSVFykWAM3WDA"
+    },
+    {
+      "alias": "edgi_optional_all",
+      "survey_id": "SV_eWeLPcs93J0UUcZ"
+    },
+    {
+      "alias": "glad_sa6_signup",
+      "survey_id": "SV_6DMA4YLjmSiUmbj"
+    },
+    {
+      "alias": "edgi_medications",
+      "survey_id": "SV_8G6XuWn2IbXfX0h"
+    },
+    {
+      "alias": "glad_medications",
+      "survey_id": "SV_0i8BQR5bGZKCppP"
     }
   ]
 }
