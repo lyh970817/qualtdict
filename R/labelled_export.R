@@ -36,7 +36,8 @@ prepare_fetch_survey_args <- function(args, dict) {
 }
 
 exclude_dict_findings <- function(dict,
-                                  exclude_findings = c("none", "validation")) {
+                                  exclude_findings = c("none", "validation"),
+                                  quiet = TRUE) {
   exclude_findings <- match.arg(exclude_findings)
   if (exclude_findings == "none") {
     return(dict)
@@ -45,7 +46,7 @@ exclude_dict_findings <- function(dict,
   excluded_response_column_ids <- character()
 
   if (exclude_findings == "validation") {
-    validation_findings <- dict_validate(dict)$validation_findings
+    validation_findings <- dict_validate(dict, quiet = quiet)$validation_findings
     excluded_response_column_ids <- c(
       excluded_response_column_ids,
       validation_findings$response_column_id

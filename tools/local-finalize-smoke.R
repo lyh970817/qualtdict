@@ -253,6 +253,22 @@ hash_list <- function(x) {
   hash_object(x)
 }
 
+run_step <- function(label, expr) {
+  cat("START ", label, "\n", sep = "")
+  flush.console()
+  timing <- system.time(value <- force(expr))
+  cat(
+    "DONE ",
+    label,
+    " elapsed=",
+    unname(timing[["elapsed"]]),
+    "s\n",
+    sep = ""
+  )
+  flush.console()
+  value
+}
+
 class_summary <- function(x) {
   vapply(x, function(column) paste(class(column), collapse = "/"), character(1))
 }
@@ -460,18 +476,37 @@ assert_response_column_id_parity <- function(survey, dict, responses, run_dir) {
 }
 
 run_scenario <- function(survey, variable_name, dict = NULL) {
+  scenario_label <- paste(survey$alias, variable_name, sep = " / ")
   if (is.null(dict)) {
-    dict <- qualtdict::dict_generate(
-      survey$survey_id,
-      variable_name = variable_name,
-      quiet = TRUE
+    dict <- run_step(
+      paste(scenario_label, "dict_generate"),
+      qualtdict::dict_generate(
+        survey$survey_id,
+        variable_name = variable_name,
+        quiet = FALSE
+      )
     )
   }
-  validation <- qualtdict::dict_validate(dict)
-  labelled <- qualtdict::get_survey_data(dict)
-  export_findings <- qualtdict::labelled_export_findings(labelled)
-  dict_blocks <- qualtdict::dict_split_blocks(dict)
-  survey_blocks <- qualtdict::survey_split_blocks(labelled)
+  validation <- run_step(
+    paste(scenario_label, "dict_validate"),
+    qualtdict::dict_validate(dict, quiet = FALSE)
+  )
+  labelled <- run_step(
+    paste(scenario_label, "get_survey_data"),
+    qualtdict::get_survey_data(dict, quiet = FALSE)
+  )
+  export_findings <- run_step(
+    paste(scenario_label, "labelled_export_findings"),
+    qualtdict::labelled_export_findings(labelled)
+  )
+  dict_blocks <- run_step(
+    paste(scenario_label, "dict_split_blocks"),
+    qualtdict::dict_split_blocks(dict)
+  )
+  survey_blocks <- run_step(
+    paste(scenario_label, "survey_split_blocks"),
+    qualtdict::survey_split_blocks(labelled)
+  )
 
   objects <- list(
     dict = dict,
@@ -483,9 +518,13 @@ run_scenario <- function(survey, variable_name, dict = NULL) {
   )
 
   if (identical(variable_name, "question_name")) {
-    labelled_excluding_validation <- qualtdict::get_survey_data(
-      dict,
-      exclude_findings = "validation"
+    labelled_excluding_validation <- run_step(
+      paste(scenario_label, "get_survey_data exclude validation"),
+      qualtdict::get_survey_data(
+        dict,
+        exclude_findings = "validation",
+        quiet = FALSE
+      )
     )
     objects$labelled_excluding_validation <- labelled_excluding_validation
   }
@@ -602,18 +641,29 @@ print_mismatch <- function(current, baseline) {
 }
 
 run_survey <- function(survey, run_dir) {
-  artifacts <- load_artifacts(survey)
+  cat("SURVEY ", survey$alias, "\n", sep = "")
+  flush.console()
+  artifacts <- run_step(
+    paste(survey$alias, "load_artifacts"),
+    load_artifacts(survey)
+  )
   with_artifact_fetches(survey, artifacts, {
-    question_name_dict <- qualtdict::dict_generate(
-      survey$survey_id,
-      variable_name = "question_name",
-      quiet = TRUE
+    question_name_dict <- run_step(
+      paste(survey$alias, "question_name dict_generate"),
+      qualtdict::dict_generate(
+        survey$survey_id,
+        variable_name = "question_name",
+        quiet = FALSE
+      )
     )
-    assert_response_column_id_parity(
-      survey = survey,
-      dict = question_name_dict,
-      responses = artifacts$responses,
-      run_dir = run_dir
+    run_step(
+      paste(survey$alias, "Response Column ID parity"),
+      assert_response_column_id_parity(
+        survey = survey,
+        dict = question_name_dict,
+        responses = artifacts$responses,
+        run_dir = run_dir
+      )
     )
 
     question_name_result <- run_scenario(

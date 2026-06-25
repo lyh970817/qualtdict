@@ -33,6 +33,7 @@
 #' By default, Labelled Survey Data includes variables with Validation Findings.
 #' Use \code{exclude_findings} when you want to explicitly remove them after
 #' download.
+#' Because \code{quiet} follows \code{...}, supply it by name.
 #'
 #' @return
 #' Labelled Survey Data: a data frame whose Export Variables are renamed to
@@ -55,11 +56,13 @@ get_survey_data <- function(dict,
                               "externalDataReference", "startDate", "endDate"
                             ),
                             exclude_findings = c("none", "validation"),
-                            ...) {
+                            ...,
+                            quiet = TRUE) {
   checkarg_isqualtdict(dict)
   extra_columns_user_supplied <- !missing(extra_columns)
   checkarg_ischaracter(extra_columns, null_okay = TRUE)
   exclude_findings <- match.arg(exclude_findings)
+  checkarg_isboolean(quiet)
 
   args <- list(...)
   args <- prepare_fetch_survey_args(args, dict)
@@ -72,7 +75,8 @@ get_survey_data <- function(dict,
 
   filtered_dict <- exclude_dict_findings(
     dict = dict,
-    exclude_findings = exclude_findings
+    exclude_findings = exclude_findings,
+    quiet = quiet
   )
   labelled_export_findings <- missing_response_column_findings(
     filtered_dict,

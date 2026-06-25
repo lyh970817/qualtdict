@@ -46,7 +46,10 @@ dict_validate <- function(dict, quiet = TRUE) {
     factor(dict_response_column_id(dict))
   )
 
-  level_label_pairs <- validation_level_label_pairs(split_dict)
+  if (!quiet) {
+    message("Checking level-label pairs...")
+  }
+  level_label_pairs <- validation_level_label_pairs(split_dict, quiet = quiet)
 
   repaired_names <- repaired_name_validation_findings(dict)
   if (!quiet && nrow(repaired_names) > 0) {
@@ -58,7 +61,10 @@ dict_validate <- function(dict, quiet = TRUE) {
     message("Variable names are not export-safe and unique.")
   }
 
-  mistake <- check_json(split_dict)
+  if (!quiet) {
+    message("Checking level-label consistency...")
+  }
+  mistake <- check_json(split_dict, quiet = quiet)
   level_label_findings <- level_label_validation_findings(mistake)
 
   if (!quiet && nrow(level_label_findings) > 0) {

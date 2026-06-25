@@ -53,18 +53,23 @@ normalize_validation_findings <- function(findings) {
   findings
 }
 
-validation_level_label_pairs <- function(split_dict) {
+validation_level_label_pairs <- function(split_dict, quiet = TRUE) {
   if (length(split_dict) == 0) {
     return(tibble(pair = list(), qid = list()))
   }
 
+  progress_bar <- new_progress_bar(length(split_dict), quiet = quiet)
+  on.exit(close_progress_bar(progress_bar), add = TRUE)
+  for (i in seq_along(split_dict)) {
+    x <- split_dict[[i]]
+    # Remove names so they don't interfere with grouping
+    x$level <- setNames(x$level, NULL)
+    x$label <- setNames(x$label, NULL)
+    split_dict[[i]] <- x
+    tick_progress_bar(progress_bar, i)
+  }
+
   split_dict %>%
-    modify(function(x) {
-      # Remove names so they don't interfere with grouping
-      x$level <- setNames(x$level, NULL)
-      x$label <- setNames(x$label, NULL)
-      x
-    }) %>%
     map(select, label, level) %>%
     enframe(value = "pair") %>%
     group_by(pair) %>%
@@ -189,9 +194,17 @@ check_item <- function(dat, response_column_id) {
   }
 }
 
-check_json <- function(split_jsons) {
-  mistakes <- imap(split_jsons, check_item) %>%
-    bind_rows()
+check_json <- function(split_jsons, quiet = TRUE) {
+  progress_bar <- new_progress_bar(length(split_jsons), quiet = quiet)
+  on.exit(close_progress_bar(progress_bar), add = TRUE)
+
+  mistakes <- vector("list", length(split_jsons))
+  for (i in seq_along(split_jsons)) {
+    mistakes[i] <- list(check_item(split_jsons[[i]], names(split_jsons)[[i]]))
+    tick_progress_bar(progress_bar, i)
+  }
+
+  mistakes <- bind_rows(mistakes)
   if (nrow(mistakes) > 0) {
     return(mistakes)
   } else {

@@ -104,12 +104,14 @@ test_that("get_survey_data reports missing Response Column IDs", {
 
 test_that("exclude_findings removes validation findings after download", {
   captured_args <- new.env(parent = emptyenv())
+  captured_quiet <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
       captured_args$value <- list(...)
       minimal_survey_data()
     },
-    dict_validate = function(dict) {
+    dict_validate = function(dict, quiet = TRUE) {
+      captured_quiet$value <- quiet
       list(
         validation_findings = tibble::tibble(
           finding = "level_label_mistake",
@@ -126,6 +128,7 @@ test_that("exclude_findings removes validation findings after download", {
   )
 
   expect_identical(captured_args$value$include_questions, c("QID1", "QID2"))
+  expect_true(captured_quiet$value)
   expect_named(dat, c(
     "externalDataReference",
     "startDate",
@@ -133,6 +136,48 @@ test_that("exclude_findings removes validation findings after download", {
     "q1"
   ))
   expect_identical(attr(dat, "dict")$response_column_id, "QID1")
+})
+
+test_that("get_survey_data forwards quiet to validation exclusion", {
+  captured_quiet <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      minimal_survey_data()
+    },
+    dict_validate = function(dict, quiet = TRUE) {
+      captured_quiet$value <- quiet
+      list(validation_findings = tibble::tibble(response_column_id = "QID2"))
+    }
+  )
+
+  get_survey_data(
+    minimal_export_dict(),
+    exclude_findings = "validation",
+    quiet = FALSE
+  )
+
+  expect_false(captured_quiet$value)
+})
+
+test_that("get_survey_data keeps quiet out of fetch_survey passthrough", {
+  captured_args <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      captured_args$value <- list(...)
+      minimal_survey_data()
+    }
+  )
+
+  get_survey_data(
+    minimal_export_dict(),
+    NULL,
+    "none",
+    "positional_fetch_arg",
+    quiet = FALSE
+  )
+
+  expect_identical(captured_args$value[[1]], "positional_fetch_arg")
+  expect_null(captured_args$value$quiet)
 })
 
 test_that("extra_columns distinguish user-specified columns from defaults", {
