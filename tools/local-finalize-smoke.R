@@ -13,7 +13,9 @@ usage <- function() {
       "  --root DIR       Local smoke artifact directory.",
       "",
       "`check` compares current exported-function output hashes with local",
-      "baselines. `bless` replaces local baselines with current output hashes.",
+      "baselines. It also verifies Response Column ID parity against local",
+      "raw fetched response columns. `bless` replaces local baselines with",
+      "current output hashes, but parity mismatches remain hard failures.",
       sep = "\n"
     ),
     "\n"
@@ -327,12 +329,144 @@ read_json <- function(path) {
   jsonlite::fromJSON(path, simplifyVector = FALSE)
 }
 
-run_scenario <- function(survey, variable_name) {
-  dict <- qualtdict::dict_generate(
-    survey$survey_id,
-    variable_name = variable_name,
-    quiet = TRUE
+column_sample <- function(x, limit = 20) {
+  if (length(x) <= limit) {
+    return(paste(x, collapse = ", "))
+  }
+  paste(
+    paste(head(x, limit), collapse = ", "),
+    "... (",
+    length(x) - limit,
+    " more)",
+    sep = ""
   )
+}
+
+response_column_id_parity <- function(dict_response_column_ids,
+                                      raw_response_columns) {
+  dict_response_column_ids <- unique(as.character(dict_response_column_ids))
+  dict_response_column_ids <- dict_response_column_ids[
+    !is.na(dict_response_column_ids)
+  ]
+
+  raw_response_columns <- unique(as.character(raw_response_columns))
+  raw_response_columns <- raw_response_columns[!is.na(raw_response_columns)]
+
+  missing_from_raw_response <- setdiff(
+    dict_response_column_ids,
+    raw_response_columns
+  )
+
+  # ADR 0005 records the planned Metadata-defined Export Variable contract, but
+  # that ADR has not been implemented yet. Until Embedded Data Fields, Scoring
+  # Variables, and Text-analysis Sidecars are represented in Variable
+  # Dictionaries, keep the stricter raw-to-dictionary parity check disabled.
+  #
+  # nolint start: commented_code_linter
+  # checked_raw_response_columns <- raw_response_columns[
+  #   grepl("(^|_)QID[0-9]+", raw_response_columns) |
+  #     grepl("^SC_", raw_response_columns) |
+  #     grepl("_SCORE$", raw_response_columns)
+  # ]
+  # missing_from_dict <- setdiff(
+  #   checked_raw_response_columns,
+  #   dict_response_column_ids
+  # )
+  # nolint end
+  checked_raw_response_columns <- character()
+  missing_from_dict <- character()
+
+  list(
+    ok = length(missing_from_raw_response) == 0,
+    dict_response_column_ids = dict_response_column_ids,
+    raw_response_columns = raw_response_columns,
+    checked_raw_response_columns = checked_raw_response_columns,
+    missing_from_raw_response = missing_from_raw_response,
+    missing_from_dict = missing_from_dict
+  )
+}
+
+response_column_id_parity_record <- function(survey, parity) {
+  c(
+    list(
+      alias = survey$alias,
+      survey_id = survey$survey_id,
+      generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+    ),
+    parity
+  )
+}
+
+write_response_column_id_parity <- function(survey, parity, run_dir) {
+  write_json(
+    response_column_id_parity_record(survey, parity),
+    file.path(run_dir, paste0(survey$alias, "-response-column-id-parity.json"))
+  )
+}
+
+stop_response_column_id_parity <- function(survey, parity) {
+  messages <- c(
+    paste0("Response Column ID parity failed for `", survey$alias, "`.")
+  )
+  if (length(parity$missing_from_raw_response) > 0) {
+    messages <- c(
+      messages,
+      paste0(
+        "Variable Dictionary Response Column IDs missing from raw fetched ",
+        "response data: ",
+        column_sample(parity$missing_from_raw_response)
+      )
+    )
+  }
+  if (length(parity$missing_from_dict) > 0) {
+    messages <- c(
+      messages,
+      paste0(
+        "QID/scoring raw response columns missing from the Variable ",
+        "Dictionary: ",
+        column_sample(parity$missing_from_dict)
+      )
+    )
+  }
+
+  stop(structure(
+    list(message = paste(messages, collapse = "\n"), call = NULL),
+    class = c("response_column_id_parity_error", "error", "condition")
+  ))
+}
+
+assert_response_column_id_parity <- function(survey, dict, responses, run_dir) {
+  parity <- response_column_id_parity(
+    dict_response_column_ids = dict[["response_column_id"]],
+    raw_response_columns = names(responses)
+  )
+  write_response_column_id_parity(survey, parity, run_dir)
+
+  if (!isTRUE(parity$ok)) {
+    stop_response_column_id_parity(survey, parity)
+  }
+
+  cat(
+    survey$alias,
+    ": Response Column ID parity matched",
+    " dict_ids=",
+    length(parity$dict_response_column_ids),
+    " raw_cols=",
+    length(parity$raw_response_columns),
+    "\n",
+    sep = ""
+  )
+  invisible(parity)
+}
+
+run_scenario <- function(survey, variable_name, dict = NULL) {
+  if (is.null(dict)) {
+    dict <- qualtdict::dict_generate(
+      survey$survey_id,
+      variable_name = variable_name,
+      quiet = TRUE
+    )
+  }
   validation <- qualtdict::dict_validate(dict)
   labelled <- qualtdict::get_survey_data(dict)
   export_findings <- qualtdict::labelled_export_findings(labelled)
@@ -470,8 +604,26 @@ print_mismatch <- function(current, baseline) {
 run_survey <- function(survey, run_dir) {
   artifacts <- load_artifacts(survey)
   with_artifact_fetches(survey, artifacts, {
-    lapply(c("question_name", "semantic_name"), function(variable_name) {
-      result <- run_scenario(survey, variable_name)
+    question_name_dict <- qualtdict::dict_generate(
+      survey$survey_id,
+      variable_name = "question_name",
+      quiet = TRUE
+    )
+    assert_response_column_id_parity(
+      survey = survey,
+      dict = question_name_dict,
+      responses = artifacts$responses,
+      run_dir = run_dir
+    )
+
+    question_name_result <- run_scenario(
+      survey,
+      "question_name",
+      dict = question_name_dict
+    )
+    semantic_name_result <- run_scenario(survey, "semantic_name")
+    results <- list(question_name_result, semantic_name_result)
+    lapply(results, function(result) {
       write_run_artifacts(result, run_dir)
       result
     })
@@ -496,9 +648,16 @@ run_id <- format(Sys.time(), "%Y%m%dT%H%M%SZ", tz = "UTC")
 run_dir <- file.path(smoke_root, "runs", run_id)
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
-results <- unlist(
-  lapply(surveys, run_survey, run_dir = run_dir),
-  recursive = FALSE
+results <- tryCatch(
+  unlist(
+    lapply(surveys, run_survey, run_dir = run_dir),
+    recursive = FALSE
+  ),
+  response_column_id_parity_error = function(error) {
+    cat(conditionMessage(error), "\n", sep = "")
+    cat("Wrote current run artifacts to ", run_dir, "\n", sep = "")
+    quit(status = 1)
+  }
 )
 
 if (identical(command, "bless")) {

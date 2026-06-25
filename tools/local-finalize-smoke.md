@@ -20,7 +20,9 @@ before updating baselines.
   as downloaded, sanitizes response data in memory, and persists only sanitized
   responses.
 - `tools/local-finalize-smoke.R` is the finalization script. It uses local
-  artifacts only, runs the exported functions, and supports `check` and `bless`.
+  artifacts only, verifies Response Column ID parity against raw fetched
+  response columns, runs the exported functions, and supports `check` and
+  `bless`.
 - `.local/finalize-smoke/` stores downloaded artifacts, run outputs, and
   baselines. It is ignored by Git.
 
@@ -80,10 +82,24 @@ Rscript tools/local-finalize-smoke.R check --survey survey_a
 .local/finalize-smoke/runs/<timestamp>/
 ```
 
+Before comparing or writing hash baselines, `check` and `bless` verify one hard
+Response Column ID invariant for each survey:
+
+- every Variable Dictionary `response_column_id` is present in the raw fetched
+  response data.
+
+The reverse check, where QID/scoring raw response columns must also be present
+in the Variable Dictionary, is intentionally disabled in the script until ADR
+0005's Metadata-defined Export Variable contract is implemented. Parity
+diagnostics are written as `<survey-alias>-response-column-id-parity.json` in
+the current run directory. Parity mismatches are hard failures for both `check`
+and `bless`; they cannot be accepted by updating baselines.
+
 Exit statuses:
 
 - `0`: all local baselines match.
-- `1`: the script completed, but baselines are missing or hashes differ.
+- `1`: the script completed, but Response Column ID parity failed, baselines
+  are missing, or hashes differ.
 - `2`: script usage, config, or artifact setup failed.
 
 ## Bless
