@@ -35,6 +35,9 @@ render_response_columns <- function(question, qid = NULL) {
   )
   response_column_id <- response_column_row_vector(response_column_id)
   row_count <- length(response_column_id)
+  if (row_count == 0) {
+    return(empty_response_columns())
+  }
 
   tibble(
     response_column_id = response_column_id,
@@ -68,6 +71,19 @@ render_response_columns <- function(question, qid = NULL) {
       ),
       row_count
     )
+  )
+}
+
+#' Empty response-column fact table
+#' @keywords internal
+#' @noRd
+empty_response_columns <- function() {
+  tibble(
+    response_column_id = character(),
+    question = character(),
+    item = character(),
+    level = character(),
+    label = character()
   )
 }
 
@@ -146,6 +162,10 @@ rep_level <- function(level, item) {
 #' @keywords internal
 #' @noRd
 response_column_row_vector <- function(x, row_count = length(x)) {
+  if (length(x) == 0) {
+    return(character())
+  }
+
   x <- null_na(x)
   x <- unlist(x, use.names = TRUE)
 
@@ -174,6 +194,7 @@ response_column_row_vector <- function(x, row_count = length(x)) {
 #' @noRd
 response_column_shape <- function(question) {
   question <- remove_empty_choice_labels(question)
+  question <- remove_non_exported_choice_columns(question)
 
   type <- question_fact_question_type(question)$type
   question_text <- question_fact_question_text(question)
@@ -247,6 +268,46 @@ remove_empty_choice_labels <- function(question) {
   }
 
   question
+}
+
+#' Remove non-exported choices only when choices render independent columns
+#' @keywords internal
+#' @noRd
+remove_non_exported_choice_columns <- function(question) {
+  if (!question_choices_render_independent_columns(question)) {
+    return(question)
+  }
+
+  response_choices <- question_fact_response_choices(question)
+  if (length(response_choices) == 0) {
+    return(question)
+  }
+
+  exported <- map_lgl(response_choices, function(choice) {
+    isTRUE(choice$analyze %||% TRUE)
+  })
+  question$response_choices <- response_choices[exported]
+  question$choices <- question$response_choices
+  question
+}
+
+#' Does each choice produce a distinct response column?
+#' @keywords internal
+#' @noRd
+question_choices_render_independent_columns <- function(question) {
+  question_type <- question_fact_question_type(question)
+  type <- question_type$type
+  selector <- question_type$selector
+  sub_selector <- question_type$sub_selector
+
+  if (identical(type, "MC")) {
+    return(selector %in% c("MACOL", "MAVR", "MAHR", "MSB"))
+  }
+  if (identical(type, "Matrix")) {
+    return(identical(sub_selector, "MultipleAnswer"))
+  }
+
+  FALSE
 }
 
 #' Build SBS-specific row shape
@@ -361,9 +422,7 @@ questiontext_qid <- function(qid,
                              label,
                              choice_len,
                              col_type) {
-  # For texts without choices
-  # Return the original QID
-  qid
+  character()
 }
 
 add_text_mc <- function(new_qid, level) {
@@ -406,6 +465,19 @@ mc_choice_ids <- function(level) {
   response_choice_ids
 }
 
+mc_recode_ids <- function(level) {
+  choice_ids <- names(level)
+  if (is.null(choice_ids)) {
+    return(level)
+  }
+
+  response_choice_ids <- unname(level)
+  text_choice_ids <- grepl("TEXT$", level)
+  response_choice_ids[text_choice_ids] <- choice_ids[text_choice_ids]
+
+  response_choice_ids
+}
+
 suf_level_qid <- function(qid,
                           col_len,
                           item,
@@ -416,7 +488,7 @@ suf_level_qid <- function(qid,
   # Add recode values to the end of the QIDs and then add Qualtrics internal
   # index to the end of QIDs with text options belonging to multiple choice
   # questions allowing for only one choice
-  add_text_mc(paste(qid, mc_choice_ids(level), sep = "_"), level)
+  add_text_mc(paste(qid, mc_recode_ids(level), sep = "_"), level)
 }
 
 suf_level_qid_macol <- function(qid,
@@ -426,7 +498,11 @@ suf_level_qid_macol <- function(qid,
                           label,
                           choice_len,
                           col_type) {
-  paste(qid, mc_choice_ids(level), sep = "_")
+  if (length(level) == 0) {
+    return(qid)
+  }
+
+  paste(qid, mc_recode_ids(level), sep = "_")
 }
 
 suf_level_qid_mavr <- function(qid,
@@ -436,6 +512,24 @@ suf_level_qid_mavr <- function(qid,
                           label,
                           choice_len,
                           col_type) {
+  if (length(level) == 0) {
+    return(qid)
+  }
+
+  paste(qid, mc_recode_ids(level), sep = "_")
+}
+
+suf_choice_level_qid <- function(qid,
+                                 col_len,
+                                 item,
+                                 level,
+                                 label,
+                                 choice_len,
+                                 col_type) {
+  if (length(level) == 0) {
+    return(qid)
+  }
+
   paste(qid, mc_choice_ids(level), sep = "_")
 }
 
@@ -515,7 +609,7 @@ item_or_level_qid <- function(qid,
                               choice_len,
                               col_type) {
   if (is.null(item)) {
-    suf_level_qid(
+    suf_choice_level_qid(
       qid,
       col_len,
       item,

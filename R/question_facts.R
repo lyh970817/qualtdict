@@ -53,6 +53,10 @@ normalise_response_choices <- function(choices) {
     label <- scalar_character(choice$label %||% choice$description)
     text_entry <- "text_entry" %in% names(choice) ||
       "textEntry" %in% names(choice)
+    analyze <- choice$analyze
+    if (is.null(analyze) || length(analyze) == 0 || is.na(analyze[[1]])) {
+      analyze <- TRUE
+    }
 
     list(
       choice_id = choice_id,
@@ -61,6 +65,7 @@ normalise_response_choices <- function(choices) {
       text_entry = text_entry,
       recode = scalar_character(choice$level %||% choice$recode),
       description = label,
+      analyze = isTRUE(analyze),
       textEntry = if (text_entry) TRUE else NULL
     )
   })

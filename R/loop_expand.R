@@ -16,7 +16,7 @@ expand_loop_question_facts <- function(questions) {
     if (!is.na(looping_qid)) {
       looping_source <- questions[[looping_qid]]
     }
-    if (!is.na(looping_qid) && is.null(looping_source)) {
+    if (!is.na(looping_qid) && is.null(looping_source) && !has_static_loop) {
       question[["looping"]] <- FALSE
       return(list(question))
     }
@@ -199,14 +199,34 @@ has_looping_prefixes <- function(looping_prefixes) {
 
 loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
-  if (all(map_lgl(resolved_choices, Negate(is.null)))) {
+  resolved <- map_lgl(resolved_choices, Negate(is.null))
+  if (!any(resolved) || mean(resolved) < 0.5) {
+    static_prefixes <- static_prefixes[!map_lgl(resolved_choices, function(choice) {
+      !is.null(choice) && isFALSE(choice$analyze)
+    })]
     return(new_loop_choice_source(
-      "resolved",
-      setNames(resolved_choices, static_prefixes)
+      "fallback",
+      fallback_static_choices(static_prefixes)
     ))
   }
 
-  new_loop_choice_source("fallback", fallback_static_choices(static_prefixes))
+  source_choices <- map2(resolved_choices, static_prefixes, function(choice,
+                                                                     prefix) {
+    if (is.null(choice)) {
+      return(NULL)
+    }
+    if (isFALSE(choice$analyze)) {
+      return(NULL)
+    }
+
+    choice
+  })
+
+  keep <- map_lgl(source_choices, Negate(is.null))
+  new_loop_choice_source(
+    "resolved",
+    setNames(source_choices[keep], static_prefixes[keep])
+  )
 }
 
 loop_choice_source_from_direct_ids <- function(choices, static_prefixes) {
@@ -234,14 +254,17 @@ static_choices_by_id_or_recode <- function(choices, static_prefixes) {
 
 fallback_static_choices <- function(static_prefixes) {
   setNames(
-    lapply(static_prefixes, function(prefix) {
-      list(description = prefix, choiceText = prefix)
-    }),
+    lapply(static_prefixes, fallback_static_choice),
     static_prefixes
   )
 }
 
+fallback_static_choice <- function(prefix) {
+  list(description = prefix, choiceText = prefix)
+}
+
 loop_options_from_choice_source <- function(source, static_prefixes) {
+  static_prefixes <- static_prefixes[static_prefixes %in% names(source$choices)]
   loop_options <- vapply(static_prefixes, function(prefix) {
     loop_option_label(source$choices[[prefix]])
   }, character(1))

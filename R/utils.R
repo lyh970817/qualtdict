@@ -120,6 +120,10 @@ paste_narm <- function(...) {
 #' @keywords internal
 #' @noRd
 unlist_nm <- function(list) {
+  if (length(list) == 0) {
+    return(character())
+  }
+
   names <- names(list)
   v <- unlist(map(list, null_na)) %>%
     setNames(names)

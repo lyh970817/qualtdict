@@ -38,6 +38,9 @@ variable_dictionary_from_normalised_metadata <- function(
     qid_base <- qjson$qid %||% qid
     response_column_qid <- qjson$response_column_qid %||% qid
     response_columns <- render_response_columns(qjson, response_column_qid)
+    if (nrow(response_columns) == 0) {
+      return(NULL)
+    }
     looping_question <- qjson$looping_question %||% NA_character_
     looping_option <- qjson$looping_option %||% NA_character_
     looping <- isTRUE(qjson$looping)
@@ -65,7 +68,16 @@ variable_dictionary_from_normalised_metadata <- function(
       looping = looping
     )
   }) %>%
-    discard(is.null) %>%
+    discard(is.null)
+
+  if (length(json) == 0) {
+    return(empty_variable_dictionary_from_normalised_metadata(
+      normalised_metadata,
+      use_semantic_name = use_semantic_name
+    ))
+  }
+
+  json <- json %>%
     to_dataframe() %>%
     convert_html()
 
