@@ -110,7 +110,7 @@ test_that("render_response_columns renders MC rows with aligned facts", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
-test_that("render_response_columns renders display block response column ids", {
+test_that("render_response_columns skips display block questions", {
   question <- normalise_question_fact(
     qid = "QID1",
     question = list(
@@ -127,14 +127,11 @@ test_that("render_response_columns renders display block response column ids", {
 
   rendered <- render_response_columns(question, "QID1")
 
-  expect_identical(
-    rendered$response_column_id,
-    "QID1"
+  expect_identical(nrow(rendered), 0L)
+  expect_named(
+    rendered,
+    c("response_column_id", "question", "item", "level", "label")
   )
-  expect_identical(rendered$question, "Intro text")
-  expect_true(all(is.na(rendered$item)))
-  expect_true(all(is.na(rendered$level)))
-  expect_true(all(is.na(rendered$label)))
 })
 
 test_that("render_response_columns accepts package-owned normalised facts", {
