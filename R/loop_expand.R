@@ -1,75 +1,94 @@
 #' Expand Loop and Merge question facts
 #' @keywords internal
 #' @noRd
-expand_loop_question_facts <- function(questions) {
-  imap(questions, function(question, name) {
-    looping_qid <- scalar_character(question_fact_looping_qid(question))
-    looping_static <- question_fact_looping_static(question)
-    has_static_loop <- !is.null(looping_static) && length(looping_static) > 0
-
-    if (is.na(looping_qid) && !has_static_loop) {
-      question[["looping"]] <- FALSE
-      return(list(question))
-    }
-
-    looping_source <- NULL
-    if (!is.na(looping_qid)) {
-      looping_source <- questions[[looping_qid]]
-    }
-    if (!is.na(looping_qid) && is.null(looping_source) && !has_static_loop) {
-      question[["looping"]] <- FALSE
-      return(list(question))
-    }
-
-    loop_rows <- loop_rows_for_question(
-      question = question,
-      looping_source = looping_source,
-      looping_qid = looping_qid
+expand_loop_question_facts <- function(survey_question_facts) {
+  imap(survey_question_facts, function(question_fact, bare_qid) {
+    context <- new_loop_expansion_context(
+      question_fact = question_fact,
+      survey_question_facts = survey_question_facts
     )
-    if (is.null(loop_rows) || length(loop_rows) == 0) {
-      return(list(question))
-    }
 
-    map(loop_rows, function(loop_row) {
-      looped_question <- question
-      looped_question[["looping_question"]] <-
-        substitute_loop_fields(
-          question[["question_text"]],
-          loop_row$fields
-        )
-      looped_question[["question_text"]] <-
-        loop_question_text_template(question[["question_text"]])
-      looped_question[["looping_option"]] <- loop_row$option
-      looped_question[["looping_prefix"]] <- loop_row$prefix
-      looped_question[["looping_qid"]] <- looping_qid
-      looped_question[["qid"]] <- question[["qid"]]
-      looped_question[["response_column_qid"]] <-
-        loop_response_column_id(
-          paste(loop_row$prefix, question[["qid"]], sep = "_")
-        )
-      looped_question[["looping"]] <- TRUE
-      looped_question
-    })
+    expand_loop_question_fact(context)
   }) %>%
     unlist(recursive = FALSE)
+}
+
+#' Build Loop and Merge expansion context for one question fact
+#' @keywords internal
+#' @noRd
+new_loop_expansion_context <- function(question_fact, survey_question_facts) {
+  looping_qid <- scalar_character(question_fact_looping_qid(question_fact))
+  looping_static <- question_fact_looping_static(question_fact)
+
+  list(
+    question_fact = question_fact,
+    looping_qid = looping_qid,
+    looping_source_fact = if (!is.na(looping_qid)) {
+      survey_question_facts[[looping_qid]]
+    } else {
+      NULL
+    },
+    looping_static = looping_static,
+    static_prefixes = unlist(
+      question_fact_looping_prefix(question_fact),
+      use.names = FALSE
+    )
+  )
+}
+
+#' Return whether one question fact should be loop-expanded
+#' @keywords internal
+#' @noRd
+loop_question_fact_should_expand <- function(context) {
+  has_static_loop <- !is.null(context$looping_static) &&
+    length(context$looping_static) > 0
+
+  if (is.na(context$looping_qid) && !has_static_loop) {
+    return(FALSE)
+  }
+  if (!is.na(context$looping_qid) && is.null(context$looping_source_fact)) {
+    return(FALSE)
+  }
+
+  TRUE
+}
+
+#' Expand one question fact or mark it as not looping
+#' @keywords internal
+#' @noRd
+expand_loop_question_fact <- function(context) {
+  if (!loop_question_fact_should_expand(context)) {
+    return(list(mark_question_fact_not_looping(context$question_fact)))
+  }
+
+  loop_rows <- loop_rows_for_context(context)
+  if (is.null(loop_rows) || length(loop_rows) == 0) {
+    return(list(context$question_fact))
+  }
+
+  map(loop_rows, loop_expanded_question_fact, context = context)
+}
+
+#' Mark a question fact as not loop-expanded
+#' @keywords internal
+#' @noRd
+mark_question_fact_not_looping <- function(question_fact) {
+  question_fact[["looping"]] <- FALSE
+  question_fact
 }
 
 #' Build Loop and Merge row facts for one question fact
 #' @keywords internal
 #' @noRd
-loop_rows_for_question <- function(question, looping_source, looping_qid) {
-  loop_options <- loop_options_for_question(
-    question = question,
-    looping_source = looping_source,
-    looping_qid = looping_qid
-  )
+loop_rows_for_context <- function(context) {
+  loop_options <- loop_options_for_context(context)
 
   if (is.null(loop_options) || length(loop_options) == 0) {
     return(NULL)
   }
 
   field_values <- loop_field_values_for_question(
-    question = question,
+    question = context$question_fact,
     prefixes = names(loop_options)
   )
 
@@ -89,15 +108,13 @@ loop_rows_for_question <- function(question, looping_source, looping_qid) {
 #' Build Loop and Merge options for one question fact
 #' @keywords internal
 #' @noRd
-loop_options_for_question <- function(question, looping_source, looping_qid) {
-  static_prefixes <- unlist(
-    question_fact_looping_prefix(question),
-    use.names = FALSE
-  )
+loop_options_for_context <- function(context) {
+  static_prefixes <- context$static_prefixes
+  looping_source_fact <- context$looping_source_fact
 
-  if (!is.null(looping_source) &&
-    scalar_character(question_fact_question_type(looping_source)$type) == "Matrix") { # nolint
-    loop_items <- question_fact_response_items(looping_source)
+  if (!is.null(looping_source_fact) &&
+    scalar_character(question_fact_question_type(looping_source_fact)$type) == "Matrix") { # nolint
+    loop_items <- question_fact_response_items(looping_source_fact)
     loop_options <- setNames(
       map_chr(loop_items, "item_text"),
       map_chr(loop_items, "item_id")
@@ -114,18 +131,43 @@ loop_options_for_question <- function(question, looping_source, looping_qid) {
     return(loop_options)
   }
 
-  if (is.null(looping_source)) {
+  if (is.null(looping_source_fact)) {
     return(loop_options_from_static_fields(
-      question_fact_looping_static(question),
+      context$looping_static,
       static_prefixes
     ))
   }
 
   loop_options_from_static_choices(
-    question_fact_looping_prefix(question),
-    question_fact_response_choices(looping_source),
+    question_fact_looping_prefix(context$question_fact),
+    question_fact_response_choices(looping_source_fact),
     static_prefixes
   )
+}
+
+#' Build one Loop-expanded Question Fact
+#' @keywords internal
+#' @noRd
+loop_expanded_question_fact <- function(loop_row, context) {
+  question_fact <- context$question_fact
+  looped_question_fact <- question_fact
+  looped_question_fact[["looping_question"]] <-
+    substitute_loop_fields(
+      question_fact[["question_text"]],
+      loop_row$fields
+    )
+  looped_question_fact[["question_text"]] <-
+    loop_question_text_template(question_fact[["question_text"]])
+  looped_question_fact[["looping_option"]] <- loop_row$option
+  looped_question_fact[["looping_prefix"]] <- loop_row$prefix
+  looped_question_fact[["looping_qid"]] <- context$looping_qid
+  looped_question_fact[["qid"]] <- question_fact[["qid"]]
+  looped_question_fact[["response_column_qid"]] <-
+    loop_response_column_id(
+      paste(loop_row$prefix, question_fact[["qid"]], sep = "_")
+    )
+  looped_question_fact[["looping"]] <- TRUE
+  looped_question_fact
 }
 
 #' Resolve Loop and Merge options from static field values
