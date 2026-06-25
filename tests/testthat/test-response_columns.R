@@ -373,6 +373,39 @@ test_that("response column render facts unwrap non-SBS levels and labels only", 
   expect_identical(sbs_facts$label, sbs_shape$label)
 })
 
+test_that("response column choice shape carries text-entry levels and labels", {
+  question_fact <- normalise_qualtrics_metadata(
+    synthetic_mc_text_raw_metadata()
+  )$questions$QID1
+
+  shape <- response_column_choice_shape(question_fact)
+
+  expect_identical(shape$level_len, 3L)
+  expect_identical(unname(shape$level[[1]]), c("1", "2", "3", "3_TEXT"))
+  expect_identical(
+    unname(shape$label[[1]]),
+    c("Yes", "No", "Other", "Other_TEXT")
+  )
+})
+
+test_that("SBS row item shape carries text-entry item rows", {
+  question_fact <- normalise_qualtrics_metadata(
+    synthetic_sbs_text_subquestion_raw_metadata()
+  )$questions$QID2
+
+  item_shape <- response_column_item_shape(question_fact)
+  sbs_items <- response_column_sbs_item_shape(
+    question_fact,
+    item_shape$has_text_sub
+  )
+
+  expect_identical(
+    unname(sbs_items),
+    c("Second row", "Fourth row", "Fourth row_TEXT", "Ninth row")
+  )
+  expect_named(sbs_items, c("2", "4", "4_TEXT", "9"))
+})
+
 test_that("response column renderer context preserves unsupported type fallback", {
   question_fact <- normalise_qualtrics_metadata(
     synthetic_mc_text_raw_metadata()

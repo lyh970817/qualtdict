@@ -247,15 +247,37 @@ response_column_shape <- function(question) {
 
   type <- question_fact_question_type(question)$type
   question_text <- question_fact_question_text(question)
-  response_choices <- question_fact_response_choices(question)
-  response_items <- question_fact_response_items(question)
+  choice_shape <- response_column_choice_shape(question)
+  item_shape <- response_column_item_shape(question)
 
+  shape <- new_response_column_shape(
+    question = question_text,
+    item = item_shape$item,
+    level = choice_shape$level,
+    label = choice_shape$label,
+    level_len = choice_shape$level_len
+  )
+  if (type == "SBS") {
+    shape <- response_column_sbs_shape(
+      question,
+      shape,
+      item_shape$has_text_sub
+    )
+  }
+
+  shape
+}
+
+#' Build generic choice facts used by response-column rendering
+#' @keywords internal
+#' @noRd
+response_column_choice_shape <- function(question) {
+  response_choices <- question_fact_response_choices(question)
   level_len <- ifelse(length(response_choices) > 0, length(response_choices), 1)
 
   level <- map(response_choices, "level") %>%
     unlist_nm() %>%
     list()
-
   label <- map(response_choices, "label") %>%
     unlist_nm() %>%
     list()
@@ -266,36 +288,36 @@ response_column_shape <- function(question) {
     label <- add_text(label, has_text)
   }
 
+  list(level = level, label = label, level_len = level_len)
+}
+
+#' Build generic item facts used by response-column rendering
+#' @keywords internal
+#' @noRd
+response_column_item_shape <- function(question) {
+  response_items <- question_fact_response_items(question)
   item <- unlist(map(response_items, "item_text"))
-  has_text_sub <- which(map_lgl(
-    response_items,
-    "text_entry"
-  ))
+  has_text_sub <- which(map_lgl(response_items, "text_entry"))
+
   if (length(has_text_sub) > 0) {
     item <- unlist(add_text(item, has_text_sub))
   }
 
-  col_len <- 0
-  col_type <- character()
+  list(item = item, has_text_sub = has_text_sub)
+}
 
-  if (type == "SBS") {
-    sbs_shape <- response_column_sbs_shape(
-      question,
-      question_text,
-      item,
-      has_text_sub
-    )
-    question_text <- sbs_shape$question
-    level_len <- sbs_shape$level_len
-    level <- sbs_shape$level
-    label <- sbs_shape$label
-    item <- sbs_shape$item
-    col_len <- sbs_shape$col_len
-    col_type <- sbs_shape$col_type
-  }
-
+#' Build response-column shape from row-aligned facts
+#' @keywords internal
+#' @noRd
+new_response_column_shape <- function(question,
+                                      item,
+                                      level,
+                                      label,
+                                      level_len,
+                                      col_len = 0,
+                                      col_type = character()) {
   list(
-    question = question_text,
+    question = question,
     item = item,
     level = level,
     label = label,
@@ -363,61 +385,123 @@ question_choices_render_independent_columns <- function(question) {
 #' @keywords internal
 #' @noRd
 response_column_sbs_shape <- function(question,
-                                      question_text,
-                                      item,
+                                      shape,
                                       has_text_sub) {
-  column_facts <- question_fact_column_facts(question)
-  response_items <- question_fact_response_items(question)
+  column_shape <- response_column_sbs_column_shape(question)
+  item <- response_column_sbs_item_shape(question, has_text_sub)
+  value_shape <- response_column_sbs_value_shape(
+    column_shape$column_facts,
+    item,
+    column_shape$level_len,
+    column_shape$col_type
+  )
+  question_text <- shape$question
 
-  level_len <- map(column_facts, "response_choices") %>% map_dbl(length)
-  col_len <- length(column_facts)
+  if (column_shape$col_len != 0) {
+    question_text <- response_column_sbs_questions(
+      question,
+      column_shape$column_facts,
+      item,
+      column_shape$level_len
+    )
+  }
+
+  new_response_column_shape(
+    question = question_text,
+    item = item,
+    level = value_shape$level,
+    label = value_shape$label,
+    level_len = value_shape$level_len,
+    col_len = column_shape$col_len,
+    col_type = column_shape$col_type
+  )
+}
+
+#' Build SBS column facts used by response-column rendering
+#' @keywords internal
+#' @noRd
+response_column_sbs_column_shape <- function(question) {
+  column_facts <- question_fact_column_facts(question)
   col_type <- map_chr(column_facts, ~ .x$question_type$selector)
   attr(col_type, "sub_selector") <-
     map_chr(column_facts, ~ scalar_character(.x$question_type$sub_selector))
 
+  list(
+    column_facts = column_facts,
+    level_len = map(column_facts, "response_choices") %>% map_dbl(length),
+    col_len = length(column_facts),
+    col_type = col_type
+  )
+}
+
+#' Build SBS row item facts used by response-column rendering
+#' @keywords internal
+#' @noRd
+response_column_sbs_item_shape <- function(question, has_text_sub) {
+  response_items <- question_fact_response_items(question)
   item <- unlist(map(response_items, "item_label"))
-  item <- unlist(add_text(item, has_text_sub))
+  unlist(add_text(item, has_text_sub))
+}
 
-  if (col_len != 0) {
-    top_question <- question_fact_question_text(question)
-    question_text <- map(column_facts, "question_text") %>%
-      map2(length(item), rep) %>%
-      map2(level_len, function(question_text, level_len) {
-        repeated_items <- rep_item(question_text, item, level_len)
-        unlist(repeated_items)
-      }) %>%
-      unlist() %>%
-      paste(top_question, ., sep = " ")
+#' Build SBS row-aligned question text facts
+#' @keywords internal
+#' @noRd
+response_column_sbs_questions <- function(question,
+                                          column_facts,
+                                          item,
+                                          level_len) {
+  top_question <- question_fact_question_text(question)
+  map(column_facts, "question_text") %>%
+    map2(length(item), rep) %>%
+    map2(level_len, function(question_text, level_len) {
+      repeated_items <- rep_item(question_text, item, level_len)
+      unlist(repeated_items)
+    }) %>%
+    unlist() %>%
+    paste(top_question, ., sep = " ")
+}
 
-    level <- map(column_facts, "response_choices") %>%
-      map(map_chr, "level") %>%
-      map2(col_type, function(level, type) {
-        if (type == "TE") {
-          level <- paste(level, "TEXT", sep = "_")
-        }
-        level
-      })
-
-    label <- map(column_facts, "response_choices") %>%
-      map(map_chr, "label")
-  } else if (length(item) > 0) {
-    level_len <- rep(1, length(item))
-    level <- as.list(rep(NA_character_, length(item)))
-    label <- as.list(rep(NA_character_, length(item)))
-  } else {
-    level <- list(NA_character_)
-    label <- list(NA_character_)
+#' Build SBS level and label facts used by response-column rendering
+#' @keywords internal
+#' @noRd
+response_column_sbs_value_shape <- function(column_facts,
+                                            item,
+                                            level_len,
+                                            col_type) {
+  if (length(column_facts) != 0) {
+    return(list(
+      level_len = level_len,
+      level = response_column_sbs_levels(column_facts, col_type),
+      label = map(column_facts, "response_choices") %>% map(map_chr, "label")
+    ))
+  }
+  if (length(item) > 0) {
+    return(list(
+      level_len = rep(1, length(item)),
+      level = as.list(rep(NA_character_, length(item))),
+      label = as.list(rep(NA_character_, length(item)))
+    ))
   }
 
   list(
-    question = question_text,
-    item = item,
-    level = level,
-    label = label,
     level_len = level_len,
-    col_len = col_len,
-    col_type = col_type
+    level = list(NA_character_),
+    label = list(NA_character_)
   )
+}
+
+#' Build SBS response levels from column choices
+#' @keywords internal
+#' @noRd
+response_column_sbs_levels <- function(column_facts, col_type) {
+  map(column_facts, "response_choices") %>%
+    map(map_chr, "level") %>%
+    map2(col_type, function(level, type) {
+      if (type == "TE") {
+        level <- paste(level, "TEXT", sep = "_")
+      }
+      level
+    })
 }
 
 #' Render row-aligned item facts
@@ -482,7 +566,9 @@ response_column_renderer_for_context <- function(context) {
 
   if (!is.null(context$selector)) {
     if (!is.null(context$sub_selector)) {
-      renderer <- renderer[[context$type]][[context$selector]][[context$sub_selector]]
+      renderer <- renderer[[context$type]][[context$selector]][[
+        context$sub_selector
+      ]]
     } else {
       renderer <- renderer[[context$type]][[context$selector]]
     }
@@ -498,61 +584,11 @@ response_column_renderer_for_context <- function(context) {
 #' @noRd
 response_column_renderer_table <- function() {
   list(
-    MC =
-      list(
-        MACOL = list(TX = suf_level_qid_macol),
-        MAVR = list(TX = suf_level_qid_mavr),
-        MAHR = list(TX = suf_level_qid),
-        MSB = suf_level_qid,
-        SAVR = list(TX = rep_level_qid),
-        SACOL = list(TX = rep_level_qid),
-        DL = rep_level_qid,
-        SAHR = list(TX = rep_level_qid),
-        SB = rep_level_qid,
-        NPS = rep_level_qid
-      ),
-    Matrix =
-      list(
-        Likert = list(
-          MultipleAnswer = suf_item_suf_level_qid,
-          DL = suf_item_rep_level_qid,
-          SingleAnswer = item_or_level_qid,
-          DND = item_or_level_qid,
-          SACV = item_or_level_qid,
-          SACH = item_or_level_qid,
-          SACCOL = item_or_level_qid
-        ),
-        TE = list(
-          Short = suf_item_suf_level_qid,
-          Medium = suf_item_suf_level_qid,
-          Long = suf_item_suf_level_qid
-        ),
-        Profile = list(
-          SingleAnswer = suf_item_rep_level_qid,
-          DL = suf_item_rep_level_qid
-        ),
-        Bipolar = suf_item_rep_level_qid,
-        RO = suf_item_suf_level_qid,
-        MaxDiff = suf_item_rep_level_qid,
-        CS = list(WTB = suf_item_suf_level_qid)
-      ),
-    Slider = list(
-      HSLIDER = suf_level_qid,
-      HBAR = suf_level_qid,
-      STAR = suf_level_qid
-    ),
-    CS = list(
-      HR = list(TX = suf_nmlabel_qid),
-      VRTL = list(TX = item_or_level_qid),
-      HBAR = item_or_level_qid,
-      HSLIDER = item_or_level_qid
-    ),
-    TE = list(
-      FORM = suf_nmlabel_qid,
-      SL = suf_text_qid,
-      ML = suf_text_qid,
-      ESTB = suf_text_qid
-    ),
+    MC = response_column_mc_renderer_table(),
+    Matrix = response_column_matrix_renderer_table(),
+    Slider = response_column_slider_renderer_table(),
+    CS = response_column_cs_renderer_table(),
+    TE = response_column_te_renderer_table(),
     SBS = list(SBSMatrix = sbs_qid),
     Timing = list(PageTimer = timing_qid),
     SS = list(TA = rep_level_qid),
@@ -562,14 +598,111 @@ response_column_renderer_table <- function() {
     Draw = list(Signature = file_upload_qid),
     HL = list(Text = suf_level_suf_item_qid),
     Meta = list(Browser = not_applicable_qid),
-    DB = list(
-      TB = questiontext_qid,
-      PTB = questiontext_qid,
-      FLB = questiontext_qid,
-      GRB = list(
-        WTXB = questiontext_qid,
-        WOTXB = questiontext_qid
-      )
+    DB = response_column_display_renderer_table()
+  )
+}
+
+#' Multiple choice Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_mc_renderer_table <- function() {
+  list(
+    MACOL = list(TX = suf_level_qid_macol),
+    MAVR = list(TX = suf_level_qid_mavr),
+    MAHR = list(TX = suf_level_qid),
+    MSB = suf_level_qid,
+    SAVR = list(TX = rep_level_qid),
+    SACOL = list(TX = rep_level_qid),
+    DL = rep_level_qid,
+    SAHR = list(TX = rep_level_qid),
+    SB = rep_level_qid,
+    NPS = rep_level_qid
+  )
+}
+
+#' Matrix Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_matrix_renderer_table <- function() {
+  list(
+    Likert = response_column_likert_renderer_table(),
+    TE = list(
+      Short = suf_item_suf_level_qid,
+      Medium = suf_item_suf_level_qid,
+      Long = suf_item_suf_level_qid
+    ),
+    Profile = list(
+      SingleAnswer = suf_item_rep_level_qid,
+      DL = suf_item_rep_level_qid
+    ),
+    Bipolar = suf_item_rep_level_qid,
+    RO = suf_item_suf_level_qid,
+    MaxDiff = suf_item_rep_level_qid,
+    CS = list(WTB = suf_item_suf_level_qid)
+  )
+}
+
+#' Likert matrix Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_likert_renderer_table <- function() {
+  list(
+    MultipleAnswer = suf_item_suf_level_qid,
+    DL = suf_item_rep_level_qid,
+    SingleAnswer = item_or_level_qid,
+    DND = item_or_level_qid,
+    SACV = item_or_level_qid,
+    SACH = item_or_level_qid,
+    SACCOL = item_or_level_qid
+  )
+}
+
+#' Slider Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_slider_renderer_table <- function() {
+  list(
+    HSLIDER = suf_level_qid,
+    HBAR = suf_level_qid,
+    STAR = suf_level_qid
+  )
+}
+
+#' Constant sum Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_cs_renderer_table <- function() {
+  list(
+    HR = list(TX = suf_nmlabel_qid),
+    VRTL = list(TX = item_or_level_qid),
+    HBAR = item_or_level_qid,
+    HSLIDER = item_or_level_qid
+  )
+}
+
+#' Text entry Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_te_renderer_table <- function() {
+  list(
+    FORM = suf_nmlabel_qid,
+    SL = suf_text_qid,
+    ML = suf_text_qid,
+    ESTB = suf_text_qid
+  )
+}
+
+#' Display block Response Column ID renderers
+#' @keywords internal
+#' @noRd
+response_column_display_renderer_table <- function() {
+  list(
+    TB = questiontext_qid,
+    PTB = questiontext_qid,
+    FLB = questiontext_qid,
+    GRB = list(
+      WTXB = questiontext_qid,
+      WOTXB = questiontext_qid
     )
   )
 }
@@ -671,7 +804,11 @@ suf_choice_level_qid <- function(context) {
 
 suf_nmlabel_qid <- function(context) {
   # Add recode values to the end of the QID
-  paste(context$response_column_qid, names(context$render_facts$level), sep = "_")
+  paste(
+    context$response_column_qid,
+    names(context$render_facts$level),
+    sep = "_"
+  )
 }
 
 suf_text_qid <- function(context) {
