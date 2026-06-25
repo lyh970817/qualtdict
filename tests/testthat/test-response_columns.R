@@ -397,3 +397,18 @@ test_that("response column renderer context preserves unsupported type fallback"
   )
   expect_identical(rendered, "QID1")
 })
+
+test_that("item_or_level_qid preserves choice ids when there is no item", {
+  context <- list(
+    response_column_qid = "QIDX",
+    render_facts = list(
+      item = NULL,
+      level = c(x1 = "1", x2 = "2")
+    )
+  )
+
+  expect_identical(
+    item_or_level_qid(context),
+    c("QIDX_x1", "QIDX_x2")
+  )
+})

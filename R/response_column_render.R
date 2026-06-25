@@ -660,6 +660,15 @@ suf_level_qid_mavr <- function(context) {
   paste(context$response_column_qid, mc_recode_ids(level), sep = "_")
 }
 
+suf_choice_level_qid <- function(context) {
+  level <- context$render_facts$level
+  if (length(level) == 0) {
+    return(context$response_column_qid)
+  }
+
+  paste(context$response_column_qid, mc_choice_ids(level), sep = "_")
+}
+
 suf_nmlabel_qid <- function(context) {
   # Add recode values to the end of the QID
   paste(context$response_column_qid, names(context$render_facts$level), sep = "_")
@@ -698,7 +707,7 @@ suf_item_rep_level_qid <- function(context) {
 
 item_or_level_qid <- function(context) {
   if (is.null(context$render_facts$item)) {
-    return(suf_level_qid(context))
+    return(suf_choice_level_qid(context))
   }
 
   suf_item_rep_level_qid(context)
