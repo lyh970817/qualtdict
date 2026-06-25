@@ -190,6 +190,20 @@ test_that("Loop expansion context separates current and source facts", {
   expect_identical(context$static_prefixes, c("x1", "x2"))
 })
 
+test_that("Loop expansion context keeps static fallback when source fact is absent", {
+  normalised_metadata <- normalise_qualtrics_metadata(
+    synthetic_loop_and_merge_raw_metadata()
+  )
+
+  context <- new_loop_expansion_context(
+    question_fact = normalised_metadata$questions$QID2,
+    survey_question_facts = normalised_metadata$questions["QID2"]
+  )
+
+  expect_null(context$looping_source_fact)
+  expect_true(loop_question_fact_should_expand(context))
+})
+
 test_that("Loop expansion context preserves text-entry response column qid normalization", { # nolint
   raw_metadata <- synthetic_looped_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
