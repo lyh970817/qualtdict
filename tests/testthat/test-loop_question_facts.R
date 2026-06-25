@@ -114,21 +114,46 @@ test_that("Loop and Merge options resolve source choice recodes", {
   )
 })
 
-test_that("Loop and Merge options fall back only for prefixed sources", {
+test_that("Loop and Merge options handle partial prefixed source matches", {
   choices <- list(
-    x1 = list(recode = "1", description = "One")
+    x1 = list(recode = "1", description = "One"),
+    x2 = list(recode = "2", description = "Two")
   )
 
   expect_identical(
     loop_options_from_static_choices(
-      c("x1", "missing"),
+      c("x1", "x2", "missing"),
       choices,
-      c("x1", "missing")
+      c("x1", "x2", "missing")
     ),
-    c(x1 = "x1", missing = "missing")
+    c(x1 = "One", x2 = "Two")
+  )
+  expect_identical(
+    loop_options_from_static_choices(
+      c("x1", "missing", "other"),
+      choices["x1"],
+      c("x1", "missing", "other")
+    ),
+    c(x1 = "x1", missing = "missing", other = "other")
   )
   expect_null(
     loop_options_from_static_choices(NULL, choices, c("x1", "missing"))
+  )
+})
+
+test_that("Loop and Merge options skip non-exported source choices", {
+  choices <- list(
+    x1 = list(recode = "1", description = "One", analyze = TRUE),
+    x2 = list(recode = "2", description = "Two", analyze = FALSE)
+  )
+
+  expect_identical(
+    loop_options_from_static_choices(
+      c("x1", "x2", "missing"),
+      choices,
+      c("x1", "x2", "missing")
+    ),
+    c(x1 = "One")
   )
 })
 
