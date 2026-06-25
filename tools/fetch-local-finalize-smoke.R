@@ -12,6 +12,8 @@ usage <- function() {
       "  --output-dir DIR Local smoke artifact directory.",
       "  --credentials PATH",
       "                   Optional .Renviron file to read before fetching.",
+      "  --response-limit N",
+      "                   Optional maximum number of response rows to fetch.",
       "",
       "This trusted-human script downloads fixed Qualtrics surveys and writes",
       "unsanitized metadata/description plus sanitized response data. It never",
@@ -86,6 +88,14 @@ output_dir <- arg_value(
 )
 survey_filter <- arg_value("--survey")
 credentials <- arg_value("--credentials")
+response_limit <- arg_value("--response-limit")
+
+if (!is.null(response_limit)) {
+  response_limit <- suppressWarnings(as.integer(response_limit))
+  if (is.na(response_limit) || response_limit < 1) {
+    stop("`--response-limit` must be an integer greater than zero.", call. = FALSE)
+  }
+}
 
 if (!is.null(credentials)) {
   readRenviron(credentials)
@@ -202,6 +212,8 @@ sanitize_date <- function(x) {
   values <- synthetic_timestamps(length(non_missing))
   if (inherits(x, "Date")) {
     y[non_missing] <- as.Date(values)
+  } else if (inherits(x, "hms")) {
+    y[non_missing] <- seq_along(non_missing) * 60
   } else if (inherits(x, c("POSIXct", "POSIXlt"))) {
     y[non_missing] <- as.POSIXct(values, tz = "UTC")
   } else {
@@ -377,6 +389,7 @@ write_artifacts <- function(survey) {
   message("Fetching and sanitizing responses for ", survey$alias, "...")
   responses <- qualtRics::fetch_survey(
     surveyID = survey$survey_id,
+    limit = response_limit,
     force_request = TRUE,
     import_id = TRUE,
     convert = FALSE,
@@ -405,6 +418,7 @@ write_artifacts <- function(survey) {
     alias = survey$alias,
     survey_id = survey$survey_id,
     fetched_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    response_limit = response_limit,
     package_versions = list(
       R = as.character(getRversion()),
       qualtRics = package_version_or_na("qualtRics"),

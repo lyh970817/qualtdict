@@ -39,6 +39,13 @@ To fetch a single survey while iterating:
 Rscript tools/fetch-local-finalize-smoke.R --survey survey_a
 ```
 
+To fetch only a small response sample when the smoke pass only needs response
+column shape and labels:
+
+```sh
+Rscript tools/fetch-local-finalize-smoke.R --response-limit 1
+```
+
 The fetch script writes:
 
 ```text

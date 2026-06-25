@@ -23,9 +23,12 @@ Tests use `testthat` edition 3 and run through `tests/testthat.R`. Name new test
 
 ## Local Finalization Smoke Check
 
-For feature work that changes or could affect exported behavior, after
-`devtools::test()` passes and after any requested review is complete, run the
-local finalization smoke check when local smoke artifacts are available:
+For feature work that changes or could affect exported behavior, consider the
+local finalization smoke check during the feature finalization phase when local
+smoke artifacts are available. Do not treat it as a command that must always be
+run immediately after unit tests. Depending on the workflow, the right moment
+may be after the tests that follow final code edits, or at the final stage of a
+review phase after requested review work is complete:
 
 `Rscript tools/local-finalize-smoke.R check`
 
