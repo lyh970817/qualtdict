@@ -38,6 +38,12 @@ changes and require inspection followed by an explicit baseline update with:
 
 `Rscript tools/local-finalize-smoke.R bless`
 
+## pkgcheck Notes
+
+For now, ignore the `pkgcheck` failure that reports "Repository has no
+website" / `pkgchk_repo_has_website`. Treat other `pkgcheck` failures as
+actionable unless there is a separate documented reason to waive them.
+
 ## Commit & Pull Request Guidelines
 
 Recent commits use short imperative summaries, for example `Fix question type CS-HR-TX` or `Add qid recode for text fields in SBS questions`. Keep commit subjects concise and focused on the user-visible or package behavior change. For pull requests, follow `.github/CONTRIBUTING.md`: open an issue for larger changes, include a minimal reprex for bugs, run `devtools::check()`, and link issues with `Fixes #<issue-number>`. Include tests for changed behavior and update documentation or generated files when roxygen or README sources change.
