@@ -173,3 +173,34 @@ test_that("Loop and Merge field values parse valid column name records", {
     )
   )
 })
+
+test_that("Loop expansion context separates current and source facts", {
+  normalised_metadata <- normalise_qualtrics_metadata(
+    synthetic_loop_and_merge_raw_metadata()
+  )
+
+  context <- new_loop_expansion_context(
+    question_fact = normalised_metadata$questions$QID2,
+    survey_question_facts = normalised_metadata$questions
+  )
+
+  expect_identical(context$question_fact$qid, "QID2")
+  expect_identical(context$looping_source_fact$qid, "QID1")
+  expect_identical(context$looping_qid, "QID1")
+  expect_identical(context$static_prefixes, c("x1", "x2"))
+})
+
+test_that("Loop expansion context preserves text-entry response column qid normalization", { # nolint
+  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  looped <- expanded[
+    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+  ]
+
+  expect_identical(
+    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    c("x1_QID2", "x2_QID2")
+  )
+})
