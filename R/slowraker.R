@@ -1,4 +1,4 @@
-#' @import slowraker
+#' @importFrom slowraker smart_words
 #' @noRd
 calc_keyword_scores <- function(cand_words, all_words) {
   # Get a list of unique words in each keyword so we don't double count (e.g.,
@@ -36,10 +36,10 @@ slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
 
   if (!is.null(stop_pos)) {
     pos_word_df <- tryCatch(
-      get_pos_tags(txt, word_token_annotator, pos_annotator),
-      error = handle_pos_error
+      slowraker2$get_pos_tags(txt, word_token_annotator, pos_annotator),
+      error = slowraker2$handle_pos_error
     )
-    txt <- stop_pos_tags(pos_word_df, stop_pos)
+    txt <- slowraker2$stop_pos_tags(pos_word_df, stop_pos)
   }
 
   txt <- tolower(txt)
@@ -128,7 +128,14 @@ slowrake <- function(txt,
   structure(all_out, class = c(class(all_out), "rakelist"))
 }
 
-.internals <- c("get_cand_words", "filter_words", "process_keyword_df")
+.internals <- c(
+  "get_cand_words",
+  "filter_words",
+  "process_keyword_df",
+  "get_pos_tags",
+  "handle_pos_error",
+  "stop_pos_tags"
+)
 # load from the slowraker namespace
 slowraker2 <- structure(
   mapply(

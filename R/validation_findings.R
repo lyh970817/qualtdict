@@ -156,14 +156,6 @@ level_label_validation_findings <- function(mistake) {
   normalize_validation_findings(mistake)
 }
 
-check_names <- function(dict) {
-  cols <- tibble(
-    response_column_id = dict_response_column_id(dict),
-    variable_name = dict_variable_name(dict)
-  )
-  which_not_onetoone(cols)
-}
-
 check_item <- function(dat, response_column_id) {
   item_name <- dict_variable_name(dat)[
     dict_response_column_id(dat) == response_column_id
