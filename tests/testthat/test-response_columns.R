@@ -297,3 +297,60 @@ test_that(
     expect_identical(rendered$response_column_id, "QID1")
   }
 )
+
+test_that("response column render context separates bare and rendering qids", {
+  question_fact <- normalise_qualtrics_metadata(
+    synthetic_looped_mc_text_raw_metadata()
+  )$questions$QID2
+
+  shape <- response_column_shape(question_fact)
+  question_type <- question_fact_question_type(question_fact)
+
+  context <- new_response_column_render_context(
+    question_fact = question_fact,
+    response_column_qid = "x1_QID2",
+    shape = shape,
+    question_type = question_type
+  )
+
+  expect_identical(context$response_column_qid, "x1_QID2")
+  expect_identical(context$question_fact$qid, "QID2")
+})
+
+test_that("resolve_response_column_qid preserves current precedence and error", {
+  question_fact <- normalise_qualtrics_metadata(
+    synthetic_mc_text_raw_metadata()
+  )$questions$QID1
+
+  expect_identical(resolve_response_column_qid(question_fact), "QID1")
+  expect_identical(
+    resolve_response_column_qid(question_fact, "x1_QID1"),
+    "x1_QID1"
+  )
+
+  question_fact$qid <- NA_character_
+  expect_error(
+    resolve_response_column_qid(question_fact),
+    "`qid` is required to render response columns.",
+    fixed = TRUE
+  )
+})
+
+test_that("response column render facts unwrap non-SBS levels and labels only", {
+  mc_question_fact <- normalise_qualtrics_metadata(
+    synthetic_mc_text_raw_metadata()
+  )$questions$QID1
+  sbs_question_fact <- normalise_qualtrics_metadata(
+    synthetic_sbs_text_subquestion_raw_metadata()
+  )$questions$QID2
+
+  mc_shape <- response_column_shape(mc_question_fact)
+  mc_facts <- response_column_render_facts(mc_shape, "MC")
+  expect_identical(mc_facts$level, mc_shape$level[[1]])
+  expect_identical(mc_facts$label, mc_shape$label[[1]])
+
+  sbs_shape <- response_column_shape(sbs_question_fact)
+  sbs_facts <- response_column_render_facts(sbs_shape, "SBS")
+  expect_identical(sbs_facts$level, sbs_shape$level)
+  expect_identical(sbs_facts$label, sbs_shape$label)
+})

@@ -2,39 +2,105 @@
 #'
 #' The renderer accepts one normalised question fact and returns row-aligned
 #' response-column facts. Loop and Merge expansion stays upstream; callers may
-#' pass an already-prefixed response-column `qid`, but this function does not
+#' pass an already-prefixed response-column `response_column_qid`, but this
+#' function does not
 #' choose loop options or substitute loop text.
 #'
 #' @keywords internal
 #' @noRd
-render_response_columns <- function(question, qid = NULL) {
-  if (is.null(qid)) {
-    qid <- question$qid
+resolve_response_column_qid <- function(question_fact,
+                                        response_column_qid = NULL) {
+  if (is.null(response_column_qid)) {
+    response_column_qid <- question_fact$qid
   }
-  if (is.null(qid) || length(qid) == 0 || is.na(qid[[1]])) {
+  if (is.null(response_column_qid) ||
+    length(response_column_qid) == 0 ||
+    is.na(response_column_qid[[1]])) {
     stop("`qid` is required to render response columns.", call. = FALSE)
   }
 
-  shape <- response_column_shape(question)
-  question_type <- question_fact_question_type(question)
-  type <- question_type$type
-  selector <- question_type$selector
-  sub_selector <- question_type$sub_selector
+  response_column_qid
+}
 
-  response_column_id <- qid_recode(qid,
-    col_len = shape$col_len,
-    col_type = shape$col_type,
-    item = shape$item,
-    level = shape$level,
-    label = shape$label,
-    choice_len = shape$level_len,
-    type = type,
-    selector = selector,
-    sub_selector = sub_selector,
-    is_qid = TRUE
+#' Build Response Column ID Rendering context
+#' @keywords internal
+#' @noRd
+new_response_column_render_context <- function(question_fact,
+                                               response_column_qid,
+                                               shape,
+                                               question_type) {
+  list(
+    question_fact = question_fact,
+    response_column_qid = response_column_qid,
+    shape = shape,
+    render_facts = response_column_render_facts(shape, question_type$type),
+    type = question_type$type,
+    selector = question_type$selector,
+    sub_selector = question_type$sub_selector
   )
-  response_column_id <- response_column_row_vector(response_column_id)
+}
+
+#' Normalize renderer inputs while preserving SBS list-shaped facts
+#' @keywords internal
+#' @noRd
+response_column_render_facts <- function(shape, type) {
+  level <- shape$level
+  label <- shape$label
+
+  if (type != "SBS") {
+    level <- level[[1]]
+    label <- label[[1]]
+  }
+
+  list(
+    question = shape$question,
+    item = shape$item,
+    level = level,
+    label = label,
+    level_len = shape$level_len,
+    col_len = shape$col_len,
+    col_type = shape$col_type
+  )
+}
+
+#' Render Qualtrics Response Column ID rows
+#'
+#' The renderer accepts one normalised question fact and returns row-aligned
+#' response-column facts. Loop and Merge expansion stays upstream; callers may
+#' pass an already-prefixed response-column `response_column_qid`, but this
+#' function does not choose loop options or substitute loop text.
+#'
+#' @keywords internal
+#' @noRd
+render_response_columns <- function(question_fact, response_column_qid = NULL) {
+  response_column_qid <- resolve_response_column_qid(
+    question_fact,
+    response_column_qid
+  )
+
+  question_type <- question_fact_question_type(question_fact)
+  shape <- response_column_shape(question_fact)
+  context <- new_response_column_render_context(
+    question_fact = question_fact,
+    response_column_qid = response_column_qid,
+    shape = shape,
+    question_type = question_type
+  )
+
+  response_column_id <- response_column_row_vector(
+    render_response_column_ids(context)
+  )
+
+  response_column_rows(context, response_column_id)
+}
+
+#' Build row-aligned response-column tibble
+#' @keywords internal
+#' @noRd
+response_column_rows <- function(context, response_column_id) {
   row_count <- length(response_column_id)
+  shape <- context$shape
+
   if (row_count == 0) {
     return(empty_response_columns())
   }
@@ -43,32 +109,15 @@ render_response_columns <- function(question, qid = NULL) {
     response_column_id = response_column_id,
     question = response_column_row_vector(shape$question, row_count),
     item = response_column_row_vector(
-      response_column_item(
-        shape$item,
-        shape$level_len,
-        type,
-        shape$col_len
-      ),
+      render_response_column_items(context),
       row_count
     ),
     level = response_column_row_vector(
-      response_column_level(
-        shape$level,
-        shape$item,
-        response_column_id,
-        type,
-        shape$col_len
-      ),
+      render_response_column_levels(context, response_column_id),
       row_count
     ),
     label = response_column_row_vector(
-      response_column_label(
-        shape$label,
-        shape$item,
-        response_column_id,
-        type,
-        shape$col_len
-      ),
+      render_response_column_labels(context, response_column_id),
       row_count
     )
   )
@@ -374,45 +423,67 @@ response_column_sbs_shape <- function(question,
 #' Render row-aligned item facts
 #' @keywords internal
 #' @noRd
-response_column_item <- function(item,
-                                 level_len,
-                                 type,
-                                 col_len) {
-  if (type == "SBS" && col_len == 0 && length(item) > 0) {
-    return(item)
+render_response_column_items <- function(context) {
+  facts <- context$render_facts
+  if (context$type == "SBS" && facts$col_len == 0 && length(facts$item) > 0) {
+    return(facts$item)
   }
 
-  rep_item(item, item, level_len) %>% null_na()
+  rep_item(facts$item, facts$item, facts$level_len) %>% null_na()
 }
 
 #' Render row-aligned level facts
 #' @keywords internal
 #' @noRd
-response_column_level <- function(level,
-                                  item,
-                                  response_column_id,
-                                  type,
-                                  col_len) {
-  if (type == "SBS" && col_len == 0 && length(item) > 0) {
+render_response_column_levels <- function(context, response_column_id) {
+  facts <- context$render_facts
+  if (context$type == "SBS" && facts$col_len == 0 && length(facts$item) > 0) {
     return(rep(NA_character_, length(response_column_id)))
   }
 
-  rep_level(level, item) %>% null_na()
+  level <- facts$level
+  if (context$type != "SBS") {
+    level <- list(level)
+  }
+
+  rep_level(level, facts$item) %>% null_na()
 }
 
 #' Render row-aligned label facts
 #' @keywords internal
 #' @noRd
-response_column_label <- function(label,
-                                  item,
-                                  response_column_id,
-                                  type,
-                                  col_len) {
-  if (type == "SBS" && col_len == 0 && length(item) > 0) {
+render_response_column_labels <- function(context, response_column_id) {
+  facts <- context$render_facts
+  if (context$type == "SBS" && facts$col_len == 0 && length(facts$item) > 0) {
     return(rep(NA_character_, length(response_column_id)))
   }
 
-  rep_level(label, item) %>% null_na()
+  label <- facts$label
+  if (context$type != "SBS") {
+    label <- list(label)
+  }
+
+  rep_level(label, facts$item) %>% null_na()
+}
+
+#' Render Response Column IDs for one context
+#' @keywords internal
+#' @noRd
+render_response_column_ids <- function(context) {
+  shape <- context$shape
+  qid_recode(
+    context$response_column_qid,
+    col_len = shape$col_len,
+    col_type = shape$col_type,
+    item = shape$item,
+    level = shape$level,
+    label = shape$label,
+    choice_len = shape$level_len,
+    type = context$type,
+    selector = context$selector,
+    sub_selector = context$sub_selector,
+    is_qid = TRUE
+  )
 }
 
 questiontext_qid <- function(qid,
