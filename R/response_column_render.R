@@ -618,13 +618,26 @@ mc_choice_ids <- function(level) {
   response_choice_ids
 }
 
+mc_recode_ids <- function(level) {
+  choice_ids <- names(level)
+  if (is.null(choice_ids)) {
+    return(level)
+  }
+
+  response_choice_ids <- unname(level)
+  text_choice_ids <- grepl("TEXT$", level)
+  response_choice_ids[text_choice_ids] <- choice_ids[text_choice_ids]
+
+  response_choice_ids
+}
+
 suf_level_qid <- function(context) {
   level <- context$render_facts$level
   # Add recode values to the end of the QIDs and then add Qualtrics internal
   # index to the end of QIDs with text options belonging to multiple choice
   # questions allowing for only one choice
   add_text_mc(
-    paste(context$response_column_qid, mc_choice_ids(level), sep = "_"),
+    paste(context$response_column_qid, mc_recode_ids(level), sep = "_"),
     level
   )
 }
@@ -635,7 +648,7 @@ suf_level_qid_macol <- function(context) {
     return(context$response_column_qid)
   }
 
-  paste(context$response_column_qid, mc_choice_ids(level), sep = "_")
+  paste(context$response_column_qid, mc_recode_ids(level), sep = "_")
 }
 
 suf_level_qid_mavr <- function(context) {
@@ -644,7 +657,7 @@ suf_level_qid_mavr <- function(context) {
     return(context$response_column_qid)
   }
 
-  paste(context$response_column_qid, mc_choice_ids(level), sep = "_")
+  paste(context$response_column_qid, mc_recode_ids(level), sep = "_")
 }
 
 suf_nmlabel_qid <- function(context) {

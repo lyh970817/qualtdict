@@ -110,6 +110,24 @@ test_that("render_response_columns renders MC rows with aligned facts", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
+test_that("render_response_columns uses recode suffixes for x-named MC choices", {
+  question <- normalise_qualtrics_metadata(
+    synthetic_mc_x_choice_raw_metadata()
+  )$questions$QID126879611
+
+  rendered <- render_response_columns(question, "QID126879611")
+
+  expect_identical(
+    rendered$response_column_id,
+    paste0("QID126879611_", c("1", "2", "3", "4", "6"))
+  )
+  expect_identical(unname(rendered$level), c("1", "2", "3", "4", "6"))
+  expect_identical(
+    unname(rendered$label),
+    paste("Choice", c("1", "2", "3", "4", "6"))
+  )
+})
+
 test_that("render_response_columns skips display block questions", {
   question <- normalise_question_fact(
     qid = "QID1",
