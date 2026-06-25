@@ -406,14 +406,6 @@ mc_choice_ids <- function(level) {
   response_choice_ids
 }
 
-sub_text_mc <- function(new_qid, qid, level) {
-  text_pos <- grep("TEXT", level, fixed = TRUE)
-  if (!is.null(text_pos)) {
-    new_qid[text_pos] <- paste(qid, names(level), sep = "_")[text_pos]
-  }
-  new_qid
-}
-
 suf_level_qid <- function(qid,
                           col_len,
                           item,

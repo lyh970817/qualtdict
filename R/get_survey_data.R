@@ -6,8 +6,7 @@
 #' \code{variable_name}, and labelled with question, item, level, and label
 #' metadata using \code{sjlabelled}.
 #'
-#' @param dict A Variable Dictionary returned by
-#' \code{\link[qualtdict]{dict_generate}}.
+#' @inheritParams dict_validate
 #' @param extra_columns A character vector of raw response columns to retain in
 #' the Labelled Survey Data in addition to Export Variables. Defaults to
 #' \code{c("externalDataReference", "startDate", "endDate")}. Missing
@@ -41,15 +40,15 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
-#' survey_id <- "SV_XXXXXXXXXXXXXXXX"
+#' if (interactive()) {
+#'   survey_id <- "SV_XXXXXXXXXXXXXXXX"
 #'
-#' # Generate a dictionary
-#' mydict <- dict_generate(survey_id, variable_name = "question_name")
-#' survey_dat <- get_survey_data(mydict,
-#'   unanswer_recode = -77,
-#'   unanswer_recode_multi = 0
-#' )
+#'   # Generate a dictionary
+#'   mydict <- dict_generate(survey_id, variable_name = "question_name")
+#'   survey_dat <- get_survey_data(mydict,
+#'     unanswer_recode = -77,
+#'     unanswer_recode_multi = 0
+#'   )
 #' }
 get_survey_data <- function(dict,
                             extra_columns = c(
