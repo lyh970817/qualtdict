@@ -57,14 +57,14 @@ Use \code{exclude_findings} when you want to explicitly remove them after
 download.
 }
 \examples{
-\dontrun{
-survey_id <- "SV_XXXXXXXXXXXXXXXX"
+if (interactive()) {
+  survey_id <- "SV_XXXXXXXXXXXXXXXX"
 
-# Generate a dictionary
-mydict <- dict_generate(survey_id, variable_name = "question_name")
-survey_dat <- get_survey_data(mydict,
-  unanswer_recode = -77,
-  unanswer_recode_multi = 0
-)
+  # Generate a dictionary
+  mydict <- dict_generate(survey_id, variable_name = "question_name")
+  survey_dat <- get_survey_data(mydict,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
 }
 }

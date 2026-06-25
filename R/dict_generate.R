@@ -45,21 +45,21 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
-#' survey_id <- "SV_XXXXXXXXXXXXXXXX"
+#' if (interactive()) {
+#'   survey_id <- "SV_XXXXXXXXXXXXXXXX"
 #'
-#' # Create a function for \code{block_pattern}
-#' # that returns the first three letters of a string
-#' block_pattern <- function(x) {
-#'   substring(x, 1, 3)
-#' }
+#'   # Create a function for \code{block_pattern}
+#'   # that returns the first three letters of a string
+#'   block_pattern <- function(x) {
+#'     substring(x, 1, 3)
+#'   }
 #'
 #'
-#' mydict <- dict_generate(survey_id,
-#'   variable_name = "semantic_name",
-#'   block_pattern = block_pattern,
-#'   block_sep = "."
-#' )
+#'   mydict <- dict_generate(survey_id,
+#'     variable_name = "semantic_name",
+#'     block_pattern = block_pattern,
+#'     block_sep = "."
+#'   )
 #' }
 #'
 dict_generate <- function(surveyID,
