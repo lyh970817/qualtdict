@@ -12,6 +12,7 @@ tools/raw-response-column-parity.R
 .sandcastle/logs/
 .sandcastle/runs/
 .sandcastle/worktrees/
+.worktrees/
 .sandcastle/.env
 .sandcastle/gitconfig
 .Renviron
