@@ -46,7 +46,9 @@ loop_question_fact_should_expand <- function(context) {
   if (is.na(context$looping_qid) && !has_static_loop) {
     return(FALSE)
   }
-  if (!is.na(context$looping_qid) && is.null(context$looping_source_fact)) {
+  if (!is.na(context$looping_qid) &&
+    is.null(context$looping_source_fact) &&
+    !has_static_loop) {
     return(FALSE)
   }
 
@@ -88,7 +90,7 @@ loop_rows_for_context <- function(context) {
   }
 
   field_values <- loop_field_values_for_question(
-    question = context$question_fact,
+    question_fact = context$question_fact,
     prefixes = names(loop_options)
   )
 
@@ -326,14 +328,14 @@ loop_option_label <- function(choice) {
 #' Resolve Loop and Merge field values beyond the primary option
 #' @keywords internal
 #' @noRd
-loop_field_values_for_question <- function(question, prefixes) {
+loop_field_values_for_question <- function(question_fact, prefixes) {
   field_values <- loop_field_values_from_static(
-    question_fact_looping_static(question),
+    question_fact_looping_static(question_fact),
     prefixes
   )
 
   column_field_values <- loop_field_values_from_column_names(
-    question_fact_looping_column_names(question),
+    question_fact_looping_column_names(question_fact),
     prefixes
   )
 
