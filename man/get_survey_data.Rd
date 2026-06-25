@@ -8,7 +8,8 @@ get_survey_data(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = c("none", "validation"),
-  ...
+  ...,
+  quiet = TRUE
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ Dictionary. \code{"validation"} excludes rows with Validation Findings.}
 \code{surveyID}, \code{import_id}, \code{convert}, \code{label}, and
 \code{breakout_sets}; passing those arguments errors because they are needed
 for reliable dictionary-to-response-column mapping.}
+
+\item{quiet}{Boolean. If \code{TRUE}, suppress routine validation messages.
+Defaults to \code{TRUE}.}
 }
 \value{
 Labelled Survey Data: a data frame whose Export Variables are renamed to
@@ -55,6 +59,7 @@ override those settings.
 By default, Labelled Survey Data includes variables with Validation Findings.
 Use \code{exclude_findings} when you want to explicitly remove them after
 download.
+Because \code{quiet} follows \code{...}, supply it by name.
 }
 \examples{
 if (interactive()) {

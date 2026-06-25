@@ -19,6 +19,26 @@ globalVariables(c(
   "reason"
 ))
 
+new_progress_bar <- function(total, quiet = TRUE) {
+  if (quiet || total == 0) {
+    return(NULL)
+  }
+
+  utils::txtProgressBar(min = 0, max = total, style = 3)
+}
+
+tick_progress_bar <- function(progress_bar, value) {
+  if (!is.null(progress_bar)) {
+    utils::setTxtProgressBar(progress_bar, value)
+  }
+}
+
+close_progress_bar <- function(progress_bar) {
+  if (!is.null(progress_bar)) {
+    close(progress_bar)
+  }
+}
+
 #' Given a two-column dataframe find which row is not one-to-one
 #' @param cols A dataframe with two columns
 #' @importFrom rlang := .data
