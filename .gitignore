@@ -5,6 +5,7 @@ tmp/
 node_modules/
 .local/finalize-smoke/
 docs/superpowers/no-mistakes-and-superpowers-summary.md
+docs/superpowers/plans/
 docs/pr-0010-merge-review.md
 pr-0010-merge-review.md
 tools/raw-response-column-parity.R
