@@ -3,8 +3,7 @@
 #' Create block-specific views of a Variable Dictionary without changing the
 #' return type of \code{\link[qualtdict]{dict_generate}}.
 #'
-#' @param dict A Variable Dictionary returned by
-#' \code{\link[qualtdict]{dict_generate}}.
+#' @inheritParams dict_validate
 #'
 #' @return A named list of Variable Dictionaries, one per Survey Block.
 #' @export
@@ -34,13 +33,15 @@ dict_split_blocks <- function(dict) {
 #'
 #' @param dat Labelled Survey Data returned by
 #' \code{\link[qualtdict]{get_survey_data}}.
-#' @param dict A Variable Dictionary. Defaults to the \code{dict} attribute
-#' attached by \code{\link[qualtdict]{get_survey_data}}.
+#' @inheritParams dict_validate
 #' @param extra_columns A character vector of raw Labelled Survey Data columns
 #' to retain in each block data set. Defaults to
 #' \code{c("externalDataReference", "startDate", "endDate")}. Missing
 #' user-specified columns error; missing default columns warn and are skipped.
 #' Use \code{NULL} to retain no extra columns.
+#' @details
+#' When \code{dict} is not supplied, \code{survey_split_blocks()} uses the
+#' \code{dict} attribute attached by \code{\link[qualtdict]{get_survey_data}}.
 #'
 #' @return A named list of data frames, one per Survey Block.
 #' @export

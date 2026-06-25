@@ -32,15 +32,14 @@ issues. The validation result is a consistency screen, not proof that the
 source Qualtrics metadata is correct.
 }
 \examples{
-\dontrun{
-survey_id <- "SV_XXXXXXXXXXXXXXXX"
+dict <- data.frame(
+  response_column_id = c("QID1", "QID2"),
+  variable_name = c("q1", "q2"),
+  label = c("Yes", "No"),
+  level = c("1", "2")
+)
+class(dict) <- c("qualtdict", class(dict))
 
-# Create a dictionary
-mydict <- dict_generate(survey_id, variable_name = "question_name")
-
-
-# Validate the dictionary
-validation <- dict_validate(mydict)
-}
+validation <- dict_validate(dict)
 
 }

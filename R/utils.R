@@ -1,7 +1,11 @@
 #' @importFrom stats setNames
-#' @import dplyr
-#' @import purrr
-#' @import stringr
+#' @importFrom dplyr bind_cols bind_rows distinct everything filter group_by
+#' @importFrom dplyr mutate mutate_all n_distinct recode reframe rename select
+#' @importFrom dplyr summarize ungroup
+#' @importFrom purrr discard imap imap_chr map map_chr map_df map_dbl map_lgl
+#' @importFrom purrr map2 map2_chr map2_df modify
+#' @importFrom stringr fixed str_extract str_match str_match_all str_remove
+#' @importFrom stringr str_remove_all str_replace str_replace_all str_split
 #' @importFrom tibble tibble as_tibble enframe
 #' @importFrom magrittr %>%
 #' @importFrom crul Async
@@ -12,13 +16,12 @@ globalVariables(c(
   "name", "variable_name", "semantic_name", "semantic_block",
   "semantic_question",
   "response_column_id", "original_candidate", "repaired_candidate",
-  "reason",
-  "get_pos_tags", "handle_pos_error", "stop_pos_tags"
+  "reason"
 ))
 
 #' Given a two-column dataframe find which row is not one-to-one
 #' @param cols A dataframe with two columns
-#' @importFrom rlang :=
+#' @importFrom rlang := .data
 #' @keywords internal
 #' @noRd
 which_not_onetoone <- function(cols) {
