@@ -470,30 +470,112 @@ render_response_column_labels <- function(context, response_column_id) {
 #' @keywords internal
 #' @noRd
 render_response_column_ids <- function(context) {
-  shape <- context$shape
-  qid_recode(
-    context$response_column_qid,
-    col_len = shape$col_len,
-    col_type = shape$col_type,
-    item = shape$item,
-    level = shape$level,
-    label = shape$label,
-    choice_len = shape$level_len,
-    type = context$type,
-    selector = context$selector,
-    sub_selector = context$sub_selector,
-    is_qid = TRUE
+  renderer <- response_column_renderer_for_context(context)
+  renderer(context)
+}
+
+#' Resolve Response Column ID renderer for one context
+#' @keywords internal
+#' @noRd
+response_column_renderer_for_context <- function(context) {
+  renderer <- response_column_renderer_table()
+
+  if (!is.null(context$selector)) {
+    if (!is.null(context$sub_selector)) {
+      renderer <- renderer[[context$type]][[context$selector]][[context$sub_selector]]
+    } else {
+      renderer <- renderer[[context$type]][[context$selector]]
+    }
+  } else {
+    renderer <- renderer[[context$type]]
+  }
+
+  renderer %||% not_applicable_qid
+}
+
+#' Response Column ID renderer dispatch table
+#' @keywords internal
+#' @noRd
+response_column_renderer_table <- function() {
+  list(
+    MC =
+      list(
+        MACOL = list(TX = suf_level_qid_macol),
+        MAVR = list(TX = suf_level_qid_mavr),
+        MAHR = list(TX = suf_level_qid),
+        MSB = suf_level_qid,
+        SAVR = list(TX = rep_level_qid),
+        SACOL = list(TX = rep_level_qid),
+        DL = rep_level_qid,
+        SAHR = list(TX = rep_level_qid),
+        SB = rep_level_qid,
+        NPS = rep_level_qid
+      ),
+    Matrix =
+      list(
+        Likert = list(
+          MultipleAnswer = suf_item_suf_level_qid,
+          DL = suf_item_rep_level_qid,
+          SingleAnswer = item_or_level_qid,
+          DND = item_or_level_qid,
+          SACV = item_or_level_qid,
+          SACH = item_or_level_qid,
+          SACCOL = item_or_level_qid
+        ),
+        TE = list(
+          Short = suf_item_suf_level_qid,
+          Medium = suf_item_suf_level_qid,
+          Long = suf_item_suf_level_qid
+        ),
+        Profile = list(
+          SingleAnswer = suf_item_rep_level_qid,
+          DL = suf_item_rep_level_qid
+        ),
+        Bipolar = suf_item_rep_level_qid,
+        RO = suf_item_suf_level_qid,
+        MaxDiff = suf_item_rep_level_qid,
+        CS = list(WTB = suf_item_suf_level_qid)
+      ),
+    Slider = list(
+      HSLIDER = suf_level_qid,
+      HBAR = suf_level_qid,
+      STAR = suf_level_qid
+    ),
+    CS = list(
+      HR = list(TX = suf_nmlabel_qid),
+      VRTL = list(TX = item_or_level_qid),
+      HBAR = item_or_level_qid,
+      HSLIDER = item_or_level_qid
+    ),
+    TE = list(
+      FORM = suf_nmlabel_qid,
+      SL = suf_text_qid,
+      ML = suf_text_qid,
+      ESTB = suf_text_qid
+    ),
+    SBS = list(SBSMatrix = sbs_qid),
+    Timing = list(PageTimer = timing_qid),
+    SS = list(TA = rep_level_qid),
+    FileUpload = list(FileUpload = file_upload_qid),
+    PGR = list(DragAndDrop = list(NoColumns = not_applicable_qid)),
+    DD = list(DL = suf_item_rep_level_qid),
+    Draw = list(Signature = file_upload_qid),
+    HL = list(Text = suf_level_suf_item_qid),
+    Meta = list(Browser = not_applicable_qid),
+    DB = list(
+      TB = questiontext_qid,
+      PTB = questiontext_qid,
+      FLB = questiontext_qid,
+      GRB = list(
+        WTXB = questiontext_qid,
+        WOTXB = questiontext_qid
+      )
+    )
   )
 }
 
-questiontext_qid <- function(qid,
-                             col_len,
-                             item,
-                             level,
-                             label,
-                             choice_len,
-                             col_type) {
-  character()
+questiontext_qid <- function(context) {
+  context$response_column_qid
 }
 
 add_text_mc <- function(new_qid, level) {
@@ -536,199 +618,99 @@ mc_choice_ids <- function(level) {
   response_choice_ids
 }
 
-mc_recode_ids <- function(level) {
-  choice_ids <- names(level)
-  if (is.null(choice_ids)) {
-    return(level)
-  }
-
-  response_choice_ids <- unname(level)
-  text_choice_ids <- grepl("TEXT$", level)
-  response_choice_ids[text_choice_ids] <- choice_ids[text_choice_ids]
-
-  response_choice_ids
-}
-
-suf_level_qid <- function(qid,
-                          col_len,
-                          item,
-                          level,
-                          label,
-                          choice_len,
-                          col_type) {
+suf_level_qid <- function(context) {
+  level <- context$render_facts$level
   # Add recode values to the end of the QIDs and then add Qualtrics internal
   # index to the end of QIDs with text options belonging to multiple choice
   # questions allowing for only one choice
-  add_text_mc(paste(qid, mc_recode_ids(level), sep = "_"), level)
+  add_text_mc(
+    paste(context$response_column_qid, mc_choice_ids(level), sep = "_"),
+    level
+  )
 }
 
-suf_level_qid_macol <- function(qid,
-                          col_len,
-                          item,
-                          level,
-                          label,
-                          choice_len,
-                          col_type) {
+suf_level_qid_macol <- function(context) {
+  level <- context$render_facts$level
   if (length(level) == 0) {
-    return(qid)
+    return(context$response_column_qid)
   }
 
-  paste(qid, mc_recode_ids(level), sep = "_")
+  paste(context$response_column_qid, mc_choice_ids(level), sep = "_")
 }
 
-suf_level_qid_mavr <- function(qid,
-                          col_len,
-                          item,
-                          level,
-                          label,
-                          choice_len,
-                          col_type) {
+suf_level_qid_mavr <- function(context) {
+  level <- context$render_facts$level
   if (length(level) == 0) {
-    return(qid)
+    return(context$response_column_qid)
   }
 
-  paste(qid, mc_recode_ids(level), sep = "_")
+  paste(context$response_column_qid, mc_choice_ids(level), sep = "_")
 }
 
-suf_choice_level_qid <- function(qid,
-                                 col_len,
-                                 item,
-                                 level,
-                                 label,
-                                 choice_len,
-                                 col_type) {
-  if (length(level) == 0) {
-    return(qid)
-  }
-
-  paste(qid, mc_choice_ids(level), sep = "_")
-}
-
-suf_nmlabel_qid <- function(qid,
-                            col_len,
-                            item,
-                            level,
-                            label,
-                            choice_len,
-                            col_type) {
+suf_nmlabel_qid <- function(context) {
   # Add recode values to the end of the QID
-  paste(qid, names(level), sep = "_")
+  paste(context$response_column_qid, names(context$render_facts$level), sep = "_")
 }
 
-suf_text_qid <- function(qid,
-                         col_len,
-                         item,
-                         level,
-                         label,
-                         choice_len,
-                         col_type) {
-  paste(qid, "TEXT", sep = "_")
+suf_text_qid <- function(context) {
+  paste(context$response_column_qid, "TEXT", sep = "_")
 }
 
-rep_level_qid <- function(qid,
-                          col_len,
-                          item,
-                          level,
-                          label,
-                          choice_len,
-                          col_type) {
-  add_text_mc(rep(qid, length(level)), level)
+rep_level_qid <- function(context) {
+  level <- context$render_facts$level
+  add_text_mc(rep(context$response_column_qid, length(level)), level)
 }
 
-suf_item_suf_level_qid <- function(qid,
-                                   col_len,
-                                   item,
-                                   level,
-                                   label,
-                                   choice_len,
-                                   col_type) {
-  level <- mc_choice_ids(level)
-  paste_narm(qid, names(item), sep = "_") %>%
+suf_item_suf_level_qid <- function(context) {
+  facts <- context$render_facts
+  level <- mc_choice_ids(facts$level)
+  paste_narm(context$response_column_qid, names(facts$item), sep = "_") %>%
     map(paste, level, sep = "_") %>%
     unlist()
 }
 
-suf_level_suf_item_qid <- function(qid,
-                                   col_len,
-                                   item,
-                                   level,
-                                   label,
-                                   choice_len,
-                                   col_type) {
-  level <- mc_choice_ids(level)
-  paste_narm(qid, level, sep = "_") %>%
-    map(paste, names(item), sep = "_") %>%
+suf_level_suf_item_qid <- function(context) {
+  facts <- context$render_facts
+  level <- mc_choice_ids(facts$level)
+  paste_narm(context$response_column_qid, level, sep = "_") %>%
+    map(paste, names(facts$item), sep = "_") %>%
     unlist()
 }
 
-suf_item_rep_level_qid <- function(qid,
-                                   col_len,
-                                   item,
-                                   level,
-                                   label,
-                                   choice_len,
-                                   col_type) {
-  paste_narm(qid, names(item), sep = "_") %>%
-    rep_qid(item, choice_len)
+suf_item_rep_level_qid <- function(context) {
+  facts <- context$render_facts
+  paste_narm(context$response_column_qid, names(facts$item), sep = "_") %>%
+    rep_qid(facts$item, facts$level_len)
 }
 
-item_or_level_qid <- function(qid,
-                              col_len,
-                              item,
-                              level,
-                              label,
-                              choice_len,
-                              col_type) {
-  if (is.null(item)) {
-    suf_choice_level_qid(
-      qid,
-      col_len,
-      item,
-      level,
-      label,
-      choice_len,
-      col_type
-    )
-  } else {
-    suf_item_rep_level_qid(
-      qid,
-      col_len,
-      item,
-      level,
-      label,
-      choice_len,
-      col_type
-    )
+item_or_level_qid <- function(context) {
+  if (is.null(context$render_facts$item)) {
+    return(suf_level_qid(context))
   }
+
+  suf_item_rep_level_qid(context)
 }
 
-text <- function(qid,
-                 col_len,
-                 item,
-                 level,
-                 label,
-                 choice_len) {
-  paste(qid, "TEXT", sep = "_")
+text <- function(context) {
+  paste(context$response_column_qid, "TEXT", sep = "_")
 }
 
-sbs_qid <- function(qid,
-                    col_len,
-                    item,
-                    level,
-                    label,
-                    choice_len,
-                    col_type) {
-  if (length(col_type) == 0) {
-    return(render_carried_forward_sbs_qids(qid, item))
+sbs_qid <- function(context) {
+  facts <- context$render_facts
+  if (length(facts$col_type) == 0) {
+    return(render_carried_forward_sbs_qids(
+      context$response_column_qid,
+      facts$item
+    ))
   }
 
   sbs_rendering_columns(
-    qid = qid,
-    col_len = col_len,
-    item = item,
-    level = level,
-    choice_len = choice_len,
-    col_type = col_type
+    qid = context$response_column_qid,
+    col_len = facts$col_len,
+    item = facts$item,
+    level = facts$level,
+    choice_len = facts$level_len,
+    col_type = facts$col_type
   ) %>%
     map(render_sbs_column_qids) %>%
     unlist()
@@ -871,162 +853,25 @@ render_sbs_single_answer_row <- function(row) {
   rep(row$row_id, each = row$choice_count)
 }
 
-timing_qid <- function(qid,
-                       col_len,
-                       item,
-                       level,
-                       label,
-                       choice_len,
-                       col_type) {
-  paste0(qid, c(
+timing_qid <- function(context) {
+  paste0(context$response_column_qid, c(
     "_FIRST_CLICK", "_LAST_CLICK", "_PAGE_SUBMIT",
     "_CLICK_COUNT"
   ))
 }
 
-file_upload_qid <- function(qid,
-                            col_len,
-                            item,
-                            level,
-                            label,
-                            choice_len,
-                            col_type) {
-  paste0(qid, c(
+file_upload_qid <- function(context) {
+  paste0(context$response_column_qid, c(
     "_FILE_ID", "_FILE_NAME", "_FILE_SIZE", "_FILE_TYPE"
   ))
 }
 
-not_applicable_qid <- function(qid,
-                               col_len,
-                               item,
-                               level,
-                               label,
-                               choice_len,
-                               col_type) {
+not_applicable_qid <- function(context) {
   warn_msg <- paste0(
-    qid,
+    context$response_column_qid,
     " uses a question type without a specific response-column renderer; ",
     "falling back to the bare QID."
   )
   warning(warn_msg)
-  qid
-}
-
-qid_recode <- function(qid,
-                       col_len,
-                       item,
-                       level,
-                       label,
-                       choice_len,
-                       col_type,
-                       type,
-                       selector,
-                       sub_selector,
-                       is_qid) {
-  recode_list <- list(
-    MC =
-      list(
-        MACOL = list(TX = suf_level_qid_macol),
-        MAVR = list(TX = suf_level_qid_mavr),
-        MAHR = list(TX = suf_level_qid),
-        MSB = suf_level_qid,
-        SAVR = list(TX = rep_level_qid),
-        SACOL = list(TX = rep_level_qid),
-        DL = rep_level_qid,
-        SAHR = list(TX = rep_level_qid),
-        SB = rep_level_qid,
-        NPS = rep_level_qid
-      ),
-    Matrix =
-      list(
-        Likert = list(
-          MultipleAnswer = suf_item_suf_level_qid,
-          DL = suf_item_rep_level_qid,
-          SingleAnswer = item_or_level_qid,
-          DND = item_or_level_qid,
-          SACV = item_or_level_qid,
-          SACH = item_or_level_qid,
-          SACCOL = item_or_level_qid
-        ),
-        TE = list(
-          Short = suf_item_suf_level_qid,
-          Medium = suf_item_suf_level_qid,
-          Long = suf_item_suf_level_qid
-        ),
-        Profile = list(
-          SingleAnswer = suf_item_rep_level_qid,
-          DL = suf_item_rep_level_qid
-        ),
-        Bipolar = suf_item_rep_level_qid,
-        RO = suf_item_suf_level_qid,
-        MaxDiff = suf_item_rep_level_qid,
-        CS = list(WTB = suf_item_suf_level_qid)
-      ),
-    Slider = list(
-      HSLIDER = suf_level_qid,
-      HBAR = suf_level_qid,
-      STAR = suf_level_qid
-    ),
-    CS = list(
-      HR = list(TX = suf_nmlabel_qid),
-      VRTL = list(TX = item_or_level_qid),
-      HBAR = item_or_level_qid,
-      HSLIDER = item_or_level_qid
-    ),
-    TE = list(
-      FORM = suf_nmlabel_qid,
-      SL = suf_text_qid,
-      ML = suf_text_qid,
-      ESTB = suf_text_qid
-    ),
-    SBS = list(SBSMatrix = sbs_qid),
-    Timing = list(PageTimer = timing_qid),
-    SS = list(TA = rep_level_qid),
-    FileUpload = list(FileUpload = file_upload_qid),
-    PGR = list(DragAndDrop = list(NoColumns = not_applicable_qid)),
-    DD = list(DL = suf_item_rep_level_qid),
-    Draw = list(Signature = file_upload_qid),
-    HL = list(Text = suf_level_suf_item_qid),
-    Meta = list(Browser = not_applicable_qid),
-    DB = list(
-      TB = questiontext_qid,
-      PTB = questiontext_qid,
-      FLB = questiontext_qid,
-      GRB = list(
-        WTXB = questiontext_qid,
-        WOTXB = questiontext_qid
-      )
-    )
-  )
-
-  if (type != "SBS") {
-    level <- level[[1]]
-    label <- label[[1]]
-  }
-
-  if (!is.null(selector)) {
-    if (!is.null(sub_selector)) {
-      recode_func <- recode_list[[type]][[selector]][[sub_selector]]
-    } else {
-      recode_func <- recode_list[[type]][[selector]]
-    }
-  } else {
-    recode_func <- recode_list[[type]]
-  }
-
-  if (is.null(recode_func)) {
-    recode_func <- not_applicable_qid
-  }
-
-  new_qid <- recode_func(
-    qid,
-    col_len,
-    item,
-    level,
-    label,
-    choice_len,
-    col_type
-  )
-
-  return(new_qid)
+  context$response_column_qid
 }

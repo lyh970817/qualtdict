@@ -110,7 +110,7 @@ test_that("render_response_columns renders MC rows with aligned facts", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
-test_that("render_response_columns skips display block questions", {
+test_that("render_response_columns renders display block response column ids", {
   question <- normalise_question_fact(
     qid = "QID1",
     question = list(
@@ -127,11 +127,14 @@ test_that("render_response_columns skips display block questions", {
 
   rendered <- render_response_columns(question, "QID1")
 
-  expect_identical(nrow(rendered), 0L)
-  expect_named(
-    rendered,
-    c("response_column_id", "question", "item", "level", "label")
+  expect_identical(
+    rendered$response_column_id,
+    "QID1"
   )
+  expect_identical(rendered$question, "Intro text")
+  expect_true(all(is.na(rendered$item)))
+  expect_true(all(is.na(rendered$level)))
+  expect_true(all(is.na(rendered$label)))
 })
 
 test_that("render_response_columns accepts package-owned normalised facts", {
@@ -353,4 +356,29 @@ test_that("response column render facts unwrap non-SBS levels and labels only", 
   sbs_facts <- response_column_render_facts(sbs_shape, "SBS")
   expect_identical(sbs_facts$level, sbs_shape$level)
   expect_identical(sbs_facts$label, sbs_shape$label)
+})
+
+test_that("response column renderer context preserves unsupported type fallback", {
+  question_fact <- normalise_qualtrics_metadata(
+    synthetic_mc_text_raw_metadata()
+  )$questions$QID1
+  question_fact$question_type <- list(
+    type = "UnsupportedType",
+    selector = "UnsupportedSelector",
+    sub_selector = NULL
+  )
+  shape <- response_column_shape(question_fact)
+  context <- new_response_column_render_context(
+    question_fact = question_fact,
+    response_column_qid = "QID1",
+    shape = shape,
+    question_type = question_fact$question_type
+  )
+
+  expect_warning(
+    rendered <- render_response_column_ids(context),
+    "QID1 uses a question type without a specific response-column renderer",
+    fixed = TRUE
+  )
+  expect_identical(rendered, "QID1")
 })
