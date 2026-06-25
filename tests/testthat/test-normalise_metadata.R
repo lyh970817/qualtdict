@@ -500,7 +500,7 @@ test_that("matrix response columns use Qualtrics subquestion IDs", {
   expect_identical(unname(dict$label), c("Low", "High", "Low", "High"))
 })
 
-test_that("multiple-answer response columns use Qualtrics x choice IDs", {
+test_that("multiple-answer response columns use recodes for x choice IDs", {
   raw_metadata <- synthetic_mc_x_choice_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
@@ -514,13 +514,48 @@ test_that("multiple-answer response columns use Qualtrics x choice IDs", {
 
   expect_identical(
     dict$response_column_id,
-    paste0("QID126879611_", c("x1", "x2", "x3", "x4", "x6"))
+    paste0("QID126879611_", c("1", "2", "3", "4", "6"))
   )
   expect_identical(unname(dict$level), c("1", "2", "3", "4", "6"))
   expect_identical(
     unname(dict$label),
     paste("Choice", c("1", "2", "3", "4", "6"))
   )
+})
+
+test_that("non-analysed multiple-answer choices are not response columns", {
+  raw_metadata <- synthetic_mc_recode_raw_metadata()
+  raw_metadata$metadata$questions$QID1$choices[["8"]]$analyze <- FALSE
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalise_qualtrics_metadata(raw_metadata),
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_false("QID1_-99" %in% dict$response_column_id)
+  expect_false("-99" %in% dict$level)
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
+test_that("non-analysed single-answer choices remain value labels", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$choices[["1"]]$analyze <- FALSE
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalise_qualtrics_metadata(raw_metadata),
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_true("QID1" %in% dict$response_column_id)
+  expect_true("1" %in% dict$level)
+  expect_true("Yes" %in% dict$label)
+  expect_true(all(lengths(dict) == nrow(dict)))
 })
 
 test_that("multiple-answer response columns use recodes when choice IDs are numeric", { # nolint
@@ -731,6 +766,27 @@ test_that("normalised metadata renders supported extra Loop and Merge fields", {
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
   expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+})
+
+test_that("static Loop and Merge rows render when source QID is absent", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  raw_metadata$metadata$questions$QID1 <- NULL
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalise_qualtrics_metadata(raw_metadata),
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_identical(target_rows$loop_option, c("x1", "x2"))
 })
 
 test_that("normalised metadata renders static Loop and Merge rows", {

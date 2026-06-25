@@ -110,6 +110,30 @@ test_that("render_response_columns renders MC rows with aligned facts", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
+test_that("render_response_columns skips display block questions", {
+  question <- normalise_question_fact(
+    qid = "QID1",
+    question = list(
+      questionName = "Intro",
+      questionType = list(type = "DB", selector = "TB", subSelector = NULL),
+      questionText = "Intro text",
+      choices = list(),
+      subQuestions = list(),
+      columns = list()
+    ),
+    block = list(description = "Main Block"),
+    content_type = NULL
+  )
+
+  rendered <- render_response_columns(question, "QID1")
+
+  expect_identical(nrow(rendered), 0L)
+  expect_named(
+    rendered,
+    c("response_column_id", "question", "item", "level", "label")
+  )
+})
+
 test_that("render_response_columns accepts package-owned normalised facts", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
