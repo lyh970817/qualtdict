@@ -235,3 +235,11 @@ merge_smoke_baseline <- function(existing, selected) {
 
   order_smoke_record_summaries(merged)
 }
+
+bless_smoke_record <- function(existing, selected, selective = FALSE) {
+  if (!isTRUE(selective) || is.null(existing)) {
+    return(selected)
+  }
+
+  merge_smoke_baseline(existing, selected)
+}

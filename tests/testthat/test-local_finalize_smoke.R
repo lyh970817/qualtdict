@@ -170,6 +170,93 @@ test_that(
   }
 )
 
+test_that("bless_smoke_record replaces stale baseline entries in full mode", {
+  existing <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "old-time",
+    summaries = list(
+      dict = list(object_hash = "old-dict"),
+      validation = list(object_hash = "old-validation"),
+      stale_summary = list(object_hash = "old-stale")
+    ),
+    object_hashes = list(
+      dict = "old-dict",
+      validation = "old-validation",
+      stale_summary = "old-stale"
+    ),
+    scenario_hash = "old-scenario"
+  )
+  selected <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "new-time",
+    summaries = list(
+      dict = list(object_hash = "new-dict"),
+      labelled = list(object_hash = "new-labelled")
+    ),
+    object_hashes = list(
+      dict = "new-dict",
+      labelled = "new-labelled"
+    ),
+    scenario_hash = "selected-scenario"
+  )
+
+  blessed <- bless_smoke_record(existing, selected, selective = FALSE)
+
+  expect_identical(blessed, selected)
+  expect_false("stale_summary" %in% names(blessed$summaries))
+  expect_false("stale_summary" %in% names(blessed$object_hashes))
+})
+
+test_that("bless_smoke_record merges selected summaries in selective mode", {
+  existing <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "old-time",
+    summaries = list(
+      dict = list(object_hash = "old-dict"),
+      validation = list(object_hash = "old-validation"),
+      survey_blocks = list(object_hash = "old-survey-blocks")
+    ),
+    object_hashes = list(
+      dict = "old-dict",
+      validation = "old-validation",
+      survey_blocks = "old-survey-blocks"
+    ),
+    scenario_hash = "old-scenario"
+  )
+  selected <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "new-time",
+    summaries = list(labelled = list(object_hash = "new-labelled")),
+    object_hashes = list(labelled = "new-labelled"),
+    scenario_hash = "selected-scenario"
+  )
+
+  blessed <- bless_smoke_record(existing, selected, selective = TRUE)
+
+  expect_identical(
+    names(blessed$summaries),
+    c("dict", "validation", "labelled", "survey_blocks")
+  )
+  expect_identical(blessed$summaries$dict, list(object_hash = "old-dict"))
+  expect_identical(
+    blessed$summaries$labelled,
+    list(object_hash = "new-labelled")
+  )
+  expect_identical(
+    blessed$summaries$survey_blocks,
+    list(object_hash = "old-survey-blocks")
+  )
+  expect_identical(blessed$generated_at, "new-time")
+})
+
 test_that("merge_smoke_baseline updates only selected summaries and hashes", {
   existing <- list(
     alias = "survey_a",
