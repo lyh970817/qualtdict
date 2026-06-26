@@ -1,9 +1,9 @@
-source(testthat::test_path(
-  "..",
-  "..",
-  "tools",
-  "local-finalize-smoke-lib.R"
-))
+helper_path <- testthat::test_path("..", "..", "tools", "local-finalize-smoke-lib.R")
+skip_if_not(
+  file.exists(helper_path),
+  "local smoke tooling is excluded from package builds"
+)
+source(helper_path)
 
 test_that("parse_smoke_functions defaults to all smoke-covered functions", {
   expect_identical(
@@ -17,6 +17,22 @@ test_that("parse_smoke_functions defaults to all smoke-covered functions", {
       "survey_split_blocks"
     )
   )
+})
+
+test_that("local finalize smoke tests use a package-build-safe helper bootstrap", {
+  test_file <- testthat::test_path("test-local_finalize_smoke.R")
+  test_lines <- readLines(test_file, warn = FALSE)
+  test_text <- gsub("\\s+", " ", paste(test_lines, collapse = "\n"))
+
+  expect_match(
+    test_text,
+    'helper_path <- testthat::test_path\\("..", "..", "tools", "local-finalize-smoke-lib.R"\\)'
+  )
+  expect_match(
+    test_text,
+    'skip_if_not\\( file.exists\\(helper_path\\), "local smoke tooling is excluded from package builds" \\)'
+  )
+  expect_match(test_text, "source\\(helper_path\\)")
 })
 
 test_that("parse_smoke_functions trims whitespace and removes duplicates", {
@@ -371,6 +387,34 @@ test_that("smoke_scenario_requirements marks setup needed by selected functions"
       needs_dict_blocks = FALSE,
       needs_survey_blocks = TRUE
     )
+  )
+})
+
+test_that("local finalize smoke help distinguishes full and selective bless", {
+  script_path <- testthat::test_path("..", "..", "tools", "local-finalize-smoke.R")
+  skip_if_not(
+    file.exists(script_path),
+    "local smoke tooling is excluded from package builds"
+  )
+
+  help_output <- system2(
+    command = file.path(R.home("bin"), "Rscript"),
+    args = c(script_path, "--help"),
+    stdout = TRUE,
+    stderr = TRUE
+  )
+  help_text <- gsub("\\s+", " ", paste(help_output, collapse = "\n"))
+
+  expect_match(help_text, "--functions", fixed = TRUE)
+  expect_match(
+    help_text,
+    "Full `bless` replaces local baselines with current output hashes",
+    fixed = TRUE
+  )
+  expect_match(
+    help_text,
+    "`bless --functions` updates selected output summaries inside existing baselines",
+    fixed = TRUE
   )
 })
 
