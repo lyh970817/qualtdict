@@ -57,3 +57,37 @@ smoke_summary_names <- function(functions) {
   }
   unique(summaries)
 }
+
+hash_smoke_list <- function(x) {
+  temp <- tempfile(fileext = ".rds")
+  on.exit(unlink(temp), add = TRUE)
+  saveRDS(x, temp, version = 2)
+  unname(tools::md5sum(temp))
+}
+
+project_smoke_record <- function(record, selected_functions) {
+  selected_summary_names <- smoke_summary_names(selected_functions)
+  selected_summary_names <- names(record$summaries)[
+    names(record$summaries) %in% selected_summary_names
+  ]
+
+  record$summaries <- record$summaries[selected_summary_names]
+  record$object_hashes <- record$object_hashes[selected_summary_names]
+  record$scenario_hash <- hash_smoke_list(record$object_hashes)
+  record
+}
+
+merge_smoke_baseline <- function(existing, selected) {
+  merged <- existing
+  merged$generated_at <- selected$generated_at
+
+  for (name in names(selected$summaries)) {
+    merged$summaries[[name]] <- selected$summaries[[name]]
+  }
+  for (name in names(selected$object_hashes)) {
+    merged$object_hashes[[name]] <- selected$object_hashes[[name]]
+  }
+
+  merged$scenario_hash <- hash_smoke_list(merged$object_hashes)
+  merged
+}
