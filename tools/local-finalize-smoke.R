@@ -95,7 +95,9 @@ smoke_root <- arg_value(
   file.path(project_root, ".local", "finalize-smoke")
 )
 survey_filter <- arg_value("--survey")
-selected_functions <- parse_smoke_functions(arg_value("--functions"))
+functions_filter <- arg_value("--functions")
+selected_functions <- parse_smoke_functions(functions_filter)
+selective_functions <- !is.null(functions_filter)
 
 read_config <- function(path) {
   if (!file.exists(path)) {
@@ -710,9 +712,12 @@ if (identical(command, "bless")) {
       baseline_record(result),
       selected_functions
     )
-    if (file.exists(path)) {
-      selected_record <- merge_smoke_baseline(read_json(path), selected_record)
-    }
+    existing_record <- if (file.exists(path)) read_json(path) else NULL
+    selected_record <- bless_smoke_record(
+      existing = existing_record,
+      selected = selected_record,
+      selective = selective_functions
+    )
     write_json(selected_record, path)
     print_result_line(result, "blessed")
   }
