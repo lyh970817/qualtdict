@@ -109,6 +109,47 @@ test_that("project_smoke_record omits unavailable optional summaries", {
   expect_identical(projected$object_hashes, list(labelled = "labelled-hash"))
 })
 
+test_that(
+  "project_smoke_record preserves full record order and hash for full selection",
+  {
+    record <- list(
+      alias = "survey_a",
+      survey_id = "SV_123",
+      variable_name = "question_name",
+      generated_at = "2026-06-26T00:00:00Z",
+      summaries = list(
+        dict = list(object_hash = "dict-hash"),
+        validation = list(object_hash = "validation-hash"),
+        labelled = list(object_hash = "labelled-hash"),
+        labelled_excluding_validation = list(
+          object_hash = "labelled-ex-hash"
+        ),
+        labelled_export_findings = list(
+          object_hash = "export-findings-hash"
+        ),
+        dict_blocks = list(object_hash = "dict-blocks-hash"),
+        survey_blocks = list(object_hash = "survey-blocks-hash")
+      ),
+      object_hashes = list(
+        dict = "dict-hash",
+        validation = "validation-hash",
+        labelled = "labelled-hash",
+        labelled_excluding_validation = "labelled-ex-hash",
+        labelled_export_findings = "export-findings-hash",
+        dict_blocks = "dict-blocks-hash",
+        survey_blocks = "survey-blocks-hash"
+      ),
+      scenario_hash = "full-hash"
+    )
+
+    projected <- project_smoke_record(record, parse_smoke_functions(NULL))
+
+    expect_identical(names(projected$summaries), names(record$summaries))
+    expect_identical(names(projected$object_hashes), names(record$object_hashes))
+    expect_identical(projected$scenario_hash, "full-hash")
+  }
+)
+
 test_that("merge_smoke_baseline updates only selected summaries and hashes", {
   existing <- list(
     alias = "survey_a",

@@ -172,6 +172,11 @@ hash_smoke_list <- function(x) {
 
 project_smoke_record <- function(record, selected_functions) {
   selected_summary_names <- smoke_summary_names(selected_functions)
+
+  if (all(names(record$summaries) %in% selected_summary_names)) {
+    return(record)
+  }
+
   selected_summary_names <- selected_summary_names[
     selected_summary_names %in% names(record$summaries)
   ]
