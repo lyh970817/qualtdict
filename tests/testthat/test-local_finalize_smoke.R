@@ -110,7 +110,7 @@ test_that("project_smoke_record omits unavailable optional summaries", {
 })
 
 test_that(
-  "project_smoke_record preserves full record order and hash for full selection",
+  "project_smoke_record uses historical full-run order for full selection",
   {
     record <- list(
       alias = "survey_a",
@@ -144,9 +144,29 @@ test_that(
 
     projected <- project_smoke_record(record, parse_smoke_functions(NULL))
 
-    expect_identical(names(projected$summaries), names(record$summaries))
-    expect_identical(names(projected$object_hashes), names(record$object_hashes))
-    expect_identical(projected$scenario_hash, "full-hash")
+    expect_identical(
+      names(projected$summaries),
+      c(
+        "dict",
+        "validation",
+        "labelled",
+        "labelled_export_findings",
+        "dict_blocks",
+        "survey_blocks",
+        "labelled_excluding_validation"
+      )
+    )
+    expect_identical(projected$object_hashes, list(
+      dict = "dict-hash",
+      validation = "validation-hash",
+      labelled = "labelled-hash",
+      labelled_export_findings = "export-findings-hash",
+      dict_blocks = "dict-blocks-hash",
+      survey_blocks = "survey-blocks-hash",
+      labelled_excluding_validation = "labelled-ex-hash"
+    ))
+    expect_match(projected$scenario_hash, "^[0-9a-f]{32}$")
+    expect_false(identical(projected$scenario_hash, "full-hash"))
   }
 )
 
@@ -187,6 +207,46 @@ test_that("merge_smoke_baseline updates only selected summaries and hashes", {
   expect_match(merged$scenario_hash, "^[0-9a-f]{32}$")
   expect_false(identical(merged$scenario_hash, "old-scenario"))
   expect_identical(merged$generated_at, "new-time")
+})
+
+test_that("merge_smoke_baseline restores canonical order for known summaries", {
+  existing <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "old-time",
+    summaries = list(
+      dict = list(object_hash = "old-dict"),
+      survey_blocks = list(object_hash = "old-survey-blocks")
+    ),
+    object_hashes = list(
+      dict = "old-dict",
+      survey_blocks = "old-survey-blocks"
+    ),
+    scenario_hash = "old-scenario"
+  )
+  selected <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "new-time",
+    summaries = list(labelled = list(object_hash = "new-labelled")),
+    object_hashes = list(labelled = "new-labelled"),
+    scenario_hash = "selected-scenario"
+  )
+
+  merged <- merge_smoke_baseline(existing, selected)
+
+  expect_identical(
+    names(merged$summaries),
+    c("dict", "labelled", "survey_blocks")
+  )
+  expect_identical(merged$object_hashes, list(
+    dict = "old-dict",
+    labelled = "new-labelled",
+    survey_blocks = "old-survey-blocks"
+  ))
+  expect_match(merged$scenario_hash, "^[0-9a-f]{32}$")
 })
 
 test_that("smoke_scenario_requirements marks setup needed by selected functions", {

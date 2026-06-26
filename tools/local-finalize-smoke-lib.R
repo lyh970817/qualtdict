@@ -75,6 +75,18 @@ smoke_summary_names <- function(functions) {
   unique(summaries)
 }
 
+smoke_full_summary_names <- function() {
+  c(
+    "dict",
+    "validation",
+    "labelled",
+    "labelled_export_findings",
+    "dict_blocks",
+    "survey_blocks",
+    "labelled_excluding_validation"
+  )
+}
+
 smoke_result_line <- function(result, status) {
   dict_summary <- result$summaries[["dict"]]
   labelled_summary <- result$summaries[["labelled"]]
@@ -170,12 +182,35 @@ hash_smoke_list <- function(x) {
   unname(tools::md5sum(temp))
 }
 
-project_smoke_record <- function(record, selected_functions) {
-  selected_summary_names <- smoke_summary_names(selected_functions)
+order_smoke_record_summaries <- function(record) {
+  known_names <- smoke_full_summary_names()
+  summary_names <- names(record$summaries)
+  ordered_summary_names <- c(
+    known_names[known_names %in% summary_names],
+    summary_names[!summary_names %in% known_names]
+  )
 
-  if (all(names(record$summaries) %in% selected_summary_names)) {
-    return(record)
+  hash_names <- names(record$object_hashes)
+  ordered_hash_names <- c(
+    known_names[known_names %in% hash_names],
+    hash_names[!hash_names %in% known_names]
+  )
+
+  record$summaries <- record$summaries[ordered_summary_names]
+  record$object_hashes <- record$object_hashes[ordered_hash_names]
+  record$scenario_hash <- hash_smoke_list(record$object_hashes)
+  record
+}
+
+project_smoke_record <- function(record, selected_functions) {
+  if (
+    length(selected_functions) == length(smoke_functions()) &&
+      setequal(selected_functions, smoke_functions())
+  ) {
+    return(order_smoke_record_summaries(record))
   }
+
+  selected_summary_names <- smoke_summary_names(selected_functions)
 
   selected_summary_names <- selected_summary_names[
     selected_summary_names %in% names(record$summaries)
@@ -198,6 +233,5 @@ merge_smoke_baseline <- function(existing, selected) {
     merged$object_hashes[[name]] <- selected$object_hashes[[name]]
   }
 
-  merged$scenario_hash <- hash_smoke_list(merged$object_hashes)
-  merged
+  order_smoke_record_summaries(merged)
 }
