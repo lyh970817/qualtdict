@@ -609,35 +609,7 @@ write_run_artifacts <- function(result, run_dir) {
 }
 
 print_result_line <- function(result, status) {
-  message <- paste0(
-    result$alias,
-    " / ",
-    result$variable_name,
-    ": ",
-    status,
-    " hash=",
-    result$scenario_hash
-  )
-
-  if (!is.null(result$summaries$dict) && !is.null(result$summaries$labelled)) {
-    message <- paste0(
-      message,
-      " dict_rows=",
-      result$summaries$dict$rows,
-      " labelled_rows=",
-      result$summaries$labelled$rows,
-      " labelled_cols=",
-      result$summaries$labelled$columns
-    )
-  } else {
-    message <- paste0(
-      message,
-      " outputs=",
-      paste(names(result$summaries), collapse = ",")
-    )
-  }
-
-  cat(message, "\n", sep = "")
+  cat(smoke_result_line(result, status), "\n", sep = "")
 }
 
 compare_records <- function(current, baseline) {
@@ -646,63 +618,9 @@ compare_records <- function(current, baseline) {
 }
 
 print_mismatch <- function(current, baseline) {
-  cat(
-    "Mismatch: ",
-    current$alias,
-    " / ",
-    current$variable_name,
-    "\n",
+  cat(paste(smoke_mismatch_lines(current, baseline), collapse = "\n"), "\n",
     sep = ""
   )
-  cat("  baseline hash: ", baseline$scenario_hash, "\n", sep = "")
-  cat("  current hash:  ", current$scenario_hash, "\n", sep = "")
-  cat(
-    "  outputs: ",
-    paste(names(current$summaries), collapse = ", "),
-    "\n",
-    sep = ""
-  )
-
-  if (!is.null(current$summaries$dict) && !is.null(baseline$summaries$dict)) {
-    cat(
-      "  dict rows: ",
-      baseline$summaries$dict$rows,
-      " -> ",
-      current$summaries$dict$rows,
-      "\n",
-      sep = ""
-    )
-  }
-  if (
-    !is.null(current$summaries$labelled) &&
-      !is.null(baseline$summaries$labelled)
-  ) {
-    cat(
-      "  labelled dims: ",
-      baseline$summaries$labelled$rows,
-      "x",
-      baseline$summaries$labelled$columns,
-      " -> ",
-      current$summaries$labelled$rows,
-      "x",
-      current$summaries$labelled$columns,
-      "\n",
-      sep = ""
-    )
-  }
-  if (
-    !is.null(current$summaries$validation) &&
-      !is.null(baseline$summaries$validation)
-  ) {
-    cat(
-      "  validation findings rows: ",
-      baseline$summaries$validation$validation_findings_rows,
-      " -> ",
-      current$summaries$validation$validation_findings_rows,
-      "\n",
-      sep = ""
-    )
-  }
 }
 
 run_survey <- function(survey, run_dir, selected_functions) {

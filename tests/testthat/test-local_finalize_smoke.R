@@ -185,3 +185,98 @@ test_that("smoke_scenario_requirements marks setup needed by selected functions"
     )
   )
 })
+
+test_that("smoke_result_line includes detailed row counts for full summaries", {
+  result <- list(
+    alias = "survey_a",
+    variable_name = "question_name",
+    scenario_hash = "abc123",
+    summaries = list(
+      dict = list(rows = 12L),
+      labelled = list(rows = 34L, columns = 5L)
+    )
+  )
+
+  expect_identical(
+    smoke_result_line(result, "matched"),
+    "survey_a / question_name: matched hash=abc123 dict_rows=12 labelled_rows=34 labelled_cols=5"
+  )
+})
+
+test_that("smoke_result_line falls back to outputs for selective summaries", {
+  result <- list(
+    alias = "survey_a",
+    variable_name = "semantic_name",
+    scenario_hash = "def456",
+    summaries = list(
+      validation = list(validation_findings_rows = 2L),
+      dict_blocks = list(block_count = 3L)
+    )
+  )
+
+  expect_identical(
+    smoke_result_line(result, "current"),
+    "survey_a / semantic_name: current hash=def456 outputs=validation,dict_blocks"
+  )
+})
+
+test_that("smoke_mismatch_lines includes detailed summary deltas when available", {
+  baseline <- list(
+    alias = "survey_a",
+    variable_name = "question_name",
+    scenario_hash = "oldhash",
+    summaries = list(
+      dict = list(rows = 12L),
+      labelled = list(rows = 34L, columns = 5L),
+      validation = list(validation_findings_rows = 2L)
+    )
+  )
+  current <- list(
+    alias = "survey_a",
+    variable_name = "question_name",
+    scenario_hash = "newhash",
+    summaries = list(
+      dict = list(rows = 13L),
+      labelled = list(rows = 35L, columns = 6L),
+      validation = list(validation_findings_rows = 4L)
+    )
+  )
+
+  expect_identical(
+    smoke_mismatch_lines(current, baseline),
+    c(
+      "Mismatch: survey_a / question_name",
+      "  baseline hash: oldhash",
+      "  current hash:  newhash",
+      "  outputs: dict, labelled, validation",
+      "  dict rows: 12 -> 13",
+      "  labelled dims: 34x5 -> 35x6",
+      "  validation findings rows: 2 -> 4"
+    )
+  )
+})
+
+test_that("smoke_mismatch_lines reports selective outputs without missing-summary assumptions", {
+  baseline <- list(
+    alias = "survey_a",
+    variable_name = "semantic_name",
+    scenario_hash = "oldhash",
+    summaries = list(dict_blocks = list(block_count = 2L))
+  )
+  current <- list(
+    alias = "survey_a",
+    variable_name = "semantic_name",
+    scenario_hash = "newhash",
+    summaries = list(dict_blocks = list(block_count = 3L))
+  )
+
+  expect_identical(
+    smoke_mismatch_lines(current, baseline),
+    c(
+      "Mismatch: survey_a / semantic_name",
+      "  baseline hash: oldhash",
+      "  current hash:  newhash",
+      "  outputs: dict_blocks"
+    )
+  )
+})

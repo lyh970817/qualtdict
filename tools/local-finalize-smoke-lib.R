@@ -75,6 +75,94 @@ smoke_summary_names <- function(functions) {
   unique(summaries)
 }
 
+smoke_result_line <- function(result, status) {
+  dict_summary <- result$summaries[["dict"]]
+  labelled_summary <- result$summaries[["labelled"]]
+  message <- paste0(
+    result$alias,
+    " / ",
+    result$variable_name,
+    ": ",
+    status,
+    " hash=",
+    result$scenario_hash
+  )
+
+  if (!is.null(dict_summary) && !is.null(labelled_summary)) {
+    return(paste0(
+      message,
+      " dict_rows=",
+      dict_summary$rows,
+      " labelled_rows=",
+      labelled_summary$rows,
+      " labelled_cols=",
+      labelled_summary$columns
+    ))
+  }
+
+  paste0(
+    message,
+    " outputs=",
+    paste(names(result$summaries), collapse = ",")
+  )
+}
+
+smoke_mismatch_lines <- function(current, baseline) {
+  current_dict <- current$summaries[["dict"]]
+  baseline_dict <- baseline$summaries[["dict"]]
+  current_labelled <- current$summaries[["labelled"]]
+  baseline_labelled <- baseline$summaries[["labelled"]]
+  current_validation <- current$summaries[["validation"]]
+  baseline_validation <- baseline$summaries[["validation"]]
+
+  lines <- c(
+    paste0("Mismatch: ", current$alias, " / ", current$variable_name),
+    paste0("  baseline hash: ", baseline$scenario_hash),
+    paste0("  current hash:  ", current$scenario_hash),
+    paste0("  outputs: ", paste(names(current$summaries), collapse = ", "))
+  )
+
+  if (!is.null(current_dict) && !is.null(baseline_dict)) {
+    lines <- c(
+      lines,
+      paste0(
+        "  dict rows: ",
+        baseline_dict$rows,
+        " -> ",
+        current_dict$rows
+      )
+    )
+  }
+  if (!is.null(current_labelled) && !is.null(baseline_labelled)) {
+    lines <- c(
+      lines,
+      paste0(
+        "  labelled dims: ",
+        baseline_labelled$rows,
+        "x",
+        baseline_labelled$columns,
+        " -> ",
+        current_labelled$rows,
+        "x",
+        current_labelled$columns
+      )
+    )
+  }
+  if (!is.null(current_validation) && !is.null(baseline_validation)) {
+    lines <- c(
+      lines,
+      paste0(
+        "  validation findings rows: ",
+        baseline_validation$validation_findings_rows,
+        " -> ",
+        current_validation$validation_findings_rows
+      )
+    )
+  }
+
+  lines
+}
+
 hash_smoke_list <- function(x) {
   temp <- tempfile(fileext = ".rds")
   on.exit(unlink(temp), add = TRUE)
