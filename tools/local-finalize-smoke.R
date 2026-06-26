@@ -561,10 +561,6 @@ run_scenario <- function(survey, variable_name, selected_functions, dict = NULL)
   }
   if ("get_survey_data" %in% selected_functions) {
     summaries$labelled <- data_frame_summary(objects$labelled)
-    if (!is.null(objects$labelled_excluding_validation)) {
-      summaries$labelled_excluding_validation <-
-        data_frame_summary(objects$labelled_excluding_validation)
-    }
   }
   if ("labelled_export_findings" %in% selected_functions) {
     summaries$labelled_export_findings <-
@@ -575,6 +571,10 @@ run_scenario <- function(survey, variable_name, selected_functions, dict = NULL)
   }
   if ("survey_split_blocks" %in% selected_functions) {
     summaries$survey_blocks <- block_list_summary(objects$survey_blocks)
+  }
+  if (!is.null(objects$labelled_excluding_validation)) {
+    summaries$labelled_excluding_validation <-
+      data_frame_summary(objects$labelled_excluding_validation)
   }
 
   object_hashes <- lapply(summaries, `[[`, "object_hash")
