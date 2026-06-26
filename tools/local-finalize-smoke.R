@@ -7,10 +7,12 @@ usage <- function() {
       "  Rscript tools/local-finalize-smoke.R check",
       "  Rscript tools/local-finalize-smoke.R bless",
       "  Rscript tools/local-finalize-smoke.R check --survey survey_a",
+      "  Rscript tools/local-finalize-smoke.R check --functions get_survey_data",
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
       "  --root DIR       Local smoke artifact directory.",
+      "  --functions NAMES  Comma-separated smoke-covered exported functions.",
       "",
       "`check` compares current exported-function output hashes with local",
       "baselines. It also verifies Response Column ID parity against local",
@@ -82,6 +84,8 @@ if (!file.exists(file.path(project_root, "DESCRIPTION"))) {
   stop("Run this script from the qualtdict repository.", call. = FALSE)
 }
 
+source(file.path(project_root, "tools", "local-finalize-smoke-lib.R"))
+
 config_path <- arg_value(
   "--config",
   file.path(project_root, "tools", "local-finalize-smoke-surveys.json")
@@ -91,6 +95,7 @@ smoke_root <- arg_value(
   file.path(project_root, ".local", "finalize-smoke")
 )
 survey_filter <- arg_value("--survey")
+selected_functions <- parse_smoke_functions(arg_value("--functions"))
 
 read_config <- function(path) {
   if (!file.exists(path)) {
@@ -475,8 +480,12 @@ assert_response_column_id_parity <- function(survey, dict, responses, run_dir) {
   invisible(parity)
 }
 
-run_scenario <- function(survey, variable_name, dict = NULL) {
+run_scenario <- function(survey, variable_name, selected_functions, dict = NULL) {
   scenario_label <- paste(survey$alias, variable_name, sep = " / ")
+  requirements <- smoke_scenario_requirements(selected_functions)
+  objects <- list()
+  summaries <- list()
+
   if (is.null(dict)) {
     dict <- run_step(
       paste(scenario_label, "dict_generate"),
@@ -487,37 +496,52 @@ run_scenario <- function(survey, variable_name, dict = NULL) {
       )
     )
   }
-  validation <- run_step(
-    paste(scenario_label, "dict_validate"),
-    qualtdict::dict_validate(dict, quiet = FALSE)
-  )
-  labelled <- run_step(
-    paste(scenario_label, "get_survey_data"),
-    qualtdict::get_survey_data(dict, quiet = FALSE)
-  )
-  export_findings <- run_step(
-    paste(scenario_label, "labelled_export_findings"),
-    qualtdict::labelled_export_findings(labelled)
-  )
-  dict_blocks <- run_step(
-    paste(scenario_label, "dict_split_blocks"),
-    qualtdict::dict_split_blocks(dict)
-  )
-  survey_blocks <- run_step(
-    paste(scenario_label, "survey_split_blocks"),
-    qualtdict::survey_split_blocks(labelled)
-  )
+  objects$dict <- dict
 
-  objects <- list(
-    dict = dict,
-    validation = validation,
-    labelled = labelled,
-    labelled_export_findings = export_findings,
-    dict_blocks = dict_blocks,
-    survey_blocks = survey_blocks
-  )
+  if (requirements$needs_validation) {
+    validation <- run_step(
+      paste(scenario_label, "dict_validate"),
+      qualtdict::dict_validate(dict, quiet = FALSE)
+    )
+    objects$validation <- validation
+  }
 
-  if (identical(variable_name, "question_name")) {
+  if (requirements$needs_labelled) {
+    labelled <- run_step(
+      paste(scenario_label, "get_survey_data"),
+      qualtdict::get_survey_data(dict, quiet = FALSE)
+    )
+    objects$labelled <- labelled
+  }
+
+  if (requirements$needs_export_findings) {
+    export_findings <- run_step(
+      paste(scenario_label, "labelled_export_findings"),
+      qualtdict::labelled_export_findings(objects$labelled)
+    )
+    objects$labelled_export_findings <- export_findings
+  }
+
+  if (requirements$needs_dict_blocks) {
+    dict_blocks <- run_step(
+      paste(scenario_label, "dict_split_blocks"),
+      qualtdict::dict_split_blocks(dict)
+    )
+    objects$dict_blocks <- dict_blocks
+  }
+
+  if (requirements$needs_survey_blocks) {
+    survey_blocks <- run_step(
+      paste(scenario_label, "survey_split_blocks"),
+      qualtdict::survey_split_blocks(objects$labelled)
+    )
+    objects$survey_blocks <- survey_blocks
+  }
+
+  if (
+    identical(variable_name, "question_name") &&
+      "get_survey_data" %in% selected_functions
+  ) {
     labelled_excluding_validation <- run_step(
       paste(scenario_label, "get_survey_data exclude validation"),
       qualtdict::get_survey_data(
@@ -529,18 +553,28 @@ run_scenario <- function(survey, variable_name, dict = NULL) {
     objects$labelled_excluding_validation <- labelled_excluding_validation
   }
 
-  summaries <- list(
-    dict = data_frame_summary(dict),
-    validation = validation_summary(validation),
-    labelled = data_frame_summary(labelled),
-    labelled_export_findings = data_frame_summary(export_findings),
-    dict_blocks = block_list_summary(dict_blocks),
-    survey_blocks = block_list_summary(survey_blocks)
-  )
-
-  if (!is.null(objects$labelled_excluding_validation)) {
-    summaries$labelled_excluding_validation <-
-      data_frame_summary(objects$labelled_excluding_validation)
+  if ("dict_generate" %in% selected_functions) {
+    summaries$dict <- data_frame_summary(objects$dict)
+  }
+  if ("dict_validate" %in% selected_functions) {
+    summaries$validation <- validation_summary(objects$validation)
+  }
+  if ("get_survey_data" %in% selected_functions) {
+    summaries$labelled <- data_frame_summary(objects$labelled)
+    if (!is.null(objects$labelled_excluding_validation)) {
+      summaries$labelled_excluding_validation <-
+        data_frame_summary(objects$labelled_excluding_validation)
+    }
+  }
+  if ("labelled_export_findings" %in% selected_functions) {
+    summaries$labelled_export_findings <-
+      data_frame_summary(objects$labelled_export_findings)
+  }
+  if ("dict_split_blocks" %in% selected_functions) {
+    summaries$dict_blocks <- block_list_summary(objects$dict_blocks)
+  }
+  if ("survey_split_blocks" %in% selected_functions) {
+    summaries$survey_blocks <- block_list_summary(objects$survey_blocks)
   }
 
   object_hashes <- lapply(summaries, `[[`, "object_hash")
@@ -575,23 +609,35 @@ write_run_artifacts <- function(result, run_dir) {
 }
 
 print_result_line <- function(result, status) {
-  cat(
+  message <- paste0(
     result$alias,
     " / ",
     result$variable_name,
     ": ",
     status,
     " hash=",
-    result$scenario_hash,
-    " dict_rows=",
-    result$summaries$dict$rows,
-    " labelled_rows=",
-    result$summaries$labelled$rows,
-    " labelled_cols=",
-    result$summaries$labelled$columns,
-    "\n",
-    sep = ""
+    result$scenario_hash
   )
+
+  if (!is.null(result$summaries$dict) && !is.null(result$summaries$labelled)) {
+    message <- paste0(
+      message,
+      " dict_rows=",
+      result$summaries$dict$rows,
+      " labelled_rows=",
+      result$summaries$labelled$rows,
+      " labelled_cols=",
+      result$summaries$labelled$columns
+    )
+  } else {
+    message <- paste0(
+      message,
+      " outputs=",
+      paste(names(result$summaries), collapse = ",")
+    )
+  }
+
+  cat(message, "\n", sep = "")
 }
 
 compare_records <- function(current, baseline) {
@@ -611,36 +657,55 @@ print_mismatch <- function(current, baseline) {
   cat("  baseline hash: ", baseline$scenario_hash, "\n", sep = "")
   cat("  current hash:  ", current$scenario_hash, "\n", sep = "")
   cat(
-    "  dict rows: ",
-    baseline$summaries$dict$rows,
-    " -> ",
-    current$summaries$dict$rows,
+    "  outputs: ",
+    paste(names(current$summaries), collapse = ", "),
     "\n",
     sep = ""
   )
-  cat(
-    "  labelled dims: ",
-    baseline$summaries$labelled$rows,
-    "x",
-    baseline$summaries$labelled$columns,
-    " -> ",
-    current$summaries$labelled$rows,
-    "x",
-    current$summaries$labelled$columns,
-    "\n",
-    sep = ""
-  )
-  cat(
-    "  validation findings rows: ",
-    baseline$summaries$validation$validation_findings_rows,
-    " -> ",
-    current$summaries$validation$validation_findings_rows,
-    "\n",
-    sep = ""
-  )
+
+  if (!is.null(current$summaries$dict) && !is.null(baseline$summaries$dict)) {
+    cat(
+      "  dict rows: ",
+      baseline$summaries$dict$rows,
+      " -> ",
+      current$summaries$dict$rows,
+      "\n",
+      sep = ""
+    )
+  }
+  if (
+    !is.null(current$summaries$labelled) &&
+      !is.null(baseline$summaries$labelled)
+  ) {
+    cat(
+      "  labelled dims: ",
+      baseline$summaries$labelled$rows,
+      "x",
+      baseline$summaries$labelled$columns,
+      " -> ",
+      current$summaries$labelled$rows,
+      "x",
+      current$summaries$labelled$columns,
+      "\n",
+      sep = ""
+    )
+  }
+  if (
+    !is.null(current$summaries$validation) &&
+      !is.null(baseline$summaries$validation)
+  ) {
+    cat(
+      "  validation findings rows: ",
+      baseline$summaries$validation$validation_findings_rows,
+      " -> ",
+      current$summaries$validation$validation_findings_rows,
+      "\n",
+      sep = ""
+    )
+  }
 }
 
-run_survey <- function(survey, run_dir) {
+run_survey <- function(survey, run_dir, selected_functions) {
   cat("SURVEY ", survey$alias, "\n", sep = "")
   flush.console()
   artifacts <- run_step(
@@ -669,9 +734,14 @@ run_survey <- function(survey, run_dir) {
     question_name_result <- run_scenario(
       survey,
       "question_name",
+      selected_functions = selected_functions,
       dict = question_name_dict
     )
-    semantic_name_result <- run_scenario(survey, "semantic_name")
+    semantic_name_result <- run_scenario(
+      survey,
+      "semantic_name",
+      selected_functions = selected_functions
+    )
     results <- list(question_name_result, semantic_name_result)
     lapply(results, function(result) {
       write_run_artifacts(result, run_dir)
@@ -700,7 +770,12 @@ dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
 results <- tryCatch(
   unlist(
-    lapply(surveys, run_survey, run_dir = run_dir),
+    lapply(
+      surveys,
+      run_survey,
+      run_dir = run_dir,
+      selected_functions = selected_functions
+    ),
     recursive = FALSE
   ),
   response_column_id_parity_error = function(error) {
@@ -713,7 +788,14 @@ results <- tryCatch(
 if (identical(command, "bless")) {
   for (result in results) {
     path <- scenario_baseline_path(result$alias, result$variable_name)
-    write_json(baseline_record(result), path)
+    selected_record <- project_smoke_record(
+      baseline_record(result),
+      selected_functions
+    )
+    if (file.exists(path)) {
+      selected_record <- merge_smoke_baseline(read_json(path), selected_record)
+    }
+    write_json(selected_record, path)
     print_result_line(result, "blessed")
   }
   cat("Wrote baselines under ", file.path(smoke_root, "baselines"), "\n", sep = "")
@@ -738,7 +820,11 @@ for (result in results) {
   }
 
   baseline <- read_json(path)
-  current <- baseline_record(result)
+  current <- project_smoke_record(
+    baseline_record(result),
+    selected_functions
+  )
+  baseline <- project_smoke_record(baseline, selected_functions)
   if (compare_records(current, baseline)) {
     print_result_line(result, "matched")
   } else {

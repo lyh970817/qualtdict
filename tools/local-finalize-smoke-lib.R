@@ -41,6 +41,23 @@ parse_smoke_functions <- function(value, supported = smoke_functions()) {
   unique(selected)
 }
 
+smoke_scenario_requirements <- function(selected_functions) {
+  needs_labelled <- any(c(
+    "get_survey_data",
+    "labelled_export_findings",
+    "survey_split_blocks"
+  ) %in% selected_functions)
+
+  list(
+    needs_dict = length(selected_functions) > 0,
+    needs_validation = "dict_validate" %in% selected_functions,
+    needs_labelled = needs_labelled,
+    needs_export_findings = "labelled_export_findings" %in% selected_functions,
+    needs_dict_blocks = "dict_split_blocks" %in% selected_functions,
+    needs_survey_blocks = "survey_split_blocks" %in% selected_functions
+  )
+}
+
 smoke_summary_names <- function(functions) {
   output_map <- c(
     dict_generate = "dict",

@@ -147,3 +147,41 @@ test_that("merge_smoke_baseline updates only selected summaries and hashes", {
   expect_false(identical(merged$scenario_hash, "old-scenario"))
   expect_identical(merged$generated_at, "new-time")
 })
+
+test_that("smoke_scenario_requirements marks setup needed by selected functions", {
+  expect_identical(
+    smoke_scenario_requirements("dict_generate"),
+    list(
+      needs_dict = TRUE,
+      needs_validation = FALSE,
+      needs_labelled = FALSE,
+      needs_export_findings = FALSE,
+      needs_dict_blocks = FALSE,
+      needs_survey_blocks = FALSE
+    )
+  )
+
+  expect_identical(
+    smoke_scenario_requirements("labelled_export_findings"),
+    list(
+      needs_dict = TRUE,
+      needs_validation = FALSE,
+      needs_labelled = TRUE,
+      needs_export_findings = TRUE,
+      needs_dict_blocks = FALSE,
+      needs_survey_blocks = FALSE
+    )
+  )
+
+  expect_identical(
+    smoke_scenario_requirements("survey_split_blocks"),
+    list(
+      needs_dict = TRUE,
+      needs_validation = FALSE,
+      needs_labelled = TRUE,
+      needs_export_findings = FALSE,
+      needs_dict_blocks = FALSE,
+      needs_survey_blocks = TRUE
+    )
+  )
+})
