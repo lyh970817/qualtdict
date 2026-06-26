@@ -16,8 +16,10 @@ usage <- function() {
       "",
       "`check` compares current exported-function output hashes with local",
       "baselines. It also verifies Response Column ID parity against local",
-      "raw fetched response columns. `bless` replaces local baselines with",
-      "current output hashes, but parity mismatches remain hard failures.",
+      "raw fetched response columns. Full `bless` replaces local baselines",
+      "with current output hashes. `bless --functions` updates selected",
+      "output summaries inside existing baselines. Parity mismatches remain",
+      "hard failures.",
       sep = "\n"
     ),
     "\n"
