@@ -58,35 +58,35 @@ test_that("project_smoke_record keeps only selected summaries and hashes", {
     variable_name = "question_name",
     generated_at = "2026-06-26T00:00:00Z",
     summaries = list(
+      labelled = list(object_hash = "labelled-hash"),
+      dict_blocks = list(object_hash = "dict-blocks-hash"),
       dict = list(object_hash = "dict-hash"),
       validation = list(object_hash = "validation-hash"),
-      labelled = list(object_hash = "labelled-hash"),
-      labelled_excluding_validation = list(object_hash = "labelled-ex-hash"),
-      dict_blocks = list(object_hash = "dict-blocks-hash")
+      labelled_excluding_validation = list(object_hash = "labelled-ex-hash")
     ),
     object_hashes = list(
+      labelled = "labelled-hash",
+      dict_blocks = "dict-blocks-hash",
       dict = "dict-hash",
       validation = "validation-hash",
-      labelled = "labelled-hash",
-      labelled_excluding_validation = "labelled-ex-hash",
-      dict_blocks = "dict-blocks-hash"
+      labelled_excluding_validation = "labelled-ex-hash"
     ),
     scenario_hash = "full-hash"
   )
 
   projected <- project_smoke_record(
     record,
-    c("get_survey_data", "dict_split_blocks")
+    c("dict_split_blocks", "get_survey_data")
   )
 
   expect_identical(
     names(projected$summaries),
-    c("labelled", "labelled_excluding_validation", "dict_blocks")
+    c("dict_blocks", "labelled", "labelled_excluding_validation")
   )
   expect_identical(projected$object_hashes, list(
+    dict_blocks = "dict-blocks-hash",
     labelled = "labelled-hash",
-    labelled_excluding_validation = "labelled-ex-hash",
-    dict_blocks = "dict-blocks-hash"
+    labelled_excluding_validation = "labelled-ex-hash"
   ))
   expect_match(projected$scenario_hash, "^[0-9a-f]{32}$")
   expect_false(identical(projected$scenario_hash, "full-hash"))
