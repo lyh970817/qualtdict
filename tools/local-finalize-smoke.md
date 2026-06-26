@@ -76,6 +76,20 @@ To run one survey:
 Rscript tools/local-finalize-smoke.R check --survey survey_a
 ```
 
+To run only smoke-covered exported functions affected by a code change, pass
+a comma-separated `--functions` list:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --functions get_survey_data
+Rscript tools/local-finalize-smoke.R check --functions get_survey_data,dict_split_blocks
+```
+
+The caller decides the affected functions after inspecting the code diff. The
+script still runs prerequisite functions needed to produce selected downstream
+outputs, but compares only the selected output summaries against local
+baselines. For example, `--functions get_survey_data` generates a Variable
+Dictionary as setup, then compares only Labelled Survey Data summaries.
+
 `check` writes current summaries and replayed objects under:
 
 ```text
@@ -109,6 +123,13 @@ local baselines:
 
 ```sh
 Rscript tools/local-finalize-smoke.R bless
+```
+
+Selective blessing updates only the selected output summaries inside each
+baseline record:
+
+```sh
+Rscript tools/local-finalize-smoke.R bless --functions get_survey_data
 ```
 
 Baselines are local to the fixed surveys and are not committed.
