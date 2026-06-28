@@ -2,14 +2,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "sandcastle": "npm run sandcastle:single --",
-    "sandcastle:single": "tsx .sandcastle/single.mts",
-    "sandcastle:sequential-review": "tsx .sandcastle/sequential-review.mts",
-    "sandcastle:parallel": "tsx .sandcastle/parallel-planner.mts",
-    "sandcastle:parallel-review": "tsx .sandcastle/parallel-planner-with-review.mts"
+    "sandcastle": "tsx .sandcastle/main.mts",
+    "sandcastle:blank": "tsx .sandcastle/main.mts blank",
+    "sandcastle:simple-loop": "tsx .sandcastle/main.mts simple-loop",
+    "sandcastle:sequential-reviewer": "tsx .sandcastle/main.mts sequential-reviewer",
+    "sandcastle:parallel-planner": "tsx .sandcastle/main.mts parallel-planner",
+    "sandcastle:parallel-planner-with-review": "tsx .sandcastle/main.mts parallel-planner-with-review"
   },
   "devDependencies": {
-    "@ai-hero/sandcastle": "0.10.0",
+    "@ai-hero/sandcastle": "^0.10.0",
     "@types/node": "^26.0.0",
     "tsx": "4.22.4",
     "zod": "^4.1.13"
