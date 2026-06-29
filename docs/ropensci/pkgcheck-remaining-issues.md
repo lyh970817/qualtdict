@@ -20,6 +20,7 @@ This note records the current `pkgcheck` status after the recent fixes for:
 - clearly unused internal helpers in Response Column ID Rendering and
   Validation Finding code
 - the `goodpractice` coverage advisory for uncovered package lines
+- missing package website metadata
 
 An authenticated local worktree run reported:
 
@@ -58,6 +59,11 @@ Earlier `pkgcheck` runs reported:
 ```text
 Repository has no website
 ```
+
+The package website is configured at
+<https://lyh970817.github.io/qualtdict/>. The site URL is recorded in
+`DESCRIPTION`, and `.github/workflows/pkgdown.yaml` builds and deploys the
+`pkgdown` site to GitHub Pages.
 
 The current authenticated run reports:
 
