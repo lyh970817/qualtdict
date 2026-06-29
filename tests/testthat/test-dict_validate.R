@@ -1,9 +1,12 @@
-minimal_validation_dict <- function(response_column_id = c("QID1", "QID1"),
-                                    variable_name = c("q1", "q1"),
-                                    label = c("Yes", "No"),
-                                    level = c("1", "2")) {
+minimal_validation_dict <- function(
+  response_column_id = c("QID1", "QID1"),
+  variable_name = c("q1", "q1"),
+  label = c("Yes", "No"),
+  level = c("1", "2")
+) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
+    row_source = "question",
     qid = sub("_.*$", "", response_column_id),
     question_name = variable_name,
     variable_name = variable_name,
@@ -26,17 +29,20 @@ test_that("dict_validate always returns a stable validation object", {
 
   expect_s3_class(validation, "qualtdict_validation")
   expect_named(validation, c("validation_findings", "level_label_pairs"))
-  expect_named(validation$validation_findings, c(
-    "finding",
-    "response_column_id",
-    "variable_name",
-    "original_candidate",
-    "reason",
-    "item_name",
-    "mistake",
-    "label",
-    "level"
-  ))
+  expect_named(
+    validation$validation_findings,
+    c(
+      "finding",
+      "response_column_id",
+      "variable_name",
+      "original_candidate",
+      "reason",
+      "item_name",
+      "mistake",
+      "label",
+      "level"
+    )
+  )
   expect_identical(nrow(validation$validation_findings), 0L)
   expect_s3_class(validation$level_label_pairs, "data.frame")
 })

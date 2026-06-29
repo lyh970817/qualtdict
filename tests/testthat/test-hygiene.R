@@ -31,10 +31,13 @@ test_that("README documents the qualtRics boundary and main workflow", {
   readme <- root_text("README.Rmd")
 
   expect_match(readme, "`qualtRics` owns API access", fixed = TRUE)
-  expect_match(readme, "Variable Dictionary To Labelled Survey Data",
+  expect_match(
+    readme,
+    "Variable Dictionary To Labelled Survey Data",
     fixed = TRUE
   )
   expect_match(readme, "response_column_id", fixed = TRUE)
+  expect_match(readme, "row_source", fixed = TRUE)
   expect_match(readme, "qid", fixed = TRUE)
   expect_match(readme, "question_name", fixed = TRUE)
   expect_match(readme, "semantic_name", fixed = TRUE)
@@ -75,6 +78,7 @@ test_that("exported function docs use canonical public terminology", {
     "Variable Dictionary",
     "Labelled Survey Data",
     "response_column_id",
+    "row_source",
     "qid",
     "question_name",
     "semantic_name",
@@ -90,7 +94,9 @@ test_that("exported function docs use canonical public terminology", {
   }
 
   expect_false(grepl("Download a labeled", function_docs, fixed = TRUE))
-  expect_false(grepl("potential mistakes in the dictionary", function_docs,
+  expect_false(grepl(
+    "potential mistakes in the dictionary",
+    function_docs,
     fixed = TRUE
   ))
 })
@@ -124,12 +130,20 @@ test_that("pkgcheck-targeted functions stay under the line limit", {
     )
   )
 
-  line_counts <- vapply(flagged_functions, function(flagged_function) {
-    function_line_count(flagged_function$path, flagged_function$name)
-  }, integer(1))
-  names(line_counts) <- vapply(flagged_functions, function(flagged_function) {
-    paste(flagged_function$path, flagged_function$name, sep = ":")
-  }, character(1))
+  line_counts <- vapply(
+    flagged_functions,
+    function(flagged_function) {
+      function_line_count(flagged_function$path, flagged_function$name)
+    },
+    integer(1)
+  )
+  names(line_counts) <- vapply(
+    flagged_functions,
+    function(flagged_function) {
+      paste(flagged_function$path, flagged_function$name, sep = ":")
+    },
+    character(1)
+  )
 
   over_limit <- line_counts[line_counts > 50L]
   expect_equal(

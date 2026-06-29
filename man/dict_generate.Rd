@@ -57,9 +57,11 @@ Generate a Variable Dictionary from Qualtrics survey metadata retrieved via
 \details{
 The returned Variable Dictionary preserves \code{response_column_id} as the
 downloaded response-column key, \code{qid} as the bare Qualtrics question
-identifier, \code{question_name} as the raw Qualtrics naming reference, and
+identifier, \code{row_source} as the Dictionary Row Source,
+\code{question_name} as the raw Qualtrics naming reference, and
 \code{variable_name} as the final export-safe Dictionary Variable Name used
-by Labelled Survey Data.
+by Labelled Survey Data. Currently generated question-backed rows use
+\code{row_source = "question"}.
 
 When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 includes \code{semantic_name}. Semantic Names are readable best-effort

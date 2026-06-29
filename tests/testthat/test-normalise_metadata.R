@@ -5,11 +5,14 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
 
   expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
   expect_s3_class(normalised_metadata, "qualtdict_normalised_metadata")
-  expect_named(normalised_metadata, c(
-    "surveyID",
-    "survey_name",
-    "questions"
-  ))
+  expect_named(
+    normalised_metadata,
+    c(
+      "surveyID",
+      "survey_name",
+      "questions"
+    )
+  )
   expect_identical(normalised_metadata$surveyID, "SV_SYNTHETIC")
   expect_identical(normalised_metadata$survey_name, "Synthetic Survey")
   expect_s3_class(
@@ -47,6 +50,7 @@ test_that("normalised metadata renders the current Variable Dictionary rows", {
 
   dict_subset <- dict[c(
     "response_column_id",
+    "row_source",
     "qid",
     "question_name",
     "variable_name",
@@ -65,6 +69,7 @@ test_that("normalised metadata renders the current Variable Dictionary rows", {
     dict_subset$response_column_id,
     c("QID1", "QID1", "QID1", "QID1_3_TEXT")
   )
+  expect_identical(dict_subset$row_source, rep("question", 4))
   expect_identical(dict_subset$qid, rep("QID1", 4))
   expect_identical(
     dict_subset$question_name,
@@ -122,8 +127,7 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
   )
   expect_identical(
     dict$variable_name[first_rows],
-    c("X1_Bad_Name", "X1_Bad_Name.1", "X1_Bad_Name.2",
-      "X1_Bad_Name.3")
+    c("X1_Bad_Name", "X1_Bad_Name.1", "X1_Bad_Name.2", "X1_Bad_Name.3")
   )
   expect_named(
     findings,
@@ -194,122 +198,146 @@ test_that("Semantic Names are generated only on the semantic naming path", {
   )
 })
 
-test_that(
-  "Semantic Name generation is quiet by default with opt-in progress messages",
-  {
-    quiet_metadata <- synthetic_mc_text_raw_metadata()
-    quiet_metadata$metadata$questions$QID1$questionText <-
-      "Quiet semantic naming check"
-    quiet_metadata <- normalise_qualtrics_metadata(quiet_metadata)
+test_that("Semantic Name generation quiets progress by default", {
+  quiet_metadata <- synthetic_mc_text_raw_metadata()
+  quiet_metadata$metadata$questions$QID1$questionText <-
+    "Quiet semantic naming check"
+  quiet_metadata <- normalise_qualtrics_metadata(quiet_metadata)
 
-    expect_silent(
-      variable_dictionary_from_normalised_metadata(
-        quiet_metadata,
-        use_semantic_name = TRUE,
-        block_pattern = NULL,
-        block_sep = ".",
-        semantic_name_preprocess = NULL
-      )
-    )
-
-    verbose_metadata <- synthetic_mc_text_raw_metadata()
-    verbose_metadata$metadata$questions$QID1$questionText <-
-      "Verbose semantic naming check"
-    verbose_metadata <- normalise_qualtrics_metadata(verbose_metadata)
-
-    expect_message(
-      variable_dictionary_from_normalised_metadata(
-        verbose_metadata,
-        use_semantic_name = TRUE,
-        block_pattern = NULL,
-        block_sep = ".",
-        semantic_name_preprocess = NULL,
-        quiet = FALSE
-      ),
-      "Generating Semantic Names"
-    )
-  }
-)
-
-test_that(
-  "semantic_name_preprocess receives the full post-normalisation dictionary",
-  {
-    raw_metadata <- synthetic_loop_and_merge_raw_metadata()
-    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-    seen <- new.env(parent = emptyenv())
-    seen$names <- NULL
-    seen$loop_rows <- NULL
-    semantic_name_preprocess <- function(dict) {
-      seen$names <- names(dict)
-      seen$loop_rows <- dict[dict$looping, c(
-        "qid", "response_column_id", "question_name", "block", "question",
-        "looping_option", "item", "label", "type", "selector", "sub_selector",
-        "content_type"
-      )]
-      dict
-    }
-
+  expect_silent(
     variable_dictionary_from_normalised_metadata(
-      normalised_metadata,
+      quiet_metadata,
       use_semantic_name = TRUE,
-      block_pattern = NULL,
-      block_sep = ".",
-      semantic_name_preprocess = semantic_name_preprocess
-    )
-
-    expect_true(all(c(
-      "qid", "response_column_id", "question_name", "block", "question",
-      "looping_question", "item", "level", "label", "type", "selector",
-      "content_type", "sub_selector", "looping_option", "looping"
-    ) %in% seen$names))
-    expect_identical(
-      seen$loop_rows$response_column_id,
-      c("x1_QID2_TEXT", "x2_QID2_TEXT")
-    )
-    expect_identical(seen$loop_rows$question_name, c("Q2", "Q2"))
-    expect_identical(seen$loop_rows$looping_option, c("Apples", "Bananas"))
-  }
-)
-
-test_that(
-  "multiple-answer response columns use recodes when choice IDs are numeric",
-  {
-    raw_metadata <- synthetic_mc_recode_raw_metadata()
-    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-
-    dict <- variable_dictionary_from_normalised_metadata(
-      normalised_metadata,
-      use_semantic_name = FALSE,
       block_pattern = NULL,
       block_sep = ".",
       semantic_name_preprocess = NULL
     )
+  )
 
-    expect_identical(
-      dict$response_column_id,
-      c("QID1_1", "QID1_2", "QID1_-88", "QID1_-99", "QID1_0",
-        "QID1_9_TEXT")
-    )
-    expect_identical(
-      unname(dict$level),
-      c("1", "2", "-88", "-99", "0", "0_TEXT")
-    )
-    expect_true(all(lengths(dict) == nrow(dict)))
-  }
-)
+  verbose_metadata <- synthetic_mc_text_raw_metadata()
+  verbose_metadata$metadata$questions$QID1$questionText <-
+    "Verbose semantic naming check"
+  verbose_metadata <- normalise_qualtrics_metadata(verbose_metadata)
 
-test_that(
-  "Semantic Name keyword extraction suppresses progress bars by default",
-  {
-    expect_silent(
-      slowrake(
-        c("First progress check", "Second progress check"),
-        all_words = "First progress check Second progress check",
-        stop_pos = NULL
+  expect_message(
+    variable_dictionary_from_normalised_metadata(
+      verbose_metadata,
+      use_semantic_name = TRUE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL,
+      quiet = FALSE
+    ),
+    "Generating Semantic Names"
+  )
+})
+
+test_that("semantic_name_preprocess receives full dictionary rows", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  seen <- new.env(parent = emptyenv())
+  seen$names <- NULL
+  seen$loop_rows <- NULL
+  semantic_name_preprocess <- function(dict) {
+    seen$names <- names(dict)
+    seen$loop_rows <- dict[
+      dict$looping,
+      c(
+        "qid",
+        "response_column_id",
+        "row_source",
+        "question_name",
+        "block",
+        "question",
+        "looping_option",
+        "item",
+        "label",
+        "type",
+        "selector",
+        "sub_selector",
+        "content_type"
       )
-    )
+    ]
+    dict
   }
-)
+
+  variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = semantic_name_preprocess
+  )
+
+  expect_true(all(
+    c(
+      "qid",
+      "response_column_id",
+      "row_source",
+      "question_name",
+      "block",
+      "question",
+      "looping_question",
+      "item",
+      "level",
+      "label",
+      "type",
+      "selector",
+      "content_type",
+      "sub_selector",
+      "looping_option",
+      "looping"
+    ) %in%
+      seen$names
+  ))
+  expect_identical(
+    seen$loop_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_identical(seen$loop_rows$question_name, c("Q2", "Q2"))
+  expect_identical(seen$loop_rows$row_source, c("question", "question"))
+  expect_identical(seen$loop_rows$looping_option, c("Apples", "Bananas"))
+})
+
+test_that("multiple-answer columns use numeric choice recodes", {
+  raw_metadata <- synthetic_mc_recode_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_identical(
+    dict$response_column_id,
+    c(
+      "QID1_1",
+      "QID1_2",
+      "QID1_-88",
+      "QID1_-99",
+      "QID1_0",
+      "QID1_9_TEXT"
+    )
+  )
+  expect_identical(
+    unname(dict$level),
+    c("1", "2", "-88", "-99", "0", "0_TEXT")
+  )
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
+test_that("Semantic Name keyword extraction quiets progress bars", {
+  expect_silent(
+    slowrake(
+      c("First progress check", "Second progress check"),
+      all_words = "First progress check Second progress check",
+      stop_pos = NULL
+    )
+  )
+})
 
 test_that("Semantic Names preserve source order for selected keywords", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
@@ -327,8 +355,12 @@ test_that("Semantic Names preserve source order for selected keywords", {
 
   expect_identical(
     dict$semantic_name,
-    c("felt_lot_energy", "felt_lot_energy", "felt_lot_energy",
-      "felt_lot_energy.txt")
+    c(
+      "felt_lot_energy",
+      "felt_lot_energy",
+      "felt_lot_energy",
+      "felt_lot_energy.txt"
+    )
   )
 })
 
@@ -391,11 +423,16 @@ test_that("Semantic Name keyword cache keys include the scoring corpus", {
     unique_texts <- clean_semantic_name_text(unique(texts))
     all_words <- paste(texts, collapse = " ")
 
-    paste0(tempdir(), "/", hash(list(
-      algorithm = "semantic-name-source-order-v1",
-      unique_texts = unique_texts,
-      all_words = all_words
-    )), ".rds")
+    paste0(
+      tempdir(),
+      "/",
+      hash(list(
+        algorithm = "semantic-name-source-order-v1",
+        unique_texts = unique_texts,
+        all_words = all_words
+      )),
+      ".rds"
+    )
   }
 
   target <- paste(
@@ -485,62 +522,62 @@ test_that("temporary semantic_name_preprocess columns do not leak", {
   expect_false("temporary_helper" %in% names(dict))
 })
 
-test_that(
-  "semantic-name Variable Dictionaries use final variable_name repair",
-  {
-    raw_metadata <- synthetic_mc_text_raw_metadata()
-    raw_metadata$metadata$questions$QID1$questionText <- "123 bad name"
-    raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
-    raw_metadata$metadata$questions$QID2$questionName <- "Q2"
-    raw_metadata$description$block$BL_1$BlockElements <- list(
-      list(QuestionID = "QID1"),
-      list(QuestionID = "QID2")
-    )
-    raw_metadata$description$question$QID2 <-
-      raw_metadata$description$question$QID1
-    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+test_that("semantic-name dictionaries use final variable_name repair", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionText <- "123 bad name"
+  raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
+  raw_metadata$metadata$questions$QID2$questionName <- "Q2"
+  raw_metadata$description$block$BL_1$BlockElements <- list(
+    list(QuestionID = "QID1"),
+    list(QuestionID = "QID2")
+  )
+  raw_metadata$description$question$QID2 <-
+    raw_metadata$description$question$QID1
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-    dict <- variable_dictionary_from_normalised_metadata(
-      normalised_metadata,
-      use_semantic_name = TRUE,
-      block_pattern = NULL,
-      block_sep = ".",
-      semantic_name_preprocess = NULL
-    )
-    attr(dict, "class") <- c("qualtdict", class(dict))
-    first_rows <- !duplicated(dict$response_column_id)
-    findings <- dict_validate(dict)$validation_findings
-    findings <- findings[findings$finding == "repaired_variable_name", ]
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  first_rows <- !duplicated(dict$response_column_id)
+  findings <- dict_validate(dict)$validation_findings
+  findings <- findings[findings$finding == "repaired_variable_name", ]
 
-    expect_identical(
-      dict$semantic_name[first_rows],
-      c("123_bad_name", "123_bad_name.txt", "123_bad_name",
-        "123_bad_name.txt")
+  expect_identical(
+    dict$semantic_name[first_rows],
+    c("123_bad_name", "123_bad_name.txt", "123_bad_name", "123_bad_name.txt")
+  )
+  expect_identical(
+    dict$variable_name[first_rows],
+    c(
+      "X123_bad_name",
+      "X123_bad_name.txt",
+      "X123_bad_name.1",
+      "X123_bad_name.txt.1"
     )
-    expect_identical(
-      dict$variable_name[first_rows],
-      c("X123_bad_name", "X123_bad_name.txt", "X123_bad_name.1",
-        "X123_bad_name.txt.1")
-    )
-    expect_identical(
-      findings$response_column_id,
-      c("QID1", "QID1_3_TEXT", "QID2", "QID2_3_TEXT")
-    )
-    expect_identical(
-      findings$finding,
-      rep("repaired_variable_name", 4)
-    )
-    expect_identical(
-      findings$original_candidate,
-      dict$semantic_name[first_rows]
-    )
-    expect_identical(findings$variable_name, dict$variable_name[first_rows])
-    expect_identical(
-      findings$reason,
-      c("unsafe", "unsafe", "unsafe;duplicate", "unsafe;duplicate")
-    )
-  }
-)
+  )
+  expect_identical(
+    findings$response_column_id,
+    c("QID1", "QID1_3_TEXT", "QID2", "QID2_3_TEXT")
+  )
+  expect_identical(
+    findings$finding,
+    rep("repaired_variable_name", 4)
+  )
+  expect_identical(
+    findings$original_candidate,
+    dict$semantic_name[first_rows]
+  )
+  expect_identical(findings$variable_name, dict$variable_name[first_rows])
+  expect_identical(
+    findings$reason,
+    c("unsafe", "unsafe", "unsafe;duplicate", "unsafe;duplicate")
+  )
+})
 
 test_that("matrix response columns use Qualtrics subquestion IDs", {
   raw_metadata <- synthetic_matrix_raw_metadata()
@@ -637,11 +674,15 @@ test_that("SBS multiple-answer columns include column, row, and choice IDs", {
     semantic_name_preprocess = NULL
   )
 
-  expect_true(all(c(
-    "QID2#3_2_1", "QID2#3_2_2",
-    "QID2#3_4_1", "QID2#3_4_2"
-  ) %in%
-    dict$response_column_id))
+  expect_true(all(
+    c(
+      "QID2#3_2_1",
+      "QID2#3_2_2",
+      "QID2#3_4_1",
+      "QID2#3_4_2"
+    ) %in%
+      dict$response_column_id
+  ))
   expect_identical(
     grep("^QID2#3_", dict$response_column_id, value = TRUE),
     c("QID2#3_2_1", "QID2#3_2_2", "QID2#3_4_1", "QID2#3_4_2")
@@ -873,8 +914,14 @@ test_that("looped MC text columns keep loop prefix before QID", {
 
   expect_identical(
     target_rows$response_column_id,
-    c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT",
-      "x2_QID2", "x2_QID2", "x2_QID2_2_TEXT")
+    c(
+      "x1_QID2",
+      "x1_QID2",
+      "x1_QID2_2_TEXT",
+      "x2_QID2",
+      "x2_QID2",
+      "x2_QID2_2_TEXT"
+    )
   )
   expect_identical(
     target_rows$loop_option,
@@ -984,15 +1031,18 @@ test_that("Labelled Survey Data matches loop-prefixed MC text columns", {
     unanswer_recode_multi = NULL
   )
 
-  expect_named(labelled_data, c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "Q2",
-    "Q2.1",
-    "Q2.2",
-    "Q2.3"
-  ))
+  expect_named(
+    labelled_data,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "Q2",
+      "Q2.1",
+      "Q2.2",
+      "Q2.3"
+    )
+  )
   expect_identical(unname(as.vector(labelled_data$Q2)), "2")
   expect_identical(unname(as.vector(labelled_data[["Q2.1"]])), "Crisp")
   expect_identical(unname(as.vector(labelled_data[["Q2.2"]])), "1")
@@ -1030,13 +1080,16 @@ test_that("Labelled Survey Data can match Loop and Merge response columns", {
     unanswer_recode_multi = NULL
   )
 
-  expect_named(labelled_data, c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "Q2",
-    "Q2.1"
-  ))
+  expect_named(
+    labelled_data,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "Q2",
+      "Q2.1"
+    )
+  )
   expect_identical(
     unname(as.vector(labelled_data[["Q2"]])),
     "Because they are crisp"
@@ -1055,51 +1108,51 @@ test_that("Labelled Survey Data can match Loop and Merge response columns", {
   )
 })
 
-test_that(
-  "Labelled Survey Data uses variable_name matched by response column",
-  {
-    raw_metadata <- synthetic_mc_text_raw_metadata()
-    raw_metadata$metadata$questions$QID1$questionName <- "1 Bad Name"
-    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-    dict <- variable_dictionary_from_normalised_metadata(
-      normalised_metadata,
-      use_semantic_name = FALSE,
-      block_pattern = NULL,
-      block_sep = ".",
-      semantic_name_preprocess = NULL
-    )
-    attr(dict, "class") <- c("qualtdict", class(dict))
-    survey <- tibble::tibble(
-      externalDataReference = "R_1",
-      startDate = "2026-06-01",
-      endDate = "2026-06-01",
-      QID1 = "1",
-      QID1_3_TEXT = "Because"
-    )
+test_that("Labelled Survey Data names by response column", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionName <- "1 Bad Name"
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    QID1 = "1",
+    QID1_3_TEXT = "Because"
+  )
 
-    labelled_data <- survey_recode(
-      dict = dict,
-      dat = survey,
-      extra_columns = default_extra_columns(),
-      unanswer_recode = NULL,
-      unanswer_recode_multi = NULL
-    )
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
 
-    expect_named(labelled_data, c(
+  expect_named(
+    labelled_data,
+    c(
       "externalDataReference",
       "startDate",
       "endDate",
       "X1_Bad_Name",
       "X1_Bad_Name.1"
-    ))
-    expect_identical(unname(as.vector(labelled_data$X1_Bad_Name)), 1)
-    expect_identical(
-      unname(as.vector(labelled_data[["X1_Bad_Name.1"]])),
-      "Because"
     )
-    expect_identical(
-      attr(labelled_data[["X1_Bad_Name.1"]], "label"),
-      "Choose one"
-    )
-  }
-)
+  )
+  expect_identical(unname(as.vector(labelled_data$X1_Bad_Name)), 1)
+  expect_identical(
+    unname(as.vector(labelled_data[["X1_Bad_Name.1"]])),
+    "Because"
+  )
+  expect_identical(
+    attr(labelled_data[["X1_Bad_Name.1"]], "label"),
+    "Choose one"
+  )
+})

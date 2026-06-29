@@ -10,15 +10,28 @@ test_that("dict_generate", {
   )
 
   legacy_columns <- c(
-    "response_column_id", "qid", "question_name", "variable_name", "block",
-    "question", "item", "level", "label", "type", "selector", "sub_selector",
+    "response_column_id",
+    "row_source",
+    "qid",
+    "question_name",
+    "variable_name",
+    "block",
+    "question",
+    "item",
+    "level",
+    "label",
+    "type",
+    "selector",
+    "sub_selector",
     "content_type"
   )
   snapshot_x <- x[legacy_columns]
   attr(snapshot_x, "variable_name_findings") <- NULL
 
   expect_s3_class(snapshot_x, "data.frame")
+  expect_identical(names(x)[1:2], c("response_column_id", "row_source"))
   expect_true("response_column_id" %in% names(x))
+  expect_true(all(x$row_source == "question"))
   expect_true(any(x$response_column_id != x$qid))
   expect_true("question_name" %in% names(x))
   expect_true("variable_name" %in% names(x))
@@ -42,6 +55,8 @@ test_that("dict_generate accepts variable_name question_name", {
 
   expect_true("question_name" %in% names(x))
   expect_true("variable_name" %in% names(x))
+  expect_identical(names(x)[1:2], c("response_column_id", "row_source"))
+  expect_true(all(x$row_source == "question"))
   expect_false(anyNA(x$question_name))
   expect_identical(
     anyDuplicated(unique(x[c("response_column_id", "variable_name")])),

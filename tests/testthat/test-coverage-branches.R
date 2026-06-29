@@ -1,10 +1,13 @@
-coverage_test_dict <- function(response_column_id = "QID1",
-                               variable_name = "q1",
-                               label = "Yes",
-                               level = "1",
-                               item = NA_character_) {
+coverage_test_dict <- function(
+  response_column_id = "QID1",
+  variable_name = "q1",
+  label = "Yes",
+  level = "1",
+  item = NA_character_
+) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
+    row_source = "question",
     qid = sub("_.*$", "", response_column_id),
     question_name = variable_name,
     variable_name = variable_name,
@@ -225,9 +228,12 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
     question_type = list(type = "MC", selector = "SAVR"),
     response_choices = NULL
   )
-  expect_identical(expand_loop_question_fact(no_rows_context), list(
-    no_rows_context$question_fact
-  ))
+  expect_identical(
+    expand_loop_question_fact(no_rows_context),
+    list(
+      no_rows_context$question_fact
+    )
+  )
 
   expect_null(loop_options_from_static_fields(NULL, character()))
   expect_identical(
@@ -334,12 +340,30 @@ test_that("Variable Dictionary assembly covers empty branches", {
     block_sep = ".",
     semantic_name_preprocess = NULL
   )
-  expect_named(empty_dict, c(
-    "qid", "response_column_id", "question_name", "semantic_name",
-    "variable_name", "block", "question", "looping_question", "item",
-    "level", "label", "type", "selector", "content_type", "sub_selector",
-    "looping_option", "looping", "loop_option"
-  ))
+  expect_named(
+    empty_dict,
+    c(
+      "qid",
+      "response_column_id",
+      "row_source",
+      "question_name",
+      "semantic_name",
+      "variable_name",
+      "block",
+      "question",
+      "looping_question",
+      "item",
+      "level",
+      "label",
+      "type",
+      "selector",
+      "content_type",
+      "sub_selector",
+      "looping_option",
+      "looping",
+      "loop_option"
+    )
+  )
   expect_identical(attr(empty_dict, "surveyID", exact = TRUE), "SV_EMPTY")
 
   no_row_question <- list(qid = "QID1", question_name = "Q1")
@@ -376,6 +400,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
   rows <- tibble::tibble(
     qid = "QID1",
     response_column_id = "QID1",
+    row_source = "question",
     question_name = "Q1",
     variable_name = "Q1",
     block = "Block",
@@ -418,10 +443,13 @@ test_that("normalisation and validation helpers cover fallback records", {
     response_column_id = c("QID1", "QID1"),
     variable_name = c("q1_a", "q1_b")
   ))
-  expect_identical(findings$finding, c(
-    "inconsistent_variable_name",
-    "inconsistent_variable_name"
-  ))
+  expect_identical(
+    findings$finding,
+    c(
+      "inconsistent_variable_name",
+      "inconsistent_variable_name"
+    )
+  )
   expect_identical(
     semantic_block_components(
       tibble::tibble(block = c("Alpha Block", "Beta Block")),

@@ -1,11 +1,13 @@
 minimal_export_dict <- function(
-    response_column_id = c("QID1", "QID2"),
-    variable_name = c("q1", "q2"),
-    block = c("Block A", "Block B"),
-    label = c("Yes", "No"),
-    level = c("1", "2")) {
+  response_column_id = c("QID1", "QID2"),
+  variable_name = c("q1", "q2"),
+  block = c("Block A", "Block B"),
+  label = c("Yes", "No"),
+  level = c("1", "2")
+) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
+    row_source = "question",
     qid = sub("_.*$", "", response_column_id),
     question_name = variable_name,
     variable_name = variable_name,
@@ -50,13 +52,16 @@ test_that("fetch_labelled_survey_data returns one labelled data frame", {
   )
 
   expect_s3_class(dat, "data.frame")
-  expect_named(dat, c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "q1",
-    "q2"
-  ))
+  expect_named(
+    dat,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "q1",
+      "q2"
+    )
+  )
   expect_s3_class(attr(dat, "dict"), "qualtdict")
   expect_identical(captured_args$value$include_questions, "QID1")
   expect_identical(captured_args$value$surveyID, "SV_TEST")
@@ -81,19 +86,25 @@ test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   dat <- fetch_labelled_survey_data(minimal_export_dict())
   findings <- labelled_export_findings(dat)
 
-  expect_named(dat, c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "q1"
-  ))
-  expect_named(findings, c(
-    "finding",
-    "response_column_id",
-    "qid",
-    "variable_name",
-    "reason"
-  ))
+  expect_named(
+    dat,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "q1"
+    )
+  )
+  expect_named(
+    findings,
+    c(
+      "finding",
+      "response_column_id",
+      "qid",
+      "variable_name",
+      "reason"
+    )
+  )
   expect_identical(nrow(findings), 1L)
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "QID2")
@@ -129,12 +140,15 @@ test_that("exclude_findings removes validation findings after download", {
 
   expect_identical(captured_args$value$include_questions, c("QID1", "QID2"))
   expect_true(captured_quiet$value)
-  expect_named(dat, c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "q1"
-  ))
+  expect_named(
+    dat,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "q1"
+    )
+  )
   expect_identical(attr(dat, "dict")$response_column_id, "QID1")
 })
 
@@ -159,29 +173,26 @@ test_that("fetch_labelled_survey_data forwards quiet to validation exclusion", {
   expect_false(captured_quiet$value)
 })
 
-test_that(
-  "fetch_labelled_survey_data keeps quiet out of fetch_survey passthrough",
-  {
-    captured_args <- new.env(parent = emptyenv())
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        captured_args$value <- list(...)
-        minimal_survey_data()
-      }
-    )
+test_that("fetch_labelled_survey_data omits quiet from fetch_survey", {
+  captured_args <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      captured_args$value <- list(...)
+      minimal_survey_data()
+    }
+  )
 
-    fetch_labelled_survey_data(
-      minimal_export_dict(),
-      NULL,
-      "none",
-      "positional_fetch_arg",
-      quiet = FALSE
-    )
+  fetch_labelled_survey_data(
+    minimal_export_dict(),
+    NULL,
+    "none",
+    "positional_fetch_arg",
+    quiet = FALSE
+  )
 
-    expect_identical(captured_args$value[[1]], "positional_fetch_arg")
-    expect_null(captured_args$value$quiet)
-  }
-)
+  expect_identical(captured_args$value[[1]], "positional_fetch_arg")
+  expect_null(captured_args$value$quiet)
+})
 
 test_that("extra_columns distinguish user-specified columns from defaults", {
   dict <- minimal_export_dict(
@@ -262,17 +273,23 @@ test_that("survey_split_blocks returns block-specific Labelled Survey Data", {
   block_data <- survey_split_blocks(dat)
 
   expect_named(block_data, c("Block A", "Block B"))
-  expect_named(block_data[["Block A"]], c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "q1"
-  ))
-  expect_named(block_data[["Block B"]], c(
-    "externalDataReference",
-    "startDate",
-    "endDate",
-    "q2"
-  ))
+  expect_named(
+    block_data[["Block A"]],
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "q1"
+    )
+  )
+  expect_named(
+    block_data[["Block B"]],
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "q2"
+    )
+  )
   expect_s3_class(attr(block_data[["Block A"]], "dict"), "qualtdict")
 })
