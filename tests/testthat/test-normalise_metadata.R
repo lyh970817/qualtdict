@@ -67,6 +67,33 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   )
 })
 
+test_that("Embedded Data Field names normalise from supported flat shapes", {
+  expect_identical(
+    embedded_data_field_names(tibble::tibble(fieldName = c("Wave", "", NA))),
+    "Wave"
+  )
+  expect_identical(
+    embedded_data_field_names(tibble::tibble(other = "Wave")),
+    character()
+  )
+  expect_identical(
+    embedded_data_field_names(c("Wave", "", NA)),
+    "Wave"
+  )
+  expect_identical(
+    embedded_data_field_names(c(Source = "ignored", "")),
+    "Source"
+  )
+  expect_identical(
+    embedded_data_field_names(list(
+      "Standalone",
+      Campaign = list(),
+      list(DataField = "Panel")
+    )),
+    c("Standalone", "Campaign", "Panel")
+  )
+})
+
 test_that("normalised metadata renders the current Variable Dictionary rows", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -227,6 +254,48 @@ test_that("Semantic Names are generated only on the semantic naming path", {
     semantic_name_dict$variable_name,
     c("choose_one", "choose_one", "choose_one", "choose_one.txt")
   )
+})
+
+test_that("Semantic Names skip Embedded Data Fields after preprocessing", {
+  raw_metadata <- synthetic_flat_embedded_data_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  semantic_name_preprocess <- function(dict) {
+    dict$row_source <- "question"
+    dict$question <- "Renamed by hook"
+    dict
+  }
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = TRUE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = semantic_name_preprocess
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_true(all(is.na(embedded_rows$semantic_name)))
+  expect_identical(
+    embedded_rows$variable_name,
+    c("Source_Channel", "Q1")
+  )
+})
+
+test_that("Semantic Names return early when no question rows are present", {
+  dict <- generate_semantic_names(
+    tibble::tibble(
+      response_column_id = "Source",
+      row_source = "embedded_data",
+      variable_name = "Source"
+    ),
+    surveyID = "SV_SYNTHETIC",
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_identical(dict$semantic_name, NA_character_)
+  expect_identical(dict$variable_name, "Source")
 })
 
 test_that("Semantic Name generation quiets progress by default", {

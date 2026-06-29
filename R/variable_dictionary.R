@@ -184,7 +184,7 @@ clean_variable_dictionary_rows <- function(json, use_semantic_name) {
   json$question[!is.na(looping_questions)] <-
     looping_questions[!is.na(looping_questions)]
   if (!use_semantic_name) {
-    question_rows <- !is.na(json$row_source) & json$row_source == "question"
+    question_rows <- dict_question_rows(json)
     json$variable_name[question_rows] <- json$question_name[question_rows]
   }
   json$variable_name <- unname(json$variable_name)

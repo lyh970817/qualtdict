@@ -85,10 +85,5 @@ dict_validate <- function(dict, quiet = TRUE) {
 }
 
 question_level_label_validation_dict <- function(dict) {
-  if (!"row_source" %in% names(dict)) {
-    return(dict)
-  }
-
-  question_rows <- !is.na(dict$row_source) & dict$row_source == "question"
-  dict[question_rows, ]
+  dict[dict_question_rows(dict), ]
 }
