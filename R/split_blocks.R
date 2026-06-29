@@ -5,7 +5,8 @@
 #'
 #' @inheritParams dict_validate
 #'
-#' @return A named list of Variable Dictionaries, one per Survey Block.
+#' @return A named list of Variable Dictionaries, one per Survey Block. When
+#'   rows have no Survey Block assignment, the list includes `"..unassigned"`.
 #' @export
 #' @examples
 #' dict <- data.frame(
@@ -19,8 +20,15 @@
 dict_split_blocks <- function(dict) {
   checkarg_isqualtdict(dict)
 
+  unassigned <- is.na(dict$block)
+  assigned_blocks <- split(dict[!unassigned, ], dict$block[!unassigned])
+  unassigned_blocks <- list()
+  if (any(unassigned)) {
+    unassigned_blocks <- list("..unassigned" = dict[unassigned, ])
+  }
+
   map(
-    split(dict, dict$block),
+    c(unassigned_blocks, assigned_blocks),
     copy_qualtdict_attrs,
     source = dict
   )
@@ -44,7 +52,8 @@ dict_split_blocks <- function(dict) {
 #' \code{dict} attribute attached by
 #' \code{\link[qualtdict]{fetch_labelled_survey_data}}.
 #'
-#' @return A named list of data frames, one per Survey Block.
+#' @return A named list of data frames, one per Survey Block. When dictionary
+#'   rows have no Survey Block assignment, the list includes `"..unassigned"`.
 #' @export
 #' @examples
 #' dict <- data.frame(
@@ -64,13 +73,15 @@ dict_split_blocks <- function(dict) {
 #' attr(dat, "dict") <- dict
 #'
 #' survey_split_blocks(dat)
-survey_split_blocks <- function(dat,
-                                dict = attr(dat, "dict", exact = TRUE),
-                                extra_columns = c(
-                                  "externalDataReference",
-                                  "startDate",
-                                  "endDate"
-                                )) {
+survey_split_blocks <- function(
+  dat,
+  dict = attr(dat, "dict", exact = TRUE),
+  extra_columns = c(
+    "externalDataReference",
+    "startDate",
+    "endDate"
+  )
+) {
   if (!is.data.frame(dat)) {
     rlang::abort("`dat` must be Labelled Survey Data.")
   }

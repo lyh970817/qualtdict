@@ -260,6 +260,62 @@ test_that("dict_split_blocks returns block-specific Variable Dictionaries", {
   )
 })
 
+test_that("dict_split_blocks preserves unassigned Variable Dictionary rows", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "ED1"),
+    variable_name = c("q1", "embedded_field"),
+    block = c("Block A", NA_character_),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_)
+  )
+  attr(dict, "variable_name_findings") <- tibble::tibble(
+    response_column_id = "ED1",
+    original_candidate = "Embedded Field",
+    variable_name = "embedded_field",
+    reason = "unsafe"
+  )
+
+  block_dicts <- dict_split_blocks(dict)
+
+  expect_named(block_dicts, c("..unassigned", "Block A"))
+  expect_s3_class(block_dicts[["..unassigned"]], "qualtdict")
+  expect_identical(
+    attr(block_dicts[["..unassigned"]], "surveyID", exact = TRUE),
+    "SV_TEST"
+  )
+  expect_identical(
+    block_dicts[["..unassigned"]]$response_column_id,
+    "ED1"
+  )
+  expect_identical(
+    attr(
+      block_dicts[["..unassigned"]],
+      "variable_name_findings"
+    )$response_column_id,
+    "ED1"
+  )
+  expect_identical(
+    nrow(attr(block_dicts[["Block A"]], "variable_name_findings")),
+    0L
+  )
+})
+
+test_that("dict_split_blocks keeps unassigned rows separate from block names", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "ED1"),
+    variable_name = c("q1", "embedded_field"),
+    block = c("..unassigned", NA_character_),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_)
+  )
+
+  block_dicts <- dict_split_blocks(dict)
+
+  expect_named(block_dicts, c("..unassigned", "..unassigned"))
+  expect_identical(block_dicts[[1]]$response_column_id, "ED1")
+  expect_identical(block_dicts[[2]]$response_column_id, "QID1")
+})
+
 test_that("survey_split_blocks returns block-specific Labelled Survey Data", {
   dat <- tibble::tibble(
     externalDataReference = "R_1",
@@ -292,4 +348,31 @@ test_that("survey_split_blocks returns block-specific Labelled Survey Data", {
     )
   )
   expect_s3_class(attr(block_data[["Block A"]], "dict"), "qualtdict")
+})
+
+test_that("survey_split_blocks preserves unassigned Export Variables", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "ED1"),
+    variable_name = c("q1", "embedded_field"),
+    block = c("Block A", NA_character_),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_)
+  )
+  dat <- tibble::tibble(
+    IPAddress = "127.0.0.1",
+    q1 = "1",
+    embedded_field = "wave_1"
+  )
+  attr(dat, "dict") <- dict
+
+  block_data <- survey_split_blocks(dat, extra_columns = "IPAddress")
+
+  expect_named(block_data, c("..unassigned", "Block A"))
+  expect_named(block_data[["..unassigned"]], c("IPAddress", "embedded_field"))
+  expect_named(block_data[["Block A"]], c("IPAddress", "q1"))
+  expect_s3_class(attr(block_data[["..unassigned"]], "dict"), "qualtdict")
+  expect_identical(
+    attr(block_data[["..unassigned"]], "dict")$response_column_id,
+    "ED1"
+  )
 })

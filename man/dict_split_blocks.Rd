@@ -11,7 +11,8 @@ dict_split_blocks(dict)
 \code{\link[qualtdict]{dict_generate}}.}
 }
 \value{
-A named list of Variable Dictionaries, one per Survey Block.
+A named list of Variable Dictionaries, one per Survey Block. When
+rows have no Survey Block assignment, the list includes \code{"..unassigned"}.
 }
 \description{
 Create block-specific views of a Variable Dictionary without changing the
