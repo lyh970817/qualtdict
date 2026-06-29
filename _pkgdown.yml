@@ -1,0 +1,31 @@
+url: https://lyh970817.github.io/qualtdict/
+destination: pkgdown
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+
+reference:
+- title: Generate and validate dictionaries
+  desc: Build Variable Dictionaries from Qualtrics metadata and inspect their findings.
+  contents:
+  - dict_generate
+  - dict_validate
+- title: Create labelled survey data
+  desc: Apply a Variable Dictionary to downloaded responses and inspect export findings.
+  contents:
+  - fetch_labelled_survey_data
+  - labelled_export_findings
+- title: Work with survey blocks
+  desc: Create block-specific views of dictionaries and labelled survey data.
+  contents:
+  - dict_split_blocks
+  - survey_split_blocks
+- title: Credentials
+  desc: Configure Qualtrics API credentials through the re-exported qualtRics helper.
+  contents:
+  - qualtrics_api_credentials
