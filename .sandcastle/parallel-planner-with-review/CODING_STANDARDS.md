@@ -23,7 +23,21 @@
 - Use `Rscript -e 'devtools::check()'` for exported behavior or broad package changes.
 - Regenerate docs with `Rscript -e 'devtools::document()'` after roxygen changes.
 - Render `README.Rmd` with `Rscript -e 'rmarkdown::render("README.Rmd")'` after README source changes.
-- Consider `Rscript tools/local-finalize-smoke.R check` during finalization when local smoke artifacts are available. Missing artifacts are not a failure.
+- Consider local finalization smoke checks during finalization when local smoke
+  artifacts are available. Missing artifacts are not a failure.
+- Run the smoke script as one self-contained invocation for the relevant
+  finalization surface, selecting affected exported functions with `--functions`
+  and the relevant Variable Dictionary route set with `--variable-name`. The
+  script runs required prerequisites internally. Prefer reproducible two-survey
+  sampling while iterating, for example:
+  `Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`.
+- Inspect the terminal output and saved RDS object artifacts under
+  `.local/finalize-smoke/runs/<timestamp>/`; temporary uncommitted R code is
+  acceptable for local inspection.
+- Smoke runs can take several minutes, especially with Semantic Name generation
+  or many surveys selected. Wait with a longer timeout, do not repeatedly poll
+  the process, and inspect output once the smoke command exits before treating
+  the agent as idle.
 
 ## Architecture
 

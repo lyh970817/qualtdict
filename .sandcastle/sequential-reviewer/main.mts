@@ -1,14 +1,16 @@
-// Sequential Reviewer — implement-then-review loop
+// Sequential Reviewer — implement-review-publish loop
 //
-// This template drives a two-phase workflow per issue:
+// This template drives a three-phase workflow per issue:
 //   Phase 1 (Implement): A Codex agent picks an open issue, works on it
 //                        on a dedicated branch, commits the changes, and signals
 //                        completion.
 //   Phase 2 (Review):    A second Codex agent reviews the branch diff and either
 //                        approves it or makes corrections directly on the branch.
+//   Phase 3 (Publish):   A third Codex agent pushes the branch, opens a PR, and
+//                        merges that PR through GitHub.
 //
-// Both phases share a single sandbox created via createSandbox(), so the
-// implementer and reviewer work on the same explicit branch.
+// All phases share a single sandbox created via createSandbox(), so the agents
+// work on the same explicit branch.
 //
 // The outer loop repeats up to MAX_ITERATIONS times, processing one issue per
 // iteration and stopping early once the backlog is exhausted (an implement
@@ -27,7 +29,7 @@ import { codex } from "../codex.mts";
 // Configuration
 // ---------------------------------------------------------------------------
 
-// Maximum number of implement→review cycles to run before stopping.
+// Maximum number of implement→review→publish cycles to run before stopping.
 // Each cycle works on one issue. Raise this to process more issues per run.
 const MAX_ITERATIONS = 10;
 
@@ -43,7 +45,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
 
   // Create a single sandbox that both the implementer and reviewer share.
   // This gives both agents a real, named branch that persists across phases.
-const sandbox = await sandcastle.createSandbox({
+  const sandbox = await sandcastle.createSandbox({
     branch,
     sandbox: noSandbox(),
   });
@@ -97,6 +99,24 @@ const sandbox = await sandcastle.createSandbox({
     });
 
     console.log("\nReview complete.");
+
+    // -----------------------------------------------------------------------
+    // Phase 3: Publish
+    //
+    // A third Codex agent pushes the reviewed branch, creates or updates a PR,
+    // and merges that PR through GitHub. It must not merge the branch locally.
+    // -----------------------------------------------------------------------
+    await sandbox.run({
+      name: "publisher",
+      maxIterations: 1,
+      agent: codex(),
+      promptFile: "./.sandcastle/sequential-reviewer/publish-prompt.md",
+      promptArgs: {
+        BRANCH: branch,
+      },
+    });
+
+    console.log("\nPull request published and merged.");
   } finally {
     await sandbox.close();
   }

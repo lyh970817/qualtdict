@@ -65,7 +65,8 @@ Keep it concise.
 
 If the task is not complete, leave a comment on the issue with what was done.
 
-Do not close the issue - this will be done later.
+Do not close the issue directly. A later publisher phase will open and merge a
+PR with a closing keyword.
 
 Once complete, output <promise>COMPLETE</promise>.
 

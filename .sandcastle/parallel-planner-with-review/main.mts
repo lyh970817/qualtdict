@@ -10,11 +10,11 @@
 //                               reviewer runs in the same sandbox on the same
 //                               branch (1 iteration). All issue pipelines run
 //                               concurrently via Promise.allSettled().
-//   Phase 3 (Merge):            A single agent merges all completed branches
-//                               into the current branch.
+//   Phase 3 (Publish):          A single agent pushes completed branches,
+//                               opens PRs, and merges those PRs.
 //
 // The outer loop repeats up to MAX_ITERATIONS times so that newly unblocked
-// issues are picked up after each round of merges.
+// issues are picked up after each round of PR merges.
 //
 // Usage:
 //   npx tsx .sandcastle/parallel-planner-with-review/main.mts
@@ -38,7 +38,7 @@ const planSchema = z.object({
 // Configuration
 // ---------------------------------------------------------------------------
 
-// Maximum number of plan→execute→merge cycles before stopping.
+// Maximum number of plan→execute→publish cycles before stopping.
 // Raise this if your backlog is large; lower it for a quick smoke-test run.
 const MAX_ITERATIONS = 10;
 
@@ -132,7 +132,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
             },
           });
 
-          // Merge commits from both runs so the merge phase sees all of them.
+          // Combine commits from both runs so the publish phase sees all of
+          // them.
           // Each sandbox.run() only returns commits from its own run.
           return {
             ...review,
@@ -156,8 +157,8 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     }
   }
 
-  // Only pass branches that actually produced commits to the merge phase.
-  // An agent that ran successfully but made no commits has nothing to merge.
+  // Only pass branches that actually produced commits to the publish phase.
+  // An agent that ran successfully but made no commits has nothing to publish.
   const completedIssues = settled
     .map((outcome, i) => ({ outcome, issue: issues[i]! }))
     .filter(
@@ -177,23 +178,24 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
   }
 
   if (completedBranches.length === 0) {
-    // All agents ran but none made commits — nothing to merge this cycle.
-    console.log("No commits produced. Nothing to merge.");
+    // All agents ran but none made commits — nothing to publish this cycle.
+    console.log("No commits produced. Nothing to publish.");
     continue;
   }
 
   // -------------------------------------------------------------------------
-  // Phase 3: Merge
+  // Phase 3: Publish
   //
-  // One agent merges all completed branches into the current branch,
-  // resolving any conflicts and running tests to confirm everything works.
+  // One agent pushes completed branches, opens PRs, and merges those PRs
+  // through GitHub. It must not merge branches locally into the base branch.
   //
   // The {{BRANCHES}} and {{ISSUES}} prompt arguments are lists that the agent
-  // uses to know which branches to merge and which issues to close.
+  // uses to know which branches to publish and which issues each PR should
+  // close via GitHub closing keywords.
   // -------------------------------------------------------------------------
   await sandcastle.run({
     sandbox: noSandbox(),
-    name: "merger",
+    name: "publisher",
     maxIterations: 1,
     agent: codex(),
     promptFile: "./.sandcastle/parallel-planner-with-review/merge-prompt.md",
@@ -202,10 +204,14 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
       BRANCHES: completedBranches.map((b) => `- ${b}`).join("\n"),
       // A markdown list of issue IDs and titles, one per line.
       ISSUES: completedIssues.map((i) => `- ${i.id}: ${i.title}`).join("\n"),
+      // A markdown list pairing branch names with the issue each PR closes.
+      ISSUE_BRANCHES: completedIssues
+        .map((i) => `- ${i.branch}: #${i.id} ${i.title}`)
+        .join("\n"),
     },
   });
 
-  console.log("\nBranches merged.");
+  console.log("\nPull requests published and merged.");
 }
 
 console.log("\nAll done.");

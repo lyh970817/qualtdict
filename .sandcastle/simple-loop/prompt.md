@@ -61,7 +61,9 @@ as context.
    - List key decisions made
    - List files changed
    - Note any blockers for the next iteration
-6. **Close** — close the issue with `gh issue close <ID> --comment "Completed by Sandcastle"`, replacing `<ID>` with the issue number.
+6. **Publish** — push the issue branch, open a pull request, and merge that
+   pull request. Use a PR body with a closing keyword such as `Fixes #<ID>` so
+   GitHub closes the issue when the PR merges. Do not close issues directly.
 
 ## Rules
 
@@ -70,6 +72,20 @@ as context.
 - Do not leave commented-out code or TODO comments in committed code.
 - Never implement or close a PRD container. If all remaining issues are PRD
   containers or blocked, leave them open and output the completion signal.
+- Before editing files, create or check out a deterministic issue branch named
+  `sandcastle/issue-<ID>`. Do not work directly on the base branch.
+- After verification succeeds, run `git push -u origin sandcastle/issue-<ID>`.
+- Open a PR against the original base branch with `gh pr create`. If a PR
+  already exists for the branch, update/reuse it instead of creating a
+  duplicate.
+- If merging this PR completes a parent PRD, add a closing keyword for that
+  parent PRD to the PR body before merging. Only add that parent PRD closing
+  keyword after checking that all linked implementation issues for the PRD are
+  closed or will be closed by this PR.
+- Merge the PR with `gh pr merge --merge --delete-branch`. If GitHub refuses
+  the merge because required checks or permissions are missing, leave the PR
+  open, comment on the issue with the PR URL and blocker, and do not close the
+  issue directly.
 - If you are blocked (missing context, failing tests you cannot fix, external dependency), leave a comment on the issue and move on — do not close it.
 
 # Done
