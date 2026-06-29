@@ -1,5 +1,6 @@
-import { run, codex } from "@ai-hero/sandcastle";
+import { run } from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
+import { codex } from "../codex.mts";
 
 // Simple loop: an agent that picks open issues one by one and closes them.
 // Run this with: npx tsx .sandcastle/simple-loop/main.mts
@@ -11,8 +12,8 @@ await run({
   // Sandbox provider — runs the agent in the local repository environment.
   sandbox: noSandbox(),
 
-  // The agent provider. Pass a model string to codex().
-  agent: codex("gpt-5.4"),
+  // The shared agent provider default lives in .sandcastle/codex.mts.
+  agent: codex(),
 
   // Path to the prompt file. Shell expressions inside are evaluated inside the
   // sandbox at the start of each iteration, so the agent always sees fresh data.

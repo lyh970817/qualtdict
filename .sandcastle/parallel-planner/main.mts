@@ -17,6 +17,7 @@
 import * as sandcastle from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
 import { z } from "zod";
+import { codex } from "../codex.mts";
 
 // The planner emits its plan as JSON inside <plan> tags; Output.object extracts
 // and validates it against this schema. We use Zod here, but any Standard
@@ -58,7 +59,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     // One iteration is enough: the planner just needs to read and reason,
     // not write code. (Structured output requires maxIterations: 1.)
     maxIterations: 1,
-    agent: sandcastle.codex("gpt-5.4"),
+    agent: codex(),
     promptFile: "./.sandcastle/parallel-planner/plan-prompt.md",
     // Extract and validate the <plan> JSON into a typed object. Throws
     // StructuredOutputError if the tag is missing, the JSON is malformed, or
@@ -99,7 +100,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
         name: "implementer",
         // Give each agent plenty of room to implement and iterate on tests.
         maxIterations: 100,
-        agent: sandcastle.codex("gpt-5.4"),
+        agent: codex(),
         promptFile: "./.sandcastle/parallel-planner/implement-prompt.md",
         // Prompt arguments substitute {{TASK_ID}}, {{ISSUE_TITLE}},
         // and {{BRANCH}} placeholders in implement-prompt.md before the
@@ -168,7 +169,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     sandbox: noSandbox(),
     name: "merger",
     maxIterations: 1,
-    agent: sandcastle.codex("gpt-5.4"),
+    agent: codex(),
     promptFile: "./.sandcastle/parallel-planner/merge-prompt.md",
     promptArgs: {
       // A markdown list of branch names, one per line.
