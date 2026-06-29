@@ -22,6 +22,7 @@
 import * as sandcastle from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
 import { z } from "zod";
+import { codex } from "../codex.mts";
 
 // The planner emits its plan as JSON inside <plan> tags; Output.object extracts
 // and validates it against this schema. We use Zod here, but any Standard
@@ -63,7 +64,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     // One iteration is enough: the planner just needs to read and reason,
     // not write code. (Structured output requires maxIterations: 1.)
     maxIterations: 1,
-    agent: sandcastle.codex("gpt-5.4"),
+    agent: codex(),
     promptFile: "./.sandcastle/parallel-planner-with-review/plan-prompt.md",
     // Extract and validate the <plan> JSON into a typed object. Throws
     // StructuredOutputError if the tag is missing, the JSON is malformed, or
@@ -108,7 +109,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
         const implement = await sandbox.run({
           name: "implementer",
           maxIterations: 100,
-          agent: sandcastle.codex("gpt-5.4"),
+          agent: codex(),
           promptFile:
             "./.sandcastle/parallel-planner-with-review/implement-prompt.md",
           promptArgs: {
@@ -123,7 +124,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
           const review = await sandbox.run({
             name: "reviewer",
             maxIterations: 1,
-            agent: sandcastle.codex("gpt-5.4"),
+            agent: codex(),
             promptFile:
               "./.sandcastle/parallel-planner-with-review/review-prompt.md",
             promptArgs: {
@@ -194,7 +195,7 @@ for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
     sandbox: noSandbox(),
     name: "merger",
     maxIterations: 1,
-    agent: sandcastle.codex("gpt-5.4"),
+    agent: codex(),
     promptFile: "./.sandcastle/parallel-planner-with-review/merge-prompt.md",
     promptArgs: {
       // A markdown list of branch names, one per line.

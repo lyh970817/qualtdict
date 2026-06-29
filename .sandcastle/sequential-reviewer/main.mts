@@ -21,6 +21,7 @@
 
 import * as sandcastle from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
+import { codex } from "../codex.mts";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -64,7 +65,7 @@ const sandbox = await sandcastle.createSandbox({
     const implement = await sandbox.run({
       name: "implementer",
       maxIterations: 1,
-      agent: sandcastle.codex("gpt-5.4"),
+      agent: codex(),
       promptFile: "./.sandcastle/sequential-reviewer/implement-prompt.md",
     });
 
@@ -88,7 +89,7 @@ const sandbox = await sandcastle.createSandbox({
     await sandbox.run({
       name: "reviewer",
       maxIterations: 1,
-      agent: sandcastle.codex("gpt-5.4"),
+      agent: codex(),
       promptFile: "./.sandcastle/sequential-reviewer/review-prompt.md",
       promptArgs: {
         BRANCH: branch,
