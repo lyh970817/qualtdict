@@ -1,5 +1,8 @@
 helper_path <- testthat::test_path(
-  "..", "..", "tools", "local-finalize-smoke-lib.R"
+  "..",
+  "..",
+  "tools",
+  "local-finalize-smoke-lib.R"
 )
 skip_if_not(
   file.exists(helper_path),
@@ -21,31 +24,28 @@ test_that("parse_smoke_functions defaults to all smoke-covered functions", {
   )
 })
 
-test_that(
-  "local finalize smoke tests use a package-build-safe helper bootstrap",
-  {
-    test_file <- testthat::test_path("test-local_finalize_smoke.R")
-    test_lines <- readLines(test_file, warn = FALSE)
-    test_text <- gsub("\\s+", " ", paste(test_lines, collapse = "\n"))
+test_that("local smoke tests use a build-safe helper bootstrap", {
+  test_file <- testthat::test_path("test-local_finalize_smoke.R")
+  test_lines <- readLines(test_file, warn = FALSE)
+  test_text <- gsub("\\s+", " ", paste(test_lines, collapse = "\n"))
 
-    expect_match(
-      test_text,
-      paste0(
-        "helper_path <- testthat::test_path\\(",
-        " *\"..\", \"..\", \"tools\", ",
-        "\"local-finalize-smoke-lib.R\" *\\)"
-      )
+  expect_match(
+    test_text,
+    paste0(
+      "helper_path <- testthat::test_path\\(",
+      " *\"..\", \"..\", \"tools\", ",
+      "\"local-finalize-smoke-lib.R\" *\\)"
     )
-    expect_match(
-      test_text,
-      paste0(
-        "skip_if_not\\( file.exists\\(helper_path\\), ",
-        "\"local smoke tooling is excluded from package builds\" \\)"
-      )
+  )
+  expect_match(
+    test_text,
+    paste0(
+      "skip_if_not\\( file.exists\\(helper_path\\), ",
+      "\"local smoke tooling is excluded from package builds\" \\)"
     )
-    expect_match(test_text, "source\\(helper_path\\)")
-  }
-)
+  )
+  expect_match(test_text, "source\\(helper_path\\)")
+})
 
 test_that("parse_smoke_functions trims whitespace and removes duplicates", {
   expect_identical(
@@ -69,6 +69,82 @@ test_that("parse_smoke_functions rejects unknown selections", {
     parse_smoke_functions("fetch_labelled_survey_data,unknown_function"),
     "Unknown smoke-covered exported function"
   )
+})
+
+test_that("parse_smoke_variable_names defaults to question_name", {
+  expect_identical(parse_smoke_variable_names(NULL), "question_name")
+})
+
+test_that("parse_smoke_variable_names accepts routes and all", {
+  expect_identical(
+    parse_smoke_variable_names(" semantic_name, question_name,semantic_name "),
+    c("semantic_name", "question_name")
+  )
+  expect_identical(
+    parse_smoke_variable_names("all"),
+    c("question_name", "semantic_name")
+  )
+})
+
+test_that("parse_smoke_variable_names rejects empty and unknown selections", {
+  expect_error(
+    parse_smoke_variable_names(" , "),
+    "Select at least one Variable Dictionary route"
+  )
+  expect_error(
+    parse_smoke_variable_names("question_name,bad_route"),
+    "Unknown Variable Dictionary route"
+  )
+  expect_error(
+    parse_smoke_variable_names("all,question_name"),
+    "`all` cannot be combined"
+  )
+})
+
+test_that("parse_smoke_survey_count defaults to two sampled surveys", {
+  expect_identical(parse_smoke_survey_count(NULL), 2L)
+  expect_identical(parse_smoke_survey_count("1"), 1L)
+  expect_identical(parse_smoke_survey_count("all"), NA_integer_)
+})
+
+test_that("parse_smoke_survey_count and seed reject invalid values", {
+  expect_error(
+    parse_smoke_survey_count("0"),
+    "`--survey-count` must be a positive integer or `all`"
+  )
+  expect_error(
+    parse_smoke_survey_count("1.5"),
+    "`--survey-count` must be a positive integer or `all`"
+  )
+  expect_error(
+    parse_smoke_survey_seed("abc"),
+    "`--survey-seed` must be an integer"
+  )
+})
+
+test_that("sample_smoke_surveys returns a reproducible subset", {
+  surveys <- lapply(seq_len(5), function(i) {
+    list(alias = paste0("survey_", i), survey_id = paste0("SV_", i))
+  })
+
+  first <- sample_smoke_surveys(surveys, count = 2L, seed = 123L)
+  second <- sample_smoke_surveys(surveys, count = 2L, seed = 123L)
+
+  expect_length(first, 2L)
+  expect_identical(first, second)
+  expect_true(all(
+    vapply(first, `[[`, character(1), "alias") %in%
+      vapply(surveys, `[[`, character(1), "alias")
+  ))
+})
+
+test_that("sample_smoke_surveys keeps all surveys when count is all or large", {
+  surveys <- lapply(seq_len(5), function(i) {
+    list(alias = paste0("survey_", i), survey_id = paste0("SV_", i))
+  })
+
+  expect_identical(sample_smoke_surveys(surveys, count = NA_integer_), surveys)
+  expect_identical(sample_smoke_surveys(surveys, count = 10L), surveys)
 })
 
 test_that("smoke_summary_names maps functions to summary object names", {
@@ -114,11 +190,14 @@ test_that("project_smoke_record keeps only selected summaries and hashes", {
     projected$summaries,
     c("dict_blocks", "labelled", "labelled_excluding_validation")
   )
-  expect_identical(projected$object_hashes, list(
-    dict_blocks = "dict-blocks-hash",
-    labelled = "labelled-hash",
-    labelled_excluding_validation = "labelled-ex-hash"
-  ))
+  expect_identical(
+    projected$object_hashes,
+    list(
+      dict_blocks = "dict-blocks-hash",
+      labelled = "labelled-hash",
+      labelled_excluding_validation = "labelled-ex-hash"
+    )
+  )
   expect_match(projected$scenario_hash, "^[0-9a-f]{32}$")
   expect_false(identical(projected$scenario_hash, "full-hash"))
 })
@@ -140,54 +219,54 @@ test_that("project_smoke_record omits unavailable optional summaries", {
   expect_identical(projected$object_hashes, list(labelled = "labelled-hash"))
 })
 
-test_that(
-  "project_smoke_record uses historical full-run order for full selection",
-  {
-    record <- list(
-      alias = "survey_a",
-      survey_id = "SV_123",
-      variable_name = "question_name",
-      generated_at = "2026-06-26T00:00:00Z",
-      summaries = list(
-        dict = list(object_hash = "dict-hash"),
-        validation = list(object_hash = "validation-hash"),
-        labelled = list(object_hash = "labelled-hash"),
-        labelled_excluding_validation = list(
-          object_hash = "labelled-ex-hash"
-        ),
-        labelled_export_findings = list(
-          object_hash = "export-findings-hash"
-        ),
-        dict_blocks = list(object_hash = "dict-blocks-hash"),
-        survey_blocks = list(object_hash = "survey-blocks-hash")
+test_that("project_smoke_record keeps full-run order", {
+  record <- list(
+    alias = "survey_a",
+    survey_id = "SV_123",
+    variable_name = "question_name",
+    generated_at = "2026-06-26T00:00:00Z",
+    summaries = list(
+      dict = list(object_hash = "dict-hash"),
+      validation = list(object_hash = "validation-hash"),
+      labelled = list(object_hash = "labelled-hash"),
+      labelled_excluding_validation = list(
+        object_hash = "labelled-ex-hash"
       ),
-      object_hashes = list(
-        dict = "dict-hash",
-        validation = "validation-hash",
-        labelled = "labelled-hash",
-        labelled_excluding_validation = "labelled-ex-hash",
-        labelled_export_findings = "export-findings-hash",
-        dict_blocks = "dict-blocks-hash",
-        survey_blocks = "survey-blocks-hash"
+      labelled_export_findings = list(
+        object_hash = "export-findings-hash"
       ),
-      scenario_hash = "full-hash"
-    )
+      dict_blocks = list(object_hash = "dict-blocks-hash"),
+      survey_blocks = list(object_hash = "survey-blocks-hash")
+    ),
+    object_hashes = list(
+      dict = "dict-hash",
+      validation = "validation-hash",
+      labelled = "labelled-hash",
+      labelled_excluding_validation = "labelled-ex-hash",
+      labelled_export_findings = "export-findings-hash",
+      dict_blocks = "dict-blocks-hash",
+      survey_blocks = "survey-blocks-hash"
+    ),
+    scenario_hash = "full-hash"
+  )
 
-    projected <- project_smoke_record(record, parse_smoke_functions(NULL))
+  projected <- project_smoke_record(record, parse_smoke_functions(NULL))
 
-    expect_named(
-      projected$summaries,
-      c(
-        "dict",
-        "validation",
-        "labelled",
-        "labelled_export_findings",
-        "dict_blocks",
-        "survey_blocks",
-        "labelled_excluding_validation"
-      )
+  expect_named(
+    projected$summaries,
+    c(
+      "dict",
+      "validation",
+      "labelled",
+      "labelled_export_findings",
+      "dict_blocks",
+      "survey_blocks",
+      "labelled_excluding_validation"
     )
-    expect_identical(projected$object_hashes, list(
+  )
+  expect_identical(
+    projected$object_hashes,
+    list(
       dict = "dict-hash",
       validation = "validation-hash",
       labelled = "labelled-hash",
@@ -195,11 +274,11 @@ test_that(
       dict_blocks = "dict-blocks-hash",
       survey_blocks = "survey-blocks-hash",
       labelled_excluding_validation = "labelled-ex-hash"
-    ))
-    expect_match(projected$scenario_hash, "^[0-9a-f]{32}$")
-    expect_false(identical(projected$scenario_hash, "full-hash"))
-  }
-)
+    )
+  )
+  expect_match(projected$scenario_hash, "^[0-9a-f]{32}$")
+  expect_false(identical(projected$scenario_hash, "full-hash"))
+})
 
 test_that("bless_smoke_record replaces stale baseline entries in full mode", {
   existing <- list(
@@ -321,10 +400,13 @@ test_that("merge_smoke_baseline updates only selected summaries and hashes", {
     merged$summaries$labelled,
     list(object_hash = "new-labelled")
   )
-  expect_identical(merged$object_hashes, list(
-    dict = "old-dict",
-    labelled = "new-labelled"
-  ))
+  expect_identical(
+    merged$object_hashes,
+    list(
+      dict = "old-dict",
+      labelled = "new-labelled"
+    )
+  )
   expect_match(merged$scenario_hash, "^[0-9a-f]{32}$")
   expect_false(identical(merged$scenario_hash, "old-scenario"))
   expect_identical(merged$generated_at, "new-time")
@@ -362,58 +444,61 @@ test_that("merge_smoke_baseline restores canonical order for known summaries", {
     merged$summaries,
     c("dict", "labelled", "survey_blocks")
   )
-  expect_identical(merged$object_hashes, list(
-    dict = "old-dict",
-    labelled = "new-labelled",
-    survey_blocks = "old-survey-blocks"
-  ))
+  expect_identical(
+    merged$object_hashes,
+    list(
+      dict = "old-dict",
+      labelled = "new-labelled",
+      survey_blocks = "old-survey-blocks"
+    )
+  )
   expect_match(merged$scenario_hash, "^[0-9a-f]{32}$")
 })
 
-test_that(
-  "smoke_scenario_requirements marks setup needed by selected functions",
-  {
-    expect_identical(
-      smoke_scenario_requirements("dict_generate"),
-      list(
-        needs_dict = TRUE,
-        needs_validation = FALSE,
-        needs_labelled = FALSE,
-        needs_export_findings = FALSE,
-        needs_dict_blocks = FALSE,
-        needs_survey_blocks = FALSE
-      )
+test_that("smoke_scenario_requirements marks needed setup", {
+  expect_identical(
+    smoke_scenario_requirements("dict_generate"),
+    list(
+      needs_dict = TRUE,
+      needs_validation = FALSE,
+      needs_labelled = FALSE,
+      needs_export_findings = FALSE,
+      needs_dict_blocks = FALSE,
+      needs_survey_blocks = FALSE
     )
+  )
 
-    expect_identical(
-      smoke_scenario_requirements("labelled_export_findings"),
-      list(
-        needs_dict = TRUE,
-        needs_validation = FALSE,
-        needs_labelled = TRUE,
-        needs_export_findings = TRUE,
-        needs_dict_blocks = FALSE,
-        needs_survey_blocks = FALSE
-      )
+  expect_identical(
+    smoke_scenario_requirements("labelled_export_findings"),
+    list(
+      needs_dict = TRUE,
+      needs_validation = FALSE,
+      needs_labelled = TRUE,
+      needs_export_findings = TRUE,
+      needs_dict_blocks = FALSE,
+      needs_survey_blocks = FALSE
     )
+  )
 
-    expect_identical(
-      smoke_scenario_requirements("survey_split_blocks"),
-      list(
-        needs_dict = TRUE,
-        needs_validation = FALSE,
-        needs_labelled = TRUE,
-        needs_export_findings = FALSE,
-        needs_dict_blocks = FALSE,
-        needs_survey_blocks = TRUE
-      )
+  expect_identical(
+    smoke_scenario_requirements("survey_split_blocks"),
+    list(
+      needs_dict = TRUE,
+      needs_validation = FALSE,
+      needs_labelled = TRUE,
+      needs_export_findings = FALSE,
+      needs_dict_blocks = FALSE,
+      needs_survey_blocks = TRUE
     )
-  }
-)
+  )
+})
 
 test_that("local finalize smoke help distinguishes full and selective bless", {
   script_path <- testthat::test_path(
-    "..", "..", "tools", "local-finalize-smoke.R"
+    "..",
+    "..",
+    "tools",
+    "local-finalize-smoke.R"
   )
   skip_if_not(
     file.exists(script_path),
@@ -429,6 +514,9 @@ test_that("local finalize smoke help distinguishes full and selective bless", {
   help_text <- gsub("\\s+", " ", paste(help_output, collapse = "\n"))
 
   expect_match(help_text, "--functions", fixed = TRUE)
+  expect_match(help_text, "--survey-count", fixed = TRUE)
+  expect_match(help_text, "--survey-seed", fixed = TRUE)
+  expect_match(help_text, "--variable-name", fixed = TRUE)
   expect_match(
     help_text,
     "Full `bless` replaces local baselines with current output hashes",
@@ -484,69 +572,63 @@ test_that("smoke_result_line falls back to outputs for selective summaries", {
   )
 })
 
-test_that(
-  "smoke_mismatch_lines includes detailed summary deltas when available",
-  {
-    baseline <- list(
-      alias = "survey_a",
-      variable_name = "question_name",
-      scenario_hash = "oldhash",
-      summaries = list(
-        dict = list(rows = 12L),
-        labelled = list(rows = 34L, columns = 5L),
-        validation = list(validation_findings_rows = 2L)
-      )
+test_that("smoke_mismatch_lines includes summary deltas", {
+  baseline <- list(
+    alias = "survey_a",
+    variable_name = "question_name",
+    scenario_hash = "oldhash",
+    summaries = list(
+      dict = list(rows = 12L),
+      labelled = list(rows = 34L, columns = 5L),
+      validation = list(validation_findings_rows = 2L)
     )
-    current <- list(
-      alias = "survey_a",
-      variable_name = "question_name",
-      scenario_hash = "newhash",
-      summaries = list(
-        dict = list(rows = 13L),
-        labelled = list(rows = 35L, columns = 6L),
-        validation = list(validation_findings_rows = 4L)
-      )
+  )
+  current <- list(
+    alias = "survey_a",
+    variable_name = "question_name",
+    scenario_hash = "newhash",
+    summaries = list(
+      dict = list(rows = 13L),
+      labelled = list(rows = 35L, columns = 6L),
+      validation = list(validation_findings_rows = 4L)
     )
+  )
 
-    expect_identical(
-      smoke_mismatch_lines(current, baseline),
-      c(
-        "Mismatch: survey_a / question_name",
-        "  baseline hash: oldhash",
-        "  current hash:  newhash",
-        "  outputs: dict, labelled, validation",
-        "  dict rows: 12 -> 13",
-        "  labelled dims: 34x5 -> 35x6",
-        "  validation findings rows: 2 -> 4"
-      )
+  expect_identical(
+    smoke_mismatch_lines(current, baseline),
+    c(
+      "Mismatch: survey_a / question_name",
+      "  baseline hash: oldhash",
+      "  current hash:  newhash",
+      "  outputs: dict, labelled, validation",
+      "  dict rows: 12 -> 13",
+      "  labelled dims: 34x5 -> 35x6",
+      "  validation findings rows: 2 -> 4"
     )
-  }
-)
+  )
+})
 
-test_that(
-  "smoke_mismatch_lines reports selective outputs",
-  {
-    baseline <- list(
-      alias = "survey_a",
-      variable_name = "semantic_name",
-      scenario_hash = "oldhash",
-      summaries = list(dict_blocks = list(block_count = 2L))
-    )
-    current <- list(
-      alias = "survey_a",
-      variable_name = "semantic_name",
-      scenario_hash = "newhash",
-      summaries = list(dict_blocks = list(block_count = 3L))
-    )
+test_that("smoke_mismatch_lines reports selective outputs", {
+  baseline <- list(
+    alias = "survey_a",
+    variable_name = "semantic_name",
+    scenario_hash = "oldhash",
+    summaries = list(dict_blocks = list(block_count = 2L))
+  )
+  current <- list(
+    alias = "survey_a",
+    variable_name = "semantic_name",
+    scenario_hash = "newhash",
+    summaries = list(dict_blocks = list(block_count = 3L))
+  )
 
-    expect_identical(
-      smoke_mismatch_lines(current, baseline),
-      c(
-        "Mismatch: survey_a / semantic_name",
-        "  baseline hash: oldhash",
-        "  current hash:  newhash",
-        "  outputs: dict_blocks"
-      )
+  expect_identical(
+    smoke_mismatch_lines(current, baseline),
+    c(
+      "Mismatch: survey_a / semantic_name",
+      "  baseline hash: oldhash",
+      "  current hash:  newhash",
+      "  outputs: dict_blocks"
     )
-  }
-)
+  )
+})

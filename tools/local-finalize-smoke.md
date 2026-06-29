@@ -1,9 +1,10 @@
 # Local Finalization Smoke Check
 
 This tooling is for the final local pass after ordinary tests pass and after
-any requested review is complete. It replays a fixed pair of Qualtrics surveys
-from local artifacts, runs the exported package functions, and compares
-hashable summaries against local baselines.
+any requested review is complete. By default it samples two configured
+Qualtrics surveys from local artifacts, runs the `question_name` Variable
+Dictionary route, runs the exported package functions, and compares hashable
+summaries against local baselines.
 
 The smoke check is not a unit test. Refactors should keep hashes unchanged.
 Feature work that intentionally changes dictionaries, labelled exports,
@@ -14,7 +15,7 @@ before updating baselines.
 
 - `tools/local-finalize-smoke-surveys.json` lists the fixed survey aliases and
   survey IDs. The committed file uses placeholder survey IDs; replace them with
-  the two local surveys before fetching artifacts.
+  local surveys before fetching artifacts.
 - `tools/fetch-local-finalize-smoke.R` is a trusted-human script that downloads
   metadata, description, and response data. It writes metadata and description
   as downloaded, sanitizes response data in memory, and persists only sanitized
@@ -70,10 +71,30 @@ Run this after `devtools::test()` passes and after any requested review:
 Rscript tools/local-finalize-smoke.R check
 ```
 
+When an agent runs this smoke check, it should use one self-contained script
+invocation for the relevant finalization surface. Select the affected
+smoke-covered exported functions with `--functions` and the relevant Variable
+Dictionary route set with `--variable-name`; the script still runs prerequisite
+steps needed for those outputs. Inspect the terminal output and saved run
+artifacts after the command finishes.
+
+The default check randomly samples two configured surveys and runs the
+`question_name` route. To make survey selection reproducible:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --survey-seed 123
+```
+
 To run one survey:
 
 ```sh
 Rscript tools/local-finalize-smoke.R check --survey survey_a
+```
+
+To run every configured survey:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --survey-count all
 ```
 
 To run only smoke-covered exported functions affected by a code change, pass
@@ -90,11 +111,55 @@ outputs, but compares only the selected output summaries against local
 baselines. For example, `--functions fetch_labelled_survey_data` generates a Variable
 Dictionary as setup, then compares only Labelled Survey Data summaries.
 
+To select the Variable Dictionary naming route, pass `--variable-name`:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --variable-name question_name
+Rscript tools/local-finalize-smoke.R check --variable-name semantic_name
+Rscript tools/local-finalize-smoke.R check --variable-name all
+```
+
+Use the route that matches the code diff. The `question_name` route is the
+default because it avoids Semantic Name generation unless the change touches
+Semantic Names or shared naming behavior. Use `--variable-name all` only when a
+change should be replayed through both naming routes.
+
+For example, a change limited to question-name dictionary generation should use
+a focused invocation such as:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name
+```
+
+A change that affects Semantic Name behavior should select that route:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name
+```
+
+If both naming routes are relevant, select both in one invocation:
+
+```sh
+Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name all
+```
+
+Use `--survey-count all` only when the changed code really needs every
+configured survey, and record why the broader smoke surface was necessary.
+Smoke runs can take several minutes, especially when Semantic Name generation
+or many surveys are selected. When an agent is running the workflow, wait with a
+longer timeout, do not repeatedly poll the process, and inspect output once the
+smoke command exits before treating the agent as idle.
+
 `check` writes current summaries and replayed objects under:
 
 ```text
 .local/finalize-smoke/runs/<timestamp>/
 ```
+
+Each scenario writes a JSON summary and an RDS file containing the replayed R
+objects. Inspect these local artifacts before blessing changed hashes. It is
+acceptable to write temporary, uncommitted R code to load an `*-objects.rds`
+file with `readRDS()` and compare the relevant objects.
 
 Before comparing or writing hash baselines, `check` and `bless` verify one hard
 Response Column ID invariant for each survey:
@@ -130,6 +195,7 @@ baseline record:
 
 ```sh
 Rscript tools/local-finalize-smoke.R bless --functions fetch_labelled_survey_data
+Rscript tools/local-finalize-smoke.R bless --variable-name semantic_name
 ```
 
 Baselines are local to the fixed surveys and are not committed.
