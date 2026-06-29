@@ -18,8 +18,8 @@ is generated from `README.Rmd`, so edit the `.Rmd` source.
 - `Rscript -e 'devtools::document()'`: regenerate `NAMESPACE` and
   `man/*.Rd` from roxygen comments.
 - `Rscript -e 'devtools::test()'`: run the `testthat` suite.
-- `Rscript -e 'devtools::check()'`: run the local equivalent of R CMD
-  check.
+- `pre-commit run --hook-stage pre-push r-cmd-check-no-manual`: run the
+  configured local equivalent of R CMD check.
 - `Rscript -e 'rmarkdown::render("README.Rmd")'`: update `README.md`
   after README source changes.
 - `pre-commit run --all-files`: run configured hooks, including roxygen,
@@ -49,79 +49,23 @@ tooling, not CI.
 
 For feature work that changes or could affect exported behavior,
 consider the local finalization smoke check during the feature
-finalization phase when local smoke artifacts are available. Do not
-treat it as a command that must always be run immediately after unit
-tests. Depending on the workflow, the right moment may be after the
-tests that follow final code edits, or at the final stage of a review
-phase after requested review work is complete.
-
-Agents should run the smoke script as one self-contained invocation for
-the relevant finalization surface, not as manually separated
-prerequisite steps. Select the affected smoke-covered exported functions
-with `--functions` based on the exported outputs whose behavior could
-change. The script still runs prerequisite steps, such as
-[`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
-before
-[`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md),
-and compares the selected output summaries. Do not broaden `--functions`
-merely because a prerequisite runs internally.
-
-Select `--variable-name` from the naming-route dependency of the changed
-code, not from the selected downstream output alone. Use the default
-`question_name` route for changes that do not affect Semantic Name
-generation, shared naming inputs, or route-specific Dictionary Variable
-Name behavior. A change to downstream consumers such as validation,
-Labelled Export, or block splitting should not use `--variable-name all`
-unless the code depends on both naming routes. The smoke script runs all
-seven configured surveys:
-
-`Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name`
-
-If Semantic Name behavior is relevant, include it in the same smoke
-invocation by selecting that route, or use `--variable-name all` only
-when the changed code depends on both naming routes:
-
-`Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name semantic_name`
-
-Inspect the terminal output and the saved run artifacts under
-`.local/finalize-smoke/runs/<timestamp>/`. The script writes RDS object
-artifacts for local inspection; agents may write temporary, uncommitted
-R code to load those objects and examine the changed behavior. Smoke
-runs can take several minutes, especially when Semantic Name generation
-is selected. When delegating or waiting on an agent running this
-workflow, use a longer wait timeout and do not repeatedly poll the
-process; inspect the output once the smoke command exits before
-concluding that the agent is idle or stuck.
-
-Missing artifacts are not a failure of the feature work; report that the
-smoke check could not be run. Hash mismatches are expected for
-intentional behavior changes and require inspection followed by an
-explicit baseline update with:
-
-`Rscript tools/local-finalize-smoke.R bless`
-
-## pkgcheck Notes
-
-For now, ignore the `pkgcheck` failure that reports “Repository has no
-website” / `pkgchk_repo_has_website`. Treat other `pkgcheck` failures as
-actionable unless there is a separate documented reason to waive them.
-
-Also ignore the non-failing `pkgcheck` suffix “but no badges on README”
-when the same check reports “Package has continuous integration checks”.
-The remote README already contains the GitHub Actions badge URLs, and
-this suffix can be caused by local
-[`curl::has_internet()`](https://jeroen.r-universe.dev/curl/reference/nslookup.html)
-returning `FALSE` in fake-IP DNS or transparent proxy environments.
+finalization phase when local smoke artifacts are available. Read
+`tools/local-finalize-smoke.md` for the agent-facing smoke-check
+workflow. Missing artifacts are not a failure of the feature work;
+report that the smoke check could not be run.
 
 ## Commit & Pull Request Guidelines
+
+Ignore the non-failing `pkgcheck` suffix “but no badges on README” when
+the same check reports “Package has continuous integration checks”.
 
 Recent commits use short imperative summaries, for example
 `Fix question type CS-HR-TX` or
 `Add qid recode for text fields in SBS questions`. Keep commit subjects
 concise and focused on the user-visible or package behavior change. For
 pull requests, follow `.github/CONTRIBUTING.md`: open an issue for
-larger changes, include a minimal reprex for bugs, run
-`devtools::check()`, and link issues with `Fixes #<issue-number>`.
+larger changes, include a minimal reprex for bugs, run the configured
+pre-push R CMD check hook, and link issues with `Fixes #<issue-number>`.
 Include tests for changed behavior and update documentation or generated
 files when roxygen or README sources change.
 
