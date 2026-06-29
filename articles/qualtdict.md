@@ -29,6 +29,9 @@ A Variable Dictionary preserves several distinct identifiers:
 
 - `response_column_id`: the downloaded response column used to match raw
   Qualtrics response data to dictionary rows.
+- `row_source`: the Dictionary Row Source that identifies what kind of
+  metadata fact produced the row. Current question-backed rows use
+  `row_source = "question"`.
 - `qid`: the bare Qualtrics question identifier, such as `QID1`.
 - `question_name`: the raw Qualtrics Question Name.
 - `variable_name`: the final export-safe Dictionary Variable Name used
@@ -44,6 +47,7 @@ the shape of a safe simulated Variable Dictionary.
 
 example_dict <- tibble::tibble(
   response_column_id = c("QID1", "QID1_3_TEXT"),
+  row_source = c("question", "question"),
   qid = c("QID1", "QID1"),
   question_name = c("Q1", "Q1"),
   variable_name = c("Q1", "Q1.1"),
@@ -59,13 +63,13 @@ example_dict <- tibble::tibble(
 )
 
 example_dict
-#> # A tibble: 2 × 13
-#>   response_column_id qid   question_name variable_name block      question item 
-#>   <chr>              <chr> <chr>         <chr>         <chr>      <chr>    <lgl>
-#> 1 QID1               QID1  Q1            Q1            Main Block Choose … NA   
-#> 2 QID1_3_TEXT        QID1  Q1            Q1.1          Main Block Choose … NA   
-#> # ℹ 6 more variables: level <chr>, label <chr>, type <chr>, selector <chr>,
-#> #   sub_selector <chr>, content_type <lgl>
+#> # A tibble: 2 × 14
+#>   response_column_id row_source qid   question_name variable_name block question
+#>   <chr>              <chr>      <chr> <chr>         <chr>         <chr> <chr>   
+#> 1 QID1               question   QID1  Q1            Q1            Main… Choose …
+#> 2 QID1_3_TEXT        question   QID1  Q1            Q1.1          Main… Choose …
+#> # ℹ 7 more variables: item <lgl>, level <chr>, label <chr>, type <chr>,
+#> #   selector <chr>, sub_selector <chr>, content_type <lgl>
 ```
 
 ## Credentials
