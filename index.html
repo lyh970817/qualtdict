@@ -56,7 +56,7 @@
 <p><a href="https://www.qualtrics.com/" class="external-link">Qualtrics</a> is an online survey and data collection software platform. <code>qualtdict</code> is a metadata and labelled-export companion to <a href="https://github.com/ropensci/qualtRics" class="external-link">qualtRics</a> for Qualtrics surveys.</p>
 <p><code>qualtRics</code> owns API access to Qualtrics. <code>qualtdict</code> owns the package workflow that turns Qualtrics metadata and import-ID response exports into:</p>
 <ul>
-<li>a <strong>Variable Dictionary</strong> with <code>response_column_id</code>, <code>qid</code>, <code>question_name</code>, <code>variable_name</code>, and survey metadata needed for analysis;</li>
+<li>a <strong>Variable Dictionary</strong> with <code>response_column_id</code>, <code>row_source</code>, <code>qid</code>, <code>question_name</code>, <code>variable_name</code>, and survey metadata needed for analysis;</li>
 <li>
 <strong>Validation Findings</strong> that make dictionary consistency issues visible; and</li>
 <li>
@@ -88,7 +88,7 @@
 <div class="section level2">
 <h2 id="variable-dictionary-to-labelled-survey-data">Variable Dictionary To Labelled Survey Data<a class="anchor" aria-label="anchor" href="#variable-dictionary-to-labelled-survey-data"></a>
 </h2>
-<p>Generate a Variable Dictionary from a survey ID. The dictionary keeps <code>response_column_id</code> as the downloaded response-column key, <code>qid</code> as the bare Qualtrics question identifier, <code>question_name</code> as the raw Qualtrics naming reference, and <code>variable_name</code> as the final export-safe Dictionary Variable Name.</p>
+<p>Generate a Variable Dictionary from a survey ID. The dictionary keeps <code>response_column_id</code> as the downloaded response-column key, <code>row_source</code> as the Dictionary Row Source, <code>qid</code> as the bare Qualtrics question identifier, <code>question_name</code> as the raw Qualtrics naming reference, and <code>variable_name</code> as the final export-safe Dictionary Variable Name. Current question-backed rows use <code>row_source = "question"</code>.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">survey_id</span> <span class="op">&lt;-</span> <span class="st">"SV_XXXXXXXXXXXXXXXX"</span></span>
 <span></span>

@@ -73,9 +73,10 @@ A Variable Dictionary: a `qualtdict` data frame.
 
 The returned Variable Dictionary preserves `response_column_id` as the
 downloaded response-column key, `qid` as the bare Qualtrics question
-identifier, `question_name` as the raw Qualtrics naming reference, and
-`variable_name` as the final export-safe Dictionary Variable Name used
-by Labelled Survey Data.
+identifier, `row_source` as the Dictionary Row Source, `question_name`
+as the raw Qualtrics naming reference, and `variable_name` as the final
+export-safe Dictionary Variable Name used by Labelled Survey Data.
+Currently generated question-backed rows use `row_source = "question"`.
 
 When `variable_name = "semantic_name"`, the Variable Dictionary also
 includes `semantic_name`. Semantic Names are readable best-effort

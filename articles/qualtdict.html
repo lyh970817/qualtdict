@@ -89,6 +89,10 @@ Survey Data.</li>
 <code>response_column_id</code>: the downloaded response column used
 to match raw Qualtrics response data to dictionary rows.</li>
 <li>
+<code>row_source</code>: the Dictionary Row Source that identifies
+what kind of metadata fact produced the row. Current question-backed
+rows use <code>row_source = "question"</code>.</li>
+<li>
 <code>qid</code>: the bare Qualtrics question identifier, such as
 <code>QID1</code>.</li>
 <li>
@@ -106,6 +110,7 @@ shows the shape of a safe simulated Variable Dictionary.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">example_dict</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
 <span>  response_column_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QID1"</span>, <span class="st">"QID1_3_TEXT"</span><span class="op">)</span>,</span>
+<span>  row_source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"question"</span>, <span class="st">"question"</span><span class="op">)</span>,</span>
 <span>  qid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QID1"</span>, <span class="st">"QID1"</span><span class="op">)</span>,</span>
 <span>  question_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Q1"</span>, <span class="st">"Q1"</span><span class="op">)</span>,</span>
 <span>  variable_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Q1"</span>, <span class="st">"Q1.1"</span><span class="op">)</span>,</span>
@@ -121,13 +126,13 @@ shows the shape of a safe simulated Variable Dictionary.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">example_dict</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 13</span></span></span>
-<span><span class="co">#&gt;   response_column_id qid   question_name variable_name block      question item </span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> QID1               QID1  Q1            Q1            Main Block Choose … <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> QID1_3_TEXT        QID1  Q1            Q1.1          Main Block Choose … <span style="color: #BB0000;">NA</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 6 more variables: level &lt;chr&gt;, label &lt;chr&gt;, type &lt;chr&gt;, selector &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   sub_selector &lt;chr&gt;, content_type &lt;lgl&gt;</span></span></span></code></pre></div>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 14</span></span></span>
+<span><span class="co">#&gt;   response_column_id row_source qid   question_name variable_name block question</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> QID1               question   QID1  Q1            Q1            Main… Choose …</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> QID1_3_TEXT        question   QID1  Q1            Q1.1          Main… Choose …</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: item &lt;lgl&gt;, level &lt;chr&gt;, label &lt;chr&gt;, type &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   selector &lt;chr&gt;, sub_selector &lt;chr&gt;, content_type &lt;lgl&gt;</span></span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="credentials">Credentials<a class="anchor" aria-label="anchor" href="#credentials"></a>
