@@ -1,31 +1,75 @@
 # TASK
 
-Merge the following branches into the current branch:
+Publish the following completed branches as pull requests, then merge the pull
+requests through GitHub:
 
 {{BRANCHES}}
 
+Branch-to-issue mapping:
+
+{{ISSUE_BRANCHES}}
+
 For each branch:
 
-1. Run `git merge <branch> --no-edit`
-2. If there are merge conflicts, resolve them intelligently by reading both sides and choosing the correct resolution
-3. After resolving conflicts, run `Rscript -e 'devtools::test()'` and the strongest practical R package checks for the merged changes
-4. If tests fail, fix the issues before proceeding to the next branch
+1. Inspect the branch diff against the current base branch.
+2. Run `Rscript -e 'devtools::test()'` and the strongest practical R package
+   checks for that branch before publishing it.
+3. If tests fail, fix the issue on the branch, commit the fix, and rerun the
+   relevant checks before proceeding.
+4. Push the branch with `git push -u origin <branch>`.
+5. Open a pull request with `gh pr create`, targeting the current base branch.
+   Include a closing keyword such as `Fixes #<ID>` in the PR body so GitHub
+   closes the issue when the PR merges.
+6. If a PR already exists for the branch, update/reuse it instead of creating a
+   duplicate.
+7. Merge the PR with `gh pr merge --merge --delete-branch`.
 
-After all branches are merged, make a single commit summarizing the merge.
+If local finalization smoke artifacts are available and the branch changes
+exported behavior, run the smoke script as one self-contained invocation for the
+relevant finalization surface. Choose the affected `--functions` and the
+relevant `--variable-name` route set in that command; the script runs required
+prerequisites internally. Prefer reproducible two-survey sampling while
+iterating, for example:
+
+`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`
+
+Select the Semantic Name route only when Semantic Name behavior or shared naming
+behavior is relevant:
+
+`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name`
+
+Use `--variable-name all` when both naming routes are relevant. Use
+`--survey-count all` only when the code change really needs every configured
+survey, and explain why. Inspect the terminal output and saved RDS object
+artifacts under `.local/finalize-smoke/runs/<timestamp>/`; temporary
+uncommitted R code is acceptable for local inspection.
+Smoke runs can take several minutes, especially with Semantic Name generation
+or many surveys selected. Wait with a longer timeout, do not repeatedly poll the
+process, and inspect output once the smoke command exits before treating the
+agent as idle.
+
+Do not merge branches locally into the base branch. The PR merge is the merge.
+After each PR merge, update the local base branch with `git pull --ff-only`.
 
 # CLOSE ISSUES
 
-For each branch that was merged, close its issue using the following command:
+Do not close issues directly with `gh issue close`. Issues should close through
+the merged PR's closing keyword.
 
-`gh issue close <ID> --comment "Completed by Sandcastle"`
-
-If closing those child issues completes a parent PRD, close the parent PRD too.
-Only close a parent PRD after checking that all linked implementation issues
-for that PRD are closed or were merged in this run. Do not close an unfinished
-parent PRD merely because one child issue completed.
+If merging a child PR completes a parent PRD, add a closing keyword for that
+parent PRD to the child PR body before merging it. Only add that parent PRD
+closing keyword after checking that all linked implementation issues for that
+PRD are closed or were merged by PR in this run. Do not close an unfinished
+parent PRD merely because one child issue completed, and do not close parent
+PRDs directly.
 
 Here are all the issues:
 
 {{ISSUES}}
 
-Once you've merged everything you can, output <promise>COMPLETE</promise>.
+If GitHub refuses to merge a PR because required checks or permissions are
+missing, leave the PR open and report the PR URL and blocker. Do not merge the
+branch locally as a fallback.
+
+Once you've published and merged everything you can, output
+<promise>COMPLETE</promise>.

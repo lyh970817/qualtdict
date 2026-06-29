@@ -2,7 +2,7 @@ import { run } from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
 import { codex } from "../codex.mts";
 
-// Simple loop: an agent that picks open issues one by one and closes them.
+// Simple loop: an agent that picks open issues one by one and lands them by PR.
 // Run this with: npx tsx .sandcastle/simple-loop/main.mts
 
 await run({
@@ -24,7 +24,6 @@ await run({
   // per run, or set it to 1 for a single-shot mode.
   maxIterations: 3,
 
-  // Branch strategy — merge-to-head creates a temporary branch for the agent
-  // to work on, then merges the result back to HEAD when the run completes.
-  branchStrategy: { type: "merge-to-head" },
+  // The prompt owns branch creation, PR creation, and PR merge. Do not use
+  // merge-to-head here; that would bypass the repository's PR workflow.
 });

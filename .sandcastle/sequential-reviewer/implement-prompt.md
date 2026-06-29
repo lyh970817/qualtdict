@@ -49,6 +49,10 @@ An issue is a PRD container if either condition is true:
 Child implementation issues remain valid candidates. Use their parent PRD only
 as context.
 
+After selecting the issue, write the selected issue number and title to
+`.sandcastle/selected-issue.json` for the later publisher phase. Do not commit
+that file.
+
 ## Workflow
 
 1. **Explore** — read the issue carefully. Pull in the parent PRD if referenced. Read the relevant source files and tests before writing any code.
@@ -61,7 +65,8 @@ as context.
    - List key decisions made
    - List files changed
    - Note any blockers for the next iteration
-6. **Close** — close the issue with `gh issue close <ID> --comment "Completed by Sandcastle"`, replacing `<ID>` with the issue number.
+6. **Hand off** — leave the issue open. A later publisher phase will push the
+   reviewed branch, open a PR, and merge that PR with a closing keyword.
 
 ## Rules
 
@@ -70,6 +75,7 @@ as context.
 - Do not leave commented-out code or TODO comments in committed code.
 - Never implement or close a PRD container. If all remaining issues are PRD
   containers or blocked, leave them open and output the completion signal.
+- Do not push branches, open PRs, merge PRs, or close issues in this phase.
 - If you are blocked (missing context, failing tests you cannot fix, external dependency), leave a comment on the issue and move on — do not close it.
 
 # Done
