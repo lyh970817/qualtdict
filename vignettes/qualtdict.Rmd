@@ -38,6 +38,9 @@ A Variable Dictionary preserves several distinct identifiers:
 
 - `response_column_id`: the downloaded response column used to match raw
   Qualtrics response data to dictionary rows.
+- `row_source`: the Dictionary Row Source that identifies what kind of
+  metadata fact produced the row. Current question-backed rows use
+  `row_source = "question"`.
 - `qid`: the bare Qualtrics question identifier, such as `QID1`.
 - `question_name`: the raw Qualtrics Question Name.
 - `variable_name`: the final export-safe Dictionary Variable Name used in
@@ -51,6 +54,7 @@ shape of a safe simulated Variable Dictionary.
 ```{r}
 example_dict <- tibble::tibble(
   response_column_id = c("QID1", "QID1_3_TEXT"),
+  row_source = c("question", "question"),
   qid = c("QID1", "QID1"),
   question_name = c("Q1", "Q1"),
   variable_name = c("Q1", "Q1.1"),

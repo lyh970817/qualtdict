@@ -29,9 +29,11 @@
 #' @details
 #' The returned Variable Dictionary preserves \code{response_column_id} as the
 #' downloaded response-column key, \code{qid} as the bare Qualtrics question
-#' identifier, \code{question_name} as the raw Qualtrics naming reference, and
+#' identifier, \code{row_source} as the Dictionary Row Source,
+#' \code{question_name} as the raw Qualtrics naming reference, and
 #' \code{variable_name} as the final export-safe Dictionary Variable Name used
-#' by Labelled Survey Data.
+#' by Labelled Survey Data. Currently generated question-backed rows use
+#' \code{row_source = "question"}.
 #'
 #' When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 #' includes \code{semantic_name}. Semantic Names are readable best-effort
@@ -62,14 +64,16 @@
 #'   )
 #' }
 #'
-dict_generate <- function(surveyID,
-                          variable_name = c("question_name", "semantic_name"),
-                          name = NULL,
-                          block_pattern = NULL,
-                          block_sep = ".",
-                          semantic_name_preprocess = NULL,
-                          preprocess = NULL,
-                          quiet = TRUE) {
+dict_generate <- function(
+  surveyID,
+  variable_name = c("question_name", "semantic_name"),
+  name = NULL,
+  block_pattern = NULL,
+  block_sep = ".",
+  semantic_name_preprocess = NULL,
+  preprocess = NULL,
+  quiet = TRUE
+) {
   check_dict_generate_args(
     surveyID = surveyID,
     block_pattern = block_pattern,
@@ -100,12 +104,14 @@ dict_generate <- function(surveyID,
   finalise_generated_dictionary(dict, use_semantic_name)
 }
 
-check_dict_generate_args <- function(surveyID,
-                                     block_pattern,
-                                     block_sep,
-                                     semantic_name_preprocess,
-                                     preprocess,
-                                     quiet) {
+check_dict_generate_args <- function(
+  surveyID,
+  block_pattern,
+  block_sep,
+  semantic_name_preprocess,
+  preprocess,
+  quiet
+) {
   checkarg_isstring(surveyID, null_okay = FALSE)
   checkarg_isfunction(block_pattern)
   checkarg_isstring(block_sep, null_okay = FALSE)
@@ -135,8 +141,10 @@ resolve_dict_generate_variable_name <- function(variable_name, name) {
   variable_name
 }
 
-resolve_semantic_name_preprocess <- function(semantic_name_preprocess,
-                                             preprocess) {
+resolve_semantic_name_preprocess <- function(
+  semantic_name_preprocess,
+  preprocess
+) {
   if (!is.null(preprocess)) {
     warning(
       "`preprocess` is deprecated; use `semantic_name_preprocess` instead.",
@@ -152,17 +160,23 @@ resolve_semantic_name_preprocess <- function(semantic_name_preprocess,
 
 generated_dictionary_columns <- function(dict, use_semantic_name) {
   dict_columns <- c(
-    "response_column_id", "qid", "question_name", "variable_name",
-    "block", "question",
-    "item", "level", "label", "type", "selector", "sub_selector", "content_type"
+    "response_column_id",
+    "row_source",
+    "qid",
+    "question_name",
+    "variable_name",
+    "block",
+    "question",
+    "item",
+    "level",
+    "label",
+    "type",
+    "selector",
+    "sub_selector",
+    "content_type"
   )
   if ("loop_option" %in% names(dict) && !all(is.na(dict$loop_option))) {
-    dict_columns <- c(
-      "response_column_id", "qid", "question_name", "variable_name",
-      "block", "question",
-      "loop_option", "item", "level", "label", "type", "selector",
-      "sub_selector", "content_type"
-    )
+    dict_columns <- append(dict_columns, "loop_option", after = 7)
   }
   if (use_semantic_name) {
     dict_columns <- append(dict_columns, "semantic_name", after = 4)

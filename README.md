@@ -26,9 +26,9 @@ surveys.
 workflow that turns Qualtrics metadata and import-ID response exports
 into:
 
-- a **Variable Dictionary** with `response_column_id`, `qid`,
-  `question_name`, `variable_name`, and survey metadata needed for
-  analysis;
+- a **Variable Dictionary** with `response_column_id`, `row_source`,
+  `qid`, `question_name`, `variable_name`, and survey metadata needed
+  for analysis;
 - **Validation Findings** that make dictionary consistency issues
   visible; and
 - **Labelled Survey Data** whose Export Variables are renamed to
@@ -74,10 +74,11 @@ response downloads require credentials.
 ## Variable Dictionary To Labelled Survey Data
 
 Generate a Variable Dictionary from a survey ID. The dictionary keeps
-`response_column_id` as the downloaded response-column key, `qid` as the
-bare Qualtrics question identifier, `question_name` as the raw Qualtrics
-naming reference, and `variable_name` as the final export-safe
-Dictionary Variable Name.
+`response_column_id` as the downloaded response-column key, `row_source`
+as the Dictionary Row Source, `qid` as the bare Qualtrics question
+identifier, `question_name` as the raw Qualtrics naming reference, and
+`variable_name` as the final export-safe Dictionary Variable Name.
+Current question-backed rows use `row_source = "question"`.
 
 ``` r
 survey_id <- "SV_XXXXXXXXXXXXXXXX"
