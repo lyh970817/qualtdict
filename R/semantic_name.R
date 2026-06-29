@@ -40,13 +40,19 @@ generate_semantic_names <- function(json,
 
 semantic_name_texts <- function(json_makename) {
   texts <- json_makename$item
-  texts[is.na(texts)] <- json_makename$question[is.na(texts)]
+  missing_text <- is.na(texts) | !nzchar(texts)
+  texts[missing_text] <- json_makename$question[missing_text]
 
   ma_lgl <- json_makename$selector %in% c("MACOL", "MAVR", "MAHR", "MSB")
-  texts[ma_lgl] <- json_makename$label[ma_lgl]
+  ma_label_lgl <-
+    ma_lgl & !is.na(json_makename$label) & nzchar(json_makename$label)
+  texts[ma_label_lgl] <- json_makename$label[ma_label_lgl]
 
   sbs_matrix <- json_makename$type == "SBS"
   texts[sbs_matrix] <- json_makename$question[sbs_matrix]
+
+  missing_text <- is.na(texts) | !nzchar(texts)
+  texts[missing_text] <- json_makename$question[missing_text]
 
   texts
 }
