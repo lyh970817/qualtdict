@@ -2,6 +2,11 @@
 
 ## qualtdict 0.0.0.9000
 
+- [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  now represents flat Embedded Data Fields from Qualtrics metadata as
+  Metadata-defined Export Variable rows with
+  `row_source = "embedded_data"`.
+
 - [`dict_split_blocks()`](https://lyh970817.github.io/qualtdict/reference/dict_split_blocks.md)
   and
   [`survey_split_blocks()`](https://lyh970817.github.io/qualtdict/reference/survey_split_blocks.md)

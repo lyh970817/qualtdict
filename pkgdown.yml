@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   qualtdict: qualtdict.html
-last_built: 2026-06-29T20:30Z
+last_built: 2026-06-29T23:07Z
 urls:
   reference: https://lyh970817.github.io/qualtdict/reference
   article: https://lyh970817.github.io/qualtdict/articles

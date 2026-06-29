@@ -69,7 +69,9 @@ Generate a Variable Dictionary from a survey ID. The dictionary keeps
 as the Dictionary Row Source, `qid` as the bare Qualtrics question
 identifier, `question_name` as the raw Qualtrics naming reference, and
 `variable_name` as the final export-safe Dictionary Variable Name.
-Current question-backed rows use `row_source = "question"`.
+Question-backed rows use `row_source = "question"`, and flat Embedded
+Data Fields defined by Qualtrics metadata use
+`row_source = "embedded_data"`.
 
 ``` r
 

@@ -76,7 +76,8 @@ downloaded response-column key, `qid` as the bare Qualtrics question
 identifier, `row_source` as the Dictionary Row Source, `question_name`
 as the raw Qualtrics naming reference, and `variable_name` as the final
 export-safe Dictionary Variable Name used by Labelled Survey Data.
-Currently generated question-backed rows use `row_source = "question"`.
+Question-backed rows use `row_source = "question"`. Flat Embedded Data
+Fields defined by Qualtrics metadata use `row_source = "embedded_data"`.
 
 When `variable_name = "semantic_name"`, the Variable Dictionary also
 includes `semantic_name`. Semantic Names are readable best-effort
