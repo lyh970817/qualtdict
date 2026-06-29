@@ -12,10 +12,11 @@ Branch-to-issue mapping:
 For each branch:
 
 1. Inspect the branch diff against the current base branch.
-2. Run `Rscript -e 'devtools::test()'` and the strongest practical R package
-   checks for that branch before publishing it.
-3. If tests fail, fix the issue on the branch, commit the fix, and rerun the
-   relevant checks before proceeding.
+2. Run `Rscript -e 'devtools::test()'` for that branch before publishing it.
+   Do not run `devtools::check()` manually; R CMD check belongs to the
+   configured pre-push hook and should run during `git push`.
+3. If tests or the pre-push hook fail, fix the issue on the branch, commit the
+   fix, and rerun the relevant check before proceeding.
 4. Push the branch with `git push -u origin <branch>`.
 5. Open a pull request with `gh pr create`, targeting the current base branch.
    Include a closing keyword such as `Fixes #<ID>` in the PR body so GitHub
@@ -46,7 +47,8 @@ Inspect the terminal output and saved RDS object artifacts under
 `.local/finalize-smoke/runs/<timestamp>/`; temporary uncommitted R code is
 acceptable for local inspection. Smoke runs can take several minutes. Wait with
 a longer timeout, do not repeatedly poll the process, and inspect output once
-the smoke command exits before treating the agent as idle.
+the smoke command exits before treating the agent as idle. Missing artifacts
+are not a failure; report that the smoke check could not be run.
 
 Do not merge branches locally into the base branch. The PR merge is the merge.
 After each PR merge, update the local base branch with `git pull --ff-only`.
