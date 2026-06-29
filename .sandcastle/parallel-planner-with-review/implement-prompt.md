@@ -47,7 +47,9 @@ If applicable, use RGR to complete the task.
 
 # FEEDBACK LOOPS
 
-Before committing, run `Rscript -e 'devtools::test()'` and the strongest practical R package checks for the change. For exported behavior, prefer `Rscript -e 'devtools::check()'`; for narrow changes, focused `testthat` files are acceptable if you explain the smaller verification scope.
+Before committing, run `Rscript -e 'devtools::test()'`. Do not run
+`devtools::check()` manually in the implementation phase; R CMD check belongs
+to the configured pre-push hook.
 
 # COMMIT
 
