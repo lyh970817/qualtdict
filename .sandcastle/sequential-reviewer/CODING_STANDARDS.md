@@ -29,19 +29,17 @@
   finalization surface. Select affected exported outputs with `--functions`
   based on the dependency path from the changed code to smoke-covered exported
   functions; do not broaden the selection just because prerequisites run
-  internally. Select `--variable-name` based on naming-route dependencies, not
-  the downstream output alone. Use `question_name` unless the changed code
-  affects Semantic Name generation, shared naming inputs, route-specific
-  Dictionary Variable Name behavior, or otherwise depends on both naming
-  routes. Prefer reproducible two-survey sampling while iterating, for example:
-  `Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`.
+  internally. Use the default `question_name` Variable Dictionary route; the
+  Semantic Name route is disabled for local finalization smoke because it is too
+  expensive for this workflow. Cover Semantic Name changes with ordinary tests
+  and package checks. For example:
+  `Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name`.
 - Inspect the terminal output and saved RDS object artifacts under
   `.local/finalize-smoke/runs/<timestamp>/`; temporary uncommitted R code is
   acceptable for local inspection.
-- Smoke runs can take several minutes, especially with Semantic Name generation
-  or many surveys selected. Wait with a longer timeout, do not repeatedly poll
-  the process, and inspect output once the smoke command exits before treating
-  the agent as idle.
+- Smoke runs can take several minutes. Wait with a longer timeout, do not
+  repeatedly poll the process, and inspect output once the smoke command exits
+  before treating the agent as idle.
 
 ## Architecture
 

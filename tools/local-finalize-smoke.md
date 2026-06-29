@@ -102,18 +102,14 @@ To select the Variable Dictionary naming route, pass `--variable-name`:
 
 ```sh
 Rscript tools/local-finalize-smoke.R check --variable-name question_name
-Rscript tools/local-finalize-smoke.R check --variable-name semantic_name
-Rscript tools/local-finalize-smoke.R check --variable-name all
 ```
 
-Use the route that matches the naming-route dependency of the code diff. The
-`question_name` route is the default because it avoids Semantic Name generation
-unless the change touches Semantic Names, shared naming inputs, or
-route-specific Dictionary Variable Name behavior. Changes to downstream
-consumers such as validation, Labelled Export, or block splitting should stay
-on `question_name` unless the changed code actually depends on both naming
-routes. Use `--variable-name all` only when a change should be replayed through
-both naming routes.
+The local finalization smoke check only supports the `question_name` route.
+The Semantic Name route is disabled because it is too expensive for the
+finalization workflow. Changes that affect Semantic Name behavior should be
+covered by ordinary tests and package checks rather than local finalization
+smoke. Do not pass `--variable-name semantic_name` or `--variable-name all`;
+the script rejects both.
 
 For example, a change limited to question-name dictionary generation should use
 a focused invocation such as:
@@ -122,22 +118,9 @@ a focused invocation such as:
 Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name
 ```
 
-A change that affects Semantic Name behavior should select that route:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name semantic_name
-```
-
-If both naming routes are relevant, select both in one invocation:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name all
-```
-
-Smoke runs can take several minutes, especially when Semantic Name generation
-is selected. When an agent is running the workflow, wait with a longer timeout,
-do not repeatedly poll the process, and inspect output once the smoke command
-exits before treating the agent as idle.
+Smoke runs can take several minutes. When an agent is running the workflow,
+wait with a longer timeout, do not repeatedly poll the process, and inspect
+output once the smoke command exits before treating the agent as idle.
 
 `check` writes current summaries and replayed objects under:
 
@@ -184,7 +167,7 @@ baseline record:
 
 ```sh
 Rscript tools/local-finalize-smoke.R bless --functions fetch_labelled_survey_data
-Rscript tools/local-finalize-smoke.R bless --variable-name semantic_name
+Rscript tools/local-finalize-smoke.R bless --variable-name question_name
 ```
 
 Baselines are local to the fixed surveys and are not committed.
