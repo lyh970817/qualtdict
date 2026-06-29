@@ -1,6 +1,6 @@
-# Remaining pkgcheck Issues
+# pkgcheck Status
 
-This note records the remaining `pkgcheck` findings after the recent fixes for:
+This note records the current `pkgcheck` status after the recent fixes for:
 
 - missing examples on exported helper functions
 - missing `utils::head` import
@@ -21,61 +21,68 @@ This note records the remaining `pkgcheck` findings after the recent fixes for:
   Validation Finding code
 - the `goodpractice` coverage advisory for uncovered package lines
 
-The exact finding set can vary depending on whether the current shell has
-reloaded the updated Nix/direnv environment. In shells that have not reloaded
-`shell.nix`, `pkgcheck` may still print `pdflatex not found! Not building PDF
-manual.`
-
-An uncached local worktree run after the fixes above reported:
+An authenticated local worktree run reported:
 
 ```text
-Package coverage is 85.9%.
+Package has continuous integration checks, but no badges on README
+Package coverage is 100%.
 R CMD check found no errors.
 R CMD check found no warnings.
 ```
 
-## Repository Readiness Findings
-
-### Repository has no website
-
-`pkgcheck` reports:
-
-```text
-Repository has no website
-```
-
-Likely fix: add a package website, typically with `pkgdown`, and expose the
-site URL in the package metadata.
-
-### Package has no continuous integration checks
-
-`pkgcheck` reports:
+`pkgcheck` discovers GitHub Actions status through the GitHub API and only
+performs that lookup when a GitHub token is available in the environment. In an
+unauthenticated local shell, the same package state may still report:
 
 ```text
 Package has no continuous integration checks.
 ```
 
-The repository has GitHub Actions files. The standard R package workflows now
-target the `main` branch, and the repository includes the rOpenSci
-`pkgcheck-action` workflow in `.github/workflows/pkgcheck.yaml`.
+Run local `pkgcheck` with a token when checking CI status, for example:
+
+```sh
+GITHUB_PAT="$(gh auth token)" Rscript -e 'pkgcheck::pkgcheck(".")'
+```
+
+The repository includes the rOpenSci `pkgcheck-action` workflow in
+`.github/workflows/pkgcheck.yaml`. That workflow grants explicit `actions: read`
+and `contents: read` permissions so GitHub-hosted `pkgcheck` runs can inspect
+repository contents and Actions run status.
+
+## Historical Findings
+
+### Repository has no website
+
+Earlier `pkgcheck` runs reported:
+
+```text
+Repository has no website
+```
+
+The current authenticated run reports:
+
+```text
+Repository has a website
+```
 
 ### Default GitHub branch is `main`
 
-`pkgcheck` reports:
+Earlier `pkgcheck` runs reported:
 
 ```text
 Default GitHub branch of 'master' is not acceptable.
 ```
 
-Fix requires changing the default branch on GitHub from `master` to `main`,
-then updating local branch names and any branch references in workflows,
-documentation, and repository settings.
+The current authenticated run reports:
 
-## Code Quality Findings
+```text
+Default branch: main
+```
 
 ### Long functions
 
-`goodpractice` reports functions over its default length limit, including:
+Earlier `goodpractice` runs reported functions over its default length limit,
+including:
 
 ```text
 R/dict_generate.R:65
@@ -85,8 +92,11 @@ R/response_column_render.R:10
 R/response_column_render.R:175
 ```
 
-Likely fix: split the longest functions around existing domain seams. This is a
-refactor and should be handled separately from audit configuration.
+The current local `pkgcheck` run reports:
+
+```text
+All goodpractice linters passed.
+```
 
 ### Unused internal functions
 
@@ -100,17 +110,21 @@ R/raw_response_columns.R:4
 R/zzz.R:2
 ```
 
-The clearly obsolete helpers were removed. The `%||%` helper in
-`R/question_facts.R` is used as an infix helper and may still be reported by
-some static checks as a false positive.
+The clearly obsolete helpers were removed. The current local `pkgcheck` run
+reports:
+
+```text
+All goodpractice linters passed.
+```
 
 ## R CMD Check Findings
 
-After the example/import fixes, a direct `devtools::check(args = "--no-manual")`
-passed with:
+After the example/import fixes, direct checks passed. The current local
+`pkgcheck` run reports:
 
 ```text
-0 errors | 0 warnings | 2 notes
+R CMD check found no errors.
+R CMD check found no warnings.
 ```
 
 The remaining notes in the local worktree were:
@@ -154,11 +168,12 @@ The following function name is duplicated in other packages:
 The exported API was renamed to `fetch_labelled_survey_data()` without a
 deprecated exported alias to resolve this finding. See ADR 0006.
 
-## Suggested Prioritization
+## Remaining Local Caveats
 
-1. Fix hook/runtime configuration separately from package audit findings.
-2. Add or align recognized CI checks.
-3. Verify GitHub reports `main` as the default branch.
-4. Add package website metadata.
-5. Verify the remaining unused-internal-function findings.
-6. Treat long-function findings as refactor tickets, not one-off lint cleanup.
+1. `pkgcheck` CI status requires a GitHub token in the local environment.
+2. The current local branch is ahead of `origin/main`; GitHub-hosted pkgcheck
+   results will reflect the older remote state until these commits are pushed.
+3. `pkgcheck` currently reports CI as present but says there are no README
+   badges because it fetches the README from GitHub's default branch. The local
+   README already includes GitHub Actions badges, so this should clear once the
+   local commits are pushed.
