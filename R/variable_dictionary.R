@@ -193,9 +193,7 @@ warn_unassigned_embedded_data_rows <- function(
     return(invisible())
   }
 
-  unassigned <- map_lgl(rows, function(row) {
-    is.na(row$block)
-  })
+  unassigned <- map_lgl(rows, ~ is.na(.x$block))
   if (any(unassigned)) {
     warning(
       "Some Embedded Data Fields could not be assigned to a Survey Block ",

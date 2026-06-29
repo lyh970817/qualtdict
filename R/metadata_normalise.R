@@ -63,17 +63,11 @@ normalise_survey_flow_embedded_data_fields <- function(mt, mt_d) {
   }
 
   block_lookup <- survey_flow_block_lookup(mt_d$block)
-  block_names <- map_chr(flow_items, function(item) {
-    block_id <- survey_flow_block_id(item)
-    if (is.na(block_id)) {
-      return(NA_character_)
-    }
-    if (!block_id %in% names(block_lookup)) {
-      return(NA_character_)
-    }
-
-    block_lookup[[block_id]] %||% NA_character_
-  })
+  block_names <- map_chr(
+    flow_items,
+    survey_flow_block_name,
+    block_lookup = block_lookup
+  )
 
   field_locations <- map2(
     flow_items,
@@ -87,10 +81,11 @@ normalise_survey_flow_embedded_data_fields <- function(mt, mt_d) {
     return(empty_normalised_embedded_data_fields())
   }
 
-  field_names <- unique(map_chr(field_locations, "field_name"))
+  location_field_names <- map_chr(field_locations, "field_name")
+  field_names <- unique(location_field_names)
   fields <- map(field_names, function(field_name) {
     normalise_survey_flow_embedded_data_field(
-      field_locations[map_chr(field_locations, "field_name") == field_name]
+      field_locations[location_field_names == field_name]
     )
   })
   names(fields) <- map_chr(fields, "field_name")
@@ -153,6 +148,15 @@ survey_flow_block_lookup <- function(blocks) {
   })
 }
 
+survey_flow_block_name <- function(item, block_lookup) {
+  block_id <- survey_flow_block_id(item)
+  if (is.na(block_id) || !block_id %in% names(block_lookup)) {
+    return(NA_character_)
+  }
+
+  block_lookup[[block_id]] %||% NA_character_
+}
+
 survey_flow_block_id <- function(item) {
   if (!identical(survey_flow_item_type(item), "Block")) {
     return(NA_character_)
@@ -184,8 +188,8 @@ survey_flow_embedded_data_field_locations <- function(
     return(list())
   }
 
-  previous_block <- last_block_before(block_names, item_index)
-  next_block <- first_block_after(block_names, item_index)
+  previous_block <- previous_survey_flow_block(block_names, item_index)
+  next_block <- next_survey_flow_block(block_names, item_index)
   map(field_names, function(field_name) {
     list(
       field_name = field_name,
@@ -225,7 +229,7 @@ is_embedded_data_field_record <- function(field) {
     any(embedded_data_field_name_columns %in% names(field))
 }
 
-last_block_before <- function(block_names, item_index) {
+previous_survey_flow_block <- function(block_names, item_index) {
   if (item_index <= 1) {
     return(NA_character_)
   }
@@ -239,7 +243,7 @@ last_block_before <- function(block_names, item_index) {
   previous_blocks[[length(previous_blocks)]]
 }
 
-first_block_after <- function(block_names, item_index) {
+next_survey_flow_block <- function(block_names, item_index) {
   if (item_index >= length(block_names)) {
     return(NA_character_)
   }
