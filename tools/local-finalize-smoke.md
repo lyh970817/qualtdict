@@ -1,36 +1,32 @@
 # Local Finalization Smoke Check
 
-This document is the agent-facing guide for the final local smoke check. It is
-about replaying already prepared local artifacts, not fetching new Qualtrics
-data. Artifact refresh is a trusted-human workflow documented in
-`tools/fetch-local-finalize-smoke.md`.
+Agent-facing guide for the final local smoke check. It replays prepared local
+artifacts; it must not fetch live Qualtrics data. Trusted-human artifact
+refresh is documented in `tools/fetch-local-finalize-smoke.md`.
 
-Use this smoke check only during feature finalization for changes that affect
-or could affect exported behavior. It is not a unit test and does not need to
-run after every edit. A good time to run it is after ordinary tests pass and
-after any requested review work is complete.
+Use this only during feature finalization for changes that affect or could
+affect exported behavior, usually after ordinary tests and requested review
+work are complete. Missing local artifacts are not a feature failure; report
+that the smoke check could not be run.
 
-## What It Checks
+## Scope
 
 `tools/local-finalize-smoke.R check` replays local Qualtrics smoke artifacts,
 runs smoke-covered exported functions, verifies Response Column ID parity
 against the stored raw response-column shape, and compares hashable summaries
 against local baselines.
 
-Refactors should usually keep hashes unchanged. Intentional changes to Variable
-Dictionaries, Labelled Survey Data, Validation Findings, Labelled Export
-Findings, or split outputs may change hashes. Inspect changed output before
-blessing baselines.
+The smoke check supports only the `question_name` Dictionary Variable Name
+route. The Semantic Name route is disabled because it is too expensive for this
+workflow. Do not pass `--variable-name semantic_name` or `--variable-name all`;
+the script rejects both. Changes that affect Semantic Name behavior belong in
+ordinary tests and package checks.
 
-## Artifact Requirement
+## Artifacts
 
-The smoke check needs local artifacts under `.local/finalize-smoke/`. This
-directory is ignored by Git. Missing artifacts are not a failure of the feature
-work; report that the smoke check could not be run.
-
-Local artifacts may exist only in the main checkout, not in a separate Git
-worktree. When running from a non-main worktree, pass the main checkout's
-artifact root explicitly:
+The smoke check expects `.local/finalize-smoke/`, which is ignored by Git.
+Artifacts may exist only in the main checkout. From another worktree, pass the
+main checkout's artifact root:
 
 ```sh
 main_worktree="$(git worktree list --porcelain | awk '/^worktree /{wt=substr($0, 10)} /^branch refs\/heads\/main$/{print wt; exit}')"
@@ -41,87 +37,33 @@ Rscript tools/local-finalize-smoke.R check \
   --variable-name question_name
 ```
 
-Do not fetch live Qualtrics data as part of ordinary agent finalization.
-
-## Run One Smoke Invocation
-
-Run the smoke script as one self-contained invocation for the relevant
-finalization surface. Do not run manually separated prerequisite steps.
-
-Default check:
-
-```sh
-Rscript tools/local-finalize-smoke.R check
-```
-
-The default check runs every configured survey and the `question_name`
-Dictionary Variable Name route.
-
-Select smoke-covered exported functions whose returned outputs could change:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --functions dict_generate
-Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data
-Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data,dict_split_blocks
-```
-
-The script still runs prerequisite functions needed to produce selected
-downstream outputs, but it compares only the selected output summaries against
-local baselines. Do not broaden `--functions` merely because a prerequisite
-runs internally. For example, `--functions fetch_labelled_survey_data`
-generates a Variable Dictionary as setup, then compares only Labelled Survey
-Data summaries.
-
-To select the Variable Dictionary naming route, pass `--variable-name`:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --variable-name question_name
-```
-
-The local finalization smoke check only supports the `question_name` route.
-The Semantic Name route is disabled because it is too expensive for the
-finalization workflow. Changes that affect Semantic Name behavior should be
-covered by ordinary tests and package checks rather than local finalization
-smoke. Do not pass `--variable-name semantic_name` or `--variable-name all`;
-the script rejects both.
-
-For example, a change limited to question-name dictionary generation should use
-a focused invocation such as:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name
-```
-
-Smoke runs can take several minutes. When an agent is running the workflow,
-wait with a longer timeout, do not repeatedly poll the process, and inspect
-output once the smoke command exits before treating the agent as idle.
-
-## Inspect Results
-
-Smoke runs can take several minutes. Wait with a longer timeout, do not
-repeatedly poll the process, and inspect output once the command exits before
-treating the process as idle or stuck.
-
 Each run writes summaries and replayed objects under:
 
 ```text
 .local/finalize-smoke/runs/<timestamp>/
 ```
 
-Inspect the terminal output and saved run artifacts. It is acceptable to write
-temporary, uncommitted R code to load an `*-objects.rds` file with `readRDS()`
-and compare relevant objects.
+## Run
 
-Before comparing or writing hash baselines, `check` and `bless` verify one hard
-Response Column ID invariant for each survey:
+Run one self-contained smoke invocation for the relevant finalization surface:
 
-- every Variable Dictionary `response_column_id` is present in the raw fetched
-  response data.
+```sh
+Rscript tools/local-finalize-smoke.R check
+Rscript tools/local-finalize-smoke.R check --functions dict_generate
+Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data
+Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data,dict_split_blocks
+Rscript tools/local-finalize-smoke.R check --variable-name question_name
+Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name
+```
 
-Parity diagnostics are written as
-`<survey-alias>-response-column-id-parity.json` in the current run directory.
-Parity mismatches are hard failures for both `check` and `bless`; they cannot
-be accepted by updating baselines.
+The script runs prerequisites needed for selected downstream outputs, but
+compares only the selected output summaries. Do not broaden `--functions` only
+because a prerequisite runs internally. For example,
+`--functions fetch_labelled_survey_data` generates a Variable Dictionary as
+setup, then compares only Labelled Survey Data summaries.
+
+Smoke runs can take several minutes. Use a longer timeout, wait for the command
+to exit, then inspect terminal output and saved run artifacts.
 
 Exit statuses:
 
@@ -130,10 +72,44 @@ Exit statuses:
   are missing, or hashes differ.
 - `2`: script usage, config, or artifact setup failed.
 
+## Required Artifact Inspection
+
+Before blessing changed hashes or missing baselines, inspect the saved run
+artifacts relevant to the feature/change. This is mandatory: do not bless from
+hash output alone. In the final response, state what artifacts and content were
+inspected.
+
+Inspect both:
+
+- JSON summaries from the current run, including selected output summaries and
+  `<survey-alias>-response-column-id-parity.json`.
+- Relevant replayed R objects from `*-objects.rds`, loaded with `readRDS()`.
+
+Content checks should match the selected `--functions` and the feature/change.
+Examples:
+
+- For `dict_generate`, inspect affected Variable Dictionary rows, including
+  Response Column ID and Dictionary Variable Name values.
+- For validation work, inspect Validation Findings in summaries and objects.
+- For Labelled Export work, inspect Labelled Export Findings and Labelled
+  Survey Data columns, labels, and value labels.
+- For `dict_split_blocks`, inspect split outputs and the affected Variable
+  Dictionary rows in each split.
+
+`check` and `bless` both verify one hard Response Column ID invariant for each
+survey before comparing or writing hash baselines:
+
+- every Variable Dictionary `response_column_id` is present in the raw fetched
+  response data.
+
+Parity mismatches are hard failures for both `check` and `bless`; they cannot
+be accepted by updating baselines.
+
 ## Bless Intended Changes
 
-Hash mismatches are expected for intentional behavior changes. After inspecting
-changed output and deciding the change is intended, update local baselines:
+Hash mismatches can be expected for intentional behavior changes. Bless only
+after the required artifact-content inspection shows the changed or newly
+missing baseline is correct for the feature/change:
 
 ```sh
 Rscript tools/local-finalize-smoke.R bless
