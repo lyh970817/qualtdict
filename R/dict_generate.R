@@ -29,9 +29,11 @@
 #' @details
 #' The returned Variable Dictionary preserves \code{response_column_id} as the
 #' downloaded response-column key, \code{qid} as the bare Qualtrics question
-#' identifier, \code{question_name} as the raw Qualtrics naming reference, and
+#' identifier, \code{row_source} as the Dictionary Row Source,
+#' \code{question_name} as the raw Qualtrics naming reference, and
 #' \code{variable_name} as the final export-safe Dictionary Variable Name used
-#' by Labelled Survey Data.
+#' by Labelled Survey Data. Currently generated question-backed rows use
+#' \code{row_source = "question"}.
 #'
 #' When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 #' includes \code{semantic_name}. Semantic Names are readable best-effort
@@ -120,14 +122,14 @@ dict_generate <- function(surveyID,
   )
 
   dict_columns <- c(
-    "response_column_id", "qid", "question_name", "variable_name",
+    "response_column_id", "row_source", "qid", "question_name", "variable_name",
     "block", "question",
     "item", "level", "label", "type", "selector", "sub_selector", "content_type"
   )
   if ("loop_option" %in% names(dict) && any(!is.na(dict$loop_option))) {
     dict_columns <- c(
-      "response_column_id", "qid", "question_name", "variable_name",
-      "block", "question",
+      "response_column_id", "row_source", "qid", "question_name",
+      "variable_name", "block", "question",
       "loop_option", "item", "level", "label", "type", "selector",
       "sub_selector", "content_type"
     )
