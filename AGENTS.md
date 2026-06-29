@@ -58,19 +58,28 @@ phase after requested review work is complete.
 Agents should run the smoke script as one self-contained invocation for
 the relevant finalization surface, not as manually separated
 prerequisite steps. Select the affected smoke-covered exported functions
-with `--functions` and the relevant Variable Dictionary route set with
-`--variable-name`. The script still runs prerequisite steps, such as
+with `--functions` based on the exported outputs whose behavior could
+change. The script still runs prerequisite steps, such as
 [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
 before
 [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md),
-and compares the selected output summaries. Prefer reproducible
+and compares the selected output summaries. Do not broaden `--functions`
+merely because a prerequisite runs internally.
+
+Select `--variable-name` from the naming-route dependency of the changed
+code, not from the selected downstream output alone. Use the default
+`question_name` route for changes that do not affect Semantic Name
+generation, shared naming inputs, or route-specific Dictionary Variable
+Name behavior. A change to downstream consumers such as validation,
+Labelled Export, or block splitting should not use `--variable-name all`
+unless the code depends on both naming routes. Prefer reproducible
 two-survey sampling while iterating:
 
 `Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`
 
 If Semantic Name behavior is relevant, include it in the same smoke
-invocation by selecting that route, or use `--variable-name all` when
-both naming routes are relevant:
+invocation by selecting that route, or use `--variable-name all` only
+when the changed code depends on both naming routes:
 
 `Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name`
 
