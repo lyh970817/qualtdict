@@ -44,26 +44,24 @@ not from the selected downstream output alone. Use the default
 shared naming inputs, or route-specific Dictionary Variable Name behavior. A
 change to downstream consumers such as validation, Labelled Export, or block
 splitting should not use `--variable-name all` unless the code depends on both
-naming routes. Prefer reproducible two-survey sampling while iterating:
+naming routes. The smoke script runs all seven configured surveys:
 
-`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`
+`Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name`
 
 If Semantic Name behavior is relevant, include it in the same smoke invocation
 by selecting that route, or use `--variable-name all` only when the changed code
 depends on both naming routes:
 
-`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name`
+`Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name semantic_name`
 
-Use `--survey-count all` only when the code change really needs every configured
-survey, and report why it was needed. Inspect the terminal output and the saved
-run artifacts under `.local/finalize-smoke/runs/<timestamp>/`. The script writes
-RDS object artifacts for local inspection; agents may write temporary,
-uncommitted R code to load those objects and examine the changed behavior.
-Smoke runs can take several minutes, especially when Semantic Name generation
-or many surveys are selected. When delegating or waiting on an agent running
-this workflow, use a longer wait timeout and do not repeatedly poll the process;
-inspect the output once the smoke command exits before concluding that the agent
-is idle or stuck.
+Inspect the terminal output and the saved run artifacts under
+`.local/finalize-smoke/runs/<timestamp>/`. The script writes RDS object
+artifacts for local inspection; agents may write temporary, uncommitted R code
+to load those objects and examine the changed behavior. Smoke runs can take
+several minutes, especially when Semantic Name generation is selected. When
+delegating or waiting on an agent running this workflow, use a longer wait
+timeout and do not repeatedly poll the process; inspect the output once the
+smoke command exits before concluding that the agent is idle or stuck.
 
 Missing artifacts are not a failure of the feature work; report that the smoke
 check could not be run. Hash mismatches are expected for intentional behavior
