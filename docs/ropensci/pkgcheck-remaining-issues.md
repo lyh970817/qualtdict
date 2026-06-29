@@ -20,6 +20,7 @@ This note records the remaining `pkgcheck` findings after the recent fixes for:
 - clearly unused internal helpers in Response Column ID Rendering and
   Validation Finding code
 - the `goodpractice` coverage advisory for uncovered package lines
+- missing package website metadata
 
 The exact finding set can vary depending on whether the current shell has
 reloaded the updated Nix/direnv environment. In shells that have not reloaded
@@ -38,14 +39,22 @@ R CMD check found no warnings.
 
 ### Repository has no website
 
-`pkgcheck` reports:
+Earlier `pkgcheck` runs reported:
 
 ```text
 Repository has no website
 ```
 
-Likely fix: add a package website, typically with `pkgdown`, and expose the
-site URL in the package metadata.
+This branch adds a `pkgdown` website at
+<https://lyh970817.github.io/qualtdict/>, records that URL in `DESCRIPTION`,
+and adds a GitHub Actions workflow to build and deploy the site to GitHub
+Pages.
+
+A local cached `pkgcheck::pkgcheck(".")` run on 2026-06-29 reported:
+
+```text
+✔ Repository has a website
+```
 
 ### Package has no continuous integration checks
 
@@ -159,6 +168,5 @@ deprecated exported alias to resolve this finding. See ADR 0006.
 1. Fix hook/runtime configuration separately from package audit findings.
 2. Add or align recognized CI checks.
 3. Verify GitHub reports `main` as the default branch.
-4. Add package website metadata.
-5. Verify the remaining unused-internal-function findings.
-6. Treat long-function findings as refactor tickets, not one-off lint cleanup.
+4. Verify the remaining unused-internal-function findings.
+5. Treat long-function findings as refactor tickets, not one-off lint cleanup.
