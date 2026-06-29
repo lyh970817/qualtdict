@@ -41,9 +41,10 @@ dict_validate <- function(dict, quiet = TRUE) {
     message("Validating dictionary...")
   }
 
+  level_label_dict <- question_level_label_validation_dict(dict)
   split_dict <- split(
-    dict,
-    factor(dict_response_column_id(dict))
+    level_label_dict,
+    factor(dict_response_column_id(level_label_dict))
   )
 
   if (!quiet) {
@@ -81,4 +82,13 @@ dict_validate <- function(dict, quiet = TRUE) {
     validation_findings = validation_findings,
     level_label_pairs = level_label_pairs
   )
+}
+
+question_level_label_validation_dict <- function(dict) {
+  if (!"row_source" %in% names(dict)) {
+    return(dict)
+  }
+
+  question_rows <- !is.na(dict$row_source) & dict$row_source == "question"
+  dict[question_rows, ]
 }

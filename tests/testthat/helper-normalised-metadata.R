@@ -53,8 +53,18 @@ synthetic_mc_text_raw_metadata <- function() {
   )
 }
 
+synthetic_flat_embedded_data_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$embedded_data <- list(
+    list(name = "Source Channel"),
+    list(name = "Q1")
+  )
+  raw_metadata
+}
+
 synthetic_loop_and_merge_raw_metadata <- function(
-    question_text = "Why did you choose ${lm://Field/1}?") {
+  question_text = "Why did you choose ${lm://Field/1}?"
+) {
   new_raw_qualtrics_metadata(
     surveyID = "SV_LOOP",
     metadata = list(
