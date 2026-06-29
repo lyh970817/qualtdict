@@ -28,9 +28,27 @@ For each branch:
 8. Merge the PR with `gh pr merge --merge --delete-branch`.
 
 If local finalization smoke artifacts are available and the branch changes
-exported behavior, read `tools/local-finalize-smoke.md` and run the relevant
-smoke-check invocation described there. Missing artifacts are not a failure;
-report that the smoke check could not be run.
+exported behavior, run the smoke script as one self-contained invocation for the
+relevant finalization surface. Choose `--functions` from the smoke-covered
+exported outputs whose behavior could change. The script runs required
+prerequisites internally, so do not broaden `--functions` merely because a
+prerequisite such as `dict_generate()` runs to produce a downstream output.
+
+Use the default `question_name` Variable Dictionary route. The local
+finalization smoke script disables the Semantic Name route because it is too
+expensive for the publication workflow. Do not pass `--variable-name
+semantic_name` or `--variable-name all`; changes that affect Semantic Name
+behavior should be covered by ordinary tests and package checks instead.
+For example:
+
+`Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name`
+
+Inspect the terminal output and saved RDS object artifacts under
+`.local/finalize-smoke/runs/<timestamp>/`; temporary uncommitted R code is
+acceptable for local inspection. Smoke runs can take several minutes. Wait with
+a longer timeout, do not repeatedly poll the process, and inspect output once
+the smoke command exits before treating the agent as idle. Missing artifacts
+are not a failure; report that the smoke check could not be run.
 
 Do not merge branches locally into the base branch. The PR merge is the merge.
 After each PR merge, update the local base branch with `git pull --ff-only`.

@@ -1,16 +1,20 @@
 minimal_validation_dict <- function(
   response_column_id = c("QID1", "QID1"),
+  row_source = "question",
   variable_name = c("q1", "q1"),
+  qid = sub("_.*$", "", response_column_id),
+  question_name = variable_name,
+  block = "Main Block",
   label = c("Yes", "No"),
   level = c("1", "2")
 ) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
-    row_source = "question",
-    qid = sub("_.*$", "", response_column_id),
-    question_name = variable_name,
+    row_source = row_source,
+    qid = qid,
+    question_name = question_name,
     variable_name = variable_name,
-    block = "Main Block",
+    block = block,
     question = "Question text",
     item = NA_character_,
     level = level,
@@ -161,4 +165,22 @@ test_that("dict_validate preserves level-label mistake findings", {
   expect_identical(unique(mistake_findings$mistake), "234")
   expect_identical(mistake_findings$label, c("A", "A", "B"))
   expect_identical(mistake_findings$level, c("1", "1", "3"))
+})
+
+test_that("dict_validate skips level-label checks for Embedded Data Fields", {
+  dict <- minimal_validation_dict(
+    response_column_id = c("ED1", "ED1", "ED1", "ED2"),
+    row_source = "embedded_data",
+    qid = NA_character_,
+    question_name = NA_character_,
+    variable_name = c("bad name", "bad name", "bad name", "bad name"),
+    block = NA_character_,
+    label = c("A", "A", "B", "C"),
+    level = c("1", "1", "3", "1")
+  )
+
+  findings <- dict_validate(dict)$validation_findings
+
+  expect_false(any(findings$finding == "level_label_mistake"))
+  expect_true(any(findings$finding == "unsafe_variable_name"))
 })

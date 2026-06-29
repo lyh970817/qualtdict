@@ -46,15 +46,14 @@ variable_dictionary_from_normalised_metadata <- function(
   quiet = TRUE
 ) {
   question_meta <- normalised_metadata$questions
-  question_meta <- expand_loop_question_facts(question_meta)
-  if (length(question_meta) == 0) {
-    return(empty_variable_dictionary_from_normalised_metadata(
-      normalised_metadata,
-      use_semantic_name = use_semantic_name
-    ))
+  if (length(question_meta) > 0) {
+    question_meta <- expand_loop_question_facts(question_meta)
   }
 
-  json <- variable_dictionary_question_rows(question_meta)
+  json <- c(
+    variable_dictionary_question_rows(question_meta),
+    variable_dictionary_embedded_data_rows(normalised_metadata$embedded_data)
+  )
   if (length(json) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
       normalised_metadata,
@@ -121,6 +120,34 @@ variable_dictionary_question_row <- function(qjson, qid) {
   )
 }
 
+variable_dictionary_embedded_data_rows <- function(embedded_data) {
+  imap(embedded_data %||% list(), variable_dictionary_embedded_data_row)
+}
+
+variable_dictionary_embedded_data_row <- function(field, field_name) {
+  field_name <- field$field_name %||% field_name
+
+  list(
+    qid = NA_character_,
+    response_column_id = field$response_column_id %||% field_name,
+    row_source = "embedded_data",
+    question_name = NA_character_,
+    variable_name = field_name,
+    block = NA_character_,
+    question = field$question_text %||% paste("Embedded Data:", field_name),
+    looping_question = NA_character_,
+    item = NA_character_,
+    level = NA_character_,
+    label = NA_character_,
+    type = NA_character_,
+    selector = NA_character_,
+    content_type = NA_character_,
+    sub_selector = NA_character_,
+    looping_option = NA_character_,
+    looping = FALSE
+  )
+}
+
 prepare_variable_dictionary_rows <- function(json) {
   json <- json |>
     to_dataframe() |>
@@ -143,6 +170,9 @@ finalise_variable_dictionary_rows <- function(
 }
 
 clean_variable_dictionary_rows <- function(json, use_semantic_name) {
+  if (!"variable_name" %in% names(json)) {
+    json$variable_name <- NA_character_
+  }
   json$item[json$item == json$question] <- NA
   json$qid <- unname(json$qid)
   json$response_column_id <- unname(json$response_column_id)
@@ -154,7 +184,8 @@ clean_variable_dictionary_rows <- function(json, use_semantic_name) {
   json$question[!is.na(looping_questions)] <-
     looping_questions[!is.na(looping_questions)]
   if (!use_semantic_name) {
-    json$variable_name <- json$question_name
+    question_rows <- dict_question_rows(json)
+    json$variable_name[question_rows] <- json$question_name[question_rows]
   }
   json$variable_name <- unname(json$variable_name)
   json$loop_option <- json$looping_option

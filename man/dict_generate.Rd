@@ -60,8 +60,9 @@ downloaded response-column key, \code{qid} as the bare Qualtrics question
 identifier, \code{row_source} as the Dictionary Row Source,
 \code{question_name} as the raw Qualtrics naming reference, and
 \code{variable_name} as the final export-safe Dictionary Variable Name used
-by Labelled Survey Data. Currently generated question-backed rows use
-\code{row_source = "question"}.
+by Labelled Survey Data. Question-backed rows use
+\code{row_source = "question"}. Flat Embedded Data Fields defined by
+Qualtrics metadata use \code{row_source = "embedded_data"}.
 
 When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 includes \code{semantic_name}. Semantic Names are readable best-effort
