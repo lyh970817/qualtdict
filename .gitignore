@@ -22,3 +22,4 @@ tools/raw-response-column-parity.R
 .R-lib/
 .direnv/
 .lavish/
+pkgdown/
