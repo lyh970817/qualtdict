@@ -127,12 +127,7 @@ dict_generate <- function(surveyID,
     "item", "level", "label", "type", "selector", "sub_selector", "content_type"
   )
   if ("loop_option" %in% names(dict) && any(!is.na(dict$loop_option))) {
-    dict_columns <- c(
-      "response_column_id", "row_source", "qid", "question_name",
-      "variable_name", "block", "question",
-      "loop_option", "item", "level", "label", "type", "selector",
-      "sub_selector", "content_type"
-    )
+    dict_columns <- append(dict_columns, "loop_option", after = 7)
   }
   if (use_semantic_name) {
     dict_columns <- append(dict_columns, "semantic_name", after = 4)

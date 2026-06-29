@@ -60,6 +60,7 @@ test_that("README documents the qualtRics boundary and main workflow", {
     fixed = TRUE
   )
   expect_match(readme, "response_column_id", fixed = TRUE)
+  expect_match(readme, "row_source", fixed = TRUE)
   expect_match(readme, "qid", fixed = TRUE)
   expect_match(readme, "question_name", fixed = TRUE)
   expect_match(readme, "semantic_name", fixed = TRUE)
@@ -100,6 +101,7 @@ test_that("exported function docs use canonical public terminology", {
     "Variable Dictionary",
     "Labelled Survey Data",
     "response_column_id",
+    "row_source",
     "qid",
     "question_name",
     "semantic_name",
