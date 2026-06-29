@@ -29,6 +29,7 @@
 ^\.sandcastle/
 ^\.superpowers$
 ^\.superpowers/
+^_pkgdown\.yml$
 ^codecov\.yml$
 ^codemeta\.json$
 ^docs$
@@ -38,6 +39,7 @@
 ^node_modules/
 ^package-lock\.json$
 ^package\.json$
+^pkgdown$
 ^qualtdict\.Rcheck$
 ^qualtdict_.*[.]tar[.]gz$
 ^scratch\.R$

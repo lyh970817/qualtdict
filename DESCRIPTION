@@ -12,7 +12,7 @@ Description: Generates Variable Dictionaries from 'Qualtrics'
     access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API
     <https://api.qualtrics.com/>.
 License: MIT + file LICENSE
-URL: https://github.com/lyh970817/qualtdict
+URL: https://github.com/lyh970817/qualtdict, https://lyh970817.github.io/qualtdict/
 BugReports: https://github.com/lyh970817/qualtdict/issues
 Imports:
     crul,
