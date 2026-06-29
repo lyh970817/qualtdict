@@ -101,52 +101,6 @@ test_that("parse_smoke_variable_names rejects empty and unknown selections", {
   )
 })
 
-test_that("parse_smoke_survey_count defaults to two sampled surveys", {
-  expect_identical(parse_smoke_survey_count(NULL), 2L)
-  expect_identical(parse_smoke_survey_count("1"), 1L)
-  expect_identical(parse_smoke_survey_count("all"), NA_integer_)
-})
-
-test_that("parse_smoke_survey_count and seed reject invalid values", {
-  expect_error(
-    parse_smoke_survey_count("0"),
-    "`--survey-count` must be a positive integer or `all`"
-  )
-  expect_error(
-    parse_smoke_survey_count("1.5"),
-    "`--survey-count` must be a positive integer or `all`"
-  )
-  expect_error(
-    parse_smoke_survey_seed("abc"),
-    "`--survey-seed` must be an integer"
-  )
-})
-
-test_that("sample_smoke_surveys returns a reproducible subset", {
-  surveys <- lapply(seq_len(5), function(i) {
-    list(alias = paste0("survey_", i), survey_id = paste0("SV_", i))
-  })
-
-  first <- sample_smoke_surveys(surveys, count = 2L, seed = 123L)
-  second <- sample_smoke_surveys(surveys, count = 2L, seed = 123L)
-
-  expect_length(first, 2L)
-  expect_identical(first, second)
-  expect_true(all(
-    vapply(first, `[[`, character(1), "alias") %in%
-      vapply(surveys, `[[`, character(1), "alias")
-  ))
-})
-
-test_that("sample_smoke_surveys keeps all surveys when count is all or large", {
-  surveys <- lapply(seq_len(5), function(i) {
-    list(alias = paste0("survey_", i), survey_id = paste0("SV_", i))
-  })
-
-  expect_identical(sample_smoke_surveys(surveys, count = NA_integer_), surveys)
-  expect_identical(sample_smoke_surveys(surveys, count = 10L), surveys)
-})
-
 test_that("smoke_summary_names maps functions to summary object names", {
   expect_identical(
     smoke_summary_names(c("dict_generate", "fetch_labelled_survey_data")),
@@ -514,8 +468,8 @@ test_that("local finalize smoke help distinguishes full and selective bless", {
   help_text <- gsub("\\s+", " ", paste(help_output, collapse = "\n"))
 
   expect_match(help_text, "--functions", fixed = TRUE)
-  expect_match(help_text, "--survey-count", fixed = TRUE)
-  expect_match(help_text, "--survey-seed", fixed = TRUE)
+  expect_no_match(help_text, "--survey-count", fixed = TRUE)
+  expect_no_match(help_text, "--survey-seed", fixed = TRUE)
   expect_match(help_text, "--variable-name", fixed = TRUE)
   expect_match(
     help_text,
@@ -529,6 +483,82 @@ test_that("local finalize smoke help distinguishes full and selective bless", {
       "existing baselines"
     ),
     fixed = TRUE
+  )
+})
+
+test_that("local finalize smoke rejects legacy survey selection flags", {
+  script_path <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "local-finalize-smoke.R"
+  )
+  skip_if_not(
+    file.exists(script_path),
+    "local smoke tooling is excluded from package builds"
+  )
+
+  survey_count_output <- suppressWarnings(system2(
+    command = file.path(R.home("bin"), "Rscript"),
+    args = c(script_path, "check", "--survey-count", "2"),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
+  survey_count_status <- attr(survey_count_output, "status")
+
+  survey_output <- suppressWarnings(system2(
+    command = file.path(R.home("bin"), "Rscript"),
+    args = c(script_path, "check", "--survey", "survey_a"),
+    stdout = TRUE,
+    stderr = TRUE
+  ))
+  survey_status <- attr(survey_output, "status")
+
+  expect_identical(survey_count_status, 2L)
+  expect_match(
+    paste(survey_count_output, collapse = "\n"),
+    "Unknown option: --survey-count.",
+    fixed = TRUE
+  )
+  expect_identical(survey_status, 2L)
+  expect_match(
+    paste(survey_output, collapse = "\n"),
+    "Unknown option: --survey.",
+    fixed = TRUE
+  )
+})
+
+test_that("local finalize smoke config keeps the seven-survey surface", {
+  config_path <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "local-finalize-smoke-surveys.json"
+  )
+  skip_if_not(
+    file.exists(config_path),
+    "local smoke tooling is excluded from package builds"
+  )
+
+  config_lines <- readLines(config_path, warn = FALSE)
+  aliases <- sub(
+    '^\\s*"alias": "([^"]+)",?\\s*$',
+    "\\1",
+    grep('"alias":', config_lines, value = TRUE, fixed = TRUE)
+  )
+
+  expect_length(aliases, 7L)
+  expect_identical(
+    aliases,
+    c(
+      "glad_sa8_signup",
+      "edgi_signup_official",
+      "glad_sa7_optional",
+      "edgi_optional_all",
+      "glad_sa6_signup",
+      "edgi_medications",
+      "glad_medications"
+    )
   )
 })
 

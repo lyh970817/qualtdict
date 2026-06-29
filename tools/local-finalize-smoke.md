@@ -1,10 +1,10 @@
 # Local Finalization Smoke Check
 
 This tooling is for the final local pass after ordinary tests pass and after
-any requested review is complete. By default it samples two configured
-Qualtrics surveys from local artifacts, runs the `question_name` Variable
-Dictionary route, runs the exported package functions, and compares hashable
-summaries against local baselines.
+any requested review is complete. It runs all seven configured Qualtrics surveys
+from local artifacts, runs the `question_name` Variable Dictionary route, runs
+the exported package functions, and compares hashable summaries against local
+baselines.
 
 The smoke check is not a unit test. Refactors should keep hashes unchanged.
 Feature work that intentionally changes dictionaries, labelled exports,
@@ -78,24 +78,8 @@ Dictionary route set with `--variable-name`; the script still runs prerequisite
 steps needed for those outputs. Inspect the terminal output and saved run
 artifacts after the command finishes.
 
-The default check randomly samples two configured surveys and runs the
-`question_name` route. To make survey selection reproducible:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --survey-seed 123
-```
-
-To run one survey:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --survey survey_a
-```
-
-To run every configured survey:
-
-```sh
-Rscript tools/local-finalize-smoke.R check --survey-count all
-```
+The default check runs all seven configured surveys and the `question_name`
+route.
 
 To run only smoke-covered exported functions affected by a code change, pass
 a comma-separated `--functions` list:
@@ -135,27 +119,25 @@ For example, a change limited to question-name dictionary generation should use
 a focused invocation such as:
 
 ```sh
-Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name
+Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name
 ```
 
 A change that affects Semantic Name behavior should select that route:
 
 ```sh
-Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name
+Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name semantic_name
 ```
 
 If both naming routes are relevant, select both in one invocation:
 
 ```sh
-Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name all
+Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name all
 ```
 
-Use `--survey-count all` only when the changed code really needs every
-configured survey, and record why the broader smoke surface was necessary.
 Smoke runs can take several minutes, especially when Semantic Name generation
-or many surveys are selected. When an agent is running the workflow, wait with a
-longer timeout, do not repeatedly poll the process, and inspect output once the
-smoke command exits before treating the agent as idle.
+is selected. When an agent is running the workflow, wait with a longer timeout,
+do not repeatedly poll the process, and inspect output once the smoke command
+exits before treating the agent as idle.
 
 `check` writes current summaries and replayed objects under:
 

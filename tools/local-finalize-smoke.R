@@ -6,18 +6,12 @@ usage <- function() {
       "Usage:",
       "  Rscript tools/local-finalize-smoke.R check",
       "  Rscript tools/local-finalize-smoke.R bless",
-      "  Rscript tools/local-finalize-smoke.R check --survey survey_a",
-      "  Rscript tools/local-finalize-smoke.R check --survey-count all",
       "  Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data",
       "  Rscript tools/local-finalize-smoke.R check --variable-name semantic_name",
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
       "  --root DIR       Local smoke artifact directory.",
-      "  --survey ALIAS   Run one configured survey alias.",
-      "  --survey-count N Randomly sample N configured surveys; default 2.",
-      "                    Use `all` to run every configured survey.",
-      "  --survey-seed N  Integer seed for reproducible survey sampling.",
       "  --functions NAMES  Comma-separated smoke-covered exported functions.",
       "  --variable-name NAMES  Comma-separated Variable Dictionary routes:",
       "                    question_name, semantic_name, or all. Default question_name.",
@@ -60,6 +54,32 @@ arg_value <- function(flag, default = NULL) {
   }
   args[[pos + 1]]
 }
+
+validate_arg_flags <- function(args) {
+  supported_flags <- c(
+    "--config",
+    "--root",
+    "--functions",
+    "--variable-name"
+  )
+
+  pos <- 1L
+  while (pos <= length(args)) {
+    flag <- args[[pos]]
+    if (!startsWith(flag, "--")) {
+      stop("Unexpected argument: ", flag, ".", call. = FALSE)
+    }
+    if (!flag %in% supported_flags) {
+      stop("Unknown option: ", flag, ".", call. = FALSE)
+    }
+    if (pos == length(args) || startsWith(args[[pos + 1L]], "--")) {
+      stop("Missing value for ", flag, ".", call. = FALSE)
+    }
+    pos <- pos + 2L
+  }
+}
+
+validate_arg_flags(args)
 
 require_namespace <- function(package) {
   if (!requireNamespace(package, quietly = TRUE)) {
@@ -104,11 +124,8 @@ smoke_root <- arg_value(
   "--root",
   file.path(project_root, ".local", "finalize-smoke")
 )
-survey_filter <- arg_value("--survey")
 functions_filter <- arg_value("--functions")
 variable_name_filter <- arg_value("--variable-name")
-survey_count <- parse_smoke_survey_count(arg_value("--survey-count"))
-survey_seed <- parse_smoke_survey_seed(arg_value("--survey-seed"))
 selected_functions <- parse_smoke_functions(functions_filter)
 selected_variable_names <- parse_smoke_variable_names(variable_name_filter)
 selective_functions <- !is.null(functions_filter)
@@ -711,21 +728,6 @@ run_survey <- function(
 }
 
 surveys <- lapply(read_config(config_path), validate_survey)
-if (!is.null(survey_filter)) {
-  surveys <- Filter(
-    function(survey) identical(survey$alias, survey_filter),
-    surveys
-  )
-  if (length(surveys) == 0) {
-    stop("No configured survey has alias `", survey_filter, "`.", call. = FALSE)
-  }
-} else {
-  surveys <- sample_smoke_surveys(
-    surveys,
-    count = survey_count,
-    seed = survey_seed
-  )
-}
 
 setwd(project_root)
 devtools::load_all(".", quiet = TRUE)

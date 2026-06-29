@@ -89,62 +89,6 @@ parse_smoke_variable_names <- function(
   unique(selected)
 }
 
-parse_smoke_survey_count <- function(value, default = 2L) {
-  if (is.null(value)) {
-    return(default)
-  }
-  if (identical(value, "all")) {
-    return(NA_integer_)
-  }
-
-  parsed <- suppressWarnings(as.integer(value))
-  if (is.na(parsed) || !identical(as.character(parsed), value) || parsed < 1L) {
-    stop(
-      "`--survey-count` must be a positive integer or `all`.",
-      call. = FALSE
-    )
-  }
-
-  parsed
-}
-
-parse_smoke_survey_seed <- function(value) {
-  if (is.null(value)) {
-    return(NULL)
-  }
-
-  parsed <- suppressWarnings(as.integer(value))
-  if (is.na(parsed) || !identical(as.character(parsed), value)) {
-    stop("`--survey-seed` must be an integer.", call. = FALSE)
-  }
-
-  parsed
-}
-
-sample_smoke_surveys <- function(surveys, count, seed = NULL) {
-  if (is.na(count) || length(surveys) <= count) {
-    return(surveys)
-  }
-
-  if (!is.null(seed)) {
-    old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) {
-      get(".Random.seed", envir = .GlobalEnv)
-    } else {
-      NULL
-    }
-    on.exit({
-      if (is.null(old_seed)) {
-        rm(".Random.seed", envir = .GlobalEnv)
-      } else {
-        assign(".Random.seed", old_seed, envir = .GlobalEnv)
-      }
-    })
-    set.seed(seed)
-  }
-
-  surveys[sample.int(length(surveys), count)]
-}
-
 smoke_scenario_requirements <- function(selected_functions) {
   needs_labelled <- any(
     c(
