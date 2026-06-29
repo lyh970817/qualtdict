@@ -58,7 +58,7 @@ that file.
 1. **Explore** — read the issue carefully. Pull in the parent PRD if referenced. Read the relevant source files and tests before writing any code.
 2. **Plan** — decide what to change and why. Keep the change as small as possible.
 3. **Execute** — use RGR (Red → Green → Repeat → Refactor): write a failing test first, then write the implementation to pass it.
-4. **Verify** — run `Rscript -e 'devtools::test()'` and the strongest practical R package checks for the change before committing. Fix any failures before proceeding.
+4. **Verify** — run `Rscript -e 'devtools::test()'` before committing. Fix any failures before proceeding. Do not run `devtools::check()` manually; R CMD check belongs to the configured pre-push hook.
 5. **Commit** — make a single git commit. The message MUST:
    - Use a short imperative subject consistent with the repository's recent commits
    - Include the task completed and any PRD reference
