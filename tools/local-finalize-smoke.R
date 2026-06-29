@@ -7,12 +7,20 @@ usage <- function() {
       "  Rscript tools/local-finalize-smoke.R check",
       "  Rscript tools/local-finalize-smoke.R bless",
       "  Rscript tools/local-finalize-smoke.R check --survey survey_a",
+      "  Rscript tools/local-finalize-smoke.R check --survey-count all",
       "  Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data",
+      "  Rscript tools/local-finalize-smoke.R check --variable-name semantic_name",
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
       "  --root DIR       Local smoke artifact directory.",
+      "  --survey ALIAS   Run one configured survey alias.",
+      "  --survey-count N Randomly sample N configured surveys; default 2.",
+      "                    Use `all` to run every configured survey.",
+      "  --survey-seed N  Integer seed for reproducible survey sampling.",
       "  --functions NAMES  Comma-separated smoke-covered exported functions.",
+      "  --variable-name NAMES  Comma-separated Variable Dictionary routes:",
+      "                    question_name, semantic_name, or all. Default question_name.",
       "",
       "`check` compares current exported-function output hashes with local",
       "baselines. It also verifies Response Column ID parity against local",
@@ -98,7 +106,11 @@ smoke_root <- arg_value(
 )
 survey_filter <- arg_value("--survey")
 functions_filter <- arg_value("--functions")
+variable_name_filter <- arg_value("--variable-name")
+survey_count <- parse_smoke_survey_count(arg_value("--survey-count"))
+survey_seed <- parse_smoke_survey_seed(arg_value("--survey-seed"))
 selected_functions <- parse_smoke_functions(functions_filter)
+selected_variable_names <- parse_smoke_variable_names(variable_name_filter)
 selective_functions <- !is.null(functions_filter)
 
 read_config <- function(path) {
@@ -108,7 +120,10 @@ read_config <- function(path) {
   config <- jsonlite::fromJSON(path, simplifyVector = FALSE)
   surveys <- config$surveys
   if (!is.list(surveys) || length(surveys) == 0) {
-    stop("Survey config must contain a non-empty `surveys` array.", call. = FALSE)
+    stop(
+      "Survey config must contain a non-empty `surveys` array.",
+      call. = FALSE
+    )
   }
   surveys
 }
@@ -148,7 +163,12 @@ artifact_md5 <- function(path) {
 validate_manifest <- function(survey, paths) {
   manifest <- read_json(paths[["manifest"]])
   if (!identical(manifest$alias, survey$alias)) {
-    stop("Manifest alias does not match config for `", survey$alias, "`.", call. = FALSE)
+    stop(
+      "Manifest alias does not match config for `",
+      survey$alias,
+      "`.",
+      call. = FALSE
+    )
   }
   if (!identical(manifest$survey_id, survey$survey_id)) {
     stop(
@@ -164,7 +184,11 @@ validate_manifest <- function(survey, paths) {
     description = manifest$artifacts$description$md5,
     responses = manifest$artifacts$responses_raw_columns$md5
   )
-  actual_hashes <- vapply(paths[names(expected_hashes)], artifact_md5, character(1))
+  actual_hashes <- vapply(
+    paths[names(expected_hashes)],
+    artifact_md5,
+    character(1)
+  )
   mismatch <- names(expected_hashes)[actual_hashes != expected_hashes]
   if (length(mismatch) > 0) {
     stop(
@@ -223,7 +247,10 @@ with_artifact_fetches <- function(survey, artifacts, expr) {
     "fetch_dictionary_metadata",
     function(surveyID) {
       if (!identical(surveyID, survey$survey_id)) {
-        stop("Unexpected surveyID requested from local artifacts.", call. = FALSE)
+        stop(
+          "Unexpected surveyID requested from local artifacts.",
+          call. = FALSE
+        )
       }
       raw_metadata_constructor(
         surveyID = surveyID,
@@ -237,16 +264,22 @@ with_artifact_fetches <- function(survey, artifacts, expr) {
     function(...) {
       fetch_args <- list(...)
       if (!identical(fetch_args$surveyID, survey$survey_id)) {
-        stop("Unexpected surveyID requested from local responses.", call. = FALSE)
+        stop(
+          "Unexpected surveyID requested from local responses.",
+          call. = FALSE
+        )
       }
       artifacts$responses
     }
   )
 
-  on.exit({
-    replace_namespace_binding("fetch_dictionary_metadata", original_metadata)
-    replace_namespace_binding("fetch_survey2", original_survey)
-  }, add = TRUE)
+  on.exit(
+    {
+      replace_namespace_binding("fetch_dictionary_metadata", original_metadata)
+      replace_namespace_binding("fetch_survey2", original_survey)
+    },
+    add = TRUE
+  )
 
   force(expr)
 }
@@ -367,8 +400,10 @@ column_sample <- function(x, limit = 20) {
   )
 }
 
-response_column_id_parity <- function(dict_response_column_ids,
-                                      raw_response_columns) {
+response_column_id_parity <- function(
+  dict_response_column_ids,
+  raw_response_columns
+) {
   dict_response_column_ids <- unique(as.character(dict_response_column_ids))
   dict_response_column_ids <- dict_response_column_ids[
     !is.na(dict_response_column_ids)
@@ -484,7 +519,12 @@ assert_response_column_id_parity <- function(survey, dict, responses, run_dir) {
   invisible(parity)
 }
 
-run_scenario <- function(survey, variable_name, selected_functions, dict = NULL) {
+run_scenario <- function(
+  survey,
+  variable_name,
+  selected_functions,
+  dict = NULL
+) {
   scenario_label <- paste(survey$alias, variable_name, sep = " / ")
   requirements <- smoke_scenario_requirements(selected_functions)
   objects <- list()
@@ -622,12 +662,19 @@ compare_records <- function(current, baseline) {
 }
 
 print_mismatch <- function(current, baseline) {
-  cat(paste(smoke_mismatch_lines(current, baseline), collapse = "\n"), "\n",
+  cat(
+    paste(smoke_mismatch_lines(current, baseline), collapse = "\n"),
+    "\n",
     sep = ""
   )
 }
 
-run_survey <- function(survey, run_dir, selected_functions) {
+run_survey <- function(
+  survey,
+  run_dir,
+  selected_functions,
+  selected_variable_names
+) {
   cat("SURVEY ", survey$alias, "\n", sep = "")
   flush.console()
   artifacts <- run_step(
@@ -635,36 +682,27 @@ run_survey <- function(survey, run_dir, selected_functions) {
     load_artifacts(survey)
   )
   with_artifact_fetches(survey, artifacts, {
-    question_name_dict <- run_step(
-      paste(survey$alias, "question_name dict_generate"),
-      qualtdict::dict_generate(
-        survey$survey_id,
-        variable_name = "question_name",
-        quiet = FALSE
-      )
+    results <- lapply(
+      selected_variable_names,
+      function(variable_name) {
+        run_scenario(
+          survey,
+          variable_name,
+          selected_functions = selected_functions
+        )
+      }
     )
+    names(results) <- selected_variable_names
+
     run_step(
       paste(survey$alias, "Response Column ID parity"),
       assert_response_column_id_parity(
         survey = survey,
-        dict = question_name_dict,
+        dict = results[[1]]$objects$dict,
         responses = artifacts$responses,
         run_dir = run_dir
       )
     )
-
-    question_name_result <- run_scenario(
-      survey,
-      "question_name",
-      selected_functions = selected_functions,
-      dict = question_name_dict
-    )
-    semantic_name_result <- run_scenario(
-      survey,
-      "semantic_name",
-      selected_functions = selected_functions
-    )
-    results <- list(question_name_result, semantic_name_result)
     lapply(results, function(result) {
       write_run_artifacts(result, run_dir)
       result
@@ -681,6 +719,12 @@ if (!is.null(survey_filter)) {
   if (length(surveys) == 0) {
     stop("No configured survey has alias `", survey_filter, "`.", call. = FALSE)
   }
+} else {
+  surveys <- sample_smoke_surveys(
+    surveys,
+    count = survey_count,
+    seed = survey_seed
+  )
 }
 
 setwd(project_root)
@@ -690,13 +734,27 @@ run_id <- format(Sys.time(), "%Y%m%dT%H%M%SZ", tz = "UTC")
 run_dir <- file.path(smoke_root, "runs", run_id)
 dir.create(run_dir, recursive = TRUE, showWarnings = FALSE)
 
+cat(
+  "Selected surveys: ",
+  paste(vapply(surveys, `[[`, character(1), "alias"), collapse = ", "),
+  "\n",
+  sep = ""
+)
+cat(
+  "Selected Variable Dictionary routes: ",
+  paste(selected_variable_names, collapse = ", "),
+  "\n",
+  sep = ""
+)
+
 results <- tryCatch(
   unlist(
     lapply(
       surveys,
       run_survey,
       run_dir = run_dir,
-      selected_functions = selected_functions
+      selected_functions = selected_functions,
+      selected_variable_names = selected_variable_names
     ),
     recursive = FALSE
   ),
@@ -723,7 +781,12 @@ if (identical(command, "bless")) {
     write_json(selected_record, path)
     print_result_line(result, "blessed")
   }
-  cat("Wrote baselines under ", file.path(smoke_root, "baselines"), "\n", sep = "")
+  cat(
+    "Wrote baselines under ",
+    file.path(smoke_root, "baselines"),
+    "\n",
+    sep = ""
+  )
   quit(status = 0)
 }
 
@@ -760,6 +823,8 @@ for (result in results) {
 
 cat("Wrote current run artifacts to ", run_dir, "\n", sep = "")
 if (status != 0L) {
-  cat("Inspect the current run artifacts, then run `bless` if changes are intended.\n")
+  cat(
+    "Inspect the current run artifacts, then run `bless` if changes are intended.\n"
+  )
 }
 quit(status = status)

@@ -28,9 +28,34 @@ local finalization smoke check during the feature finalization phase when local
 smoke artifacts are available. Do not treat it as a command that must always be
 run immediately after unit tests. Depending on the workflow, the right moment
 may be after the tests that follow final code edits, or at the final stage of a
-review phase after requested review work is complete:
+review phase after requested review work is complete.
 
-`Rscript tools/local-finalize-smoke.R check`
+Agents should run the smoke script as one self-contained invocation for the
+relevant finalization surface, not as manually separated prerequisite steps.
+Select the affected smoke-covered exported functions with `--functions` and the
+relevant Variable Dictionary route set with `--variable-name`. The script still
+runs prerequisite steps, such as `dict_generate()` before `dict_validate()`, and
+compares the selected output summaries. Prefer reproducible two-survey sampling
+while iterating:
+
+`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`
+
+If Semantic Name behavior is relevant, include it in the same smoke invocation
+by selecting that route, or use `--variable-name all` when both naming routes
+are relevant:
+
+`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name`
+
+Use `--survey-count all` only when the code change really needs every configured
+survey, and report why it was needed. Inspect the terminal output and the saved
+run artifacts under `.local/finalize-smoke/runs/<timestamp>/`. The script writes
+RDS object artifacts for local inspection; agents may write temporary,
+uncommitted R code to load those objects and examine the changed behavior.
+Smoke runs can take several minutes, especially when Semantic Name generation
+or many surveys are selected. When delegating or waiting on an agent running
+this workflow, use a longer wait timeout and do not repeatedly poll the process;
+inspect the output once the smoke command exits before concluding that the agent
+is idle or stuck.
 
 Missing artifacts are not a failure of the feature work; report that the smoke
 check could not be run. Hash mismatches are expected for intentional behavior

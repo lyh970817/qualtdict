@@ -41,12 +41,119 @@ parse_smoke_functions <- function(value, supported = smoke_functions()) {
   unique(selected)
 }
 
+smoke_variable_names <- function() {
+  c("question_name", "semantic_name")
+}
+
+parse_smoke_variable_names <- function(
+  value,
+  supported = smoke_variable_names()
+) {
+  if (is.null(value)) {
+    return("question_name")
+  }
+
+  selected <- trimws(strsplit(value, ",", fixed = TRUE)[[1]])
+  selected <- selected[nzchar(selected)]
+
+  if (length(selected) == 0) {
+    stop(
+      "Select at least one Variable Dictionary route with `--variable-name`.",
+      call. = FALSE
+    )
+  }
+  if ("all" %in% selected) {
+    if (length(selected) > 1) {
+      stop(
+        "`all` cannot be combined with other `--variable-name` values.",
+        call. = FALSE
+      )
+    }
+    return(supported)
+  }
+
+  unknown <- setdiff(selected, supported)
+  if (length(unknown) > 0) {
+    stop(
+      "Unknown Variable Dictionary route",
+      if (length(unknown) == 1) "" else "s",
+      ": ",
+      paste(unknown, collapse = ", "),
+      ". Supported values: ",
+      paste(c(supported, "all"), collapse = ", "),
+      ".",
+      call. = FALSE
+    )
+  }
+
+  unique(selected)
+}
+
+parse_smoke_survey_count <- function(value, default = 2L) {
+  if (is.null(value)) {
+    return(default)
+  }
+  if (identical(value, "all")) {
+    return(NA_integer_)
+  }
+
+  parsed <- suppressWarnings(as.integer(value))
+  if (is.na(parsed) || !identical(as.character(parsed), value) || parsed < 1L) {
+    stop(
+      "`--survey-count` must be a positive integer or `all`.",
+      call. = FALSE
+    )
+  }
+
+  parsed
+}
+
+parse_smoke_survey_seed <- function(value) {
+  if (is.null(value)) {
+    return(NULL)
+  }
+
+  parsed <- suppressWarnings(as.integer(value))
+  if (is.na(parsed) || !identical(as.character(parsed), value)) {
+    stop("`--survey-seed` must be an integer.", call. = FALSE)
+  }
+
+  parsed
+}
+
+sample_smoke_surveys <- function(surveys, count, seed = NULL) {
+  if (is.na(count) || length(surveys) <= count) {
+    return(surveys)
+  }
+
+  if (!is.null(seed)) {
+    old_seed <- if (exists(".Random.seed", envir = .GlobalEnv)) {
+      get(".Random.seed", envir = .GlobalEnv)
+    } else {
+      NULL
+    }
+    on.exit({
+      if (is.null(old_seed)) {
+        rm(".Random.seed", envir = .GlobalEnv)
+      } else {
+        assign(".Random.seed", old_seed, envir = .GlobalEnv)
+      }
+    })
+    set.seed(seed)
+  }
+
+  surveys[sample.int(length(surveys), count)]
+}
+
 smoke_scenario_requirements <- function(selected_functions) {
-  needs_labelled <- any(c(
-    "fetch_labelled_survey_data",
-    "labelled_export_findings",
-    "survey_split_blocks"
-  ) %in% selected_functions)
+  needs_labelled <- any(
+    c(
+      "fetch_labelled_survey_data",
+      "labelled_export_findings",
+      "survey_split_blocks"
+    ) %in%
+      selected_functions
+  )
 
   list(
     needs_dict = length(selected_functions) > 0,
