@@ -26,10 +26,18 @@ For each branch:
 
 If local finalization smoke artifacts are available and the branch changes
 exported behavior, run the smoke script as one self-contained invocation for the
-relevant finalization surface. Choose the affected `--functions` and the
-relevant `--variable-name` route set in that command; the script runs required
-prerequisites internally. Prefer reproducible two-survey sampling while
-iterating, for example:
+relevant finalization surface. Choose `--functions` from the smoke-covered
+exported outputs whose behavior could change. The script runs required
+prerequisites internally, so do not broaden `--functions` merely because a
+prerequisite such as `dict_generate()` runs to produce a downstream output.
+
+Choose `--variable-name` from the naming-route dependency of the changed code,
+not from the selected downstream output alone. Use the default `question_name`
+route for changes that do not affect Semantic Name generation, shared naming
+inputs, or route-specific Dictionary Variable Name behavior. For example,
+changes to validation, Labelled Export, or block splitting should not use
+`--variable-name all` unless the changed code actually depends on both naming
+routes. Prefer reproducible two-survey sampling while iterating, for example:
 
 `Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`
 
@@ -38,7 +46,7 @@ behavior is relevant:
 
 `Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name`
 
-Use `--variable-name all` when both naming routes are relevant. Use
+Use `--variable-name all` only when both naming routes are relevant. Use
 `--survey-count all` only when the code change really needs every configured
 survey, and explain why. Inspect the terminal output and saved RDS object
 artifacts under `.local/finalize-smoke/runs/<timestamp>/`; temporary

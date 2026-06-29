@@ -105,10 +105,13 @@ Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_dat
 Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data,dict_split_blocks
 ```
 
-The caller decides the affected functions after inspecting the code diff. The
-script still runs prerequisite functions needed to produce selected downstream
-outputs, but compares only the selected output summaries against local
-baselines. For example, `--functions fetch_labelled_survey_data` generates a Variable
+The caller decides the affected functions after inspecting the code diff and
+the dependency path to exported outputs. Select the smoke-covered exported
+functions whose returned outputs could change; do not broaden `--functions`
+merely because a prerequisite runs internally. The script still runs
+prerequisite functions needed to produce selected downstream outputs, but
+compares only the selected output summaries against local baselines. For
+example, `--functions fetch_labelled_survey_data` generates a Variable
 Dictionary as setup, then compares only Labelled Survey Data summaries.
 
 To select the Variable Dictionary naming route, pass `--variable-name`:
@@ -119,10 +122,14 @@ Rscript tools/local-finalize-smoke.R check --variable-name semantic_name
 Rscript tools/local-finalize-smoke.R check --variable-name all
 ```
 
-Use the route that matches the code diff. The `question_name` route is the
-default because it avoids Semantic Name generation unless the change touches
-Semantic Names or shared naming behavior. Use `--variable-name all` only when a
-change should be replayed through both naming routes.
+Use the route that matches the naming-route dependency of the code diff. The
+`question_name` route is the default because it avoids Semantic Name generation
+unless the change touches Semantic Names, shared naming inputs, or
+route-specific Dictionary Variable Name behavior. Changes to downstream
+consumers such as validation, Labelled Export, or block splitting should stay
+on `question_name` unless the changed code actually depends on both naming
+routes. Use `--variable-name all` only when a change should be replayed through
+both naming routes.
 
 For example, a change limited to question-name dictionary generation should use
 a focused invocation such as:
