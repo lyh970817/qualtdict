@@ -19,11 +19,18 @@
 // execution with a planning phase).
 //
 // Usage:
-//   npx tsx .sandcastle/sequential-reviewer/main.mts
+//   npx tsx .sandcastle/sequential-reviewer/main.mts [--max-iterations 10]
 
 import * as sandcastle from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
 import { codex } from "../codex.mts";
+import {
+  formatFlowUsage,
+  isDirectRun,
+  parseSandcastleArgs,
+  resolveMaxIterations,
+  type SandcastleOptions,
+} from "../options.mts";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -37,89 +44,110 @@ const MAX_ITERATIONS = 10;
 // Main loop
 // ---------------------------------------------------------------------------
 
-for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
-  console.log(`\n=== Iteration ${iteration}/${MAX_ITERATIONS} ===\n`);
+export default async function main(options: SandcastleOptions = {}) {
+  const maxIterations = resolveMaxIterations(MAX_ITERATIONS, options);
 
-  // Generate a unique branch name for this iteration.
-  const branch = `sandcastle/sequential-reviewer/${Date.now()}`;
+  for (let iteration = 1; iteration <= maxIterations; iteration++) {
+    console.log(`\n=== Iteration ${iteration}/${maxIterations} ===\n`);
 
-  // Create a single sandbox that both the implementer and reviewer share.
-  // This gives both agents a real, named branch that persists across phases.
-  const sandbox = await sandcastle.createSandbox({
-    branch,
-    sandbox: noSandbox(),
-  });
+    // Generate a unique branch name for this iteration.
+    const branch = `sandcastle/sequential-reviewer/${Date.now()}`;
 
-  try {
-    // -----------------------------------------------------------------------
-    // Phase 1: Implement
-    //
-    // A Codex agent picks the next open issue, writes the
-    // implementation (using RGR: Red → Green → Repeat → Refactor), and
-    // commits the result.
-    //
-    // The agent signals completion via <promise>COMPLETE</promise> when done.
-    // -----------------------------------------------------------------------
-    // One iteration so each outer pass implements a single issue on its own
-    // branch, then hands it to the reviewer. A higher value lets the agent
-    // drain the whole backlog onto this one branch in a single pass, which
-    // defeats the per-issue review.
-    const implement = await sandbox.run({
-      name: "implementer",
-      maxIterations: 1,
-      agent: codex(),
-      promptFile: "./.sandcastle/sequential-reviewer/implement-prompt.md",
+    // Create a single sandbox that both the implementer and reviewer share.
+    // This gives both agents a real, named branch that persists across phases.
+    const sandbox = await sandcastle.createSandbox({
+      branch,
+      sandbox: noSandbox(),
     });
 
-    if (!implement.commits.length) {
-      // No commits means the backlog is empty or every remaining issue is
-      // blocked — there is nothing left to implement or review, so stop.
-      console.log("Implementation agent made no commits. Stopping.");
-      break;
+    try {
+      // ---------------------------------------------------------------------
+      // Phase 1: Implement
+      //
+      // A Codex agent picks the next open issue, writes the
+      // implementation (using RGR: Red → Green → Repeat → Refactor), and
+      // commits the result.
+      //
+      // The agent signals completion via <promise>COMPLETE</promise> when done.
+      // ---------------------------------------------------------------------
+      // One iteration so each outer pass implements a single issue on its own
+      // branch, then hands it to the reviewer. A higher value lets the agent
+      // drain the whole backlog onto this one branch in a single pass, which
+      // defeats the per-issue review.
+      const implement = await sandbox.run({
+        name: "implementer",
+        maxIterations: 1,
+        agent: codex(),
+        promptFile: "./.sandcastle/sequential-reviewer/implement-prompt.md",
+      });
+
+      if (!implement.commits.length) {
+        // No commits means the backlog is empty or every remaining issue is
+        // blocked — there is nothing left to implement or review, so stop.
+        console.log("Implementation agent made no commits. Stopping.");
+        break;
+      }
+
+      console.log(`\nImplementation complete on branch: ${branch}`);
+      console.log(`Commits: ${implement.commits.length}`);
+
+      // ---------------------------------------------------------------------
+      // Phase 2: Review
+      //
+      // A second Codex agent reviews the diff of the branch produced by
+      // Phase 1. It uses the {{BRANCH}} prompt argument to inspect the right
+      // branch, and either approves or makes corrections directly on the
+      // branch.
+      // ---------------------------------------------------------------------
+      await sandbox.run({
+        name: "reviewer",
+        maxIterations: 1,
+        agent: codex(),
+        promptFile: "./.sandcastle/sequential-reviewer/review-prompt.md",
+        promptArgs: {
+          BRANCH: branch,
+        },
+      });
+
+      console.log("\nReview complete.");
+
+      // ---------------------------------------------------------------------
+      // Phase 3: Publish
+      //
+      // A third Codex agent pushes the reviewed branch, creates or updates a
+      // PR, and merges that PR through GitHub. It must not merge the branch
+      // locally.
+      // ---------------------------------------------------------------------
+      await sandbox.run({
+        name: "publisher",
+        maxIterations: 1,
+        agent: codex(),
+        promptFile: "./.sandcastle/sequential-reviewer/publish-prompt.md",
+        promptArgs: {
+          BRANCH: branch,
+        },
+      });
+
+      console.log("\nPull request published and merged.");
+    } finally {
+      await sandbox.close();
     }
-
-    console.log(`\nImplementation complete on branch: ${branch}`);
-    console.log(`Commits: ${implement.commits.length}`);
-
-    // -----------------------------------------------------------------------
-    // Phase 2: Review
-    //
-    // A second Codex agent reviews the diff of the branch produced by
-    // Phase 1. It uses the {{BRANCH}} prompt argument to inspect the right
-    // branch, and either approves or makes corrections directly on the branch.
-    // -----------------------------------------------------------------------
-    await sandbox.run({
-      name: "reviewer",
-      maxIterations: 1,
-      agent: codex(),
-      promptFile: "./.sandcastle/sequential-reviewer/review-prompt.md",
-      promptArgs: {
-        BRANCH: branch,
-      },
-    });
-
-    console.log("\nReview complete.");
-
-    // -----------------------------------------------------------------------
-    // Phase 3: Publish
-    //
-    // A third Codex agent pushes the reviewed branch, creates or updates a PR,
-    // and merges that PR through GitHub. It must not merge the branch locally.
-    // -----------------------------------------------------------------------
-    await sandbox.run({
-      name: "publisher",
-      maxIterations: 1,
-      agent: codex(),
-      promptFile: "./.sandcastle/sequential-reviewer/publish-prompt.md",
-      promptArgs: {
-        BRANCH: branch,
-      },
-    });
-
-    console.log("\nPull request published and merged.");
-  } finally {
-    await sandbox.close();
   }
+
+  console.log("\nAll done.");
 }
 
-console.log("\nAll done.");
+if (isDirectRun(import.meta.url)) {
+  try {
+    await main(
+      parseSandcastleArgs(process.argv.slice(2), {
+        allowFlowName: false,
+      }).options,
+    );
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    console.error("");
+    console.error(formatFlowUsage(".sandcastle/sequential-reviewer/main.mts"));
+    process.exit(1);
+  }
+}

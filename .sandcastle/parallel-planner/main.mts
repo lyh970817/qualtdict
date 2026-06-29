@@ -13,12 +13,19 @@
 // issues are picked up after each round of PR merges.
 //
 // Usage:
-//   npx tsx .sandcastle/parallel-planner/main.mts
+//   npx tsx .sandcastle/parallel-planner/main.mts [--max-iterations 10]
 
 import * as sandcastle from "@ai-hero/sandcastle";
 import { noSandbox } from "@ai-hero/sandcastle/sandboxes/no-sandbox";
 import { z } from "zod";
 import { codex } from "../codex.mts";
+import {
+  formatFlowUsage,
+  isDirectRun,
+  parseSandcastleArgs,
+  resolveMaxIterations,
+  type SandcastleOptions,
+} from "../options.mts";
 
 // The planner emits its plan as JSON inside <plan> tags; Output.object extracts
 // and validates it against this schema. We use Zod here, but any Standard
@@ -42,150 +49,170 @@ const MAX_ITERATIONS = 10;
 // Main loop
 // ---------------------------------------------------------------------------
 
-for (let iteration = 1; iteration <= MAX_ITERATIONS; iteration++) {
-  console.log(`\n=== Iteration ${iteration}/${MAX_ITERATIONS} ===\n`);
+export default async function main(options: SandcastleOptions = {}) {
+  const maxIterations = resolveMaxIterations(MAX_ITERATIONS, options);
 
-  // -------------------------------------------------------------------------
-  // Phase 1: Plan
-  //
-  // The planning agent reads the open issue list,
-  // builds a dependency graph, and selects the issues that can be worked in
-  // parallel right now (i.e., no blocking dependencies on other open issues).
-  //
-  // It outputs a <plan> JSON block — Output.object parses and validates it.
-  // -------------------------------------------------------------------------
-  const plan = await sandcastle.run({
-    sandbox: noSandbox(),
-    name: "planner",
-    // One iteration is enough: the planner just needs to read and reason,
-    // not write code. (Structured output requires maxIterations: 1.)
-    maxIterations: 1,
-    agent: codex(),
-    promptFile: "./.sandcastle/parallel-planner/plan-prompt.md",
-    // Extract and validate the <plan> JSON into a typed object. Throws
-    // StructuredOutputError if the tag is missing, the JSON is malformed, or
-    // validation fails — which aborts the loop.
-    output: sandcastle.Output.object({ tag: "plan", schema: planSchema }),
-  });
+  for (let iteration = 1; iteration <= maxIterations; iteration++) {
+    console.log(`\n=== Iteration ${iteration}/${maxIterations} ===\n`);
 
-  const issues = plan.output.issues;
+    // -----------------------------------------------------------------------
+    // Phase 1: Plan
+    //
+    // The planning agent reads the open issue list,
+    // builds a dependency graph, and selects the issues that can be worked in
+    // parallel right now (i.e., no blocking dependencies on other open issues).
+    //
+    // It outputs a <plan> JSON block — Output.object parses and validates it.
+    // -----------------------------------------------------------------------
+    const plan = await sandcastle.run({
+      sandbox: noSandbox(),
+      name: "planner",
+      // One iteration is enough: the planner just needs to read and reason,
+      // not write code. (Structured output requires maxIterations: 1.)
+      maxIterations: 1,
+      agent: codex(),
+      promptFile: "./.sandcastle/parallel-planner/plan-prompt.md",
+      // Extract and validate the <plan> JSON into a typed object. Throws
+      // StructuredOutputError if the tag is missing, the JSON is malformed, or
+      // validation fails — which aborts the loop.
+      output: sandcastle.Output.object({ tag: "plan", schema: planSchema }),
+    });
 
-  if (issues.length === 0) {
-    // No unblocked work — either everything is done or everything is blocked.
-    console.log("No unblocked issues to work on. Exiting.");
-    break;
-  }
+    const issues = plan.output.issues;
 
-  console.log(
-    `Planning complete. ${issues.length} issue(s) to work in parallel:`,
-  );
-  for (const issue of issues) {
-    console.log(`  ${issue.id}: ${issue.title} → ${issue.branch}`);
-  }
-
-  // -------------------------------------------------------------------------
-  // Phase 2: Execute
-  //
-  // Spawn one Codex agent per issue, all running concurrently.
-  // Each agent works on its own branch so there are no conflicts during
-  // execution — PR publication happens in Phase 3.
-  //
-  // Promise.allSettled means one failing agent doesn't cancel the others.
-  // -------------------------------------------------------------------------
-  const settled = await Promise.allSettled(
-    issues.map((issue) =>
-      sandcastle.run({
-        // Each agent starts on its own branch via branchStrategy on run().
-        sandbox: noSandbox(),
-        branchStrategy: { type: "branch", branch: issue.branch },
-        name: "implementer",
-        // Give each agent plenty of room to implement and iterate on tests.
-        maxIterations: 100,
-        agent: codex(),
-        promptFile: "./.sandcastle/parallel-planner/implement-prompt.md",
-        // Prompt arguments substitute {{TASK_ID}}, {{ISSUE_TITLE}},
-        // and {{BRANCH}} placeholders in implement-prompt.md before the
-        // agent sees the prompt.
-        promptArgs: {
-          TASK_ID: issue.id,
-          ISSUE_TITLE: issue.title,
-          BRANCH: issue.branch,
-        },
-      }),
-    ),
-  );
-
-  // Log any agents that threw (network error, sandbox crash, etc.).
-  for (const [i, outcome] of settled.entries()) {
-    if (outcome.status === "rejected") {
-      console.error(
-        `  ✗ ${issues[i]!.id} (${issues[i]!.branch}) failed: ${outcome.reason}`,
-      );
+    if (issues.length === 0) {
+      // No unblocked work — either everything is done or everything is blocked.
+      console.log("No unblocked issues to work on. Exiting.");
+      break;
     }
+
+    console.log(
+      `Planning complete. ${issues.length} issue(s) to work in parallel:`,
+    );
+    for (const issue of issues) {
+      console.log(`  ${issue.id}: ${issue.title} → ${issue.branch}`);
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 2: Execute
+    //
+    // Spawn one Codex agent per issue, all running concurrently.
+    // Each agent works on its own branch so there are no conflicts during
+    // execution — PR publication happens in Phase 3.
+    //
+    // Promise.allSettled means one failing agent doesn't cancel the others.
+    // -----------------------------------------------------------------------
+    const settled = await Promise.allSettled(
+      issues.map((issue) =>
+        sandcastle.run({
+          // Each agent starts on its own branch via branchStrategy on run().
+          sandbox: noSandbox(),
+          branchStrategy: { type: "branch", branch: issue.branch },
+          name: "implementer",
+          // Give each agent plenty of room to implement and iterate on tests.
+          maxIterations: 100,
+          agent: codex(),
+          promptFile: "./.sandcastle/parallel-planner/implement-prompt.md",
+          // Prompt arguments substitute {{TASK_ID}}, {{ISSUE_TITLE}},
+          // and {{BRANCH}} placeholders in implement-prompt.md before the
+          // agent sees the prompt.
+          promptArgs: {
+            TASK_ID: issue.id,
+            ISSUE_TITLE: issue.title,
+            BRANCH: issue.branch,
+          },
+        }),
+      ),
+    );
+
+    // Log any agents that threw (network error, sandbox crash, etc.).
+    for (const [i, outcome] of settled.entries()) {
+      if (outcome.status === "rejected") {
+        console.error(
+          `  ✗ ${issues[i]!.id} (${issues[i]!.branch}) failed: ${outcome.reason}`,
+        );
+      }
+    }
+
+    // Only pass branches that actually produced commits to the publish phase.
+    // An agent that ran successfully but made no commits has nothing to publish.
+    const completedIssues = settled
+      .map((outcome, i) => ({ outcome, issue: issues[i]! }))
+      .filter(
+        (
+          entry,
+        ): entry is {
+          outcome: PromiseFulfilledResult<
+            Awaited<ReturnType<typeof sandcastle.run>>
+          >;
+          issue: (typeof issues)[number];
+        } =>
+          entry.outcome.status === "fulfilled" &&
+          entry.outcome.value.commits.length > 0,
+      )
+      .map((entry) => entry.issue);
+
+    const completedBranches = completedIssues.map((i) => i.branch);
+
+    console.log(
+      `\nExecution complete. ${completedBranches.length} branch(es) with commits:`,
+    );
+    for (const branch of completedBranches) {
+      console.log(`  ${branch}`);
+    }
+
+    if (completedBranches.length === 0) {
+      // All agents ran but none made commits — nothing to publish this cycle.
+      console.log("No commits produced. Nothing to publish.");
+      continue;
+    }
+
+    // -----------------------------------------------------------------------
+    // Phase 3: Publish
+    //
+    // One Codex agent pushes completed branches, opens PRs, and merges those
+    // PRs through GitHub. It must not merge branches locally into the base
+    // branch.
+    //
+    // The {{BRANCHES}} and {{ISSUES}} prompt arguments are lists that the
+    // agent uses to know which branches to publish and which issues each PR
+    // should close via GitHub closing keywords.
+    // -----------------------------------------------------------------------
+    await sandcastle.run({
+      sandbox: noSandbox(),
+      name: "publisher",
+      maxIterations: 1,
+      agent: codex(),
+      promptFile: "./.sandcastle/parallel-planner/merge-prompt.md",
+      promptArgs: {
+        // A markdown list of branch names, one per line.
+        BRANCHES: completedBranches.map((b) => `- ${b}`).join("\n"),
+        // A markdown list of issue IDs and titles, one per line.
+        ISSUES: completedIssues.map((i) => `- ${i.id}: ${i.title}`).join("\n"),
+        // A markdown list pairing branch names with the issue each PR closes.
+        ISSUE_BRANCHES: completedIssues
+          .map((i) => `- ${i.branch}: #${i.id} ${i.title}`)
+          .join("\n"),
+      },
+    });
+
+    console.log("\nPull requests published and merged.");
   }
 
-  // Only pass branches that actually produced commits to the publish phase.
-  // An agent that ran successfully but made no commits has nothing to publish.
-  const completedIssues = settled
-    .map((outcome, i) => ({ outcome, issue: issues[i]! }))
-    .filter(
-      (
-        entry,
-      ): entry is {
-        outcome: PromiseFulfilledResult<
-          Awaited<ReturnType<typeof sandcastle.run>>
-        >;
-        issue: (typeof issues)[number];
-      } =>
-        entry.outcome.status === "fulfilled" &&
-        entry.outcome.value.commits.length > 0,
-    )
-    .map((entry) => entry.issue);
-
-  const completedBranches = completedIssues.map((i) => i.branch);
-
-  console.log(
-    `\nExecution complete. ${completedBranches.length} branch(es) with commits:`,
-  );
-  for (const branch of completedBranches) {
-    console.log(`  ${branch}`);
-  }
-
-  if (completedBranches.length === 0) {
-    // All agents ran but none made commits — nothing to publish this cycle.
-    console.log("No commits produced. Nothing to publish.");
-    continue;
-  }
-
-  // -------------------------------------------------------------------------
-  // Phase 3: Publish
-  //
-  // One Codex agent pushes completed branches, opens PRs, and merges those PRs
-  // through GitHub. It must not merge branches locally into the base branch.
-  //
-  // The {{BRANCHES}} and {{ISSUES}} prompt arguments are lists that the agent
-  // uses to know which branches to publish and which issues each PR should
-  // close via GitHub closing keywords.
-  // -------------------------------------------------------------------------
-  await sandcastle.run({
-    sandbox: noSandbox(),
-    name: "publisher",
-    maxIterations: 1,
-    agent: codex(),
-    promptFile: "./.sandcastle/parallel-planner/merge-prompt.md",
-    promptArgs: {
-      // A markdown list of branch names, one per line.
-      BRANCHES: completedBranches.map((b) => `- ${b}`).join("\n"),
-      // A markdown list of issue IDs and titles, one per line.
-      ISSUES: completedIssues.map((i) => `- ${i.id}: ${i.title}`).join("\n"),
-      // A markdown list pairing branch names with the issue each PR closes.
-      ISSUE_BRANCHES: completedIssues
-        .map((i) => `- ${i.branch}: #${i.id} ${i.title}`)
-        .join("\n"),
-    },
-  });
-
-  console.log("\nPull requests published and merged.");
+  console.log("\nAll done.");
 }
 
-console.log("\nAll done.");
+if (isDirectRun(import.meta.url)) {
+  try {
+    await main(
+      parseSandcastleArgs(process.argv.slice(2), {
+        allowFlowName: false,
+      }).options,
+    );
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    console.error("");
+    console.error(formatFlowUsage(".sandcastle/parallel-planner/main.mts"));
+    process.exit(1);
+  }
+}
