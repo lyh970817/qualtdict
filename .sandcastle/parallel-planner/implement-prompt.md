@@ -6,6 +6,18 @@ Pull in the issue using `gh issue view {{TASK_ID}} --comments`. If it has a pare
 
 Only work on the issue specified.
 
+Before writing code, run `node_modules/.bin/tsx .sandcastle/list-ready-issues.mts`
+and find issue {{TASK_ID}} in the JSON output. If it is a PRD container, do not
+implement it, do not commit, and do not close it. Leave a comment explaining
+that the issue appears to be a parent PRD/tracking issue with implementation
+issues, then output <promise>COMPLETE</promise>.
+
+An issue is a PRD container if either condition is true:
+
+- `hasSubIssues` is true.
+- The issue appears to be a PRD or parent/tracking issue and
+  `linkedImplementationIssueIds` is not empty.
+
 Work on branch {{BRANCH}}. Make commits and run tests.
 
 # CONTEXT
