@@ -110,23 +110,26 @@ test_that("render_response_columns renders MC rows with aligned facts", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
-test_that("render_response_columns uses recode suffixes for x-named MC choices", {
-  question <- normalise_qualtrics_metadata(
-    synthetic_mc_x_choice_raw_metadata()
-  )$questions$QID126879611
+test_that(
+  "render_response_columns uses recode suffixes for x-named MC choices",
+  {
+    question <- normalise_qualtrics_metadata(
+      synthetic_mc_x_choice_raw_metadata()
+    )$questions$QID126879611
 
-  rendered <- render_response_columns(question, "QID126879611")
+    rendered <- render_response_columns(question, "QID126879611")
 
-  expect_identical(
-    rendered$response_column_id,
-    paste0("QID126879611_", c("1", "2", "3", "4", "6"))
-  )
-  expect_identical(unname(rendered$level), c("1", "2", "3", "4", "6"))
-  expect_identical(
-    unname(rendered$label),
-    paste("Choice", c("1", "2", "3", "4", "6"))
-  )
-})
+    expect_identical(
+      rendered$response_column_id,
+      paste0("QID126879611_", c("1", "2", "3", "4", "6"))
+    )
+    expect_identical(unname(rendered$level), c("1", "2", "3", "4", "6"))
+    expect_identical(
+      unname(rendered$label),
+      paste("Choice", c("1", "2", "3", "4", "6"))
+    )
+  }
+)
 
 test_that("render_response_columns skips display block questions", {
   question <- normalise_question_fact(
@@ -335,43 +338,49 @@ test_that("response column render context separates bare and rendering qids", {
   expect_identical(context$question_fact$qid, "QID2")
 })
 
-test_that("resolve_response_column_qid preserves current precedence and error", {
-  question_fact <- normalise_qualtrics_metadata(
-    synthetic_mc_text_raw_metadata()
-  )$questions$QID1
+test_that(
+  "resolve_response_column_qid preserves current precedence and error",
+  {
+    question_fact <- normalise_qualtrics_metadata(
+      synthetic_mc_text_raw_metadata()
+    )$questions$QID1
 
-  expect_identical(resolve_response_column_qid(question_fact), "QID1")
-  expect_identical(
-    resolve_response_column_qid(question_fact, "x1_QID1"),
-    "x1_QID1"
-  )
+    expect_identical(resolve_response_column_qid(question_fact), "QID1")
+    expect_identical(
+      resolve_response_column_qid(question_fact, "x1_QID1"),
+      "x1_QID1"
+    )
 
-  question_fact$qid <- NA_character_
-  expect_error(
-    resolve_response_column_qid(question_fact),
-    "`qid` is required to render response columns.",
-    fixed = TRUE
-  )
-})
+    question_fact$qid <- NA_character_
+    expect_error(
+      resolve_response_column_qid(question_fact),
+      "`qid` is required to render response columns.",
+      fixed = TRUE
+    )
+  }
+)
 
-test_that("response column render facts unwrap non-SBS levels and labels only", {
-  mc_question_fact <- normalise_qualtrics_metadata(
-    synthetic_mc_text_raw_metadata()
-  )$questions$QID1
-  sbs_question_fact <- normalise_qualtrics_metadata(
-    synthetic_sbs_text_subquestion_raw_metadata()
-  )$questions$QID2
+test_that(
+  "response column render facts unwrap non-SBS levels and labels only",
+  {
+    mc_question_fact <- normalise_qualtrics_metadata(
+      synthetic_mc_text_raw_metadata()
+    )$questions$QID1
+    sbs_question_fact <- normalise_qualtrics_metadata(
+      synthetic_sbs_text_subquestion_raw_metadata()
+    )$questions$QID2
 
-  mc_shape <- response_column_shape(mc_question_fact)
-  mc_facts <- response_column_render_facts(mc_shape, "MC")
-  expect_identical(mc_facts$level, mc_shape$level[[1]])
-  expect_identical(mc_facts$label, mc_shape$label[[1]])
+    mc_shape <- response_column_shape(mc_question_fact)
+    mc_facts <- response_column_render_facts(mc_shape, "MC")
+    expect_identical(mc_facts$level, mc_shape$level[[1]])
+    expect_identical(mc_facts$label, mc_shape$label[[1]])
 
-  sbs_shape <- response_column_shape(sbs_question_fact)
-  sbs_facts <- response_column_render_facts(sbs_shape, "SBS")
-  expect_identical(sbs_facts$level, sbs_shape$level)
-  expect_identical(sbs_facts$label, sbs_shape$label)
-})
+    sbs_shape <- response_column_shape(sbs_question_fact)
+    sbs_facts <- response_column_render_facts(sbs_shape, "SBS")
+    expect_identical(sbs_facts$level, sbs_shape$level)
+    expect_identical(sbs_facts$label, sbs_shape$label)
+  }
+)
 
 test_that("response column choice shape carries text-entry levels and labels", {
   question_fact <- normalise_qualtrics_metadata(
@@ -406,30 +415,33 @@ test_that("SBS row item shape carries text-entry item rows", {
   expect_named(sbs_items, c("2", "4", "4_TEXT", "9"))
 })
 
-test_that("response column renderer context preserves unsupported type fallback", {
-  question_fact <- normalise_qualtrics_metadata(
-    synthetic_mc_text_raw_metadata()
-  )$questions$QID1
-  question_fact$question_type <- list(
-    type = "UnsupportedType",
-    selector = "UnsupportedSelector",
-    sub_selector = NULL
-  )
-  shape <- response_column_shape(question_fact)
-  context <- new_response_column_render_context(
-    question_fact = question_fact,
-    response_column_qid = "QID1",
-    shape = shape,
-    question_type = question_fact$question_type
-  )
+test_that(
+  "response column renderer context preserves unsupported type fallback",
+  {
+    question_fact <- normalise_qualtrics_metadata(
+      synthetic_mc_text_raw_metadata()
+    )$questions$QID1
+    question_fact$question_type <- list(
+      type = "UnsupportedType",
+      selector = "UnsupportedSelector",
+      sub_selector = NULL
+    )
+    shape <- response_column_shape(question_fact)
+    context <- new_response_column_render_context(
+      question_fact = question_fact,
+      response_column_qid = "QID1",
+      shape = shape,
+      question_type = question_fact$question_type
+    )
 
-  expect_warning(
-    rendered <- render_response_column_ids(context),
-    "QID1 uses a question type without a specific response-column renderer",
-    fixed = TRUE
-  )
-  expect_identical(rendered, "QID1")
-})
+    expect_warning(
+      rendered <- render_response_column_ids(context),
+      "QID1 uses a question type without a specific response-column renderer",
+      fixed = TRUE
+    )
+    expect_identical(rendered, "QID1")
+  }
+)
 
 test_that("item_or_level_qid preserves choice ids when there is no item", {
   context <- list(

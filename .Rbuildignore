@@ -24,6 +24,8 @@
 ^\.nix/
 ^\.pre-commit-config\.yaml$
 ^\.sandcastle$
+^\.sandcastle-backups$
+^\.sandcastle-backups/
 ^\.sandcastle/
 ^\.superpowers$
 ^\.superpowers/

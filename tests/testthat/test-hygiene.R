@@ -65,7 +65,7 @@ test_that("exported function docs use canonical public terminology", {
   function_docs <- paste(
     root_text("R", "dict_generate.R"),
     root_text("R", "dict_validate.R"),
-    root_text("R", "get_survey_data.R"),
+    root_text("R", "fetch_labelled_survey_data.R"),
     root_text("R", "metadata_normalise.R"),
     root_text("R", "split_blocks.R"),
     collapse = "\n"

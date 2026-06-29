@@ -35,7 +35,7 @@ minimal_survey_data <- function() {
   )
 }
 
-test_that("get_survey_data returns one labelled data frame", {
+test_that("fetch_labelled_survey_data returns one labelled data frame", {
   captured_args <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -44,7 +44,7 @@ test_that("get_survey_data returns one labelled data frame", {
     }
   )
 
-  dat <- get_survey_data(
+  dat <- fetch_labelled_survey_data(
     minimal_export_dict(),
     include_questions = "QID1"
   )
@@ -66,7 +66,7 @@ test_that("get_survey_data returns one labelled data frame", {
   expect_true(captured_args$value$breakout_sets)
 })
 
-test_that("get_survey_data reports missing Response Column IDs", {
+test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
       tibble::tibble(
@@ -78,7 +78,7 @@ test_that("get_survey_data reports missing Response Column IDs", {
     }
   )
 
-  dat <- get_survey_data(minimal_export_dict())
+  dat <- fetch_labelled_survey_data(minimal_export_dict())
   findings <- labelled_export_findings(dat)
 
   expect_named(dat, c(
@@ -121,7 +121,7 @@ test_that("exclude_findings removes validation findings after download", {
     }
   )
 
-  dat <- get_survey_data(
+  dat <- fetch_labelled_survey_data(
     minimal_export_dict(),
     exclude_findings = "validation",
     include_questions = c("QID1", "QID2")
@@ -138,7 +138,7 @@ test_that("exclude_findings removes validation findings after download", {
   expect_identical(attr(dat, "dict")$response_column_id, "QID1")
 })
 
-test_that("get_survey_data forwards quiet to validation exclusion", {
+test_that("fetch_labelled_survey_data forwards quiet to validation exclusion", {
   captured_quiet <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -150,7 +150,7 @@ test_that("get_survey_data forwards quiet to validation exclusion", {
     }
   )
 
-  get_survey_data(
+  fetch_labelled_survey_data(
     minimal_export_dict(),
     exclude_findings = "validation",
     quiet = FALSE
@@ -159,26 +159,29 @@ test_that("get_survey_data forwards quiet to validation exclusion", {
   expect_false(captured_quiet$value)
 })
 
-test_that("get_survey_data keeps quiet out of fetch_survey passthrough", {
-  captured_args <- new.env(parent = emptyenv())
-  local_mocked_bindings(
-    fetch_survey2 = function(...) {
-      captured_args$value <- list(...)
-      minimal_survey_data()
-    }
-  )
+test_that(
+  "fetch_labelled_survey_data keeps quiet out of fetch_survey passthrough",
+  {
+    captured_args <- new.env(parent = emptyenv())
+    local_mocked_bindings(
+      fetch_survey2 = function(...) {
+        captured_args$value <- list(...)
+        minimal_survey_data()
+      }
+    )
 
-  get_survey_data(
-    minimal_export_dict(),
-    NULL,
-    "none",
-    "positional_fetch_arg",
-    quiet = FALSE
-  )
+    fetch_labelled_survey_data(
+      minimal_export_dict(),
+      NULL,
+      "none",
+      "positional_fetch_arg",
+      quiet = FALSE
+    )
 
-  expect_identical(captured_args$value[[1]], "positional_fetch_arg")
-  expect_null(captured_args$value$quiet)
-})
+    expect_identical(captured_args$value[[1]], "positional_fetch_arg")
+    expect_null(captured_args$value$quiet)
+  }
+)
 
 test_that("extra_columns distinguish user-specified columns from defaults", {
   dict <- minimal_export_dict(
@@ -196,24 +199,24 @@ test_that("extra_columns distinguish user-specified columns from defaults", {
   )
 
   expect_warning(
-    dat <- get_survey_data(dict),
+    dat <- fetch_labelled_survey_data(dict),
     "Missing default `extra_columns`"
   )
   expect_named(dat, "q1")
 
   expect_error(
-    get_survey_data(dict, extra_columns = "IPAddress"),
+    fetch_labelled_survey_data(dict, extra_columns = "IPAddress"),
     "Missing user-specified `extra_columns`"
   )
 })
 
 test_that("users cannot override qualtdict-owned fetch settings", {
   expect_error(
-    get_survey_data(minimal_export_dict(), import_id = FALSE),
+    fetch_labelled_survey_data(minimal_export_dict(), import_id = FALSE),
     "owned by qualtdict"
   )
   expect_error(
-    get_survey_data(minimal_export_dict(), breakout_sets = FALSE),
+    fetch_labelled_survey_data(minimal_export_dict(), breakout_sets = FALSE),
     "owned by qualtdict"
   )
 })

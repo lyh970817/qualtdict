@@ -114,8 +114,13 @@ loop_options_for_context <- function(context) {
   static_prefixes <- context$static_prefixes
   looping_source_fact <- context$looping_source_fact
 
-  if (!is.null(looping_source_fact) &&
-    scalar_character(question_fact_question_type(looping_source_fact)$type) == "Matrix") { # nolint
+  source_type <- if (!is.null(looping_source_fact)) {
+    scalar_character(question_fact_question_type(looping_source_fact)$type)
+  } else {
+    NA_character_
+  }
+
+  if (!is.null(looping_source_fact) && source_type == "Matrix") {
     loop_items <- question_fact_response_items(looping_source_fact)
     loop_options <- setNames(
       map_chr(loop_items, "item_text"),
@@ -245,9 +250,10 @@ loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
   if (!any(resolved) || mean(resolved) < 0.5) {
-    static_prefixes <- static_prefixes[!map_lgl(resolved_choices, function(choice) {
+    non_exported_choices <- map_lgl(resolved_choices, function(choice) {
       !is.null(choice) && isFALSE(choice$analyze)
-    })]
+    })
+    static_prefixes <- static_prefixes[!non_exported_choices]
     return(new_loop_choice_source(
       "fallback",
       fallback_static_choices(static_prefixes)
@@ -459,24 +465,4 @@ loop_question_text_template <- function(question_text) {
     "\\$\\{lm://Field/[0-9]+\\}",
     "{}"
   )
-}
-
-#' Extract Loop and Merge field numbers from question text
-#' @keywords internal
-#' @noRd
-loop_field_numbers <- function(question_text) {
-  if (is.null(question_text) || is.na(question_text)) {
-    return(character())
-  }
-
-  matches <- str_match_all(
-    question_text,
-    "\\$\\{lm://Field/([0-9]+)\\}"
-  )[[1]]
-
-  if (nrow(matches) == 0) {
-    return(character())
-  }
-
-  matches[, 2]
 }
