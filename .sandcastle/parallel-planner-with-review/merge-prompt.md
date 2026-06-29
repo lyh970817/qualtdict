@@ -22,7 +22,9 @@ For each branch:
    closes the issue when the PR merges.
 6. If a PR already exists for the branch, update/reuse it instead of creating a
    duplicate.
-7. Merge the PR with `gh pr merge --merge --delete-branch`.
+7. Before merging, verify `gh pr view <PR> --json closingIssuesReferences`
+   includes the intended issue. If not, fix the PR body before merging.
+8. Merge the PR with `gh pr merge --merge --delete-branch`.
 
 If local finalization smoke artifacts are available and the branch changes
 exported behavior, run the smoke script as one self-contained invocation for the
