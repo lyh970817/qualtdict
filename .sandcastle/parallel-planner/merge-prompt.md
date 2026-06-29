@@ -19,6 +19,11 @@ For each branch that was merged, close its issue using the following command:
 
 `gh issue close <ID> --comment "Completed by Sandcastle"`
 
+If closing those child issues completes a parent PRD, close the parent PRD too.
+Only close a parent PRD after checking that all linked implementation issues
+for that PRD are closed or were merged in this run. Do not close an unfinished
+parent PRD merely because one child issue completed.
+
 Here are all the issues:
 
 {{ISSUES}}

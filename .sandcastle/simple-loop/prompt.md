@@ -2,9 +2,20 @@
 
 ## Open issues
 
-!`gh issue list --state open --label ready-for-agent --limit 100 --json number,title,body,labels,comments --jq '[.[] | {id: (.number | tostring), title, body, labels: [.labels[].name], comments: [.comments[].body]}]'`
+!`node_modules/.bin/tsx .sandcastle/list-ready-issues.mts`
 
-The list above has already been filtered to issues ready for work and is the sole source of truth for what work exists. Do not run your own unfiltered query to find more issues — if the list is empty, there is nothing to do.
+The list above has already been filtered to issues with the `ready-for-agent`
+label and is the sole source of truth for what work exists. Do not run your
+own unfiltered query to find more issues — if the list is empty, there is
+nothing to do.
+
+Each issue includes:
+
+- `hasSubIssues`: true when GitHub reports this issue has sub-issues.
+- `parentIssueId`: the GitHub parent issue number when this issue is a
+  sub-issue.
+- `linkedImplementationIssueIds`: other ready issues whose body or comments
+  link to this issue as their parent PRD.
 
 ## Recent commits (last 10)
 
@@ -23,7 +34,20 @@ Work on issues in this order:
 3. **Polish** — improving existing functionality (error messages, UX, docs)
 4. **Refactors** — internal cleanups with no user-visible change
 
-Pick the highest-priority open issue that is not blocked by another open issue.
+Pick the highest-priority open issue that is directly actionable and not
+blocked by another open issue.
+
+Treat a PRD container as context, not implementation work. Do not select a PRD
+container, even if it has `ready-for-agent` and appears unblocked.
+
+An issue is a PRD container if either condition is true:
+
+- `hasSubIssues` is true.
+- The issue appears to be a PRD or parent/tracking issue and
+  `linkedImplementationIssueIds` is not empty.
+
+Child implementation issues remain valid candidates. Use their parent PRD only
+as context.
 
 ## Workflow
 
@@ -44,6 +68,8 @@ Pick the highest-priority open issue that is not blocked by another open issue.
 - Work on **one issue per iteration**. Do not attempt multiple issues in a single iteration.
 - Do not close an issue until you have committed the fix and verified tests pass.
 - Do not leave commented-out code or TODO comments in committed code.
+- Never implement or close a PRD container. If all remaining issues are PRD
+  containers or blocked, leave them open and output the completion signal.
 - If you are blocked (missing context, failing tests you cannot fix, external dependency), leave a comment on the issue and move on — do not close it.
 
 # Done
