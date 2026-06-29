@@ -24,7 +24,8 @@ user-specified columns error; missing default columns warn and are skipped.
 Use \code{NULL} to retain no extra columns.}
 }
 \value{
-A named list of data frames, one per Survey Block.
+A named list of data frames, one per Survey Block. When dictionary
+rows have no Survey Block assignment, the list includes \code{"..unassigned"}.
 }
 \description{
 Create block-specific views of Labelled Survey Data without changing the
