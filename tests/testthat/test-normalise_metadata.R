@@ -67,6 +67,71 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   )
 })
 
+test_that("Survey Flow Embedded Data Fields normalise with block candidates", {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$metadata$flow$Flow[[1]]$EmbeddedData <-
+    list(Field = "Before Main", Value = "ignored")
+  raw_metadata$metadata$flow$Flow <- append(
+    raw_metadata$metadata$flow$Flow,
+    list(list(type = "EmbeddedData")),
+    after = 1
+  )
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  embedded_data <- normalised_metadata$embedded_data
+
+  expect_named(
+    embedded_data,
+    c("Before Main", "Between Blocks", "After Follow-up")
+  )
+  expect_identical(
+    embedded_data[["Before Main"]]$previous_block,
+    NA_character_
+  )
+  expect_identical(
+    embedded_data[["Before Main"]]$next_block,
+    "Main Block"
+  )
+  expect_identical(
+    embedded_data[["Between Blocks"]]$previous_block,
+    "Main Block"
+  )
+  expect_identical(
+    embedded_data[["Between Blocks"]]$next_block,
+    "Follow-up Block"
+  )
+})
+
+test_that("Survey Flow Embedded Data normalisation handles defensive shapes", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$flow <- list(
+    Flow = list(
+      list(Type = "Block", ID = "BL_UNKNOWN"),
+      list(type = "EmbeddedData")
+    )
+  )
+  expect_length(
+    normalise_qualtrics_metadata(raw_metadata)$embedded_data,
+    0
+  )
+
+  raw_metadata$metadata$flow <- list(
+    Type = "EmbeddedData",
+    EmbeddedData = list(Field = "Single Flow Field")
+  )
+  embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
+
+  expect_named(embedded_data, "Single Flow Field")
+  expect_identical(
+    embedded_data[["Single Flow Field"]]$previous_block,
+    NA_character_
+  )
+  expect_identical(
+    embedded_data[["Single Flow Field"]]$next_block,
+    NA_character_
+  )
+})
+
 test_that("Embedded Data Field names normalise from supported flat shapes", {
   expect_identical(
     embedded_data_field_names(tibble::tibble(fieldName = c("Wave", "", NA))),

@@ -43,6 +43,7 @@ variable_dictionary_from_normalised_metadata <- function(
   block_pattern,
   block_sep,
   semantic_name_preprocess,
+  embedded_data_block_assignment = "none",
   quiet = TRUE
 ) {
   question_meta <- normalised_metadata$questions
@@ -52,7 +53,11 @@ variable_dictionary_from_normalised_metadata <- function(
 
   json <- c(
     variable_dictionary_question_rows(question_meta),
-    variable_dictionary_embedded_data_rows(normalised_metadata$embedded_data)
+    variable_dictionary_embedded_data_rows(
+      normalised_metadata$embedded_data,
+      embedded_data_block_assignment = embedded_data_block_assignment,
+      quiet = quiet
+    )
   )
   if (length(json) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
@@ -120,11 +125,30 @@ variable_dictionary_question_row <- function(qjson, qid) {
   )
 }
 
-variable_dictionary_embedded_data_rows <- function(embedded_data) {
-  imap(embedded_data %||% list(), variable_dictionary_embedded_data_row)
+variable_dictionary_embedded_data_rows <- function(
+  embedded_data,
+  embedded_data_block_assignment = "none",
+  quiet = TRUE
+) {
+  rows <- imap(
+    embedded_data %||% list(),
+    variable_dictionary_embedded_data_row,
+    embedded_data_block_assignment = embedded_data_block_assignment
+  )
+  warn_unassigned_embedded_data_rows(
+    rows,
+    embedded_data_block_assignment = embedded_data_block_assignment,
+    quiet = quiet
+  )
+
+  rows
 }
 
-variable_dictionary_embedded_data_row <- function(field, field_name) {
+variable_dictionary_embedded_data_row <- function(
+  field,
+  field_name,
+  embedded_data_block_assignment = "none"
+) {
   field_name <- field$field_name %||% field_name
 
   list(
@@ -133,7 +157,10 @@ variable_dictionary_embedded_data_row <- function(field, field_name) {
     row_source = "embedded_data",
     question_name = NA_character_,
     variable_name = field_name,
-    block = NA_character_,
+    block = embedded_data_field_block(
+      field,
+      embedded_data_block_assignment
+    ),
     question = field$question_text %||% paste("Embedded Data:", field_name),
     looping_question = NA_character_,
     item = NA_character_,
@@ -146,6 +173,40 @@ variable_dictionary_embedded_data_row <- function(field, field_name) {
     looping_option = NA_character_,
     looping = FALSE
   )
+}
+
+embedded_data_field_block <- function(field, embedded_data_block_assignment) {
+  switch(
+    embedded_data_block_assignment,
+    none = NA_character_,
+    previous = field$previous_block %||% NA_character_,
+    "next" = field$next_block %||% NA_character_
+  )
+}
+
+warn_unassigned_embedded_data_rows <- function(
+  rows,
+  embedded_data_block_assignment,
+  quiet
+) {
+  if (quiet || identical(embedded_data_block_assignment, "none")) {
+    return(invisible())
+  }
+
+  unassigned <- map_lgl(rows, function(row) {
+    is.na(row$block)
+  })
+  if (any(unassigned)) {
+    warning(
+      "Some Embedded Data Fields could not be assigned to a Survey Block ",
+      "using `embedded_data_block_assignment = \"",
+      embedded_data_block_assignment,
+      "\"`.",
+      call. = FALSE
+    )
+  }
+
+  invisible()
 }
 
 prepare_variable_dictionary_rows <- function(json) {
