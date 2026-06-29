@@ -12,6 +12,7 @@ dict_generate(
   block_sep = ".",
   semantic_name_preprocess = NULL,
   preprocess = NULL,
+  embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 )
 }
@@ -44,6 +45,12 @@ this function are not included in the returned Variable Dictionary.}
 \item{preprocess}{Deprecated compatibility alias for
 \code{semantic_name_preprocess}.}
 
+\item{embedded_data_block_assignment}{String. Survey Flow adjacency policy
+for assigning Embedded Data Fields to Survey Blocks. Use \code{"none"} to
+leave Embedded Data Fields unassigned, \code{"previous"} to assign fields
+with an unambiguous Survey Flow location to the nearest previous Survey
+Block, or \code{"next"} to assign them to the nearest next Survey Block.}
+
 \item{quiet}{Boolean. If \code{TRUE}, suppress routine progress messages and
 progress bars. Defaults to \code{TRUE}.}
 }
@@ -62,7 +69,10 @@ identifier, \code{row_source} as the Dictionary Row Source,
 \code{variable_name} as the final export-safe Dictionary Variable Name used
 by Labelled Survey Data. Question-backed rows use
 \code{row_source = "question"}. Flat Embedded Data Fields defined by
-Qualtrics metadata use \code{row_source = "embedded_data"}.
+Qualtrics metadata use \code{row_source = "embedded_data"}. Embedded Data
+Fields remain unassigned by Survey Block unless
+\code{embedded_data_block_assignment} explicitly requests Survey Flow
+adjacency assignment.
 
 When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 includes \code{semantic_name}. Semantic Names are readable best-effort

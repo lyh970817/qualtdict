@@ -11,7 +11,10 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     raw_metadata$metadata,
     raw_metadata$description
   )
-  embedded_data <- normalise_flat_embedded_data_fields(raw_metadata$metadata)
+  embedded_data <- normalise_embedded_data_fields(
+    raw_metadata$metadata,
+    raw_metadata$description
+  )
 
   structure(
     list(
@@ -22,6 +25,13 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     ),
     class = c("qualtdict_normalised_metadata", "list")
   )
+}
+
+normalise_embedded_data_fields <- function(mt, mt_d) {
+  flat_fields <- normalise_flat_embedded_data_fields(mt)
+  flow_fields <- normalise_survey_flow_embedded_data_fields(mt, mt_d)
+
+  merge_embedded_data_fields(flat_fields, flow_fields)
 }
 
 normalise_flat_embedded_data_fields <- function(mt) {
@@ -43,6 +53,225 @@ normalise_flat_embedded_data_fields <- function(mt) {
   structure(
     fields,
     class = c("qualtdict_normalised_embedded_data_fields", "list")
+  )
+}
+
+normalise_survey_flow_embedded_data_fields <- function(mt, mt_d) {
+  flow_items <- survey_flow_items(mt$flow %||% mt_d$flow)
+  if (length(flow_items) == 0) {
+    return(empty_normalised_embedded_data_fields())
+  }
+
+  block_lookup <- survey_flow_block_lookup(mt_d$block)
+  block_names <- map_chr(flow_items, function(item) {
+    block_id <- survey_flow_block_id(item)
+    if (is.na(block_id)) {
+      return(NA_character_)
+    }
+    if (!block_id %in% names(block_lookup)) {
+      return(NA_character_)
+    }
+
+    block_lookup[[block_id]] %||% NA_character_
+  })
+
+  field_locations <- map2(
+    flow_items,
+    seq_along(flow_items),
+    survey_flow_embedded_data_field_locations,
+    block_names = block_names
+  ) |>
+    do.call(c, args = _)
+
+  if (length(field_locations) == 0) {
+    return(empty_normalised_embedded_data_fields())
+  }
+
+  field_names <- unique(map_chr(field_locations, "field_name"))
+  fields <- map(field_names, function(field_name) {
+    normalise_survey_flow_embedded_data_field(
+      field_locations[map_chr(field_locations, "field_name") == field_name]
+    )
+  })
+  names(fields) <- map_chr(fields, "field_name")
+
+  structure(
+    fields,
+    class = c("qualtdict_normalised_embedded_data_fields", "list")
+  )
+}
+
+empty_normalised_embedded_data_fields <- function() {
+  structure(
+    list(),
+    class = c("qualtdict_normalised_embedded_data_fields", "list")
+  )
+}
+
+merge_embedded_data_fields <- function(flat_fields, flow_fields) {
+  fields <- flat_fields
+  for (field_name in names(flow_fields)) {
+    fields[[field_name]] <- utils::modifyList(
+      fields[[field_name]] %||% list(),
+      flow_fields[[field_name]]
+    )
+  }
+
+  structure(
+    fields,
+    class = c("qualtdict_normalised_embedded_data_fields", "list")
+  )
+}
+
+survey_flow_items <- function(flow) {
+  if (is.null(flow) || length(flow) == 0) {
+    return(list())
+  }
+
+  items <- flow$Flow %||% flow$flow
+  if (is.null(items)) {
+    if (!is.na(survey_flow_item_type(flow))) {
+      return(list(flow))
+    }
+
+    items <- flow
+  }
+  if (is.null(names(items))) {
+    return(items)
+  }
+
+  unname(items)
+}
+
+survey_flow_block_lookup <- function(blocks) {
+  if (is.null(blocks) || length(blocks) == 0) {
+    return(character())
+  }
+
+  imap_chr(blocks, function(block, block_id) {
+    scalar_character(block$Description %||% block$description %||% block_id)
+  })
+}
+
+survey_flow_block_id <- function(item) {
+  if (!identical(survey_flow_item_type(item), "Block")) {
+    return(NA_character_)
+  }
+
+  scalar_character(
+    item$ID %||%
+      item$BlockID %||%
+      item$BlockId %||%
+      item$id
+  )
+}
+
+survey_flow_item_type <- function(item) {
+  scalar_character(item$Type %||% item$FlowType %||% item$type)
+}
+
+survey_flow_embedded_data_field_locations <- function(
+  item,
+  item_index,
+  block_names
+) {
+  if (!identical(survey_flow_item_type(item), "EmbeddedData")) {
+    return(list())
+  }
+
+  field_names <- survey_flow_embedded_data_field_names(item)
+  if (length(field_names) == 0) {
+    return(list())
+  }
+
+  previous_block <- last_block_before(block_names, item_index)
+  next_block <- first_block_after(block_names, item_index)
+  map(field_names, function(field_name) {
+    list(
+      field_name = field_name,
+      previous_block = previous_block,
+      next_block = next_block
+    )
+  })
+}
+
+survey_flow_embedded_data_field_names <- function(item) {
+  embedded_data <- item$EmbeddedData %||%
+    item$EmbeddedDataFields %||%
+    item$Fields %||%
+    item$embeddedData %||%
+    item$embedded_data
+
+  if (is.null(embedded_data)) {
+    if (is_embedded_data_field_record(item)) {
+      return(valid_embedded_data_field_names(
+        embedded_data_field_name(item)
+      ))
+    }
+
+    return(character())
+  }
+  if (is_embedded_data_field_record(embedded_data)) {
+    return(valid_embedded_data_field_names(
+      embedded_data_field_name(embedded_data)
+    ))
+  }
+
+  embedded_data_field_names(embedded_data)
+}
+
+is_embedded_data_field_record <- function(field) {
+  is.list(field) &&
+    any(embedded_data_field_name_columns %in% names(field))
+}
+
+last_block_before <- function(block_names, item_index) {
+  if (item_index <= 1) {
+    return(NA_character_)
+  }
+
+  previous_blocks <- block_names[seq_len(item_index - 1)]
+  previous_blocks <- previous_blocks[!is.na(previous_blocks)]
+  if (length(previous_blocks) == 0) {
+    return(NA_character_)
+  }
+
+  previous_blocks[[length(previous_blocks)]]
+}
+
+first_block_after <- function(block_names, item_index) {
+  if (item_index >= length(block_names)) {
+    return(NA_character_)
+  }
+
+  next_blocks <- block_names[seq.int(item_index + 1, length(block_names))]
+  next_blocks <- next_blocks[!is.na(next_blocks)]
+  if (length(next_blocks) == 0) {
+    return(NA_character_)
+  }
+
+  next_blocks[[1]]
+}
+
+normalise_survey_flow_embedded_data_field <- function(locations) {
+  field_name <- locations[[1]]$field_name
+  if (length(locations) == 1) {
+    previous_block <- locations[[1]]$previous_block
+    next_block <- locations[[1]]$next_block
+  } else {
+    previous_block <- NA_character_
+    next_block <- NA_character_
+  }
+
+  structure(
+    list(
+      field_name = field_name,
+      response_column_id = field_name,
+      question_text = paste("Embedded Data:", field_name),
+      previous_block = previous_block,
+      next_block = next_block
+    ),
+    class = c("qualtdict_normalised_embedded_data_field", "list")
   )
 }
 
