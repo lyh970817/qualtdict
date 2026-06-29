@@ -94,3 +94,50 @@ test_that("exported function docs use canonical public terminology", {
     fixed = TRUE
   ))
 })
+
+function_line_count <- function(path, function_name) {
+  parsed <- getParseData(parse(text = root_text(path), keep.source = TRUE))
+  assignment <- parsed[
+    parsed$token == "SYMBOL" & parsed$text == function_name,
+  ]
+  assignment <- assignment[which.min(assignment$line1), ]
+  function_call <- parsed[
+    parsed$token == "FUNCTION" & parsed$line1 >= assignment$line1,
+  ]
+  function_call <- function_call[which.min(function_call$line1), ]
+  function_expr <- parsed[parsed$id == function_call$parent, ]
+
+  function_expr$line2 - function_expr$line1 + 1L
+}
+
+test_that("pkgcheck-targeted functions stay under the line limit", {
+  flagged_functions <- list(
+    list(path = "R/dict_generate.R", name = "dict_generate"),
+    list(
+      path = "R/metadata_normalise.R",
+      name = "normalise_qualtrics_questions"
+    ),
+    list(path = "R/semantic_name.R", name = "generate_semantic_names"),
+    list(
+      path = "R/variable_dictionary.R",
+      name = "variable_dictionary_from_normalised_metadata"
+    )
+  )
+
+  line_counts <- vapply(flagged_functions, function(flagged_function) {
+    function_line_count(flagged_function$path, flagged_function$name)
+  }, integer(1))
+  names(line_counts) <- vapply(flagged_functions, function(flagged_function) {
+    paste(flagged_function$path, flagged_function$name, sep = ":")
+  }, character(1))
+
+  over_limit <- line_counts[line_counts > 50L]
+  expect_equal(
+    unname(over_limit),
+    integer(),
+    info = paste(
+      paste(names(over_limit), over_limit, sep = " = "),
+      collapse = "; "
+    )
+  )
+})

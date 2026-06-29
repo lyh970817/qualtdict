@@ -70,41 +70,19 @@ dict_generate <- function(surveyID,
                           semantic_name_preprocess = NULL,
                           preprocess = NULL,
                           quiet = TRUE) {
-  checkarg_isstring(surveyID, null_okay = FALSE)
-  checkarg_isfunction(block_pattern)
-  checkarg_isstring(block_sep, null_okay = FALSE)
-  checkarg_isfunction(semantic_name_preprocess)
-  checkarg_isfunction(preprocess)
-  checkarg_isboolean(quiet)
-
-  if (!is.null(name)) {
-    checkarg_isname(name)
-    warning(
-      "`name` is deprecated; use `variable_name` instead.",
-      call. = FALSE
-    )
-    if (identical(name, "easy_name")) {
-      warning(
-        "`easy_name` is deprecated; use `semantic_name` instead.",
-        call. = FALSE
-      )
-    }
-    variable_name <- ifelse(name == "easy_name", "semantic_name", name)
-  } else {
-    variable_name <- match.arg(variable_name)
-    checkarg_isvariable_name(variable_name)
-  }
-
-  if (!is.null(preprocess)) {
-    warning(
-      "`preprocess` is deprecated; use `semantic_name_preprocess` instead.",
-      call. = FALSE
-    )
-    if (is.null(semantic_name_preprocess)) {
-      semantic_name_preprocess <- preprocess
-    }
-  }
-
+  check_dict_generate_args(
+    surveyID = surveyID,
+    block_pattern = block_pattern,
+    block_sep = block_sep,
+    semantic_name_preprocess = semantic_name_preprocess,
+    preprocess = preprocess,
+    quiet = quiet
+  )
+  variable_name <- resolve_dict_generate_variable_name(variable_name, name)
+  semantic_name_preprocess <- resolve_semantic_name_preprocess(
+    semantic_name_preprocess,
+    preprocess
+  )
   use_semantic_name <- variable_name == "semantic_name"
 
   survey_metadata <- fetch_dictionary_metadata(surveyID)
@@ -119,6 +97,60 @@ dict_generate <- function(surveyID,
     quiet = quiet
   )
 
+  finalise_generated_dictionary(dict, use_semantic_name)
+}
+
+check_dict_generate_args <- function(surveyID,
+                                     block_pattern,
+                                     block_sep,
+                                     semantic_name_preprocess,
+                                     preprocess,
+                                     quiet) {
+  checkarg_isstring(surveyID, null_okay = FALSE)
+  checkarg_isfunction(block_pattern)
+  checkarg_isstring(block_sep, null_okay = FALSE)
+  checkarg_isfunction(semantic_name_preprocess)
+  checkarg_isfunction(preprocess)
+  checkarg_isboolean(quiet)
+}
+
+resolve_dict_generate_variable_name <- function(variable_name, name) {
+  if (!is.null(name)) {
+    checkarg_isname(name)
+    warning(
+      "`name` is deprecated; use `variable_name` instead.",
+      call. = FALSE
+    )
+    if (identical(name, "easy_name")) {
+      warning(
+        "`easy_name` is deprecated; use `semantic_name` instead.",
+        call. = FALSE
+      )
+    }
+    return(ifelse(name == "easy_name", "semantic_name", name))
+  }
+
+  variable_name <- match.arg(variable_name, c("question_name", "semantic_name"))
+  checkarg_isvariable_name(variable_name)
+  variable_name
+}
+
+resolve_semantic_name_preprocess <- function(semantic_name_preprocess,
+                                             preprocess) {
+  if (!is.null(preprocess)) {
+    warning(
+      "`preprocess` is deprecated; use `semantic_name_preprocess` instead.",
+      call. = FALSE
+    )
+    if (is.null(semantic_name_preprocess)) {
+      semantic_name_preprocess <- preprocess
+    }
+  }
+
+  semantic_name_preprocess
+}
+
+generated_dictionary_columns <- function(dict, use_semantic_name) {
   dict_columns <- c(
     "response_column_id", "qid", "question_name", "variable_name",
     "block", "question",
@@ -135,6 +167,12 @@ dict_generate <- function(surveyID,
   if (use_semantic_name) {
     dict_columns <- append(dict_columns, "semantic_name", after = 4)
   }
+
+  dict_columns
+}
+
+finalise_generated_dictionary <- function(dict, use_semantic_name) {
+  dict_columns <- generated_dictionary_columns(dict, use_semantic_name)
   variable_name_findings <- attr(dict, "variable_name_findings", exact = TRUE)
   if (is.null(variable_name_findings)) {
     variable_name_findings <- empty_variable_name_findings()

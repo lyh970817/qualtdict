@@ -27,49 +27,7 @@ variable_dictionary_from_normalised_metadata <- function(
     ))
   }
 
-  json <- imap(question_meta, function(qjson, qid) {
-    question_type <- question_fact_question_type(qjson)
-    question_name <- question_fact_question_name(qjson)
-    type <- question_type$type
-    selector <- question_type$selector
-    block <- question_fact_survey_block(qjson)
-    content_type <- qjson$content_type
-    sub_selector <- question_type$sub_selector
-    qid_base <- qjson$qid %||% qid
-    response_column_qid <- qjson$response_column_qid %||% qid
-    response_columns <- render_response_columns(qjson, response_column_qid)
-    if (nrow(response_columns) == 0) {
-      return(NULL)
-    }
-    looping_question <- qjson$looping_question %||% NA_character_
-    looping_option <- qjson$looping_option %||% NA_character_
-    looping <- isTRUE(qjson$looping)
-
-    question_name <- rep(
-      question_name,
-      length(response_columns$response_column_id)
-    )
-
-    list(
-      qid = rep(qid_base, length(response_columns$response_column_id)),
-      response_column_id = response_columns$response_column_id,
-      question_name = null_na(question_name),
-      block = block,
-      question = response_columns$question,
-      looping_question = looping_question,
-      item = response_columns$item,
-      level = response_columns$level,
-      label = response_columns$label,
-      type = type,
-      selector = selector,
-      content_type = content_type,
-      sub_selector = null_na(sub_selector),
-      looping_option = looping_option,
-      looping = looping
-    )
-  }) %>%
-    discard(is.null)
-
+  json <- variable_dictionary_question_rows(question_meta)
   if (length(json) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
       normalised_metadata,
@@ -77,11 +35,7 @@ variable_dictionary_from_normalised_metadata <- function(
     ))
   }
 
-  json <- json %>%
-    to_dataframe() %>%
-    convert_html()
-
-  json$looping <- as.logical(json$looping)
+  json <- prepare_variable_dictionary_rows(json)
 
   if (use_semantic_name) {
     json <- generate_semantic_names(
@@ -94,7 +48,71 @@ variable_dictionary_from_normalised_metadata <- function(
     )
   }
 
-  # Remove duplicated question text in item before Semantic Name generation.
+  finalise_variable_dictionary_rows(
+    json,
+    normalised_metadata,
+    use_semantic_name = use_semantic_name
+  )
+}
+
+variable_dictionary_question_rows <- function(question_meta) {
+  imap(question_meta, variable_dictionary_question_row) %>%
+    discard(is.null)
+}
+
+variable_dictionary_question_row <- function(qjson, qid) {
+  question_type <- question_fact_question_type(qjson)
+  question_name <- question_fact_question_name(qjson)
+  response_column_qid <- qjson$response_column_qid %||% qid
+  response_columns <- render_response_columns(qjson, response_column_qid)
+  if (nrow(response_columns) == 0) {
+    return(NULL)
+  }
+
+  question_name <- rep(
+    question_name,
+    length(response_columns$response_column_id)
+  )
+
+  list(
+    qid = rep(qjson$qid %||% qid, length(response_columns$response_column_id)),
+    response_column_id = response_columns$response_column_id,
+    question_name = null_na(question_name),
+    block = question_fact_survey_block(qjson),
+    question = response_columns$question,
+    looping_question = qjson$looping_question %||% NA_character_,
+    item = response_columns$item,
+    level = response_columns$level,
+    label = response_columns$label,
+    type = question_type$type,
+    selector = question_type$selector,
+    content_type = qjson$content_type,
+    sub_selector = null_na(question_type$sub_selector),
+    looping_option = qjson$looping_option %||% NA_character_,
+    looping = isTRUE(qjson$looping)
+  )
+}
+
+prepare_variable_dictionary_rows <- function(json) {
+  json <- json %>%
+    to_dataframe() %>%
+    convert_html()
+
+  json$looping <- as.logical(json$looping)
+  json
+}
+
+finalise_variable_dictionary_rows <- function(json,
+                                              normalised_metadata,
+                                              use_semantic_name) {
+  json <- clean_variable_dictionary_rows(json, use_semantic_name)
+  attr(json, "survey_name") <- normalised_metadata$survey_name
+  attr(json, "surveyID") <- normalised_metadata$surveyID
+
+  repair_variable_dictionary_names(json)
+}
+
+clean_variable_dictionary_rows <- function(json, use_semantic_name) {
   json$item[json$item == json$question] <- NA
   json$qid <- unname(json$qid)
   json$response_column_id <- unname(json$response_column_id)
@@ -110,10 +128,6 @@ variable_dictionary_from_normalised_metadata <- function(
   }
   json$variable_name <- unname(json$variable_name)
   json$loop_option <- json$looping_option
-
-  attr(json, "survey_name") <- normalised_metadata$survey_name
-  attr(json, "surveyID") <- normalised_metadata$surveyID
-  json <- repair_variable_dictionary_names(json)
 
   json
 }
