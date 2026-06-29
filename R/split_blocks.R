@@ -20,15 +20,20 @@
 dict_split_blocks <- function(dict) {
   checkarg_isqualtdict(dict)
 
-  unassigned <- is.na(dict$block)
-  assigned_blocks <- split(dict[!unassigned, ], dict$block[!unassigned])
-  unassigned_blocks <- list()
-  if (any(unassigned)) {
-    unassigned_blocks <- list("..unassigned" = dict[unassigned, ])
+  unassigned_rows <- is.na(dict$block)
+  block_dicts <- split(
+    dict[!unassigned_rows, ],
+    dict$block[!unassigned_rows]
+  )
+  if (any(unassigned_rows)) {
+    block_dicts <- c(
+      list("..unassigned" = dict[unassigned_rows, ]),
+      block_dicts
+    )
   }
 
   map(
-    c(unassigned_blocks, assigned_blocks),
+    block_dicts,
     copy_qualtdict_attrs,
     source = dict
   )

@@ -1,15 +1,18 @@
 minimal_export_dict <- function(
   response_column_id = c("QID1", "QID2"),
+  row_source = "question",
   variable_name = c("q1", "q2"),
+  qid = sub("_.*$", "", response_column_id),
+  question_name = variable_name,
   block = c("Block A", "Block B"),
   label = c("Yes", "No"),
   level = c("1", "2")
 ) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
-    row_source = "question",
-    qid = sub("_.*$", "", response_column_id),
-    question_name = variable_name,
+    row_source = row_source,
+    qid = qid,
+    question_name = question_name,
     variable_name = variable_name,
     block = block,
     question = paste("Question", variable_name),
@@ -263,6 +266,9 @@ test_that("dict_split_blocks returns block-specific Variable Dictionaries", {
 test_that("dict_split_blocks preserves unassigned Variable Dictionary rows", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "ED1"),
+    row_source = c("question", "embedded_data"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
     variable_name = c("q1", "embedded_field"),
     block = c("Block A", NA_character_),
     label = c("Yes", NA_character_),
@@ -303,6 +309,9 @@ test_that("dict_split_blocks preserves unassigned Variable Dictionary rows", {
 test_that("dict_split_blocks keeps unassigned rows separate from block names", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "ED1"),
+    row_source = c("question", "embedded_data"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
     variable_name = c("q1", "embedded_field"),
     block = c("..unassigned", NA_character_),
     label = c("Yes", NA_character_),
@@ -353,6 +362,9 @@ test_that("survey_split_blocks returns block-specific Labelled Survey Data", {
 test_that("survey_split_blocks preserves unassigned Export Variables", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "ED1"),
+    row_source = c("question", "embedded_data"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
     variable_name = c("q1", "embedded_field"),
     block = c("Block A", NA_character_),
     label = c("Yes", NA_character_),
