@@ -36,7 +36,8 @@ survey_split_blocks(
 
 ## Value
 
-A named list of data frames, one per Survey Block.
+A named list of data frames, one per Survey Block. When dictionary rows
+have no Survey Block assignment, the list includes `"..unassigned"`.
 
 ## Details
 

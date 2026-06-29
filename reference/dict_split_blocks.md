@@ -19,7 +19,8 @@ dict_split_blocks(dict)
 
 ## Value
 
-A named list of Variable Dictionaries, one per Survey Block.
+A named list of Variable Dictionaries, one per Survey Block. When rows
+have no Survey Block assignment, the list includes `"..unassigned"`.
 
 ## Examples
 
