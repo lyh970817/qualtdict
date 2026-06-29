@@ -46,6 +46,19 @@ normalise_flat_embedded_data_fields <- function(mt) {
   )
 }
 
+embedded_data_field_name_columns <- c(
+  "name",
+  "fieldName",
+  "field_name",
+  "field",
+  "Field",
+  "DataField"
+)
+
+valid_embedded_data_field_names <- function(field_names) {
+  field_names[!is.na(field_names) & nzchar(field_names)]
+}
+
 embedded_data_field_names <- function(embedded_data) {
   if (is.null(embedded_data) || length(embedded_data) == 0) {
     return(character())
@@ -64,39 +77,33 @@ embedded_data_field_names <- function(embedded_data) {
     names(embedded_data) %||% rep(NA_character_, length(embedded_data)),
     embedded_data_field_name
   )
-  field_names <- field_names[!is.na(field_names) & nzchar(field_names)]
-  unname(field_names)
+  unname(valid_embedded_data_field_names(field_names))
 }
 
 embedded_data_field_names_from_data_frame <- function(embedded_data) {
-  candidate_columns <- c(
-    "name",
-    "fieldName",
-    "field_name",
-    "field",
-    "Field",
-    "DataField"
+  field_columns <- intersect(
+    embedded_data_field_name_columns,
+    names(embedded_data)
   )
-  field_columns <- intersect(candidate_columns, names(embedded_data))
   if (length(field_columns) == 0) {
     return(character())
   }
   field_column <- field_columns[[1]]
 
   field_names <- as.character(embedded_data[[field_column]])
-  field_names[!is.na(field_names) & nzchar(field_names)]
+  valid_embedded_data_field_names(field_names)
 }
 
 embedded_data_field_names_from_atomic <- function(embedded_data) {
   field_names <- as.character(embedded_data)
   if (is.null(names(embedded_data))) {
-    return(field_names[!is.na(field_names) & nzchar(field_names)])
+    return(valid_embedded_data_field_names(field_names))
   }
 
   named_fields <- names(embedded_data)
   use_names <- !is.na(named_fields) & nzchar(named_fields)
   field_names[use_names] <- named_fields[use_names]
-  field_names[!is.na(field_names) & nzchar(field_names)]
+  valid_embedded_data_field_names(field_names)
 }
 
 embedded_data_field_name <- function(field, fallback_name = NA_character_) {
@@ -104,22 +111,17 @@ embedded_data_field_name <- function(field, fallback_name = NA_character_) {
     return(scalar_character(field))
   }
 
-  candidate_names <- c(
-    "name",
-    "fieldName",
-    "field_name",
-    "field",
-    "Field",
-    "DataField"
-  )
-  candidates <- map_chr(candidate_names, function(candidate_name) {
-    if (!candidate_name %in% names(field)) {
-      return(NA_character_)
-    }
+  candidates <- map_chr(
+    embedded_data_field_name_columns,
+    function(candidate_name) {
+      if (!candidate_name %in% names(field)) {
+        return(NA_character_)
+      }
 
-    scalar_character(field[[candidate_name]])
-  })
-  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
+      scalar_character(field[[candidate_name]])
+    }
+  )
+  candidates <- valid_embedded_data_field_names(candidates)
   if (length(candidates) > 0) {
     return(candidates[[1]])
   }

@@ -282,15 +282,13 @@ survey_var_recode_context <- function(var_dict) {
   # Multiple rows for a question, only first one chosen.
   type <- var_dict[["type"]][1]
   levels <- var_dict[["level"]]
-  row_source <- var_dict[["row_source"]][[1]] %||% "question"
-  is_metadata_defined_var <- !is.na(row_source) && row_source != "question"
 
   list(
     type = type,
     content_type = var_dict[["content_type"]][[1]],
     levels = levels,
     labels = var_dict[["label"]],
-    is_metadata_defined_var = is_metadata_defined_var,
+    is_metadata_defined_row = dict_metadata_defined_rows(var_dict)[[1]],
     is_text_var = isTRUE(type == "TE") ||
       any(grepl("_TEXT", levels, fixed = TRUE), na.rm = TRUE),
     has_value_labels = !all(is.na(levels))
@@ -314,7 +312,7 @@ survey_var_label_facts <- function(
 
   if (
     context$is_text_var ||
-      (context$is_metadata_defined_var && !context$has_value_labels)
+      (context$is_metadata_defined_row && !context$has_value_labels)
   ) {
     levels <- NA_character_
   } else if (nrow(var_dict) == 1) {

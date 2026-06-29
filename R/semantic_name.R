@@ -22,7 +22,7 @@ generate_semantic_names <- function(
     json_makename <- semantic_name_preprocess(json_makename)
   }
 
-  question_rows <- semantic_name_question_rows(json_makename)
+  question_rows <- dict_question_rows(json)
   json$semantic_name <- NA_character_
   if (!any(question_rows)) {
     return(json)
@@ -48,14 +48,6 @@ generate_semantic_names <- function(
   json$variable_name[question_rows] <- question_json$semantic_name
 
   json
-}
-
-semantic_name_question_rows <- function(json_makename) {
-  if (!"row_source" %in% names(json_makename)) {
-    return(rep(TRUE, nrow(json_makename)))
-  }
-
-  !is.na(json_makename$row_source) & json_makename$row_source == "question"
 }
 
 semantic_name_texts <- function(json_makename) {

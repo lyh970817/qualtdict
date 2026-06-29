@@ -13,3 +13,21 @@ dict_variable_name <- function(dict) {
 
   dict[["name"]]
 }
+
+dict_row_source <- function(dict) {
+  if ("row_source" %in% names(dict)) {
+    return(dict[["row_source"]])
+  }
+
+  rep("question", nrow(dict))
+}
+
+dict_question_rows <- function(dict) {
+  row_source <- dict_row_source(dict)
+  !is.na(row_source) & row_source == "question"
+}
+
+dict_metadata_defined_rows <- function(dict) {
+  row_source <- dict_row_source(dict)
+  !is.na(row_source) & row_source != "question"
+}
