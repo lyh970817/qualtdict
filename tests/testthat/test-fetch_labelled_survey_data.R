@@ -5,8 +5,13 @@ minimal_export_dict <- function(
   qid = sub("_.*$", "", response_column_id),
   question_name = variable_name,
   block = c("Block A", "Block B"),
+  question = paste("Question", variable_name),
   label = c("Yes", "No"),
-  level = c("1", "2")
+  level = c("1", "2"),
+  type = "MC",
+  selector = "SAVR",
+  sub_selector = "TX",
+  content_type = NA_character_
 ) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
@@ -15,14 +20,14 @@ minimal_export_dict <- function(
     question_name = question_name,
     variable_name = variable_name,
     block = block,
-    question = paste("Question", variable_name),
+    question = question,
     item = NA_character_,
     level = level,
     label = label,
-    type = "MC",
-    selector = "SAVR",
-    sub_selector = "TX",
-    content_type = NA_character_
+    type = type,
+    selector = selector,
+    sub_selector = sub_selector,
+    content_type = content_type
   )
   attr(dict, "class") <- c("qualtdict", class(dict))
   attr(dict, "surveyID") <- "SV_TEST"
@@ -74,6 +79,52 @@ test_that("fetch_labelled_survey_data returns one labelled data frame", {
   expect_true(captured_args$value$breakout_sets)
 })
 
+test_that(
+  paste(
+    "fetch_labelled_survey_data includes",
+    "Embedded Data Fields by default"
+  ),
+  {
+    dict <- minimal_export_dict(
+      response_column_id = c("QID1", "Source Channel"),
+      row_source = c("question", "embedded_data"),
+      variable_name = c("q1", "Source_Channel"),
+      qid = c("QID1", NA_character_),
+      question_name = c("q1", NA_character_),
+      block = c("Block A", NA_character_),
+      question = c("Question q1", "Embedded Data: Source Channel"),
+      label = c("Yes", NA_character_),
+      level = c("1", NA_character_),
+      type = c("MC", NA_character_),
+      selector = c("SAVR", NA_character_),
+      sub_selector = c("TX", NA_character_)
+    )
+    local_mocked_bindings(
+      fetch_survey2 = function(...) {
+        tibble::tibble(
+          QID1 = "1",
+          `Source Channel` = "newsletter"
+        )
+      }
+    )
+
+    dat <- fetch_labelled_survey_data(
+      dict,
+      extra_columns = NULL,
+      unanswer_recode_multi = 0
+    )
+
+    expect_named(dat, c("q1", "Source_Channel"))
+    expect_identical(as.character(dat$Source_Channel), "newsletter")
+    expect_identical(
+      sjlabelled::get_label(dat$Source_Channel),
+      "Embedded Data: Source Channel"
+    )
+    expect_null(attr(dat$Source_Channel, "labels", exact = TRUE))
+    expect_identical(nrow(labelled_export_findings(dat)), 0L)
+  }
+)
+
 test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -113,6 +164,38 @@ test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   expect_identical(findings$response_column_id, "QID2")
   expect_identical(findings$qid, "QID2")
   expect_identical(findings$variable_name, "q2")
+  expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
+})
+
+test_that("fetch_labelled_survey_data reports missing Embedded Data Fields", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "Source Channel"),
+    row_source = c("question", "embedded_data"),
+    variable_name = c("q1", "Source_Channel"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
+    block = c("Block A", NA_character_),
+    question = c("Question q1", "Embedded Data: Source Channel"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "1")
+    }
+  )
+
+  dat <- fetch_labelled_survey_data(dict, extra_columns = NULL)
+  findings <- labelled_export_findings(dat)
+
+  expect_named(dat, "q1")
+  expect_identical(findings$finding, "missing_response_column_id")
+  expect_identical(findings$response_column_id, "Source Channel")
+  expect_true(is.na(findings$qid))
+  expect_identical(findings$variable_name, "Source_Channel")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 

@@ -35,9 +35,11 @@ prepare_fetch_survey_args <- function(args, dict) {
   args
 }
 
-exclude_dict_findings <- function(dict,
-                                  exclude_findings = c("none", "validation"),
-                                  quiet = TRUE) {
+exclude_dict_findings <- function(
+  dict,
+  exclude_findings = c("none", "validation"),
+  quiet = TRUE
+) {
   exclude_findings <- match.arg(exclude_findings)
   if (exclude_findings == "none") {
     return(dict)
@@ -147,9 +149,11 @@ missing_response_column_findings <- function(dict, dat) {
     distinct(.data$response_column_id, .keep_all = TRUE)
 }
 
-resolve_extra_columns <- function(dat,
-                                  extra_columns,
-                                  extra_columns_user_supplied) {
+resolve_extra_columns <- function(
+  dat,
+  extra_columns,
+  extra_columns_user_supplied
+) {
   if (is.null(extra_columns)) {
     return(character())
   }
@@ -182,12 +186,14 @@ resolve_extra_columns <- function(dat,
 #' Add labels to survey
 #' @keywords internal
 #' @noRd
-survey_recode <- function(dict,
-                          dat,
-                          extra_columns = default_extra_columns(),
-                          extra_columns_user_supplied = FALSE,
-                          unanswer_recode,
-                          unanswer_recode_multi) {
+survey_recode <- function(
+  dict,
+  dat,
+  extra_columns = default_extra_columns(),
+  extra_columns_user_supplied = FALSE,
+  unanswer_recode,
+  unanswer_recode_multi
+) {
   response_column_id <- dict_response_column_id(dict)
   in_dat <- response_column_id %in% colnames(dat)
   dict <- dict[in_dat, ]
@@ -216,8 +222,11 @@ survey_recode <- function(dict,
     factor(response_column_id, levels = unique_response_column_ids)
   )
   dat_vars <- map2_df(
-    dat[unique_varnames], split_dict,
-    ~ survey_var_recode(.x, .y,
+    dat[unique_varnames],
+    split_dict,
+    ~ survey_var_recode(
+      .x,
+      .y,
       unanswer_recode = unanswer_recode,
       unanswer_recode_multi = unanswer_recode_multi
     )
@@ -232,18 +241,15 @@ survey_recode <- function(dict,
 #' @importFrom haven read_xpt
 #' @keywords internal
 #' @noRd
-survey_var_recode <- function(var,
-                              var_dict,
-                              unanswer_recode,
-                              unanswer_recode_multi) {
-  # Multiple rows for a question, only first one chosen
-  type <- var_dict[["type"]][1]
-  content_type <- var_dict[["content_type"]][[1]]
-  levels <- var_dict[["level"]]
-  labels <- var_dict[["label"]]
-  is_text_var <- type == "TE" || any(grepl("_TEXT", levels, fixed = TRUE))
+survey_var_recode <- function(
+  var,
+  var_dict,
+  unanswer_recode,
+  unanswer_recode_multi
+) {
+  context <- survey_var_recode_context(var_dict)
 
-  if (!is_text_var && !is.na(content_type) && content_type == "Number") {
+  if (survey_var_should_coerce_numeric(context)) {
     # Check for content_type numeric,
     # vector with numbers such as "06" passes validation on Qualtrics but
     # will be character when read by readr
@@ -251,9 +257,66 @@ survey_var_recode <- function(var,
     var <- as.numeric(var)
   }
 
-  if (is_text_var) {
-    levels <- NA
+  label_facts <- survey_var_label_facts(
+    var_dict,
+    context,
+    unanswer_recode = unanswer_recode,
+    unanswer_recode_multi = unanswer_recode_multi
+  )
 
+  # TE variables dont have levels or labels
+  if (all(is.na(label_facts$levels))) {
+    text_label <- unique(paste_narm(var_dict[["question"]], var_dict[["item"]]))
+    var <- set_label(var, label = text_label)
+  } else {
+    var <- set_labels(
+      var,
+      labels = setNames(label_facts$levels, label_facts$labels)
+    )
+  }
+
+  return(var)
+}
+
+survey_var_recode_context <- function(var_dict) {
+  # Multiple rows for a question, only first one chosen.
+  type <- var_dict[["type"]][1]
+  levels <- var_dict[["level"]]
+  row_source <- var_dict[["row_source"]][[1]] %||% "question"
+  is_metadata_defined_var <- !is.na(row_source) && row_source != "question"
+
+  list(
+    type = type,
+    content_type = var_dict[["content_type"]][[1]],
+    levels = levels,
+    labels = var_dict[["label"]],
+    is_metadata_defined_var = is_metadata_defined_var,
+    is_text_var = isTRUE(type == "TE") ||
+      any(grepl("_TEXT", levels, fixed = TRUE), na.rm = TRUE),
+    has_value_labels = !all(is.na(levels))
+  )
+}
+
+survey_var_should_coerce_numeric <- function(context) {
+  !context$is_text_var &&
+    !is.na(context$content_type) &&
+    context$content_type == "Number"
+}
+
+survey_var_label_facts <- function(
+  var_dict,
+  context,
+  unanswer_recode,
+  unanswer_recode_multi
+) {
+  levels <- context$levels
+  labels <- context$labels
+
+  if (
+    context$is_text_var ||
+      (context$is_metadata_defined_var && !context$has_value_labels)
+  ) {
+    levels <- NA_character_
   } else if (nrow(var_dict) == 1) {
     # Single row means allowing for multiple answer
     if (!is.null(unanswer_recode_multi)) {
@@ -270,14 +333,5 @@ survey_var_recode <- function(var,
     }
   }
 
-  # TE variables dont have levels or labels
-  if (all(is.na(levels))) {
-    text_label <- unique(paste_narm(var_dict[["question"]], var_dict[["item"]]))
-    var <- set_label(var, label = text_label)
-  } else {
-    var <- set_labels(var, labels = setNames(levels, labels))
-  }
-
-
-  return(var)
+  list(levels = levels, labels = labels)
 }

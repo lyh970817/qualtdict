@@ -10,7 +10,8 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
     c(
       "surveyID",
       "survey_name",
-      "questions"
+      "questions",
+      "embedded_data"
     )
   )
   expect_identical(normalised_metadata$surveyID, "SV_SYNTHETIC")
@@ -20,6 +21,11 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
     "qualtdict_normalised_questions"
   )
   expect_named(normalised_metadata$questions, "QID1")
+  expect_s3_class(
+    normalised_metadata$embedded_data,
+    "qualtdict_normalised_embedded_data_fields"
+  )
+  expect_length(normalised_metadata$embedded_data, 0)
 
   question <- normalised_metadata$questions$QID1
   expect_s3_class(question, "qualtdict_normalised_question")
@@ -34,6 +40,31 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
   expect_named(question$response_choices, c("1", "2", "3"))
   expect_length(question$response_items, 0)
   expect_length(question$column_facts, 0)
+})
+
+test_that("flat Embedded Data Fields normalise into package-owned metadata", {
+  raw_metadata <- synthetic_flat_embedded_data_raw_metadata()
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  embedded_data <- normalised_metadata$embedded_data
+
+  expect_s3_class(
+    embedded_data,
+    "qualtdict_normalised_embedded_data_fields"
+  )
+  expect_named(embedded_data, c("Source Channel", "Q1"))
+  expect_s3_class(
+    embedded_data[["Source Channel"]],
+    "qualtdict_normalised_embedded_data_field"
+  )
+  expect_identical(
+    embedded_data[["Source Channel"]]$response_column_id,
+    "Source Channel"
+  )
+  expect_identical(
+    embedded_data[["Source Channel"]]$question_text,
+    "Embedded Data: Source Channel"
+  )
 })
 
 test_that("normalised metadata renders the current Variable Dictionary rows", {
