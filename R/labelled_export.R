@@ -143,7 +143,7 @@ missing_response_column_findings <- function(dict, dat) {
     qid = as.character(qid[missing]),
     variable_name = as.character(dict_variable_name(dict)[missing]),
     reason = "not_found_in_downloaded_survey_data"
-  ) %>%
+  ) |>
     distinct(.data$response_column_id, .keep_all = TRUE)
 }
 

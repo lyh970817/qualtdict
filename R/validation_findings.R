@@ -69,10 +69,10 @@ validation_level_label_pairs <- function(split_dict, quiet = TRUE) {
     tick_progress_bar(progress_bar, i)
   }
 
-  split_dict %>%
-    map(select, label, level) %>%
-    enframe(value = "pair") %>%
-    group_by(pair) %>%
+  split_dict |>
+    map(select, label, level) |>
+    enframe(value = "pair") |>
+    group_by(pair) |>
     summarize(qid = list(name), .groups = "drop")
 }
 
@@ -93,7 +93,7 @@ variable_name_validation_findings <- function(dict) {
   names_by_response_column <- tibble(
     response_column_id = as.character(dict_response_column_id(dict)),
     variable_name = as.character(dict_variable_name(dict))
-  ) %>%
+  ) |>
     distinct()
 
   bind_rows(
@@ -104,9 +104,9 @@ variable_name_validation_findings <- function(dict) {
 }
 
 inconsistent_response_column_names <- function(names_by_response_column) {
-  findings <- names_by_response_column %>%
-    group_by(.data$response_column_id) %>%
-    filter(n_distinct(.data$variable_name) > 1) %>%
+  findings <- names_by_response_column |>
+    group_by(.data$response_column_id) |>
+    filter(n_distinct(.data$variable_name) > 1) |>
     ungroup()
 
   if (nrow(findings) == 0) {
@@ -119,9 +119,9 @@ inconsistent_response_column_names <- function(names_by_response_column) {
 }
 
 duplicate_variable_names <- function(names_by_response_column) {
-  findings <- names_by_response_column %>%
-    group_by(.data$variable_name) %>%
-    filter(n_distinct(.data$response_column_id) > 1) %>%
+  findings <- names_by_response_column |>
+    group_by(.data$variable_name) |>
+    filter(n_distinct(.data$response_column_id) > 1) |>
     ungroup()
 
   if (nrow(findings) == 0) {
