@@ -4,6 +4,7 @@ minimal_validation_dict <- function(response_column_id = c("QID1", "QID1"),
                                     level = c("1", "2")) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
+    row_source = "question",
     qid = sub("_.*$", "", response_column_id),
     question_name = variable_name,
     variable_name = variable_name,

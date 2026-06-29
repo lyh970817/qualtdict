@@ -50,6 +50,7 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
     list(
       qid = rep(qid_base, length(response_columns$response_column_id)),
       response_column_id = response_columns$response_column_id,
+      row_source = rep("question", length(response_columns$response_column_id)),
       question_name = null_na(question_name),
       block = block,
       question = response_columns$question,
@@ -115,6 +116,7 @@ empty_variable_dictionary_from_normalised_metadata <- function(
   json <- tibble(
     qid = character(),
     response_column_id = character(),
+    row_source = character(),
     question_name = character(),
     variable_name = character(),
     block = character(),
@@ -133,17 +135,18 @@ empty_variable_dictionary_from_normalised_metadata <- function(
   )
   if (use_semantic_name) {
     json <- json[c(
-      "qid", "response_column_id", "question_name", "variable_name",
-      "block", "question", "looping_question", "item", "level", "label",
-      "type", "selector", "content_type", "sub_selector", "looping_option",
-      "looping", "loop_option"
-    )]
-    json$semantic_name <- character()
-    json <- json[c(
-      "qid", "response_column_id", "question_name", "semantic_name",
+      "qid", "response_column_id", "row_source", "question_name",
       "variable_name", "block", "question", "looping_question", "item",
       "level", "label", "type", "selector", "content_type", "sub_selector",
       "looping_option", "looping", "loop_option"
+    )]
+    json$semantic_name <- character()
+    json <- json[c(
+      "qid", "response_column_id", "row_source", "question_name",
+      "semantic_name", "variable_name", "block", "question",
+      "looping_question", "item", "level", "label", "type", "selector",
+      "content_type", "sub_selector", "looping_option", "looping",
+      "loop_option"
     )]
   }
 

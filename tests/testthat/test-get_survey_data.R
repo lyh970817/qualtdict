@@ -6,6 +6,7 @@ minimal_export_dict <- function(
     level = c("1", "2")) {
   dict <- tibble::tibble(
     response_column_id = response_column_id,
+    row_source = "question",
     qid = sub("_.*$", "", response_column_id),
     question_name = variable_name,
     variable_name = variable_name,

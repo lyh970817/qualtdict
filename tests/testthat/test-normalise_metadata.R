@@ -47,6 +47,7 @@ test_that("normalised metadata renders the current Variable Dictionary rows", {
 
   dict_subset <- dict[c(
     "response_column_id",
+    "row_source",
     "qid",
     "question_name",
     "variable_name",
@@ -65,6 +66,7 @@ test_that("normalised metadata renders the current Variable Dictionary rows", {
     dict_subset$response_column_id,
     c("QID1", "QID1", "QID1", "QID1_3_TEXT")
   )
+  expect_equal(dict_subset$row_source, rep("question", 4))
   expect_equal(dict_subset$qid, rep("QID1", 4))
   expect_equal(
     dict_subset$question_name,
@@ -364,9 +366,9 @@ test_that("semantic_name_preprocess receives the full post-normalisation diction
   semantic_name_preprocess <- function(dict) {
     seen_names <<- names(dict)
     seen_loop_rows <<- dict[dict$looping, c(
-      "qid", "response_column_id", "question_name", "block", "question",
-      "looping_option", "item", "label", "type", "selector", "sub_selector",
-      "content_type"
+      "qid", "response_column_id", "row_source", "question_name", "block",
+      "question", "looping_option", "item", "label", "type", "selector",
+      "sub_selector", "content_type"
     )]
     dict
   }
@@ -380,15 +382,16 @@ test_that("semantic_name_preprocess receives the full post-normalisation diction
   )
 
   expect_true(all(c(
-    "qid", "response_column_id", "question_name", "block", "question",
-    "looping_question", "item", "level", "label", "type", "selector",
-    "content_type", "sub_selector", "looping_option", "looping"
+    "qid", "response_column_id", "row_source", "question_name", "block",
+    "question", "looping_question", "item", "level", "label", "type",
+    "selector", "content_type", "sub_selector", "looping_option", "looping"
   ) %in% seen_names))
   expect_equal(
     seen_loop_rows$response_column_id,
     c("x1_QID2_TEXT", "x2_QID2_TEXT")
   )
   expect_equal(seen_loop_rows$question_name, c("Q2", "Q2"))
+  expect_equal(seen_loop_rows$row_source, c("question", "question"))
   expect_equal(seen_loop_rows$looping_option, c("Apples", "Bananas"))
 })
 
