@@ -44,6 +44,12 @@ For now, ignore the `pkgcheck` failure that reports "Repository has no
 website" / `pkgchk_repo_has_website`. Treat other `pkgcheck` failures as
 actionable unless there is a separate documented reason to waive them.
 
+Also ignore the non-failing `pkgcheck` suffix "but no badges on README" when
+the same check reports "Package has continuous integration checks". The remote
+README already contains the GitHub Actions badge URLs, and this suffix can be
+caused by local `curl::has_internet()` returning `FALSE` in fake-IP DNS or
+transparent proxy environments.
+
 ## Commit & Pull Request Guidelines
 
 Recent commits use short imperative summaries, for example `Fix question type CS-HR-TX` or `Add qid recode for text fields in SBS questions`. Keep commit subjects concise and focused on the user-visible or package behavior change. For pull requests, follow `.github/CONTRIBUTING.md`: open an issue for larger changes, include a minimal reprex for bugs, run `devtools::check()`, and link issues with `Fixes #<issue-number>`. Include tests for changed behavior and update documentation or generated files when roxygen or README sources change.

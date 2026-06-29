@@ -3,6 +3,14 @@
 default_install_hook_types: [pre-commit, pre-push]
 
 repos:
+-   repo: local
+    hooks:
+    -   id: air-format
+        name: Format R files with Air
+        entry: air format
+        language: system
+        files: '^(R|tests|tools)/.*\.[rR]$'
+        stages: [pre-commit]
 -   repo: https://github.com/lorenzwalthert/precommit
     rev: v0.4.3.9026
     hooks:
