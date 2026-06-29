@@ -32,7 +32,7 @@ normalise_qualtrics_questions <- function(mt, mt_d) {
   block_meta <- normalise_question_block_metadata(mt, mt_d, qids)
   content_type_meta <- normalise_question_content_types(mt_d, qids)
 
-  question_meta <- question_meta[qids] %>%
+  question_meta <- question_meta[qids] |>
     order_name()
 
   question_meta <- imap(question_meta, function(question, qid) {
@@ -48,7 +48,7 @@ normalise_qualtrics_questions <- function(mt, mt_d) {
 }
 
 normalise_question_block_metadata <- function(mt, mt_d, qids) {
-  block_meta <- block_metadata(mt, mt_d) %>%
+  block_meta <- block_metadata(mt, mt_d) |>
     map(function(block) {
       map(block$qid, ~ list(
         qid = .x,
@@ -58,13 +58,14 @@ normalise_question_block_metadata <- function(mt, mt_d, qids) {
         looping_static = block$looping_static,
         looping_column_names = block$looping_column_names
       ))
-    }) %>%
+    }) |>
     # Use 'c' to combine multiple lists into one list
     # Previously the lists are nested in block and then QID
-    do.call(c, .) %>%
-    setNames(map_chr(., ~ .x$qid))
+    do.call(c, args = _)
 
-  block_meta[qids] %>%
+  block_meta <- setNames(block_meta, map_chr(block_meta, ~ .x$qid))
+
+  block_meta[qids] |>
     order_name()
 }
 
@@ -98,14 +99,14 @@ question_metadata <- function(mt) {
 }
 
 normalise_question_content_types <- function(mt_d, qids) {
-  content_type_meta <- mt_d$question %>%
-    map("Validation") %>%
-    map("Settings") %>%
-    map("ContentType") %>%
-    map(null_na) %>%
+  content_type_meta <- mt_d$question |>
+    map("Validation") |>
+    map("Settings") |>
+    map("ContentType") |>
+    map(null_na) |>
     map(str_remove, "Valid")
 
-  content_type_meta[qids] %>%
+  content_type_meta[qids] |>
     order_name()
 }
 

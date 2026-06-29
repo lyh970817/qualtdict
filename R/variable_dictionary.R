@@ -56,7 +56,7 @@ variable_dictionary_from_normalised_metadata <- function(
 }
 
 variable_dictionary_question_rows <- function(question_meta) {
-  imap(question_meta, variable_dictionary_question_row) %>%
+  imap(question_meta, variable_dictionary_question_row) |>
     discard(is.null)
 }
 
@@ -94,8 +94,8 @@ variable_dictionary_question_row <- function(qjson, qid) {
 }
 
 prepare_variable_dictionary_rows <- function(json) {
-  json <- json %>%
-    to_dataframe() %>%
+  json <- json |>
+    to_dataframe() |>
     convert_html()
 
   json$looping <- as.logical(json$looping)

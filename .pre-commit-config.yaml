@@ -119,11 +119,15 @@ repos:
     -   id: pkgcheck
         name: Run full rOpenSci pkgcheck audit
         entry: >
+          bash -c 'if [ -z "$GITHUB_PAT$GITHUB_TOKEN" ] &&
+          command -v gh >/dev/null 2>&1; then
+          export GITHUB_PAT="$(gh auth token 2>/dev/null || true)";
+          fi;
           env _R_CHECK_SYSTEM_CLOCK_=FALSE Rscript -e
-          'checks <- pkgcheck::pkgcheck(); print(checks);
+          '"'"'checks <- pkgcheck::pkgcheck(); print(checks);
           summary <- pkgcheck:::summarise_all_checks(checks);
           quit(save = "no", status = if
-          (isTRUE(attr(summary, "checks_okay"))) 0 else 1)'
+          (isTRUE(attr(summary, "checks_okay"))) 0 else 1)'"'"''
         language: system
         pass_filenames: false
         files: >

@@ -7,7 +7,6 @@
 #' @importFrom stringr fixed str_extract str_match str_match_all str_remove
 #' @importFrom stringr str_remove_all str_replace str_replace_all str_split
 #' @importFrom tibble tibble as_tibble enframe
-#' @importFrom magrittr %>%
 #' @importFrom crul Async
 #' @importFrom utils globalVariables
 
@@ -46,9 +45,9 @@ close_progress_bar <- function(progress_bar) {
 #' @noRd
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
-    cols %>%
-      group_by(.data[[from]]) %>%
-      filter(length(unique(.data[[to]])) != 1) %>%
+    cols |>
+      group_by(.data[[from]]) |>
+      filter(length(unique(.data[[to]])) != 1) |>
       reframe(!!to := unique(.data[[to]]))
   }
   names_cols <- colnames(cols)
@@ -103,7 +102,7 @@ convert_html <- function(data) {
     )
   }
 
-  data %>%
+  data |>
     mutate_all(
       unescape_html
     )
@@ -131,8 +130,8 @@ paste_narm <- function(...) {
   is_null_na <- map_lgl(args, ~ is.null(.x) | all(is.na(.x)))
   args[is_null_na] <- NULL
 
-  sep <- list(...)$sep %>%
-    ifelse(is.null(.), " ", .)
+  sep <- list(...)$sep
+  sep <- ifelse(is.null(sep), " ", sep)
   do.call(paste, args)
 }
 
@@ -145,7 +144,7 @@ unlist_nm <- function(list) {
   }
 
   names <- names(list)
-  v <- unlist(map(list, null_na)) %>%
+  v <- unlist(map(list, null_na)) |>
     setNames(names)
   return(v)
 }

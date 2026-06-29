@@ -102,11 +102,11 @@ add_semantic_name_components <- function(json_makename,
       json_makename$block
     )
 
-  json_makename %>%
+  json_makename |>
     unite(semantic_name, semantic_block, semantic_question,
       sep = block_sep, na.rm = TRUE
-    ) %>%
-    mutate(semantic_name = semantic_name) %>%
+    ) |>
+    mutate(semantic_name = semantic_name) |>
     select(semantic_name, everything())
 }
 
@@ -193,7 +193,7 @@ semantic_name_label_suffix <- function(x) {
 }
 
 clean_semantic_name_text <- function(text) {
-  str_remove_all(text, "\\(.+\\)") %>%
+  str_remove_all(text, "\\(.+\\)") |>
     str_remove_all("[[:punct:]]")
 }
 

@@ -46,7 +46,7 @@ repair_variable_dictionary_names <- function(dict) {
     original_candidate = original_candidates,
     variable_name = repaired_candidates,
     reason = reasons
-  ) %>%
+  ) |>
     filter(!is.na(.data$reason))
 
   name_map <- setNames(repaired_candidates, response_column_id)

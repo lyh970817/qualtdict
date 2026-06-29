@@ -9,7 +9,7 @@ expand_loop_question_facts <- function(survey_question_facts) {
     )
 
     expand_loop_question_fact(context)
-  }) %>%
+  }) |>
     unlist(recursive = FALSE)
 }
 
