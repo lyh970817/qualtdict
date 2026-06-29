@@ -15,10 +15,11 @@ merge the PR.
 
 1. Confirm you are on branch `{{BRANCH}}`.
 2. Inspect the branch diff against the current base branch.
-3. Run `Rscript -e 'devtools::test()'` and the strongest practical R package
-   checks for the reviewed branch.
-4. If tests fail, fix the issue on the branch, commit the fix, and rerun the
-   relevant checks before proceeding.
+3. Run `Rscript -e 'devtools::test()'` for the reviewed branch. Do not run
+   `devtools::check()` manually; R CMD check belongs to the configured pre-push
+   hook and should run during `git push`.
+4. If tests or the pre-push hook fail, fix the issue on the branch, commit the
+   fix, and rerun the relevant check before proceeding.
 5. Push the branch with `git push -u origin {{BRANCH}}`.
 6. Open a pull request with `gh pr create`, targeting the current base branch.
    Include `Fixes #<ID>` in the PR body when the issue number is known so
