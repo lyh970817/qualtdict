@@ -5,35 +5,47 @@
 #' @importFrom utils head
 #' @keywords internal
 #' @noRd
-generate_semantic_names <- function(json,
-                              surveyID,
-                              block_pattern,
-                              block_sep,
-                              semantic_name_preprocess,
-                              quiet = TRUE) {
+generate_semantic_names <- function(
+  json,
+  surveyID,
+  block_pattern,
+  block_sep,
+  semantic_name_preprocess,
+  quiet = TRUE
+) {
+  if (!"variable_name" %in% names(json)) {
+    json$variable_name <- NA_character_
+  }
   json_makename <- json
-  response_column_id <- dict_response_column_id(json)
 
   if (!is.null(semantic_name_preprocess)) {
     json_makename <- semantic_name_preprocess(json_makename)
   }
 
-  texts <- semantic_name_texts(json_makename)
+  question_rows <- dict_question_rows(json)
+  json$semantic_name <- NA_character_
+  if (!any(question_rows)) {
+    return(json)
+  }
+
+  question_json <- json_makename[question_rows, ]
+  response_column_id <- dict_response_column_id(question_json)
+  texts <- semantic_name_texts(question_json)
   keywords <- semantic_name_keywords(texts, quiet = quiet)
-  json_makename <- add_semantic_name_components(
-    json_makename,
+  question_json <- add_semantic_name_components(
+    question_json,
     texts = texts,
     keywords = keywords,
     block_pattern = block_pattern,
     block_sep = block_sep
   )
-  json_makename <- add_semantic_name_suffixes(
-    json_makename,
+  question_json <- add_semantic_name_suffixes(
+    question_json,
     response_column_id
   )
 
-  json$semantic_name <- json_makename$semantic_name
-  json$variable_name <- json$semantic_name
+  json$semantic_name[question_rows] <- question_json$semantic_name
+  json$variable_name[question_rows] <- question_json$semantic_name
 
   json
 }
@@ -82,18 +94,25 @@ semantic_name_keywords <- function(texts, quiet = TRUE) {
 }
 
 semantic_name_cache_path <- function(cleaned_unique_texts, all_words) {
-  paste0(tempdir(), "/", hash(list(
-    algorithm = "semantic-name-source-order-v1",
-    unique_texts = cleaned_unique_texts,
-    all_words = all_words
-  )), ".rds")
+  paste0(
+    tempdir(),
+    "/",
+    hash(list(
+      algorithm = "semantic-name-source-order-v1",
+      unique_texts = cleaned_unique_texts,
+      all_words = all_words
+    )),
+    ".rds"
+  )
 }
 
-add_semantic_name_components <- function(json_makename,
-                                         texts,
-                                         keywords,
-                                         block_pattern,
-                                         block_sep) {
+add_semantic_name_components <- function(
+  json_makename,
+  texts,
+  keywords,
+  block_pattern,
+  block_sep
+) {
   json_makename$semantic_question <-
     unique_expand(semantic_question_components(texts, keywords), texts)
   json_makename$semantic_block <-
@@ -103,8 +122,12 @@ add_semantic_name_components <- function(json_makename,
     )
 
   json_makename |>
-    unite(semantic_name, semantic_block, semantic_question,
-      sep = block_sep, na.rm = TRUE
+    unite(
+      semantic_name,
+      semantic_block,
+      semantic_question,
+      sep = block_sep,
+      na.rm = TRUE
     ) |>
     mutate(semantic_name = semantic_name) |>
     select(semantic_name, everything())
@@ -151,11 +174,12 @@ add_semantic_name_suffixes <- function(json_makename, response_column_id) {
 add_matrix_semantic_name_suffixes <- function(json_makename) {
   add_label_qs <-
     json_makename$type == "Matrix" &
-      json_makename$selector == "Likert" &
-      json_makename$sub_selector == "MultipleAnswer"
+    json_makename$selector == "Likert" &
+    json_makename$sub_selector == "MultipleAnswer"
 
   json_makename$semantic_name[add_label_qs] <-
-    paste(json_makename$semantic_name[add_label_qs],
+    paste(
+      json_makename$semantic_name[add_label_qs],
       semantic_name_label_suffix(json_makename$label[add_label_qs]),
       sep = "."
     )
@@ -166,7 +190,8 @@ add_matrix_semantic_name_suffixes <- function(json_makename) {
 add_sbs_semantic_name_suffixes <- function(json_makename) {
   sbs_matrix <- json_makename$type == "SBS"
   json_makename$semantic_name[sbs_matrix] <-
-    paste(json_makename$semantic_name[sbs_matrix],
+    paste(
+      json_makename$semantic_name[sbs_matrix],
       semantic_name_label_suffix(json_makename$item[sbs_matrix]),
       sep = "."
     )
@@ -186,10 +211,14 @@ add_loop_semantic_name_suffixes <- function(json_makename) {
 }
 
 semantic_name_label_suffix <- function(x) {
-  str_remove_all(str_replace_all(
-    tolower(x),
-    "\\s", "_"
-  ), "[^0-9A-Za-z_\\.]")
+  str_remove_all(
+    str_replace_all(
+      tolower(x),
+      "\\s",
+      "_"
+    ),
+    "[^0-9A-Za-z_\\.]"
+  )
 }
 
 clean_semantic_name_text <- function(text) {
@@ -197,8 +226,11 @@ clean_semantic_name_text <- function(text) {
     str_remove_all("[[:punct:]]")
 }
 
-semantic_name_source_order_component <- function(keywords, source_text,
-                                                 max_words = 4) {
+semantic_name_source_order_component <- function(
+  keywords,
+  source_text,
+  max_words = 4
+) {
   keyword_words <- character()
   keyword_values <- keywords$keyword %||% keywords[[1]]
 
