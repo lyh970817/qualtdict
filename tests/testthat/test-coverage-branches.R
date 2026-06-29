@@ -235,7 +235,7 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
     "missing"
   )
   expect_identical(
-    loop_field_values_from_static(NULL, c("x1")),
+    loop_field_values_from_static(NULL, "x1"),
     list(x1 = NULL)
   )
   expect_identical(
@@ -284,8 +284,8 @@ test_that("Response Column ID helpers cover fallback shapes", {
   )
   expect_type(response_column_renderer_for_context(list(type = "TE")), "list")
   expect_identical(
-    add_text_mc(c("QID1_2_TEXT"), c(x2_TEXT = "2_TEXT")),
-    c("QID1_x2_TEXT")
+    add_text_mc("QID1_2_TEXT", stats::setNames("2_TEXT", "x2_TEXT")),
+    "QID1_x2_TEXT"
   )
   expect_identical(mc_recode_ids(c("1", "2_TEXT")), c("1", "2_TEXT"))
 
@@ -354,10 +354,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
       )
     }
   )
-  expect_identical(
-    variable_dictionary_question_row(no_row_question, "QID1"),
-    NULL
-  )
+  expect_null(variable_dictionary_question_row(no_row_question, "QID1"))
 
   normalised_metadata$questions <- list(QID1 = no_row_question)
   local_mocked_bindings(
@@ -476,10 +473,11 @@ test_that("slowrake and retry cover deterministic fallback branches", {
     "rakelist"
   )
 
-  attempts <- 0
+  attempts <- new.env(parent = emptyenv())
+  attempts$count <- 0
   succeeds_second_time <- retry(function() {
-    attempts <<- attempts + 1
-    if (attempts == 1) {
+    attempts$count <- attempts$count + 1
+    if (attempts$count == 1) {
       stop("first failure")
     }
     "ok"
