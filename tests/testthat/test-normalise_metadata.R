@@ -262,6 +262,40 @@ test_that("Semantic Names preserve source order for selected keywords", {
   )
 })
 
+test_that("Semantic Names fall back from missing multiple-answer labels", {
+  dict_rows <- tibble(
+    qid = c("QID1", "QID1217"),
+    response_column_id = c("QID1", "QID1217_TEXT"),
+    question_name = c("Q1", "TOC"),
+    block = "Main Block",
+    question = c("Choose one", "Missing text entry source should fall back"),
+    looping_question = NA_character_,
+    item = NA_character_,
+    level = c("1", NA_character_),
+    label = c("Yes", NA_character_),
+    type = "MC",
+    selector = c("SAVR", "MACOL"),
+    content_type = c("Number", "Text"),
+    sub_selector = "TX",
+    looping_option = NA_character_,
+    looping = FALSE
+  )
+
+  expect_no_error(
+    dict <- generate_semantic_names(
+      dict_rows,
+      surveyID = "SV_TEST",
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    )
+  )
+  expect_identical(
+    dict$semantic_name,
+    c("choose_one", "missing_text_entry_source_should_fall_back.txt")
+  )
+})
+
 test_that("Semantic Name keyword cache keys include the scoring corpus", {
   semantic_json <- function(questions) {
     tibble(
