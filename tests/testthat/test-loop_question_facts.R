@@ -190,31 +190,37 @@ test_that("Loop expansion context separates current and source facts", {
   expect_identical(context$static_prefixes, c("x1", "x2"))
 })
 
-test_that("Loop expansion context keeps static fallback when source fact is absent", {
-  normalised_metadata <- normalise_qualtrics_metadata(
-    synthetic_loop_and_merge_raw_metadata()
-  )
+test_that(
+  "Loop expansion context keeps static fallback when source fact is absent",
+  {
+    normalised_metadata <- normalise_qualtrics_metadata(
+      synthetic_loop_and_merge_raw_metadata()
+    )
 
-  context <- new_loop_expansion_context(
-    question_fact = normalised_metadata$questions$QID2,
-    survey_question_facts = normalised_metadata$questions["QID2"]
-  )
+    context <- new_loop_expansion_context(
+      question_fact = normalised_metadata$questions$QID2,
+      survey_question_facts = normalised_metadata$questions["QID2"]
+    )
 
-  expect_null(context$looping_source_fact)
-  expect_true(loop_question_fact_should_expand(context))
-})
+    expect_null(context$looping_source_fact)
+    expect_true(loop_question_fact_should_expand(context))
+  }
+)
 
-test_that("Loop expansion context preserves text-entry response column qid normalization", { # nolint
-  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+test_that(
+  "Loop expansion preserves text-entry response column qid",
+  {
+    raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-  expanded <- expand_loop_question_facts(normalised_metadata$questions)
-  looped <- expanded[
-    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
-  ]
+    expanded <- expand_loop_question_facts(normalised_metadata$questions)
+    looped <- expanded[
+      vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+    ]
 
-  expect_identical(
-    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
-    c("x1_QID2", "x2_QID2")
-  )
-})
+    expect_identical(
+      unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+      c("x1_QID2", "x2_QID2")
+    )
+  }
+)

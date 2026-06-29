@@ -29,10 +29,10 @@ dict_split_blocks <- function(dict) {
 #' Split Labelled Survey Data by Survey Block
 #'
 #' Create block-specific views of Labelled Survey Data without changing the
-#' return type of \code{\link[qualtdict]{get_survey_data}}.
+#' return type of \code{\link[qualtdict]{fetch_labelled_survey_data}}.
 #'
 #' @param dat Labelled Survey Data returned by
-#' \code{\link[qualtdict]{get_survey_data}}.
+#' \code{\link[qualtdict]{fetch_labelled_survey_data}}.
 #' @inheritParams dict_validate
 #' @param extra_columns A character vector of raw Labelled Survey Data columns
 #' to retain in each block data set. Defaults to
@@ -41,7 +41,8 @@ dict_split_blocks <- function(dict) {
 #' Use \code{NULL} to retain no extra columns.
 #' @details
 #' When \code{dict} is not supplied, \code{survey_split_blocks()} uses the
-#' \code{dict} attribute attached by \code{\link[qualtdict]{get_survey_data}}.
+#' \code{dict} attribute attached by
+#' \code{\link[qualtdict]{fetch_labelled_survey_data}}.
 #'
 #' @return A named list of data frames, one per Survey Block.
 #' @export

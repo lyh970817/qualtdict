@@ -7,13 +7,13 @@
 
 <!-- badges: start -->
 
-[![Project Status: Active – The project has reached a stable, usable
+[![Project Status: Active - The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 [![check-standard](https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml)
 [![test-coverage](https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/lyh970817/qualtdict/branch/master/graph/badge.svg)](https://app.codecov.io/gh/lyh970817/qualtdict?branch=master)
+coverage](https://codecov.io/gh/lyh970817/qualtdict/branch/main/graph/badge.svg)](https://app.codecov.io/gh/lyh970817/qualtdict?branch=main)
 <!-- badges: end -->
 
 [Qualtrics](https://www.qualtrics.com/) is an online survey and data
@@ -49,9 +49,9 @@ remotes::install_github("lyh970817/qualtdict")
 
 ## Credentials And Offline Work
 
-Live calls to `dict_generate()` and `get_survey_data()` require
-Qualtrics API credentials because they retrieve metadata and responses
-through `qualtRics`. Register credentials with
+Live calls to `dict_generate()` and `fetch_labelled_survey_data()`
+require Qualtrics API credentials because they retrieve metadata and
+responses through `qualtRics`. Register credentials with
 `qualtRics::qualtrics_api_credentials()`, which `qualtdict` also
 re-exports for convenience.
 
@@ -102,7 +102,7 @@ Variables to `variable_name` and attaches labels from the Variable
 Dictionary.
 
 ``` r
-survey_dat <- get_survey_data(
+survey_dat <- fetch_labelled_survey_data(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = "none",

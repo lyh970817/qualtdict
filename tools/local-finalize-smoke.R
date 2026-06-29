@@ -7,7 +7,7 @@ usage <- function() {
       "  Rscript tools/local-finalize-smoke.R check",
       "  Rscript tools/local-finalize-smoke.R bless",
       "  Rscript tools/local-finalize-smoke.R check --survey survey_a",
-      "  Rscript tools/local-finalize-smoke.R check --functions get_survey_data",
+      "  Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data",
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
@@ -512,8 +512,8 @@ run_scenario <- function(survey, variable_name, selected_functions, dict = NULL)
 
   if (requirements$needs_labelled) {
     labelled <- run_step(
-      paste(scenario_label, "get_survey_data"),
-      qualtdict::get_survey_data(dict, quiet = FALSE)
+      paste(scenario_label, "fetch_labelled_survey_data"),
+      qualtdict::fetch_labelled_survey_data(dict, quiet = FALSE)
     )
     objects$labelled <- labelled
   }
@@ -544,11 +544,11 @@ run_scenario <- function(survey, variable_name, selected_functions, dict = NULL)
 
   if (
     identical(variable_name, "question_name") &&
-      "get_survey_data" %in% selected_functions
+      "fetch_labelled_survey_data" %in% selected_functions
   ) {
     labelled_excluding_validation <- run_step(
-      paste(scenario_label, "get_survey_data exclude validation"),
-      qualtdict::get_survey_data(
+      paste(scenario_label, "fetch_labelled_survey_data exclude validation"),
+      qualtdict::fetch_labelled_survey_data(
         dict,
         exclude_findings = "validation",
         quiet = FALSE
@@ -563,7 +563,7 @@ run_scenario <- function(survey, variable_name, selected_functions, dict = NULL)
   if ("dict_validate" %in% selected_functions) {
     summaries$validation <- validation_summary(objects$validation)
   }
-  if ("get_survey_data" %in% selected_functions) {
+  if ("fetch_labelled_survey_data" %in% selected_functions) {
     summaries$labelled <- data_frame_summary(objects$labelled)
   }
   if ("labelled_export_findings" %in% selected_functions) {

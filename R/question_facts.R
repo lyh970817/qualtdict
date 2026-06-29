@@ -10,6 +10,7 @@ scalar_character <- function(x) {
 }
 
 #' Build one package-owned normalised question fact
+#' @importFrom rlang %||%
 #' @keywords internal
 #' @noRd
 normalise_question_fact <- function(qid, question, block, content_type) {
@@ -109,17 +110,6 @@ normalise_column_facts <- function(columns) {
       response_choices = normalise_response_choices(column$choices)
     )
   })
-}
-
-#' Return first non-NULL value
-#' @keywords internal
-#' @noRd
-`%||%` <- function(x, y) {
-  if (is.null(x)) {
-    y
-  } else {
-    x
-  }
 }
 
 #' Return a question fact field with optional legacy fallback

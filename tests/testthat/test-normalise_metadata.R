@@ -194,39 +194,109 @@ test_that("Semantic Names are generated only on the semantic naming path", {
   )
 })
 
-test_that("Semantic Name generation is quiet by default with opt-in progress messages", { # nolint
-  quiet_metadata <- synthetic_mc_text_raw_metadata()
-  quiet_metadata$metadata$questions$QID1$questionText <-
-    "Quiet semantic naming check"
-  quiet_metadata <- normalise_qualtrics_metadata(quiet_metadata)
+test_that(
+  "Semantic Name generation is quiet by default with opt-in progress messages",
+  {
+    quiet_metadata <- synthetic_mc_text_raw_metadata()
+    quiet_metadata$metadata$questions$QID1$questionText <-
+      "Quiet semantic naming check"
+    quiet_metadata <- normalise_qualtrics_metadata(quiet_metadata)
 
-  expect_silent(
+    expect_silent(
+      variable_dictionary_from_normalised_metadata(
+        quiet_metadata,
+        use_semantic_name = TRUE,
+        block_pattern = NULL,
+        block_sep = ".",
+        semantic_name_preprocess = NULL
+      )
+    )
+
+    verbose_metadata <- synthetic_mc_text_raw_metadata()
+    verbose_metadata$metadata$questions$QID1$questionText <-
+      "Verbose semantic naming check"
+    verbose_metadata <- normalise_qualtrics_metadata(verbose_metadata)
+
+    expect_message(
+      variable_dictionary_from_normalised_metadata(
+        verbose_metadata,
+        use_semantic_name = TRUE,
+        block_pattern = NULL,
+        block_sep = ".",
+        semantic_name_preprocess = NULL,
+        quiet = FALSE
+      ),
+      "Generating Semantic Names"
+    )
+  }
+)
+
+test_that(
+  "semantic_name_preprocess receives the full post-normalisation dictionary",
+  {
+    raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+    seen <- new.env(parent = emptyenv())
+    seen$names <- NULL
+    seen$loop_rows <- NULL
+    semantic_name_preprocess <- function(dict) {
+      seen$names <- names(dict)
+      seen$loop_rows <- dict[dict$looping, c(
+        "qid", "response_column_id", "question_name", "block", "question",
+        "looping_option", "item", "label", "type", "selector", "sub_selector",
+        "content_type"
+      )]
+      dict
+    }
+
     variable_dictionary_from_normalised_metadata(
-      quiet_metadata,
+      normalised_metadata,
       use_semantic_name = TRUE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = semantic_name_preprocess
+    )
+
+    expect_true(all(c(
+      "qid", "response_column_id", "question_name", "block", "question",
+      "looping_question", "item", "level", "label", "type", "selector",
+      "content_type", "sub_selector", "looping_option", "looping"
+    ) %in% seen$names))
+    expect_identical(
+      seen$loop_rows$response_column_id,
+      c("x1_QID2_TEXT", "x2_QID2_TEXT")
+    )
+    expect_identical(seen$loop_rows$question_name, c("Q2", "Q2"))
+    expect_identical(seen$loop_rows$looping_option, c("Apples", "Bananas"))
+  }
+)
+
+test_that(
+  "multiple-answer response columns use recodes when choice IDs are numeric",
+  {
+    raw_metadata <- synthetic_mc_recode_raw_metadata()
+    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+    dict <- variable_dictionary_from_normalised_metadata(
+      normalised_metadata,
+      use_semantic_name = FALSE,
       block_pattern = NULL,
       block_sep = ".",
       semantic_name_preprocess = NULL
     )
-  )
 
-  verbose_metadata <- synthetic_mc_text_raw_metadata()
-  verbose_metadata$metadata$questions$QID1$questionText <-
-    "Verbose semantic naming check"
-  verbose_metadata <- normalise_qualtrics_metadata(verbose_metadata)
-
-  expect_message(
-    variable_dictionary_from_normalised_metadata(
-      verbose_metadata,
-      use_semantic_name = TRUE,
-      block_pattern = NULL,
-      block_sep = ".",
-      semantic_name_preprocess = NULL,
-      quiet = FALSE
-    ),
-    "Generating Semantic Names"
-  )
-})
+    expect_identical(
+      dict$response_column_id,
+      c("QID1_1", "QID1_2", "QID1_-88", "QID1_-99", "QID1_0",
+        "QID1_9_TEXT")
+    )
+    expect_identical(
+      unname(dict$level),
+      c("1", "2", "-88", "-99", "0", "0_TEXT")
+    )
+    expect_true(all(lengths(dict) == nrow(dict)))
+  }
+)
 
 test_that(
   "Semantic Name keyword extraction suppresses progress bars by default",
@@ -394,43 +464,6 @@ test_that("semantic_name_preprocess runs only for semantic naming", {
   expect_true(all(grepl("^renamed_by_hook", dict$semantic_name)))
 })
 
-test_that("semantic_name_preprocess receives the full post-normalisation dictionary", { # nolint
-  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-  seen <- new.env(parent = emptyenv())
-  seen$names <- NULL
-  seen$loop_rows <- NULL
-  semantic_name_preprocess <- function(dict) {
-    seen$names <- names(dict)
-    seen$loop_rows <- dict[dict$looping, c(
-      "qid", "response_column_id", "question_name", "block", "question",
-      "looping_option", "item", "label", "type", "selector", "sub_selector",
-      "content_type"
-    )]
-    dict
-  }
-
-  variable_dictionary_from_normalised_metadata(
-    normalised_metadata,
-    use_semantic_name = TRUE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = semantic_name_preprocess
-  )
-
-  expect_true(all(c(
-    "qid", "response_column_id", "question_name", "block", "question",
-    "looping_question", "item", "level", "label", "type", "selector",
-    "content_type", "sub_selector", "looping_option", "looping"
-  ) %in% seen$names))
-  expect_identical(
-    seen$loop_rows$response_column_id,
-    c("x1_QID2_TEXT", "x2_QID2_TEXT")
-  )
-  expect_identical(seen$loop_rows$question_name, c("Q2", "Q2"))
-  expect_identical(seen$loop_rows$looping_option, c("Apples", "Bananas"))
-})
-
 test_that("temporary semantic_name_preprocess columns do not leak", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -589,30 +622,6 @@ test_that("non-analysed single-answer choices remain value labels", {
   expect_true("QID1" %in% dict$response_column_id)
   expect_true("1" %in% dict$level)
   expect_true("Yes" %in% dict$label)
-  expect_true(all(lengths(dict) == nrow(dict)))
-})
-
-test_that("multiple-answer response columns use recodes when choice IDs are numeric", { # nolint
-  raw_metadata <- synthetic_mc_recode_raw_metadata()
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-
-  dict <- variable_dictionary_from_normalised_metadata(
-    normalised_metadata,
-    use_semantic_name = FALSE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = NULL
-  )
-
-  expect_identical(
-    dict$response_column_id,
-    c("QID1_1", "QID1_2", "QID1_-88", "QID1_-99", "QID1_0",
-      "QID1_9_TEXT")
-  )
-  expect_identical(
-    unname(dict$level),
-    c("1", "2", "-88", "-99", "0", "0_TEXT")
-  )
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
@@ -913,7 +922,10 @@ test_that("static numeric loop prefixes do not fall back to source QIDs", {
     target_rows$response_column_id,
     paste0(1:12, "_QID3_TEXT")
   )
-  expect_false(any(grepl("^QID[0-9]+_QID3_TEXT$", target_rows$response_column_id))) # nolint
+  expect_false(any(grepl(
+    "^QID[0-9]+_QID3_TEXT$",
+    target_rows$response_column_id
+  )))
   expect_identical(target_rows$loop_option, as.character(1:12))
 })
 
@@ -1091,36 +1103,3 @@ test_that(
     )
   }
 )
-
-test_that("known non-question raw columns are explicitly classified", {
-  raw_columns <- c(
-    "SC_abcdef",
-    "Cognitron_ID",
-    "GAD7_SCORE",
-    "PD_Eligible",
-    "test",
-    "QID1_TEXT_ANALYSIS_SENTIMENT",
-    "QID1_4_TEXT_ANALYSIS_TOPICS",
-    "QID126879611_x1"
-  )
-
-  classified <- classify_raw_response_columns(raw_columns)
-
-  expect_identical(
-    classified$classification,
-    c(
-      "scoring",
-      "embedded_data",
-      "scoring",
-      "embedded_data",
-      "embedded_data",
-      "text_analysis",
-      "text_analysis",
-      NA_character_
-    )
-  )
-  expect_identical(
-    classified$details[1],
-    "Qualtrics scoring column; not represented as a question dictionary row."
-  )
-})

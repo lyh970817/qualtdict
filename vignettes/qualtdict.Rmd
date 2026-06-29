@@ -32,7 +32,7 @@ The core workflow is:
 
 1. Use `dict_generate()` to build a Variable Dictionary.
 2. Use `dict_validate()` to inspect Validation Findings.
-3. Use `get_survey_data()` to create Labelled Survey Data.
+3. Use `fetch_labelled_survey_data()` to create Labelled Survey Data.
 
 A Variable Dictionary preserves several distinct identifiers:
 
@@ -70,10 +70,11 @@ example_dict
 
 ## Credentials
 
-Live calls to `dict_generate()` and `get_survey_data()` require Qualtrics API
-credentials because they call Qualtrics through `qualtRics`. Your institution
-must support API access and it must be enabled for your account. The person who
-manages your Qualtrics account can help you find your API token and base URL.
+Live calls to `dict_generate()` and `fetch_labelled_survey_data()` require
+Qualtrics API credentials because they call Qualtrics through `qualtRics`.
+Your institution must support API access and it must be enabled for your
+account. The person who manages your Qualtrics account can help you find your
+API token and base URL.
 
 ```{r, eval=FALSE}
 library(qualtdict)
@@ -170,7 +171,7 @@ Dictionary Variable Names, and level-label coding findings.
 Create Labelled Survey Data from a Variable Dictionary:
 
 ```{r, eval=FALSE}
-survey_dat <- get_survey_data(
+survey_dat <- fetch_labelled_survey_data(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = "none",
@@ -179,19 +180,19 @@ survey_dat <- get_survey_data(
 )
 ```
 
-`get_survey_data()` calls `qualtRics::fetch_survey()` with the settings needed
-for reliable matching to `response_column_id`: `import_id = TRUE`,
-`label = FALSE`, `convert = FALSE`, and `breakout_sets = TRUE`. You may pass
-filtering arguments such as `include_questions`, but not arguments that would
-override the response-column naming, labelling, conversion, or breakout
-contract owned by `qualtdict`.
+`fetch_labelled_survey_data()` calls `qualtRics::fetch_survey()` with the
+settings needed for reliable matching to `response_column_id`:
+`import_id = TRUE`, `label = FALSE`, `convert = FALSE`, and
+`breakout_sets = TRUE`. You may pass filtering arguments such as
+`include_questions`, but not arguments that would override the response-column
+naming, labelling, conversion, or breakout contract owned by `qualtdict`.
 
 By default, variables with Validation Findings remain in the Labelled Survey
 Data. Use `exclude_findings` only when you explicitly want to drop those
 variables after download.
 
 ```{r, eval=FALSE}
-survey_dat_clean <- get_survey_data(
+survey_dat_clean <- fetch_labelled_survey_data(
   dict,
   exclude_findings = "validation"
 )
@@ -199,9 +200,9 @@ survey_dat_clean <- get_survey_data(
 
 ## Survey Block Views
 
-`dict_generate()` returns one Variable Dictionary and `get_survey_data()`
-returns one Labelled Survey Data object. Use explicit helpers when you want
-block-specific views:
+`dict_generate()` returns one Variable Dictionary and
+`fetch_labelled_survey_data()` returns one Labelled Survey Data object. Use
+explicit helpers when you want block-specific views:
 
 ```{r, eval=FALSE}
 dict_by_block <- dict_split_blocks(dict)

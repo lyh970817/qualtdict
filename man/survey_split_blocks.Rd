@@ -12,7 +12,7 @@ survey_split_blocks(
 }
 \arguments{
 \item{dat}{Labelled Survey Data returned by
-\code{\link[qualtdict]{get_survey_data}}.}
+\code{\link[qualtdict]{fetch_labelled_survey_data}}.}
 
 \item{dict}{A Variable Dictionary returned by
 \code{\link[qualtdict]{dict_generate}}.}
@@ -28,11 +28,12 @@ A named list of data frames, one per Survey Block.
 }
 \description{
 Create block-specific views of Labelled Survey Data without changing the
-return type of \code{\link[qualtdict]{get_survey_data}}.
+return type of \code{\link[qualtdict]{fetch_labelled_survey_data}}.
 }
 \details{
 When \code{dict} is not supplied, \code{survey_split_blocks()} uses the
-\code{dict} attribute attached by \code{\link[qualtdict]{get_survey_data}}.
+\code{dict} attribute attached by
+\code{\link[qualtdict]{fetch_labelled_survey_data}}.
 }
 \examples{
 dict <- data.frame(

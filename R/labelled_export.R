@@ -46,7 +46,8 @@ exclude_dict_findings <- function(dict,
   excluded_response_column_ids <- character()
 
   if (exclude_findings == "validation") {
-    validation_findings <- dict_validate(dict, quiet = quiet)$validation_findings
+    validation <- dict_validate(dict, quiet = quiet)
+    validation_findings <- validation$validation_findings
     excluded_response_column_ids <- c(
       excluded_response_column_ids,
       validation_findings$response_column_id
@@ -100,7 +101,7 @@ empty_labelled_export_findings <- function() {
 #' Labelled Export Findings describe issues detected while matching a Variable
 #' Dictionary to downloaded survey data.
 #'
-#' @param x Labelled Survey Data returned by [get_survey_data()].
+#' @param x Labelled Survey Data returned by [fetch_labelled_survey_data()].
 #'
 #' @return A data frame of Labelled Export Findings.
 #' @export

@@ -6,7 +6,7 @@
 checkarg_isboolean <-
   function(arg) {
     test <-
-      is.logical(arg) && !is.na(arg) && length(arg) == 1
+      is.logical(arg) && length(arg) == 1 && !is.na(arg)
 
     if (!test) {
       rlang::abort(

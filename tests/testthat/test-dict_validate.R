@@ -57,7 +57,10 @@ test_that("dict_validate is quiet by default with opt-in progress messages", {
       type = "message"
     )
   )
-  expect_match(paste(progress_messages, collapse = "\n"), "Validating dictionary")
+  expect_match(
+    paste(progress_messages, collapse = "\n"),
+    "Validating dictionary"
+  )
 })
 
 test_that("dict_validate reports progress for long validation phases", {
