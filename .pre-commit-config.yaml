@@ -99,6 +99,23 @@ repos:
         pass_filenames: false
         files: '^(R/|tests/|DESCRIPTION|NAMESPACE)'
         stages: [pre-commit]
+    -   id: goodpractice
+        name: Run goodpractice audit
+        entry: >
+          Rscript -e 'gp <- goodpractice::gp(); print(gp);
+          failed <- goodpractice::failed_checks(gp);
+          if (length(failed)) {
+          message("Failed goodpractice checks: ", paste(failed, collapse = ", "));
+          quit(save = "no", status = 1)
+          }'
+        language: system
+        pass_filenames: false
+        files: >
+          (?x)^(
+          R/|tests/|tests/fixtures/|man/|vignettes/|inst/|DESCRIPTION|
+          NAMESPACE|README\.Rmd|\.Rbuildignore|\.pre-commit-config\.yaml
+          )
+        stages: [pre-commit]
     -   id: pkgcheck
         name: Run full rOpenSci pkgcheck audit
         entry: >
