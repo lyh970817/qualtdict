@@ -19,6 +19,7 @@ This note records the remaining `pkgcheck` findings after the recent fixes for:
 - examples that used non-running roxygen blocks
 - clearly unused internal helpers in Response Column ID Rendering and
   Validation Finding code
+- the `goodpractice` coverage advisory for uncovered package lines
 
 The exact finding set can vary depending on whether the current shell has
 reloaded the updated Nix/direnv environment. In shells that have not reloaded
@@ -54,12 +55,11 @@ site URL in the package metadata.
 Package has no continuous integration checks.
 ```
 
-The repository has GitHub Actions files, but `pkgcheck` did not recognize them
-as satisfying its check in the latest local run. This may require aligning the
-workflow names/triggers with what `pkgcheck` expects, or confirming whether the
-check is being run against a local checkout state that lacks remote CI metadata.
+The repository has GitHub Actions files. The standard R package workflows now
+target the `main` branch, and the repository includes the rOpenSci
+`pkgcheck-action` workflow in `.github/workflows/pkgcheck.yaml`.
 
-### Default GitHub branch is `master`
+### Default GitHub branch is `main`
 
 `pkgcheck` reports:
 
@@ -67,8 +67,8 @@ check is being run against a local checkout state that lacks remote CI metadata.
 Default GitHub branch of 'master' is not acceptable.
 ```
 
-Fix requires changing the default branch on GitHub, usually from `master` to
-`main`, then updating local branch names and any branch references in workflows,
+Fix requires changing the default branch on GitHub from `master` to `main`,
+then updating local branch names and any branch references in workflows,
 documentation, and repository settings.
 
 ## Code Quality Findings
@@ -90,8 +90,8 @@ refactor and should be handled separately from audit configuration.
 
 ### Unused internal functions
 
-The latest uncached local worktree run still reported unused internal
-functions, including:
+Earlier uncached local worktree runs reported unused internal functions,
+including:
 
 ```text
 R/loop_expand.R:400
@@ -100,20 +100,9 @@ R/raw_response_columns.R:4
 R/zzz.R:2
 ```
 
-Likely fix: verify whether these are genuinely dead code. Some findings may be
-helpers used indirectly, compatibility hooks, or test-covered domain work for
-Metadata-defined Export Variables.
-
-### Coverage below pkgcheck expectation
-
-`pkgcheck` reports package coverage around:
-
-```text
-85.9%
-```
-
-It still flags uncovered lines. Fixing this requires targeted tests for the
-reported uncovered branches rather than broad snapshot-only tests.
+The clearly obsolete helpers were removed. The `%||%` helper in
+`R/question_facts.R` is used as an infix helper and may still be reported by
+some static checks as a false positive.
 
 ## R CMD Check Findings
 
@@ -153,24 +142,23 @@ direnv reload
 
 or a fresh shell before `pdflatex` is visible.
 
-## Duplicate Function Name
+## Resolved Duplicate Function Name
 
-`pkgcheck` reports:
+Earlier `pkgcheck` runs reported:
 
 ```text
 The following function name is duplicated in other packages:
 - `get_survey_data` from ipanema
 ```
 
-This may be acceptable if the exported API name is intentional. If avoiding the
-finding is important, the fix would be an API rename with lifecycle/deprecation
-planning.
+The exported API was renamed to `fetch_labelled_survey_data()` without a
+deprecated exported alias to resolve this finding. See ADR 0006.
 
 ## Suggested Prioritization
 
 1. Fix hook/runtime configuration separately from package audit findings.
 2. Add or align recognized CI checks.
-3. Decide whether to rename the default branch from `master` to `main`.
+3. Verify GitHub reports `main` as the default branch.
 4. Add package website metadata.
 5. Verify the remaining unused-internal-function findings.
 6. Treat long-function findings as refactor tickets, not one-off lint cleanup.
