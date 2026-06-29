@@ -42,7 +42,7 @@ parse_smoke_functions <- function(value, supported = smoke_functions()) {
 }
 
 smoke_variable_names <- function() {
-  c("question_name", "semantic_name")
+  "question_name"
 }
 
 parse_smoke_variable_names <- function(
@@ -62,14 +62,13 @@ parse_smoke_variable_names <- function(
       call. = FALSE
     )
   }
-  if ("all" %in% selected) {
-    if (length(selected) > 1) {
-      stop(
-        "`all` cannot be combined with other `--variable-name` values.",
-        call. = FALSE
-      )
-    }
-    return(supported)
+  disabled <- intersect(selected, c("semantic_name", "all"))
+  if (length(disabled) > 0) {
+    stop(
+      "Semantic Name smoke route is disabled; use `--variable-name ",
+      "question_name` or omit `--variable-name`.",
+      call. = FALSE
+    )
   }
 
   unknown <- setdiff(selected, supported)
@@ -80,7 +79,7 @@ parse_smoke_variable_names <- function(
       ": ",
       paste(unknown, collapse = ", "),
       ". Supported values: ",
-      paste(c(supported, "all"), collapse = ", "),
+      paste(supported, collapse = ", "),
       ".",
       call. = FALSE
     )

@@ -75,29 +75,29 @@ test_that("parse_smoke_variable_names defaults to question_name", {
   expect_identical(parse_smoke_variable_names(NULL), "question_name")
 })
 
-test_that("parse_smoke_variable_names accepts routes and all", {
+test_that("parse_smoke_variable_names accepts the question_name route", {
   expect_identical(
-    parse_smoke_variable_names(" semantic_name, question_name,semantic_name "),
-    c("semantic_name", "question_name")
-  )
-  expect_identical(
-    parse_smoke_variable_names("all"),
-    c("question_name", "semantic_name")
+    parse_smoke_variable_names(" question_name, question_name "),
+    "question_name"
   )
 })
 
-test_that("parse_smoke_variable_names rejects empty and unknown selections", {
+test_that("parse_smoke_variable_names rejects disabled and unknown routes", {
   expect_error(
     parse_smoke_variable_names(" , "),
     "Select at least one Variable Dictionary route"
   )
   expect_error(
-    parse_smoke_variable_names("question_name,bad_route"),
-    "Unknown Variable Dictionary route"
+    parse_smoke_variable_names("semantic_name"),
+    "Semantic Name smoke route is disabled"
   )
   expect_error(
-    parse_smoke_variable_names("all,question_name"),
-    "`all` cannot be combined"
+    parse_smoke_variable_names("all"),
+    "Semantic Name smoke route is disabled"
+  )
+  expect_error(
+    parse_smoke_variable_names("question_name,bad_route"),
+    "Unknown Variable Dictionary route"
   )
 })
 

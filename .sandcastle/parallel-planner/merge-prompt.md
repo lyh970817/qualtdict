@@ -33,30 +33,20 @@ exported outputs whose behavior could change. The script runs required
 prerequisites internally, so do not broaden `--functions` merely because a
 prerequisite such as `dict_generate()` runs to produce a downstream output.
 
-Choose `--variable-name` from the naming-route dependency of the changed code,
-not from the selected downstream output alone. Use the default `question_name`
-route for changes that do not affect Semantic Name generation, shared naming
-inputs, or route-specific Dictionary Variable Name behavior. For example,
-changes to validation, Labelled Export, or block splitting should not use
-`--variable-name all` unless the changed code actually depends on both naming
-routes. Prefer reproducible two-survey sampling while iterating, for example:
+Use the default `question_name` Variable Dictionary route. The local
+finalization smoke script disables the Semantic Name route because it is too
+expensive for the publication workflow. Do not pass `--variable-name
+semantic_name` or `--variable-name all`; changes that affect Semantic Name
+behavior should be covered by ordinary tests and package checks instead.
+For example:
 
-`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name question_name`
+`Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name`
 
-Select the Semantic Name route only when Semantic Name behavior or shared naming
-behavior is relevant:
-
-`Rscript tools/local-finalize-smoke.R check --survey-seed 123 --functions dict_generate --variable-name semantic_name`
-
-Use `--variable-name all` only when both naming routes are relevant. Use
-`--survey-count all` only when the code change really needs every configured
-survey, and explain why. Inspect the terminal output and saved RDS object
-artifacts under `.local/finalize-smoke/runs/<timestamp>/`; temporary
-uncommitted R code is acceptable for local inspection.
-Smoke runs can take several minutes, especially with Semantic Name generation
-or many surveys selected. Wait with a longer timeout, do not repeatedly poll the
-process, and inspect output once the smoke command exits before treating the
-agent as idle.
+Inspect the terminal output and saved RDS object artifacts under
+`.local/finalize-smoke/runs/<timestamp>/`; temporary uncommitted R code is
+acceptable for local inspection. Smoke runs can take several minutes. Wait with
+a longer timeout, do not repeatedly poll the process, and inspect output once
+the smoke command exits before treating the agent as idle.
 
 Do not merge branches locally into the base branch. The PR merge is the merge.
 After each PR merge, update the local base branch with `git pull --ff-only`.
