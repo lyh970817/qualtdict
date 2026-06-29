@@ -38,19 +38,18 @@ variable_dictionary_from_normalised_metadata <- function(normalised_metadata,
     qid_base <- qjson$qid %||% qid
     response_column_qid <- qjson$response_column_qid %||% qid
     response_columns <- render_response_columns(qjson, response_column_qid)
+    response_column_id <- response_columns$response_column_id
+    row_count <- length(response_column_id)
     looping_question <- qjson$looping_question %||% NA_character_
     looping_option <- qjson$looping_option %||% NA_character_
     looping <- isTRUE(qjson$looping)
 
-    question_name <- rep(
-      question_name,
-      length(response_columns$response_column_id)
-    )
+    question_name <- rep(question_name, row_count)
 
     list(
-      qid = rep(qid_base, length(response_columns$response_column_id)),
-      response_column_id = response_columns$response_column_id,
-      row_source = rep("question", length(response_columns$response_column_id)),
+      qid = rep(qid_base, row_count),
+      response_column_id = response_column_id,
+      row_source = rep("question", row_count),
       question_name = null_na(question_name),
       block = block,
       question = response_columns$question,
@@ -134,12 +133,6 @@ empty_variable_dictionary_from_normalised_metadata <- function(
     loop_option = character()
   )
   if (use_semantic_name) {
-    json <- json[c(
-      "qid", "response_column_id", "row_source", "question_name",
-      "variable_name", "block", "question", "looping_question", "item",
-      "level", "label", "type", "selector", "content_type", "sub_selector",
-      "looping_option", "looping", "loop_option"
-    )]
     json$semantic_name <- character()
     json <- json[c(
       "qid", "response_column_id", "row_source", "question_name",
