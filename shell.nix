@@ -138,6 +138,7 @@ pkgs.mkShell {
 
   buildInputs = [
     pkgs.R
+    pkgs.air-formatter
     pkgs.bzip2
     pkgs.curl
     pkgs.icu
