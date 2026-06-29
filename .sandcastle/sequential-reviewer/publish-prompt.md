@@ -29,8 +29,10 @@ merge the PR.
    parent PRD to the PR body before merging. Only add that parent PRD closing
    keyword after checking that all linked implementation issues for the PRD are
    closed or will be closed by this PR.
-9. Merge the PR with `gh pr merge --merge --delete-branch`.
-10. After the PR merge, update the local base branch with `git pull --ff-only`.
+9. Before merging, verify `gh pr view <PR> --json closingIssuesReferences`
+   includes the intended issue. If not, fix the PR body before merging.
+10. Merge the PR with `gh pr merge --merge --delete-branch`.
+11. After the PR merge, update the local base branch with `git pull --ff-only`.
 
 # RULES
 
