@@ -15,8 +15,7 @@ fetch_dictionary_metadata <- function(surveyID) {
       "blocks",
       "responsecounts",
       "flow",
-      "embedded_data",
-      "comments"
+      "embedded_data"
     )
   )
 

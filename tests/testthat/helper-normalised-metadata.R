@@ -65,8 +65,10 @@ synthetic_flat_embedded_data_raw_metadata <- function() {
 synthetic_scoring_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$description$scoring <- list(
-    list(name = "Total Score"),
-    list(name = "Q1")
+    ScoringCategories = list(
+      list(ID = "SC_TOTAL", Name = "Total Score", Description = NULL),
+      list(ID = "SC_Q1", Name = "Q1", Description = NULL)
+    )
   )
   raw_metadata
 }
@@ -76,7 +78,7 @@ synthetic_nested_scoring_raw_metadata <- function() {
   raw_metadata$description$scoring <- list(
     ScoringCategories = list(
       list(ID = "SC_TOTAL", Name = "Total Score"),
-      list(ID = "SC_SCREEN")
+      list(ID = "SC_SCREEN", Name = "SC_SCREEN")
     )
   )
   raw_metadata
@@ -84,23 +86,76 @@ synthetic_nested_scoring_raw_metadata <- function() {
 
 synthetic_text_analysis_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
-  raw_metadata$metadata$comments <- list(
-    list(
-      outputName = "Q1 Sentiment",
-      responseColumnId = "QID1_TEXT_SENTIMENT",
-      questionId = "QID1"
+  raw_metadata$response_column_map <- tibble::tibble(
+    qname = c(
+      "QID1_3_TEXT",
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
     ),
-    `Q1 Topic` = list(
-      responseColumnId = "QID1_TEXT_TOPIC",
-      questionId = "QID1"
+    ImportId = c(
+      "QID1_3_TEXT",
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
     ),
-    list(
-      outputName = "Q1",
-      responseColumnId = "Unmatched Topic",
-      questionId = "QID99"
-    )
+    description = c(
+      "Choose one - Other",
+      "Q1 Other - Sentiment",
+      "Q1 Other - Parent Topics"
+    ),
+    main = c("Choose one", "Q1 Other", "Q1 Other"),
+    sub = c("", "Sentiment", "Parent Topics")
   )
   raw_metadata
+}
+
+flow_embedded_data_item <- function(field_name) {
+  list(
+    Description = field_name,
+    Type = "Custom",
+    Field = field_name,
+    VariableType = "String",
+    DataVisibility = list(),
+    AnalyzeText = FALSE
+  )
+}
+
+description_flow_embedded_data_node <- function(...) {
+  list(
+    Type = "EmbeddedData",
+    EmbeddedData = list(...)
+  )
+}
+
+description_flow_block_node <- function(block_id, type = "Standard") {
+  list(Type = type, ID = block_id)
+}
+
+metadata_flow_embedded_data_marker <- function() {
+  list(type = "EmbeddedData")
+}
+
+embedded_data_records <- function(field_names) {
+  lapply(field_names, function(field_name) {
+    list(name = field_name)
+  })
+}
+
+description_flow <- function(...) {
+  list(
+    Type = "Root",
+    FlowID = "FL_1",
+    Flow = list(...),
+    Properties = list(Count = length(list(...)))
+  )
+}
+
+metadata_type_only_flow <- function(count) {
+  list(
+    Flow = rep(
+      list(metadata_flow_embedded_data_marker()),
+      length.out = count
+    )
+  )
 }
 
 glad_sa6_text_analysis_sidecar_ids <- function() {
@@ -339,6 +394,7 @@ synthetic_column_map_sidecar_raw_metadata <- function() {
 
 synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
+  field_names <- c("Before Main", "Between Blocks", "After Follow-up")
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
   raw_metadata$metadata$questions$QID2$questionName <- "Q2"
   raw_metadata$metadata$questions$QID2$questionText <- "Follow-up question"
@@ -349,22 +405,19 @@ synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata$description$blocks$BL_2$BlockElements <- list(
     list(QuestionID = "QID2")
   )
-  raw_metadata$metadata$flow <- list(
-    Flow = list(
-      list(
-        Type = "EmbeddedData",
-        EmbeddedData = list(list(Field = "Before Main"))
-      ),
-      list(Type = "Block", ID = "BL_1"),
-      list(
-        Type = "EmbeddedData",
-        EmbeddedData = list(list(Field = "Between Blocks"))
-      ),
-      list(Type = "Block", ID = "BL_2"),
-      list(
-        Type = "EmbeddedData",
-        EmbeddedData = list(list(Field = "After Follow-up"))
-      )
+  raw_metadata$metadata$embedded_data <- embedded_data_records(field_names)
+  raw_metadata$metadata$flow <- metadata_type_only_flow(length(field_names))
+  raw_metadata$description$flow <- description_flow(
+    description_flow_embedded_data_node(
+      flow_embedded_data_item("Before Main")
+    ),
+    description_flow_block_node("BL_1"),
+    description_flow_embedded_data_node(
+      flow_embedded_data_item("Between Blocks")
+    ),
+    description_flow_block_node("BL_2", type = "Block"),
+    description_flow_embedded_data_node(
+      flow_embedded_data_item("After Follow-up")
     )
   )
 
@@ -373,9 +426,9 @@ synthetic_survey_flow_embedded_data_raw_metadata <- function() {
 
 synthetic_nested_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
-  raw_metadata$metadata$flow$Flow[[3]] <- list(
+  raw_metadata$description$flow$Flow[[3]] <- list(
     Type = "Branch",
-    Flow = list(raw_metadata$metadata$flow$Flow[[3]])
+    Flow = list(raw_metadata$description$flow$Flow[[3]])
   )
 
   raw_metadata
@@ -383,17 +436,17 @@ synthetic_nested_survey_flow_embedded_data_raw_metadata <- function() {
 
 synthetic_ambiguous_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
-  raw_metadata$metadata$flow <- list(
-    Flow = list(
-      list(
-        Type = "EmbeddedData",
-        EmbeddedData = list(list(Field = "Duplicated Field"))
-      ),
-      list(Type = "Block", ID = "BL_1"),
-      list(
-        Type = "EmbeddedData",
-        EmbeddedData = list(list(Field = "Duplicated Field"))
-      )
+  raw_metadata$metadata$embedded_data <- embedded_data_records(
+    "Duplicated Field"
+  )
+  raw_metadata$metadata$flow <- metadata_type_only_flow(2)
+  raw_metadata$description$flow <- description_flow(
+    description_flow_embedded_data_node(
+      flow_embedded_data_item("Duplicated Field")
+    ),
+    description_flow_block_node("BL_1"),
+    description_flow_embedded_data_node(
+      flow_embedded_data_item("Duplicated Field")
     )
   )
 

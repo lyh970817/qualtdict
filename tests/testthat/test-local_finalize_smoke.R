@@ -75,7 +75,6 @@ test_that("local smoke artifact refresh requests represented metadata", {
   fetch_text <- paste(readLines(fetch_script, warn = FALSE), collapse = "\n")
 
   expect_match(fetch_text, '"embedded_data"', fixed = TRUE)
-  expect_match(fetch_text, '"comments"', fixed = TRUE)
   expect_match(fetch_text, '"scoring"', fixed = TRUE)
   expect_match(fetch_text, 'attr(responses, "column_map"', fixed = TRUE)
   expect_match(fetch_text, 'attr(sanitized$data, "column_map"', fixed = TRUE)

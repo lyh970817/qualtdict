@@ -88,29 +88,35 @@ test_that("Text-analysis Sidecars normalise with parent question context", {
     text_analysis,
     "qualtdict_normalised_text_analysis_sidecars"
   )
-  expect_named(text_analysis, c("Q1 Sentiment", "Q1 Topic", "Q1"))
+  expect_named(
+    text_analysis,
+    c("Q1 Other - Sentiment", "Q1 Other - Parent Topics")
+  )
   expect_s3_class(
-    text_analysis[["Q1 Sentiment"]],
+    text_analysis[["Q1 Other - Sentiment"]],
     "qualtdict_normalised_text_analysis_sidecar"
   )
   expect_identical(
-    text_analysis[["Q1 Sentiment"]]$response_column_id,
-    "QID1_TEXT_SENTIMENT"
+    text_analysis[["Q1 Other - Sentiment"]]$response_column_id,
+    "QID1_3_TEXT_SENTIMENT"
   )
-  expect_identical(text_analysis[["Q1 Sentiment"]]$parent_qid, "QID1")
+  expect_identical(text_analysis[["Q1 Other - Sentiment"]]$parent_qid, "QID1")
   expect_identical(
-    text_analysis[["Q1 Sentiment"]]$parent_question_name,
+    text_analysis[["Q1 Other - Sentiment"]]$parent_question_name,
     "Q1"
   )
-  expect_identical(text_analysis[["Q1 Sentiment"]]$parent_block, "Main Block")
   expect_identical(
-    text_analysis[["Q1 Topic"]]$response_column_id,
-    "QID1_TEXT_TOPIC"
+    text_analysis[["Q1 Other - Sentiment"]]$parent_block,
+    "Main Block"
   )
-  expect_identical(text_analysis[["Q1 Topic"]]$sidecar_name, "Q1 Topic")
-  expect_true(is.na(text_analysis[["Q1"]]$parent_qid))
-  expect_true(is.na(text_analysis[["Q1"]]$parent_question_name))
-  expect_true(is.na(text_analysis[["Q1"]]$parent_block))
+  expect_identical(
+    text_analysis[["Q1 Other - Parent Topics"]]$response_column_id,
+    "QID1_3_e476cefa310845248231594eParTopics"
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Parent Topics"]]$sidecar_name,
+    "Q1 Other - Parent Topics"
+  )
 })
 
 test_that("Text-analysis Sidecars normalise from response column maps", {
@@ -284,8 +290,7 @@ test_that("ordinary SBS response columns are not Text-analysis Sidecars", {
   expect_false(any(classified$row_source == "text_analysis"))
 })
 
-test_that("Text-analysis Sidecar fallback paths normalise", {
-  expect_identical(text_analysis_sidecar_records(list(), list()), list())
+test_that("Text-analysis Sidecar column-map helpers normalise", {
   expect_identical(
     classify_response_column_map(
       tibble::tibble(),
@@ -300,9 +305,7 @@ test_that("Text-analysis Sidecar fallback paths normalise", {
     character()
   )
   expect_identical(
-    text_analysis_sidecars_from_response_column_map(
-      tibble::tibble(ImportId = "QID1_TEXT_SENTIMENT")
-    ),
+    text_analysis_sidecars_from_response_column_map(NULL),
     list()
   )
   expect_identical(
@@ -311,53 +314,43 @@ test_that("Text-analysis Sidecar fallback paths normalise", {
   )
   expect_null(
     normalise_text_analysis_sidecar(
-      list(outputName = ""),
-      fallback_name = NA_character_,
+      list(
+        sidecar_name = "",
+        response_column_id = "QID1_TEXT_SENTIMENT",
+        parent_qid = "QID1"
+      ),
       questions = list()
     )
   )
   expect_identical(
-    text_analysis_sidecar_parent_context(list(), list()),
+    text_analysis_sidecar_parent_context(NA_character_, list()),
     list(
       parent_qid = NA_character_,
       parent_question_name = NA_character_,
       parent_block = NA_character_
     )
   )
-  expect_identical(
-    text_analysis_sidecar_name("Q1 Sentiment"),
-    "Q1 Sentiment"
+
+  classification <- tibble::tibble(
+    response_column_id = "QID1_TEXT_SENTIMENT",
+    row_source = "text_analysis",
+    parent_qid = "QID1",
+    display_name = "Q1 Sentiment",
+    main = "Q1",
+    sub = "Sentiment",
+    description = "Q1 Sentiment",
+    reason = "derived_question"
   )
-})
+  records <- text_analysis_sidecars_from_response_column_map(classification)
 
-test_that("Text-analysis Sidecar record shapes normalise", {
-  expect_identical(text_analysis_sidecar_record_list(NULL), list())
-  expect_identical(text_analysis_sidecar_record_list(list()), list())
-
-  data_frame_records <- text_analysis_sidecar_record_list(
-    tibble::tibble(
-      outputName = c("Sentiment", "Topic"),
-      responseColumnId = c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC")
+  expect_length(records, 1)
+  expect_identical(
+    records[[1]][c("sidecar_name", "response_column_id", "parent_qid")],
+    list(
+      sidecar_name = "Q1 Sentiment",
+      response_column_id = "QID1_TEXT_SENTIMENT",
+      parent_qid = "QID1"
     )
-  )
-  expect_length(data_frame_records, 2)
-  expect_identical(data_frame_records[[1]]$outputName, "Sentiment")
-
-  direct_record <- list(
-    outputName = "Emotion",
-    responseColumnId = "QID1_TEXT_EMOTION"
-  )
-  expect_identical(
-    text_analysis_sidecar_record_list(direct_record),
-    list(direct_record)
-  )
-  expect_identical(
-    text_analysis_sidecar_record_list(c(Sentiment = "QID1_TEXT_SENTIMENT")),
-    list(Sentiment = "QID1_TEXT_SENTIMENT")
-  )
-  expect_identical(
-    text_analysis_sidecar_record_key(list(), NA),
-    "record_index:NA"
   )
 })
 
@@ -390,15 +383,8 @@ test_that("response-column map classifier reports edge-case unknown reasons", {
   expect_identical(classified$row_source, rep("unknown", 3))
 })
 
-test_that("Survey Flow Embedded Data Fields normalise with block candidates", {
+test_that("description Survey Flow Embedded Data Fields add block candidates", {
   raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
-  raw_metadata$metadata$flow$Flow[[1]]$EmbeddedData <-
-    list(Field = "Before Main", Value = "ignored")
-  raw_metadata$metadata$flow$Flow <- append(
-    raw_metadata$metadata$flow$Flow,
-    list(list(type = "EmbeddedData")),
-    after = 1
-  )
 
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
   embedded_data <- normalised_metadata$embedded_data
@@ -445,109 +431,77 @@ test_that("nested Survey Flow Embedded Data Fields normalise with candidates", {
   )
 })
 
-test_that("Survey Flow Embedded Data normalisation handles defensive shapes", {
+test_that("metadata Survey Flow does not define Embedded Data Field locations", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$flow <- list(
     Flow = list(
-      list(Type = "Block", ID = "BL_UNKNOWN"),
-      list(type = "EmbeddedData")
+      list(type = "EmbeddedData"),
+      list(Type = "EmbeddedData", Field = "Ignored Flow Field")
     )
   )
+  raw_metadata$description$flow <- list()
+
   expect_length(
     normalise_qualtrics_metadata(raw_metadata)$embedded_data,
     0
   )
+})
 
-  raw_metadata$metadata$flow <- list(
-    first = list(Type = "EmbeddedData", Field = "Named Flow Field")
+test_that("description Survey Flow locations merge only onto flat fields", {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$metadata$embedded_data <- embedded_data_records(
+    c("Before Main", "Flat Only")
   )
+
   embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
 
-  expect_named(embedded_data, "Named Flow Field")
+  expect_named(embedded_data, c("Before Main", "Flat Only"))
   expect_identical(
-    embedded_data[["Named Flow Field"]]$previous_block,
-    NA_character_
+    embedded_data[["Before Main"]]$next_block,
+    "Main Block"
   )
-  expect_identical(
-    embedded_data[["Named Flow Field"]]$next_block,
-    NA_character_
-  )
+  expect_null(embedded_data[["Flat Only"]]$previous_block)
+  expect_null(embedded_data[["Flat Only"]]$next_block)
+})
 
+test_that("description Survey Flow Embedded Data skips missing block lookups", {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
   raw_metadata$description$blocks <- NULL
-  raw_metadata$metadata$flow <- list(
-    Flow = list(
-      list(Type = "Block", ID = "BL_1"),
-      list(Type = "EmbeddedData", Field = "No Block Lookup")
-    )
-  )
+
   embedded_data <- normalise_survey_flow_embedded_data_fields(
-    raw_metadata$metadata,
     raw_metadata$description
   )
 
-  expect_named(embedded_data, "No Block Lookup")
+  expect_named(
+    embedded_data,
+    c("Before Main", "Between Blocks", "After Follow-up")
+  )
   expect_identical(
-    embedded_data[["No Block Lookup"]]$previous_block,
-    NA_character_
-  )
-
-  raw_metadata <- synthetic_mc_text_raw_metadata()
-  raw_metadata$metadata$flow <- list(
-    Flow = list(
-      list(Type = "EmbeddedData", Field = "No Next Block"),
-      list(Type = "Block", ID = "BL_UNKNOWN")
-    )
-  )
-  embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
-
-  expect_named(embedded_data, "No Next Block")
-  expect_identical(
-    embedded_data[["No Next Block"]]$next_block,
-    NA_character_
-  )
-
-  raw_metadata <- synthetic_mc_text_raw_metadata()
-  raw_metadata$metadata$flow <- list(
-    Type = "EmbeddedData",
-    EmbeddedData = list(Field = "Single Flow Field")
-  )
-  embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
-
-  expect_named(embedded_data, "Single Flow Field")
-  expect_identical(
-    embedded_data[["Single Flow Field"]]$previous_block,
+    embedded_data[["Between Blocks"]]$previous_block,
     NA_character_
   )
   expect_identical(
-    embedded_data[["Single Flow Field"]]$next_block,
+    embedded_data[["Between Blocks"]]$next_block,
     NA_character_
   )
 })
 
-test_that("Embedded Data Field names normalise from supported flat shapes", {
+test_that("Embedded Data Field names normalise from flat metadata records", {
   expect_identical(
-    embedded_data_field_names(tibble::tibble(fieldName = c("Wave", "", NA))),
+    embedded_data_field_names(list(
+      list(name = "Wave"),
+      list(name = ""),
+      list(name = NA_character_)
+    )),
     "Wave"
-  )
-  expect_identical(
-    embedded_data_field_names(tibble::tibble(other = "Wave")),
-    character()
-  )
-  expect_identical(
-    embedded_data_field_names(c("Wave", "", NA)),
-    "Wave"
-  )
-  expect_identical(
-    embedded_data_field_names(c(Source = "ignored", "")),
-    "Source"
   )
   expect_identical(
     embedded_data_field_names(list(
       "Standalone",
-      Campaign = list(),
-      list(DataField = "Panel")
+      list(fieldName = "Legacy Field"),
+      list(Field = "Flow Field")
     )),
-    c("Standalone", "Campaign", "Panel")
+    character()
   )
 })
 
@@ -559,7 +513,7 @@ test_that("Scoring Variables normalise from survey description metadata", {
   expect_named(scoring, c("Total Score", "Q1"))
   expect_identical(
     scoring[["Total Score"]]$response_column_id,
-    "Total Score"
+    "SC_TOTAL"
   )
   expect_identical(
     scoring[["Total Score"]]$question_text,
@@ -595,97 +549,20 @@ test_that("Scoring Variables skip non-exported response columns when known", {
   expect_identical(scoring[["Total Score"]]$response_column_id, "SC_TOTAL")
 })
 
-test_that("Scoring Variable names normalise from supported shapes", {
-  expect_identical(
-    scoring_variable_names(tibble::tibble(name = c("Total", "", NA))),
-    "Total"
-  )
-  expect_identical(
-    normalise_scoring_variables(
-      list(
-        scoring = tibble::tibble(
-          Name = "Total",
-          responseColumnId = "SC_TOTAL"
-        )
+test_that("Scoring Variables require artifact-backed category fields", {
+  scoring <- normalise_scoring_variables(list(
+    scoring = list(
+      ScoringCategories = list(
+        list(ID = "SC_1", Name = "Exported"),
+        list(ID = "SC_MISSING_NAME"),
+        list(Name = "Missing ID")
       )
-    )[["Total"]]$response_column_id,
-    "SC_TOTAL"
-  )
-  expect_identical(
-    scoring_variable_names(tibble::tibble(other = "Total")),
-    character()
-  )
-  expect_identical(
-    scoring_variable_names(c("Total", "", NA)),
-    "Total"
-  )
-  expect_identical(
-    scoring_variable_names(c(Total = "ignored", "")),
-    "Total"
-  )
-  expect_identical(
-    scoring_variable_names(list(
-      "Standalone",
-      Weighted = list(responseColumnId = "SC_1"),
-      list(outputName = "Percent"),
-      list(ID = "SC_2")
-    )),
-    c("Standalone", "Weighted", "Percent", "SC_2")
-  )
-  expect_identical(
-    scoring_variable_names(
-      scoring_variable_definitions(
-        list(ScoringCategories = list(list(ID = "SC_3", Name = "Nested")))
-      )
-    ),
-    "Nested"
-  )
-  expect_identical(
-    scoring_variable_response_column_id(
-      list(name = "Weighted", responseColumnId = "SC_1"),
-      "Weighted"
-    ),
-    "SC_1"
-  )
-  expect_identical(
-    scoring_variable_response_column_id("SC_4", "SC_4"),
-    "SC_4"
-  )
-  expect_identical(
-    scoring_variable_record(NULL, "Missing"),
-    list()
-  )
-  expect_identical(
-    scoring_variable_record("Total", "Total"),
-    list()
-  )
-  expect_identical(
-    scoring_variable_record(list(), "Missing"),
-    list()
-  )
-  expect_identical(
-    scoring_variable_record(tibble::tibble(other = "Total"), "Total"),
-    list()
-  )
-  expect_identical(
-    scoring_variable_record(tibble::tibble(name = "Total"), "Total"),
-    list(name = "Total")
-  )
-  expect_identical(
-    scoring_variable_record(tibble::tibble(name = "Total"), "Missing"),
-    list()
-  )
-  expect_identical(
-    scoring_variable_record(
-      list(Total = list(responseColumnId = "SC_5")),
-      "Total"
-    ),
-    list(responseColumnId = "SC_5")
-  )
-  expect_identical(
-    scoring_variable_record(list(list(name = "Other")), "Missing"),
-    list()
-  )
+    )
+  ))
+
+  expect_named(scoring, "Exported")
+  expect_identical(scoring[["Exported"]]$response_column_id, "SC_1")
+  expect_identical(scoring[["Exported"]]$output_name, "Exported")
 })
 
 test_that("normalised metadata renders the current Variable Dictionary rows", {

@@ -132,7 +132,7 @@ variable_dictionary_embedded_data_rows <- function(
   embedded_data_block_assignment = "none",
   quiet = TRUE
 ) {
-  rows <- imap(
+  rows <- map(
     embedded_data %||% list(),
     variable_dictionary_embedded_data_row,
     embedded_data_block_assignment = embedded_data_block_assignment
@@ -148,22 +148,19 @@ variable_dictionary_embedded_data_rows <- function(
 
 variable_dictionary_embedded_data_row <- function(
   field,
-  field_name,
   embedded_data_block_assignment = "none"
 ) {
-  field_name <- field$field_name %||% field_name
-
   list(
     qid = NA_character_,
-    response_column_id = field$response_column_id %||% field_name,
+    response_column_id = field$response_column_id,
     row_source = "embedded_data",
     question_name = NA_character_,
-    variable_name = field_name,
+    variable_name = field$field_name,
     block = embedded_data_field_block(
       field,
       embedded_data_block_assignment
     ),
-    question = field$question_text %||% paste("Embedded Data:", field_name),
+    question = field$question_text,
     looping_question = NA_character_,
     item = NA_character_,
     level = NA_character_,
@@ -210,24 +207,21 @@ warn_unassigned_embedded_data_rows <- function(
 }
 
 variable_dictionary_scoring_rows <- function(scoring) {
-  imap(
+  map(
     scoring %||% list(),
     variable_dictionary_scoring_row
   )
 }
 
-variable_dictionary_scoring_row <- function(variable, output_name) {
-  output_name <- variable$output_name %||% output_name
-
+variable_dictionary_scoring_row <- function(variable) {
   list(
     qid = NA_character_,
-    response_column_id = variable$response_column_id %||% output_name,
+    response_column_id = variable$response_column_id,
     row_source = "scoring",
     question_name = NA_character_,
-    variable_name = output_name,
+    variable_name = variable$output_name,
     block = NA_character_,
-    question = variable$question_text %||%
-      paste("Scoring Variable:", output_name),
+    question = variable$question_text,
     looping_question = NA_character_,
     item = NA_character_,
     level = NA_character_,
@@ -242,25 +236,21 @@ variable_dictionary_scoring_row <- function(variable, output_name) {
 }
 
 variable_dictionary_text_analysis_rows <- function(text_analysis) {
-  imap(
+  map(
     text_analysis %||% list(),
     variable_dictionary_text_analysis_row
   )
 }
 
-variable_dictionary_text_analysis_row <- function(sidecar, sidecar_name) {
-  sidecar_name <- sidecar$sidecar_name %||% sidecar_name
-  question_text <- sidecar$question_text %||%
-    paste("Text Analysis:", sidecar_name)
-
+variable_dictionary_text_analysis_row <- function(sidecar) {
   list(
     qid = sidecar$parent_qid %||% NA_character_,
-    response_column_id = sidecar$response_column_id %||% sidecar_name,
+    response_column_id = sidecar$response_column_id,
     row_source = "text_analysis",
     question_name = sidecar$parent_question_name %||% NA_character_,
-    variable_name = sidecar_name,
+    variable_name = sidecar$sidecar_name,
     block = sidecar$parent_block %||% NA_character_,
-    question = question_text,
+    question = sidecar$question_text,
     looping_question = NA_character_,
     item = NA_character_,
     level = NA_character_,
