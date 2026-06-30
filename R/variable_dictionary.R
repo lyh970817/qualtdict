@@ -58,7 +58,8 @@ variable_dictionary_from_normalised_metadata <- function(
       embedded_data_block_assignment = embedded_data_block_assignment,
       quiet = quiet
     ),
-    variable_dictionary_scoring_rows(normalised_metadata$scoring)
+    variable_dictionary_scoring_rows(normalised_metadata$scoring),
+    variable_dictionary_text_analysis_rows(normalised_metadata$text_analysis)
   )
   if (length(json) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
@@ -227,6 +228,37 @@ variable_dictionary_scoring_row <- function(variable, output_name) {
     block = NA_character_,
     question = variable$question_text %||%
       paste("Scoring Variable:", output_name),
+    looping_question = NA_character_,
+    item = NA_character_,
+    level = NA_character_,
+    label = NA_character_,
+    type = NA_character_,
+    selector = NA_character_,
+    content_type = NA_character_,
+    sub_selector = NA_character_,
+    looping_option = NA_character_,
+    looping = FALSE
+  )
+}
+
+variable_dictionary_text_analysis_rows <- function(text_analysis) {
+  imap(
+    text_analysis %||% list(),
+    variable_dictionary_text_analysis_row
+  )
+}
+
+variable_dictionary_text_analysis_row <- function(sidecar, sidecar_name) {
+  sidecar_name <- sidecar$sidecar_name %||% sidecar_name
+
+  list(
+    qid = sidecar$parent_qid %||% NA_character_,
+    response_column_id = sidecar$response_column_id %||% sidecar_name,
+    row_source = "text_analysis",
+    question_name = sidecar$parent_question_name %||% NA_character_,
+    variable_name = sidecar_name,
+    block = sidecar$parent_block %||% NA_character_,
+    question = sidecar$question_text %||% paste("Text Analysis:", sidecar_name),
     looping_question = NA_character_,
     item = NA_character_,
     level = NA_character_,

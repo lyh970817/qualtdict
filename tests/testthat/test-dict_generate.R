@@ -172,6 +172,67 @@ test_that("dict_generate represents nested Scoring Categories", {
   expect_true(all(is.na(scoring_rows$block)))
 })
 
+test_that("dict_generate represents Text-analysis Sidecars", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_text_analysis_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  sidecar_rows <- dict[dict$row_source == "text_analysis", ]
+
+  expect_identical(
+    sidecar_rows$response_column_id,
+    c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC", "Unmatched Topic")
+  )
+  expect_identical(sidecar_rows$row_source, rep("text_analysis", 3))
+  expect_identical(sidecar_rows$qid, c("QID1", "QID1", NA_character_))
+  expect_identical(sidecar_rows$question_name, c("Q1", "Q1", NA_character_))
+  expect_identical(
+    sidecar_rows$block,
+    c("Main Block", "Main Block", NA_character_)
+  )
+  expect_identical(
+    sidecar_rows$variable_name,
+    c("Q1_Sentiment", "Q1_Topic", "Q1.2")
+  )
+  expect_identical(
+    sidecar_rows$question,
+    c(
+      "Text Analysis: Q1 Sentiment",
+      "Text Analysis: Q1 Topic",
+      "Text Analysis: Q1"
+    )
+  )
+  expect_true(all(is.na(sidecar_rows$level)))
+  expect_true(all(is.na(sidecar_rows$label)))
+
+  findings <- attr(dict, "variable_name_findings", exact = TRUE)
+  sidecar_findings <- findings[
+    findings$response_column_id %in% sidecar_rows$response_column_id,
+  ]
+  expect_identical(
+    sidecar_findings$response_column_id,
+    c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC", "Unmatched Topic")
+  )
+  expect_identical(
+    unname(sidecar_findings$reason),
+    c("unsafe", "unsafe", "duplicate")
+  )
+
+  validation_findings <- dict_validate(dict)$validation_findings
+  repaired_findings <- validation_findings[
+    validation_findings$finding == "repaired_variable_name" &
+      validation_findings$response_column_id %in%
+        sidecar_rows$response_column_id,
+  ]
+  expect_identical(
+    repaired_findings$response_column_id,
+    c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC", "Unmatched Topic")
+  )
+})
+
 test_that("dict_generate assigns Embedded Data Fields to previous blocks", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {

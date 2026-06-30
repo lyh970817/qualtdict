@@ -82,6 +82,27 @@ synthetic_nested_scoring_raw_metadata <- function() {
   raw_metadata
 }
 
+synthetic_text_analysis_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$comments <- list(
+    list(
+      outputName = "Q1 Sentiment",
+      responseColumnId = "QID1_TEXT_SENTIMENT",
+      questionId = "QID1"
+    ),
+    `Q1 Topic` = list(
+      responseColumnId = "QID1_TEXT_TOPIC",
+      questionId = "QID1"
+    ),
+    list(
+      outputName = "Q1",
+      responseColumnId = "Unmatched Topic",
+      questionId = "QID99"
+    )
+  )
+  raw_metadata
+}
+
 synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
