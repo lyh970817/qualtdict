@@ -103,6 +103,7 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
     fetch_description2 = function(surveyID, elements) {
       expect_identical(surveyID, "SV_FETCH")
       expect_false("responsecounts" %in% elements)
+      expect_true("scoring" %in% elements)
       description
     }
   )
