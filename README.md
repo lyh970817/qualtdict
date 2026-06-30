@@ -81,8 +81,12 @@ identifier, `question_name` as the raw Qualtrics naming reference, and
 Question-backed rows use `row_source = "question"`, and flat Embedded
 Data Fields defined by Qualtrics metadata use
 `row_source = "embedded_data"`. Scoring Variables defined by survey
-description metadata use `row_source = "scoring"` and remain unassigned
-by Survey Block.
+description metadata use `row_source = "scoring"`, while Text-analysis
+Sidecars discovered from the response column map use
+`row_source = "text_analysis"`. Embedded Data Field block assignment,
+when requested, uses the richer Survey Flow returned by
+`fetch_description()`. Scoring Variables remain unassigned by Survey
+Block.
 
 ``` r
 survey_id <- "SV_XXXXXXXXXXXXXXXX"
