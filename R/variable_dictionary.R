@@ -250,6 +250,8 @@ variable_dictionary_text_analysis_rows <- function(text_analysis) {
 
 variable_dictionary_text_analysis_row <- function(sidecar, sidecar_name) {
   sidecar_name <- sidecar$sidecar_name %||% sidecar_name
+  question_text <- sidecar$question_text %||%
+    paste("Text Analysis:", sidecar_name)
 
   list(
     qid = sidecar$parent_qid %||% NA_character_,
@@ -258,7 +260,7 @@ variable_dictionary_text_analysis_row <- function(sidecar, sidecar_name) {
     question_name = sidecar$parent_question_name %||% NA_character_,
     variable_name = sidecar_name,
     block = sidecar$parent_block %||% NA_character_,
-    question = sidecar$question_text %||% paste("Text Analysis:", sidecar_name),
+    question = question_text,
     looping_question = NA_character_,
     item = NA_character_,
     level = NA_character_,

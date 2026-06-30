@@ -113,6 +113,28 @@ test_that("Text-analysis Sidecars normalise with parent question context", {
   expect_true(is.na(text_analysis[["Q1"]]$parent_block))
 })
 
+test_that("Text-analysis Sidecar fallback paths normalise", {
+  expect_null(
+    normalise_text_analysis_sidecar(
+      list(outputName = ""),
+      fallback_name = NA_character_,
+      questions = list()
+    )
+  )
+  expect_identical(
+    text_analysis_sidecar_parent_context(list(), list()),
+    list(
+      parent_qid = NA_character_,
+      parent_question_name = NA_character_,
+      parent_block = NA_character_
+    )
+  )
+  expect_identical(
+    text_analysis_sidecar_name("Q1 Sentiment"),
+    "Q1 Sentiment"
+  )
+})
+
 test_that("Text-analysis Sidecar record shapes normalise", {
   expect_identical(text_analysis_sidecar_record_list(NULL), list())
   expect_identical(text_analysis_sidecar_record_list(list()), list())

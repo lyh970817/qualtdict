@@ -699,14 +699,7 @@ normalise_text_analysis_sidecar <- function(
     return(NULL)
   }
 
-  parent_qid <- text_analysis_sidecar_parent_qid(sidecar)
-  parent_question <- NULL
-  if (!is.na(parent_qid)) {
-    parent_question <- questions[[parent_qid]]
-  }
-  if (is.na(parent_qid) || is.null(parent_question)) {
-    parent_qid <- NA_character_
-  }
+  parent_context <- text_analysis_sidecar_parent_context(sidecar, questions)
 
   structure(
     list(
@@ -716,19 +709,37 @@ normalise_text_analysis_sidecar <- function(
         sidecar_name
       ),
       question_text = paste("Text Analysis:", sidecar_name),
-      parent_qid = parent_qid,
-      parent_question_name = if (!is.na(parent_qid)) {
-        parent_question$question_name
-      } else {
-        NA_character_
-      },
-      parent_block = if (!is.na(parent_qid)) {
-        parent_question$survey_block
-      } else {
-        NA_character_
-      }
+      parent_qid = parent_context$parent_qid,
+      parent_question_name = parent_context$parent_question_name,
+      parent_block = parent_context$parent_block
     ),
     class = c("qualtdict_normalised_text_analysis_sidecar", "list")
+  )
+}
+
+text_analysis_sidecar_parent_context <- function(sidecar, questions) {
+  parent_qid <- text_analysis_sidecar_parent_qid(sidecar)
+  if (is.na(parent_qid)) {
+    return(empty_text_analysis_sidecar_parent_context())
+  }
+
+  parent_question <- questions[[parent_qid]]
+  if (is.null(parent_question)) {
+    return(empty_text_analysis_sidecar_parent_context())
+  }
+
+  list(
+    parent_qid = parent_qid,
+    parent_question_name = parent_question$question_name,
+    parent_block = parent_question$survey_block
+  )
+}
+
+empty_text_analysis_sidecar_parent_context <- function() {
+  list(
+    parent_qid = NA_character_,
+    parent_question_name = NA_character_,
+    parent_block = NA_character_
   )
 }
 
