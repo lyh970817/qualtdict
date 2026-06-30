@@ -184,3 +184,21 @@ test_that("dict_validate skips level-label checks for Embedded Data Fields", {
   expect_false(any(findings$finding == "level_label_mistake"))
   expect_true(any(findings$finding == "unsafe_variable_name"))
 })
+
+test_that("dict_validate skips level-label checks for Text-analysis Sidecars", {
+  dict <- minimal_validation_dict(
+    response_column_id = c("TA1", "TA1", "TA1", "TA2"),
+    row_source = "text_analysis",
+    qid = c("QID1", "QID1", "QID1", NA_character_),
+    question_name = c("Q1", "Q1", "Q1", NA_character_),
+    variable_name = c("bad name", "bad name", "bad name", "bad name"),
+    block = c("Main Block", "Main Block", "Main Block", NA_character_),
+    label = c("A", "A", "B", "C"),
+    level = c("1", "1", "3", "1")
+  )
+
+  findings <- dict_validate(dict)$validation_findings
+
+  expect_false(any(findings$finding == "level_label_mistake"))
+  expect_true(any(findings$finding == "unsafe_variable_name"))
+})

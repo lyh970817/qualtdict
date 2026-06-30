@@ -45,6 +45,10 @@
 #' Survey Block unless
 #' \code{embedded_data_block_assignment} explicitly requests Survey Flow
 #' adjacency assignment. Scoring Variables remain unassigned by Survey Block.
+#' Text-analysis Sidecars defined by Qualtrics metadata
+#' use \code{row_source = "text_analysis"} and inherit parent \code{qid},
+#' \code{question_name}, and \code{block} when a clear parent QID can be
+#' determined.
 #'
 #' When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 #' includes \code{semantic_name}. Semantic Names are readable best-effort
