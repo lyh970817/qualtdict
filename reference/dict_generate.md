@@ -87,9 +87,11 @@ as the raw Qualtrics naming reference, and `variable_name` as the final
 export-safe Dictionary Variable Name used by Labelled Survey Data.
 Question-backed rows use `row_source = "question"`. Flat Embedded Data
 Fields defined by Qualtrics metadata use `row_source = "embedded_data"`.
-Embedded Data Fields remain unassigned by Survey Block unless
-`embedded_data_block_assignment` explicitly requests Survey Flow
-adjacency assignment.
+Scoring Variables defined by survey description metadata use
+`row_source = "scoring"`. Embedded Data Fields remain unassigned by
+Survey Block unless `embedded_data_block_assignment` explicitly requests
+Survey Flow adjacency assignment. Scoring Variables remain unassigned by
+Survey Block.
 
 When `variable_name = "semantic_name"`, the Variable Dictionary also
 includes `semantic_name`. Semantic Names are readable best-effort
