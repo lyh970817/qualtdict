@@ -36,28 +36,44 @@ normalise_scoring_variables <- function(mt_d) {
     mt_d$ScoringData
   scoring <- scoring_variable_definitions(scoring)
   output_names <- scoring_variable_names(scoring)
+  if (length(output_names) == 0) {
+    return(empty_normalised_scoring_variables())
+  }
 
-  variables <- map(output_names, function(output_name) {
-    output <- scoring_variable_record(scoring, output_name)
-    response_column_id <- scoring_variable_response_column_id(
-      output,
-      output_name
-    )
-
-    structure(
-      list(
-        output_name = output_name,
-        response_column_id = response_column_id,
-        question_text = paste("Scoring Variable:", output_name)
-      ),
-      class = c("qualtdict_normalised_scoring_variable", "list")
-    )
-  })
+  variables <- map(
+    output_names,
+    normalise_scoring_variable,
+    scoring = scoring
+  )
   names(variables) <- output_names
 
   structure(
     variables,
     class = c("qualtdict_normalised_scoring_variables", "list")
+  )
+}
+
+empty_normalised_scoring_variables <- function() {
+  structure(
+    list(),
+    class = c("qualtdict_normalised_scoring_variables", "list")
+  )
+}
+
+normalise_scoring_variable <- function(output_name, scoring) {
+  output <- scoring_variable_record(scoring, output_name)
+  response_column_id <- scoring_variable_response_column_id(
+    output,
+    output_name
+  )
+
+  structure(
+    list(
+      output_name = output_name,
+      response_column_id = response_column_id,
+      question_text = paste("Scoring Variable:", output_name)
+    ),
+    class = c("qualtdict_normalised_scoring_variable", "list")
   )
 }
 
@@ -142,8 +158,9 @@ scoring_variable_names_from_data_frame <- function(scoring) {
   if (length(output_columns) == 0) {
     return(character())
   }
+  output_column <- output_columns[[1]]
 
-  output_names <- as.character(scoring[[output_columns[[1]]]])
+  output_names <- as.character(scoring[[output_column]])
   valid_scoring_variable_names(output_names)
 }
 
@@ -160,11 +177,20 @@ scoring_variable_names_from_atomic <- function(scoring) {
 }
 
 scoring_variable_record <- function(scoring, output_name) {
-  if (is.null(scoring) || is.atomic(scoring) || is.data.frame(scoring)) {
+  if (is.null(scoring) || is.atomic(scoring)) {
     return(list())
   }
 
-  named_index <- match(output_name, names(scoring))
+  if (is.data.frame(scoring)) {
+    return(scoring_variable_record_from_data_frame(scoring, output_name))
+  }
+
+  if (length(scoring) == 0) {
+    return(list())
+  }
+
+  scoring_names <- names(scoring) %||% rep(NA_character_, length(scoring))
+  named_index <- match(output_name, scoring_names)
   if (!is.na(named_index)) {
     return(scoring[[named_index]])
   }
@@ -172,11 +198,28 @@ scoring_variable_record <- function(scoring, output_name) {
   matches <- map_lgl(scoring, function(output) {
     identical(scoring_variable_name(output), output_name)
   })
-  if (any(matches)) {
-    return(scoring[[which(matches)[[1]]]])
+  matched_index <- match(TRUE, matches)
+  if (!is.na(matched_index)) {
+    return(scoring[[matched_index]])
   }
 
   list()
+}
+
+scoring_variable_record_from_data_frame <- function(scoring, output_name) {
+  output_columns <- intersect(scoring_variable_name_columns, names(scoring))
+  if (length(output_columns) == 0) {
+    return(list())
+  }
+  output_column <- output_columns[[1]]
+
+  output_names <- as.character(scoring[[output_column]])
+  matched_index <- match(output_name, output_names)
+  if (is.na(matched_index)) {
+    return(list())
+  }
+
+  as.list(scoring[matched_index, , drop = FALSE])
 }
 
 scoring_variable_name <- function(output, fallback_name = NA_character_) {
@@ -184,19 +227,12 @@ scoring_variable_name <- function(output, fallback_name = NA_character_) {
     return(scalar_character(output))
   }
 
-  candidates <- map_chr(
-    scoring_variable_name_columns,
-    function(candidate_name) {
-      if (!candidate_name %in% names(output)) {
-        return(NA_character_)
-      }
-
-      scalar_character(output[[candidate_name]])
-    }
+  candidate <- scoring_variable_metadata_value(
+    output,
+    scoring_variable_name_columns
   )
-  candidates <- valid_scoring_variable_names(candidates)
-  if (length(candidates) > 0) {
-    return(candidates[[1]])
+  if (!is.na(candidate)) {
+    return(candidate)
   }
 
   scalar_character(fallback_name)
@@ -207,22 +243,31 @@ scoring_variable_response_column_id <- function(output, output_name) {
     return(output_name)
   }
 
-  candidates <- map_chr(
-    scoring_variable_response_column_id_columns,
-    function(candidate_name) {
-      if (!candidate_name %in% names(output)) {
-        return(NA_character_)
-      }
-
-      scalar_character(output[[candidate_name]])
-    }
+  candidate <- scoring_variable_metadata_value(
+    output,
+    scoring_variable_response_column_id_columns
   )
+  if (!is.na(candidate)) {
+    return(candidate)
+  }
+
+  output_name
+}
+
+scoring_variable_metadata_value <- function(output, candidate_names) {
+  candidates <- map_chr(candidate_names, function(candidate_name) {
+    if (!candidate_name %in% names(output)) {
+      return(NA_character_)
+    }
+
+    scalar_character(output[[candidate_name]])
+  })
   candidates <- valid_scoring_variable_names(candidates)
   if (length(candidates) > 0) {
     return(candidates[[1]])
   }
 
-  output_name
+  NA_character_
 }
 
 normalise_embedded_data_fields <- function(mt, mt_d) {
