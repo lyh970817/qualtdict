@@ -12,7 +12,8 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
       "survey_name",
       "questions",
       "embedded_data",
-      "scoring"
+      "scoring",
+      "text_analysis"
     )
   )
   expect_identical(normalised_metadata$surveyID, "SV_SYNTHETIC")
@@ -32,6 +33,11 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
     "qualtdict_normalised_scoring_variables"
   )
   expect_length(normalised_metadata$scoring, 0)
+  expect_s3_class(
+    normalised_metadata$text_analysis,
+    "qualtdict_normalised_text_analysis_sidecars"
+  )
+  expect_length(normalised_metadata$text_analysis, 0)
 
   question <- normalised_metadata$questions$QID1
   expect_s3_class(question, "qualtdict_normalised_question")
@@ -70,6 +76,89 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   expect_identical(
     embedded_data[["Source Channel"]]$question_text,
     "Embedded Data: Source Channel"
+  )
+})
+
+test_that("Text-analysis Sidecars normalise with parent question context", {
+  raw_metadata <- synthetic_text_analysis_raw_metadata()
+
+  text_analysis <- normalise_qualtrics_metadata(raw_metadata)$text_analysis
+
+  expect_s3_class(
+    text_analysis,
+    "qualtdict_normalised_text_analysis_sidecars"
+  )
+  expect_named(text_analysis, c("Q1 Sentiment", "Q1 Topic", "Q1"))
+  expect_s3_class(
+    text_analysis[["Q1 Sentiment"]],
+    "qualtdict_normalised_text_analysis_sidecar"
+  )
+  expect_identical(
+    text_analysis[["Q1 Sentiment"]]$response_column_id,
+    "QID1_TEXT_SENTIMENT"
+  )
+  expect_identical(text_analysis[["Q1 Sentiment"]]$parent_qid, "QID1")
+  expect_identical(
+    text_analysis[["Q1 Sentiment"]]$parent_question_name,
+    "Q1"
+  )
+  expect_identical(text_analysis[["Q1 Sentiment"]]$parent_block, "Main Block")
+  expect_identical(
+    text_analysis[["Q1 Topic"]]$response_column_id,
+    "QID1_TEXT_TOPIC"
+  )
+  expect_identical(text_analysis[["Q1 Topic"]]$sidecar_name, "Q1 Topic")
+  expect_true(is.na(text_analysis[["Q1"]]$parent_qid))
+  expect_true(is.na(text_analysis[["Q1"]]$parent_question_name))
+  expect_true(is.na(text_analysis[["Q1"]]$parent_block))
+})
+
+test_that("Text-analysis Sidecar fallback paths normalise", {
+  expect_null(
+    normalise_text_analysis_sidecar(
+      list(outputName = ""),
+      fallback_name = NA_character_,
+      questions = list()
+    )
+  )
+  expect_identical(
+    text_analysis_sidecar_parent_context(list(), list()),
+    list(
+      parent_qid = NA_character_,
+      parent_question_name = NA_character_,
+      parent_block = NA_character_
+    )
+  )
+  expect_identical(
+    text_analysis_sidecar_name("Q1 Sentiment"),
+    "Q1 Sentiment"
+  )
+})
+
+test_that("Text-analysis Sidecar record shapes normalise", {
+  expect_identical(text_analysis_sidecar_record_list(NULL), list())
+  expect_identical(text_analysis_sidecar_record_list(list()), list())
+
+  data_frame_records <- text_analysis_sidecar_record_list(
+    tibble::tibble(
+      outputName = c("Sentiment", "Topic"),
+      responseColumnId = c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC")
+    )
+  )
+  expect_length(data_frame_records, 2)
+  expect_identical(data_frame_records[[1]]$outputName, "Sentiment")
+
+  direct_record <- list(
+    outputName = "Emotion",
+    responseColumnId = "QID1_TEXT_EMOTION"
+  )
+  expect_identical(
+    text_analysis_sidecar_record_list(direct_record),
+    list(direct_record)
+  )
+  expect_identical(
+    text_analysis_sidecar_record_list(c(Sentiment = "QID1_TEXT_SENTIMENT")),
+    list(Sentiment = "QID1_TEXT_SENTIMENT")
   )
 })
 
