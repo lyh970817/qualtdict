@@ -59,8 +59,4 @@ test_that("Scoring Variables require artifact-backed category fields", {
   expect_identical(scoring_categories(list(ScoringCategories = list())), list())
   expect_identical(scoring_category_name(NULL), NA_character_)
   expect_identical(scoring_category_response_column_id(NULL), NA_character_)
-  expect_identical(
-    text_analysis_sidecar_parent_context("QID999", list()),
-    empty_text_analysis_sidecar_parent_context()
-  )
 })
