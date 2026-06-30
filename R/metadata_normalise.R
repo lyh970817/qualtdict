@@ -15,11 +15,27 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     raw_metadata$metadata,
     raw_metadata$description
   )
-  scoring <- normalise_scoring_variables(raw_metadata$description)
+  response_column_map <- raw_metadata$response_column_map
+  embedded_data <- filter_exported_embedded_data_fields(
+    embedded_data,
+    response_column_map
+  )
+  scoring <- normalise_scoring_variables(
+    raw_metadata$description,
+    response_column_map = response_column_map
+  )
+  response_column_classification <- classify_response_column_map(
+    response_column_map,
+    questions = questions,
+    embedded_data = embedded_data,
+    scoring = scoring
+  )
   text_analysis <- normalise_text_analysis_sidecars(
     raw_metadata$metadata,
     raw_metadata$description,
-    questions
+    questions,
+    response_column_map = response_column_map,
+    response_column_classification = response_column_classification
   )
 
   structure(
@@ -35,7 +51,7 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
   )
 }
 
-normalise_scoring_variables <- function(mt_d) {
+normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
   scoring <- mt_d$scoring %||%
     mt_d$Scoring %||%
     mt_d$scoringData %||%
@@ -52,6 +68,10 @@ normalise_scoring_variables <- function(mt_d) {
     scoring = scoring
   )
   names(variables) <- output_names
+  variables <- filter_exported_scoring_variables(
+    variables,
+    response_column_map
+  )
 
   structure(
     variables,
@@ -64,6 +84,18 @@ empty_normalised_scoring_variables <- function() {
     list(),
     class = c("qualtdict_normalised_scoring_variables", "list")
   )
+}
+
+filter_exported_scoring_variables <- function(variables, response_column_map) {
+  response_column_ids <- response_column_map_ids(response_column_map)
+  if (length(response_column_ids) == 0) {
+    return(variables)
+  }
+
+  keep <- map_lgl(variables, function(variable) {
+    variable$response_column_id %in% response_column_ids
+  })
+  variables[keep]
 }
 
 normalise_scoring_variable <- function(output_name, scoring) {
@@ -311,7 +343,7 @@ normalise_survey_flow_embedded_data_fields <- function(mt, mt_d) {
     return(empty_normalised_embedded_data_fields())
   }
 
-  block_lookup <- survey_flow_block_lookup(mt_d$block)
+  block_lookup <- survey_flow_block_lookup(description_blocks(mt_d))
   block_names <- map_chr(
     flow_items,
     survey_flow_block_name,
@@ -360,6 +392,30 @@ merge_embedded_data_fields <- function(flat_fields, flow_fields) {
       flow_fields[[field_name]]
     )
   }
+
+  structure(
+    fields,
+    class = c("qualtdict_normalised_embedded_data_fields", "list")
+  )
+}
+
+filter_exported_embedded_data_fields <- function(
+  fields,
+  response_column_map,
+  raw_response_columns = NULL
+) {
+  response_column_ids <- unique(c(
+    response_column_map_ids(response_column_map),
+    raw_response_columns %||% character()
+  ))
+  if (length(response_column_ids) == 0) {
+    return(fields)
+  }
+
+  keep <- map_lgl(fields, function(field) {
+    field$response_column_id %in% response_column_ids
+  })
+  fields <- fields[keep]
 
   structure(
     fields,
@@ -617,8 +673,19 @@ embedded_data_field_name <- function(field, fallback_name = NA_character_) {
   scalar_character(fallback_name)
 }
 
-normalise_text_analysis_sidecars <- function(mt, mt_d, questions) {
-  sidecar_records <- text_analysis_sidecar_records(mt, mt_d)
+normalise_text_analysis_sidecars <- function(
+  mt,
+  mt_d,
+  questions,
+  response_column_map = NULL,
+  response_column_classification = NULL
+) {
+  sidecar_records <- text_analysis_sidecar_records(
+    mt,
+    mt_d,
+    response_column_map = response_column_map,
+    response_column_classification = response_column_classification
+  )
   if (length(sidecar_records) == 0) {
     return(empty_normalised_text_analysis_sidecars())
   }
@@ -636,7 +703,12 @@ normalise_text_analysis_sidecars <- function(mt, mt_d, questions) {
   )
 }
 
-text_analysis_sidecar_records <- function(mt, mt_d) {
+text_analysis_sidecar_records <- function(
+  mt,
+  mt_d,
+  response_column_map = NULL,
+  response_column_classification = NULL
+) {
   sources <- list(
     mt$text_analysis,
     mt$textAnalysis,
@@ -645,14 +717,432 @@ text_analysis_sidecar_records <- function(mt, mt_d) {
     mt_d$text_analysis,
     mt_d$textAnalysis,
     mt_d$textAnalysisSidecars,
-    mt_d$comments
+    mt_d$comments,
+    text_analysis_sidecars_from_response_column_map(
+      response_column_map,
+      response_column_classification = response_column_classification
+    )
   )
   sources <- discard(sources, is.null)
-  if (length(sources) == 0) {
+  records <- do.call(c, args = map(sources, text_analysis_sidecar_record_list))
+  deduplicate_text_analysis_sidecar_records(records %||% list())
+}
+
+response_column_map_ids <- function(response_column_map) {
+  ids <- response_column_map_row_ids(response_column_map)
+  ids[!is.na(ids) & nzchar(ids)]
+}
+
+response_column_map_row_ids <- function(response_column_map) {
+  if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
+    return(character())
+  }
+
+  ids <- rep(NA_character_, nrow(response_column_map))
+  for (id_column in response_column_map_id_columns()) {
+    if (!id_column %in% names(response_column_map)) {
+      next
+    }
+
+    candidate_ids <- as.character(response_column_map[[id_column]])
+    use_candidate <- is.na(ids) | !nzchar(ids)
+    valid_candidate <- !is.na(candidate_ids) & nzchar(candidate_ids)
+    ids[use_candidate & valid_candidate] <-
+      candidate_ids[use_candidate & valid_candidate]
+  }
+
+  ids
+}
+
+response_column_map_id_columns <- function() {
+  c("qname", "ImportId", "importId", "response_column_id")
+}
+
+classify_response_column_map <- function(
+  response_column_map,
+  questions,
+  embedded_data,
+  scoring
+) {
+  if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
+    return(empty_response_column_map_classification())
+  }
+  if (nrow(response_column_map) == 0) {
+    return(empty_response_column_map_classification())
+  }
+
+  response_column_ids <- response_column_map_row_ids(response_column_map)
+  ordinary_question_ids <- ordinary_question_response_column_ids(questions)
+  embedded_data_ids <- normalised_response_column_ids(embedded_data)
+  scoring_ids <- normalised_response_column_ids(scoring)
+
+  rows <- map2_df(
+    seq_len(nrow(response_column_map)),
+    response_column_ids,
+    classify_response_column_map_row,
+    response_column_map = response_column_map,
+    questions = questions,
+    ordinary_question_ids = ordinary_question_ids,
+    embedded_data_ids = embedded_data_ids,
+    scoring_ids = scoring_ids
+  )
+
+  rows
+}
+
+empty_response_column_map_classification <- function() {
+  tibble(
+    response_column_id = character(),
+    row_source = character(),
+    parent_qid = character(),
+    display_name = character(),
+    main = character(),
+    sub = character(),
+    description = character(),
+    reason = character()
+  )
+}
+
+classify_response_column_map_row <- function(
+  row_index,
+  response_column_id,
+  response_column_map,
+  questions,
+  ordinary_question_ids,
+  embedded_data_ids,
+  scoring_ids
+) {
+  row <- response_column_map[row_index, , drop = FALSE]
+  main <- response_column_map_scalar(row, "main")
+  sub <- response_column_map_scalar(row, "sub")
+  description <- response_column_map_scalar(row, "description")
+  display_name <- response_column_map_display_name(
+    row,
+    response_column_id
+  )
+  parent_qid <- response_column_map_parent_qid(response_column_id)
+  classification <- response_column_map_row_class(
+    response_column_id = response_column_id,
+    parent_qid = parent_qid,
+    questions = questions,
+    ordinary_question_ids = ordinary_question_ids,
+    embedded_data_ids = embedded_data_ids,
+    scoring_ids = scoring_ids,
+    main = main,
+    sub = sub,
+    description = description
+  )
+
+  tibble(
+    response_column_id = response_column_id,
+    row_source = classification$row_source,
+    parent_qid = parent_qid,
+    display_name = display_name,
+    main = main,
+    sub = sub,
+    description = description,
+    reason = classification$reason
+  )
+}
+
+response_column_map_row_class <- function(
+  response_column_id,
+  parent_qid,
+  questions,
+  ordinary_question_ids,
+  embedded_data_ids,
+  scoring_ids,
+  main,
+  sub,
+  description
+) {
+  context <- list(
+    response_column_id = response_column_id,
+    parent_qid = parent_qid,
+    questions = questions,
+    ordinary_question_ids = ordinary_question_ids,
+    embedded_data_ids = embedded_data_ids,
+    scoring_ids = scoring_ids,
+    main = main,
+    sub = sub,
+    description = description
+  )
+
+  for (rule in response_column_map_classification_rules()) {
+    classification <- rule(context)
+    if (!is.null(classification)) {
+      return(classification)
+    }
+  }
+
+  response_column_map_class("unknown", "no_derived_column_map_fields")
+}
+
+response_column_map_classification_rules <- function() {
+  list(
+    response_column_map_missing_id_class,
+    response_column_map_embedded_data_class,
+    response_column_map_scoring_class,
+    response_column_map_question_class,
+    response_column_map_system_class,
+    response_column_map_display_order_class,
+    response_column_map_missing_parent_class,
+    response_column_map_loop_prefixed_class,
+    response_column_map_ordinary_qid_class,
+    response_column_map_text_analysis_class
+  )
+}
+
+response_column_map_missing_id_class <- function(context) {
+  response_column_id <- context$response_column_id
+  if (is.na(response_column_id) || !nzchar(response_column_id)) {
+    response_column_map_class("unknown", "missing_response_column_id")
+  }
+}
+
+response_column_map_embedded_data_class <- function(context) {
+  if (context$response_column_id %in% context$embedded_data_ids) {
+    response_column_map_class("embedded_data", "embedded_data")
+  }
+}
+
+response_column_map_scoring_class <- function(context) {
+  if (context$response_column_id %in% context$scoring_ids) {
+    response_column_map_class("scoring", "scoring")
+  }
+}
+
+response_column_map_question_class <- function(context) {
+  if (context$response_column_id %in% context$ordinary_question_ids) {
+    response_column_map_class("question", "rendered_question")
+  }
+}
+
+response_column_map_system_class <- function(context) {
+  if (is_system_response_column(context$response_column_id)) {
+    response_column_map_class("system", "system_metadata")
+  }
+}
+
+response_column_map_display_order_class <- function(context) {
+  if (is_display_order_response_column(context$response_column_id)) {
+    response_column_map_class("question_auxiliary", "display_order")
+  }
+}
+
+response_column_map_missing_parent_class <- function(context) {
+  parent_qid <- context$parent_qid
+  if (is.na(parent_qid) || !parent_qid %in% names(context$questions)) {
+    response_column_map_class("unknown", "no_known_parent_qid")
+  }
+}
+
+response_column_map_loop_prefixed_class <- function(context) {
+  if (is_loop_prefixed_qid_response_column(context$response_column_id)) {
+    response_column_map_class("question_auxiliary", "ordinary_loop_qid_shape")
+  }
+}
+
+response_column_map_ordinary_qid_class <- function(context) {
+  if (is_ordinary_qid_response_column(context$response_column_id)) {
+    response_column_map_class("question_auxiliary", "ordinary_qid_shape")
+  }
+}
+
+response_column_map_text_analysis_class <- function(context) {
+  if (
+    has_derived_response_column_map_fields(
+      context$main,
+      context$sub,
+      context$description
+    )
+  ) {
+    response_column_map_class("text_analysis", "derived_question")
+  }
+}
+
+response_column_map_class <- function(row_source, reason) {
+  list(row_source = row_source, reason = reason)
+}
+
+ordinary_question_response_column_ids <- function(questions) {
+  if (is.null(questions) || length(questions) == 0) {
+    return(character())
+  }
+
+  question_facts <- expand_loop_question_facts(questions)
+  ids <- imap(question_facts, function(question_fact, qid) {
+    response_column_qid <- question_fact$response_column_qid %||% qid
+    render_response_columns(
+      question_fact,
+      response_column_qid
+    )$response_column_id
+  })
+  unique(unname(unlist(ids, use.names = FALSE)))
+}
+
+normalised_response_column_ids <- function(records) {
+  if (is.null(records) || length(records) == 0) {
+    return(character())
+  }
+
+  ids <- map_chr(records, function(record) {
+    scalar_character(record$response_column_id)
+  })
+  ids[!is.na(ids) & nzchar(ids)]
+}
+
+is_system_response_column <- function(response_column_id) {
+  response_column_id %in%
+    system_response_column_ids() ||
+    grepl("^Q_", response_column_id)
+}
+
+system_response_column_ids <- function() {
+  c(
+    "StartTime",
+    "EndTime",
+    "StartDate",
+    "EndDate",
+    "startDate",
+    "endDate",
+    "status",
+    "ipAddress",
+    "progress",
+    "duration",
+    "finished",
+    "recordedDate",
+    "_recordId",
+    "recipientLastName",
+    "recipientFirstName",
+    "recipientEmail",
+    "externalDataReference",
+    "locationLatitude",
+    "locationLongitude",
+    "distributionChannel",
+    "userLanguage",
+    "Q_URL"
+  )
+}
+
+is_ordinary_qid_response_column <- function(response_column_id) {
+  grepl("^QID[0-9]+$", response_column_id) ||
+    grepl("^QID[0-9]+_[^_]+$", response_column_id) ||
+    grepl("^QID[0-9]+_[^_]+_TEXT$", response_column_id) ||
+    grepl("^QID[0-9]+#[^_]+_[^_]+(?:_[^_]+)?$", response_column_id)
+}
+
+is_display_order_response_column <- function(response_column_id) {
+  grepl("^QID[0-9]+_DO_[^_]+$", response_column_id)
+}
+
+is_loop_prefixed_qid_response_column <- function(response_column_id) {
+  grepl(
+    "^[^_]+_QID[0-9]+(?:#[^_]+)?(?:_[^_]+)*(?:_TEXT)?$",
+    response_column_id
+  )
+}
+
+has_derived_response_column_map_fields <- function(main, sub, description) {
+  fields <- c(main, sub, description)
+  fields <- fields[!is.na(fields)]
+  any(nzchar(fields))
+}
+
+text_analysis_sidecars_from_response_column_map <- function(
+  response_column_map,
+  response_column_classification = NULL
+) {
+  if (is.null(response_column_classification)) {
+    if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
+      return(list())
+    }
+    response_column_classification <- empty_response_column_map_classification()
+  }
+  if (nrow(response_column_classification) == 0) {
     return(list())
   }
 
-  do.call(c, args = map(sources, text_analysis_sidecar_record_list))
+  sidecar_rows <- response_column_classification$row_source == "text_analysis"
+  if (!any(sidecar_rows, na.rm = TRUE)) {
+    return(list())
+  }
+
+  sidecars <- response_column_classification[sidecar_rows, , drop = FALSE]
+  map(
+    seq_len(nrow(sidecars)),
+    function(row_index) {
+      sidecar <- sidecars[row_index, , drop = FALSE]
+      list(
+        outputName = sidecar$display_name,
+        responseColumnId = sidecar$response_column_id,
+        questionId = sidecar$parent_qid,
+        main = sidecar$main,
+        sub = sidecar$sub,
+        description = sidecar$description
+      )
+    }
+  )
+}
+
+response_column_map_display_name <- function(row, response_column_id) {
+  candidates <- c(
+    row[["description"]],
+    row[["sub"]],
+    row[["main"]],
+    response_column_id
+  )
+  candidates <- as.character(candidates)
+  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
+  if (length(candidates) == 0) {
+    return(NA_character_)
+  }
+
+  candidates[[1]]
+}
+
+response_column_map_parent_qid <- function(response_column_id) {
+  if (is.na(response_column_id) || !nzchar(response_column_id)) {
+    return(NA_character_)
+  }
+
+  parent_qid <- str_extract(response_column_id, "QID[0-9]+")
+  parent_qid %||% NA_character_
+}
+
+response_column_map_scalar <- function(row, column) {
+  if (!column %in% names(row)) {
+    return(NA_character_)
+  }
+
+  scalar_character(row[[column]])
+}
+
+deduplicate_text_analysis_sidecar_records <- function(records) {
+  if (length(records) == 0) {
+    return(list())
+  }
+
+  fallback_names <- names(records) %||% rep(NA_character_, length(records))
+  keys <- map2_chr(
+    records,
+    fallback_names,
+    text_analysis_sidecar_record_key
+  )
+  records[!duplicated(keys)]
+}
+
+text_analysis_sidecar_record_key <- function(sidecar, fallback_name) {
+  sidecar_name <- text_analysis_sidecar_name(sidecar, fallback_name)
+  response_column_id <- text_analysis_sidecar_response_column_id(
+    sidecar,
+    sidecar_name
+  )
+  if (!is.na(response_column_id) && nzchar(response_column_id)) {
+    return(paste0("response_column_id:", response_column_id))
+  }
+
+  paste0("record_index:", fallback_name)
 }
 
 text_analysis_sidecar_record_list <- function(sidecars) {
@@ -884,7 +1374,7 @@ normalise_question_block_metadata <- function(mt, mt_d, qids) {
 }
 
 block_metadata <- function(mt, mt_d) {
-  imap(mt_d$block, function(block, block_id) {
+  imap(description_blocks(mt_d), function(block, block_id) {
     looping_options <- block$Options$LoopingOptions
     list(
       description = block$Description,
@@ -895,6 +1385,14 @@ block_metadata <- function(mt, mt_d) {
       looping_column_names = mt$loopAndMerge[[block_id]]$columnNames
     )
   })
+}
+
+description_blocks <- function(mt_d) {
+  mt_d$block %||% mt_d$blocks
+}
+
+description_questions <- function(mt_d) {
+  mt_d$question %||% mt_d$questions
 }
 
 question_metadata <- function(mt) {
@@ -914,7 +1412,7 @@ question_metadata <- function(mt) {
 }
 
 normalise_question_content_types <- function(mt_d, qids) {
-  content_type_meta <- mt_d$question |>
+  content_type_meta <- description_questions(mt_d) |>
     map("Validation") |>
     map("Settings") |>
     map("ContentType") |>
