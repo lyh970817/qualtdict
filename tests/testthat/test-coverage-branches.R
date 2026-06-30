@@ -105,6 +105,13 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
       expect_false("responsecounts" %in% elements)
       expect_true("scoring" %in% elements)
       description
+    },
+    fetch_survey2 = function(...) {
+      response_schema <- tibble::tibble(QID1 = "1")
+      attr(response_schema, "column_map") <- tibble::tibble(
+        ImportId = "QID1"
+      )
+      response_schema
     }
   )
 
@@ -113,6 +120,31 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
   expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
   expect_identical(raw_metadata$survey_name, "Fetched Survey")
   expect_identical(raw_metadata$description, description)
+  expect_identical(raw_metadata$response_column_map$ImportId, "QID1")
+})
+
+test_that("metadata fetching degrades without response column maps", {
+  metadata <- list(metadata = list(name = "Fetched Survey"))
+  description <- list(block = list(), question = list())
+  local_mocked_bindings(
+    metadata2 = function(surveyID, elements) {
+      metadata
+    },
+    fetch_description2 = function(surveyID, elements) {
+      description
+    },
+    fetch_survey2 = function(...) {
+      stop("response export denied", call. = FALSE)
+    }
+  )
+
+  expect_warning(
+    raw_metadata <- fetch_dictionary_metadata("SV_FETCH"),
+    "Failed to fetch the Qualtrics response column map"
+  )
+
+  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_null(raw_metadata$response_column_map)
 })
 
 test_that("dictionary accessors support legacy dictionary columns", {

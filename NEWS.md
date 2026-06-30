@@ -5,7 +5,8 @@
   `blocks`/`questions` structure returned by `qualtRics::fetch_description()`.
 
 - Local finalization smoke artifact refresh now captures Qualtrics
-  `embedded_data` metadata for Embedded Data Field inspection.
+  `embedded_data`, scoring metadata, and response column-map metadata for
+  Metadata-defined Export Variable inspection.
 
 - `dict_generate()` now represents Scoring Variables from Qualtrics survey
   description metadata as Metadata-defined Export Variable rows with

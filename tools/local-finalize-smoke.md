@@ -96,11 +96,21 @@ Examples:
 - For `dict_split_blocks`, inspect split outputs and the affected Variable
   Dictionary rows in each split.
 
-`check` and `bless` both verify one hard Response Column ID invariant for each
+`check` and `bless` both verify hard Response Column ID invariants for each
 survey before comparing or writing hash baselines:
 
 - every Variable Dictionary `response_column_id` is present in the raw fetched
   response data.
+- every checked raw response column is represented in the Variable Dictionary.
+
+The checked raw response set includes ordinary question columns listed in the
+stored Qualtrics response `column_map`, plus metadata-defined export variables
+that this package represents: Embedded Data fields, exported Scoring Variables,
+and Text-analysis Sidecars. Qualtrics helper columns that are not in the response
+`column_map`, such as display-order helpers, are not treated as dictionary rows.
+If an older local artifact has no stored `column_map`, ordinary raw question
+raw-to-dictionary parity is skipped for that artifact, but metadata-defined raw
+columns are still checked where their metadata is available.
 
 Parity mismatches are hard failures for both `check` and `bless`; they cannot
 be accepted by updating baselines.

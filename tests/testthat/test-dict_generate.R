@@ -139,6 +139,65 @@ test_that(
   }
 )
 
+test_that("dict_generate represents response column-map sidecars", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      raw_metadata <- synthetic_flat_embedded_data_raw_metadata()
+      raw_metadata$description$scoring <- list(
+        ScoringCategories = list(
+          list(ID = "SC_TOTAL", Name = "Total Score"),
+          list(ID = "SC_HIDDEN", Name = "Hidden Score")
+        )
+      )
+      raw_metadata$response_column_map <- tibble::tibble(
+        ImportId = c(
+          "QID1",
+          "Source Channel",
+          "SC_TOTAL",
+          "QID1_3_TEXT_SENTIMENT",
+          "QID1_3_e476cefa310845248231594eParTopics"
+        ),
+        description = c(
+          "Choose one",
+          "Source Channel",
+          "Total Score",
+          "Q1 Other - Sentiment",
+          "Q1 Other - Parent Topics"
+        ),
+        main = c(
+          "Choose one",
+          "Source Channel",
+          "Total Score",
+          "Q1 Other",
+          "Q1 Other"
+        ),
+        sub = c("", "", "", "Sentiment", "Parent Topics")
+      )
+      raw_metadata
+    }
+  )
+
+  dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  represented_rows <- dict[
+    dict$row_source %in% c("embedded_data", "scoring", "text_analysis"),
+  ]
+
+  expect_setequal(
+    represented_rows$row_source,
+    c("embedded_data", "scoring", "text_analysis")
+  )
+  expect_true("Source Channel" %in% represented_rows$response_column_id)
+  expect_true("SC_TOTAL" %in% represented_rows$response_column_id)
+  expect_false("SC_HIDDEN" %in% represented_rows$response_column_id)
+  expect_true(
+    "QID1_3_TEXT_SENTIMENT" %in% represented_rows$response_column_id
+  )
+  expect_true(
+    "QID1_3_e476cefa310845248231594eParTopics" %in%
+      represented_rows$response_column_id
+  )
+})
+
 test_that("dict_generate represents Scoring Variables", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {

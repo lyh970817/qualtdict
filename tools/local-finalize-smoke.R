@@ -444,15 +444,43 @@ checked_response_columns <- function(
   scoring_columns <- intersect(scoring_columns, raw_response_columns)
 
   unique(c(
-    raw_response_columns[raw_question_response_column(raw_response_columns)],
+    smoke_question_response_column_ids(
+      response_column_map,
+      raw_response_columns = raw_response_columns
+    ),
     scoring_columns,
     raw_response_columns[raw_text_analysis_sidecar(raw_response_columns)],
     embedded_columns
   ))
 }
 
-raw_question_response_column <- function(raw_response_columns) {
-  grepl("^QID[0-9]+", raw_response_columns)
+smoke_question_response_column_ids <- function(
+  response_column_map,
+  raw_response_columns
+) {
+  response_column_ids <- smoke_response_column_map_ids(response_column_map)
+  response_column_ids <- response_column_ids[
+    grepl("^QID[0-9]+", response_column_ids) &
+      !raw_text_analysis_sidecar(response_column_ids)
+  ]
+  intersect(response_column_ids, raw_response_columns)
+}
+
+smoke_response_column_map_ids <- function(response_column_map) {
+  if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
+    return(character())
+  }
+
+  id_columns <- intersect(
+    c("ImportId", "importId", "response_column_id", "qname"),
+    names(response_column_map)
+  )
+  if (length(id_columns) == 0) {
+    return(character())
+  }
+
+  response_column_ids <- as.character(response_column_map[[id_columns[[1]]]])
+  response_column_ids[!is.na(response_column_ids) & nzchar(response_column_ids)]
 }
 
 raw_scoring_response_column <- function(raw_response_columns) {
@@ -461,9 +489,45 @@ raw_scoring_response_column <- function(raw_response_columns) {
 }
 
 raw_text_analysis_sidecar <- function(raw_response_columns) {
-  grepl(
+  text_sidecars <- grepl(
     "^QID[0-9]+(?:#[^_]+)?(?:_[^_]+)*_TEXT_.+",
     raw_response_columns
+  )
+  metric_sidecars <- grepl(
+    paste0(
+      "^QID[0-9]+(?:#[^_]+)?(?:_[^_]+)+[[:alnum:]]",
+      smoke_text_analysis_metric_suffix_pattern(),
+      "$"
+    ),
+    raw_response_columns,
+    ignore.case = TRUE
+  )
+
+  text_sidecars | metric_sidecars
+}
+
+smoke_text_analysis_metric_suffix_pattern <- function() {
+  paste0(
+    "(?:",
+    paste(
+      c(
+        "Actionability",
+        "Effort",
+        "EffortNumeric",
+        "EmotIntensity",
+        "Emotion",
+        "ParTopics",
+        "SenPol",
+        "SenScore",
+        "Sentiment",
+        "TopicHierarchy[0-9]+",
+        "TopicSenLabel",
+        "TopicSenScore",
+        "Topics"
+      ),
+      collapse = "|"
+    ),
+    ")"
   )
 }
 

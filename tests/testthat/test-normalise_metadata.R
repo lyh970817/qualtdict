@@ -140,7 +140,54 @@ test_that("Text-analysis Sidecars normalise with parent question context", {
   expect_true(is.na(text_analysis[["Q1"]]$parent_block))
 })
 
+test_that("Text-analysis Sidecars normalise from response column maps", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    ImportId = c(
+      "QID1_3_TEXT",
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
+    ),
+    description = c(
+      "Choose one - Other",
+      "Q1 Other - Sentiment",
+      "Q1 Other - Parent Topics"
+    ),
+    main = c("Choose one", "Q1 Other", "Q1 Other"),
+    sub = c("", "Sentiment", "Parent Topics")
+  )
+
+  text_analysis <- normalise_qualtrics_metadata(raw_metadata)$text_analysis
+
+  expect_named(
+    text_analysis,
+    c("Q1 Other - Sentiment", "Q1 Other - Parent Topics")
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Sentiment"]]$response_column_id,
+    "QID1_3_TEXT_SENTIMENT"
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Parent Topics"]]$response_column_id,
+    "QID1_3_e476cefa310845248231594eParTopics"
+  )
+  expect_identical(text_analysis[["Q1 Other - Sentiment"]]$parent_qid, "QID1")
+  expect_identical(
+    text_analysis[["Q1 Other - Sentiment"]]$parent_question_name,
+    "Q1"
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Sentiment"]]$parent_block,
+    "Main Block"
+  )
+})
+
 test_that("Text-analysis Sidecar fallback paths normalise", {
+  expect_identical(text_analysis_sidecar_records(list(), list()), list())
+  expect_identical(
+    response_column_map_ids(tibble::tibble(other = "QID1_TEXT_SENTIMENT")),
+    character()
+  )
   expect_null(
     normalise_text_analysis_sidecar(
       list(outputName = ""),
@@ -380,6 +427,18 @@ test_that("Scoring Variables normalise from nested scoring categories", {
     scoring[["SC_SCREEN"]]$response_column_id,
     "SC_SCREEN"
   )
+})
+
+test_that("Scoring Variables skip non-exported response columns when known", {
+  raw_metadata <- synthetic_nested_scoring_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    ImportId = "SC_TOTAL"
+  )
+
+  scoring <- normalise_qualtrics_metadata(raw_metadata)$scoring
+
+  expect_named(scoring, "Total Score")
+  expect_identical(scoring[["Total Score"]]$response_column_id, "SC_TOTAL")
 })
 
 test_that("Scoring Variable names normalise from supported shapes", {
