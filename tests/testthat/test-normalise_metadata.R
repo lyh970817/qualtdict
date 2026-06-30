@@ -431,7 +431,7 @@ test_that("nested Survey Flow Embedded Data Fields normalise with candidates", {
   )
 })
 
-test_that("metadata Survey Flow does not define Embedded Data Field locations", {
+test_that("metadata flow does not locate Embedded Data Fields", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$flow <- list(
     Flow = list(
@@ -503,6 +503,32 @@ test_that("Embedded Data Field names normalise from flat metadata records", {
     )),
     character()
   )
+  expect_identical(
+    embedded_data_field_names("Standalone"),
+    character()
+  )
+  expect_identical(
+    embedded_data_flow_field_name(NULL),
+    NA_character_
+  )
+})
+
+test_that("description Survey Flow helpers cover empty artifact branches", {
+  expect_identical(
+    normalise_survey_flow_embedded_data_fields(list(
+      flow = list(Type = "EmbeddedData", EmbeddedData = list())
+    )),
+    empty_normalised_embedded_data_fields()
+  )
+  expect_length(
+    survey_flow_items(list(named = list(Type = "Standard", ID = "BL_1"))),
+    1
+  )
+  expect_identical(survey_flow_item_type("Root"), NA_character_)
+  expect_identical(
+    survey_flow_embedded_data_field_names(list(Type = "EmbeddedData")),
+    character()
+  )
 })
 
 test_that("Scoring Variables normalise from survey description metadata", {
@@ -563,6 +589,13 @@ test_that("Scoring Variables require artifact-backed category fields", {
   expect_named(scoring, "Exported")
   expect_identical(scoring[["Exported"]]$response_column_id, "SC_1")
   expect_identical(scoring[["Exported"]]$output_name, "Exported")
+  expect_identical(scoring_categories(list(ScoringCategories = list())), list())
+  expect_identical(scoring_category_name(NULL), NA_character_)
+  expect_identical(scoring_category_response_column_id(NULL), NA_character_)
+  expect_identical(
+    text_analysis_sidecar_parent_context("QID999", list()),
+    empty_text_analysis_sidecar_parent_context()
+  )
 })
 
 test_that("normalised metadata renders the current Variable Dictionary rows", {
