@@ -31,10 +31,7 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     scoring = scoring
   )
   text_analysis <- normalise_text_analysis_sidecars(
-    raw_metadata$metadata,
-    raw_metadata$description,
     questions,
-    response_column_map = response_column_map,
     response_column_classification = response_column_classification
   )
 
@@ -52,22 +49,14 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
 }
 
 normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
-  scoring <- mt_d$scoring %||%
-    mt_d$Scoring %||%
-    mt_d$scoringData %||%
-    mt_d$ScoringData
-  scoring <- scoring_variable_definitions(scoring)
-  output_names <- scoring_variable_names(scoring)
-  if (length(output_names) == 0) {
+  categories <- scoring_categories(mt_d$scoring)
+  if (length(categories) == 0) {
     return(empty_normalised_scoring_variables())
   }
 
-  variables <- map(
-    output_names,
-    normalise_scoring_variable,
-    scoring = scoring
-  )
-  names(variables) <- output_names
+  variables <- map(categories, normalise_scoring_variable) |>
+    discard(is.null)
+  names(variables) <- map_chr(variables, "output_name")
   variables <- filter_exported_scoring_variables(
     variables,
     response_column_map
@@ -77,6 +66,19 @@ normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
     variables,
     class = c("qualtdict_normalised_scoring_variables", "list")
   )
+}
+
+scoring_categories <- function(scoring) {
+  if (is.null(scoring) || !is.list(scoring)) {
+    return(list())
+  }
+
+  categories <- scoring$ScoringCategories
+  if (is.null(categories) || length(categories) == 0) {
+    return(list())
+  }
+
+  categories
 }
 
 empty_normalised_scoring_variables <- function() {
@@ -98,12 +100,17 @@ filter_exported_scoring_variables <- function(variables, response_column_map) {
   variables[keep]
 }
 
-normalise_scoring_variable <- function(output_name, scoring) {
-  output <- scoring_variable_record(scoring, output_name)
-  response_column_id <- scoring_variable_response_column_id(
-    output,
-    output_name
-  )
+normalise_scoring_variable <- function(category) {
+  output_name <- scoring_category_name(category)
+  response_column_id <- scoring_category_response_column_id(category)
+  if (
+    is.na(output_name) ||
+      !nzchar(output_name) ||
+      is.na(response_column_id) ||
+      !nzchar(response_column_id)
+  ) {
+    return(NULL)
+  }
 
   structure(
     list(
@@ -115,208 +122,31 @@ normalise_scoring_variable <- function(output_name, scoring) {
   )
 }
 
-scoring_variable_name_columns <- c(
-  "name",
-  "Name",
-  "outputName",
-  "OutputName",
-  "scoreName",
-  "ScoreName",
-  "fieldName",
-  "FieldName",
-  "ID",
-  "id"
-)
-
-scoring_variable_response_column_id_columns <- c(
-  "response_column_id",
-  "responseColumnId",
-  "responseColumnID",
-  "columnName",
-  "ColumnName",
-  "exportTag",
-  "ExportTag",
-  "importId",
-  "ImportId",
-  "ID",
-  "id"
-)
-
-scoring_variable_definition_columns <- c(
-  "ScoringCategories",
-  "scoringCategories",
-  "scoring_categories",
-  "categories",
-  "Categories"
-)
-
-scoring_variable_definitions <- function(scoring) {
-  if (is.null(scoring) || !is.list(scoring)) {
-    return(scoring)
+scoring_category_name <- function(category) {
+  if (is.null(category) || !is.list(category)) {
+    return(NA_character_)
   }
 
-  definition_columns <- intersect(
-    scoring_variable_definition_columns,
-    names(scoring)
-  )
-  if (length(definition_columns) == 0) {
-    return(scoring)
-  }
-
-  scoring[[definition_columns[[1]]]]
+  scalar_character(category$Name)
 }
 
-valid_scoring_variable_names <- function(output_names) {
-  output_names[!is.na(output_names) & nzchar(output_names)]
-}
-
-scoring_variable_names <- function(scoring) {
-  if (is.null(scoring) || length(scoring) == 0) {
-    return(character())
+scoring_category_response_column_id <- function(category) {
+  if (is.null(category) || !is.list(category)) {
+    return(NA_character_)
   }
 
-  if (is.data.frame(scoring)) {
-    return(scoring_variable_names_from_data_frame(scoring))
-  }
-
-  if (is.atomic(scoring)) {
-    return(scoring_variable_names_from_atomic(scoring))
-  }
-
-  output_names <- map2_chr(
-    scoring,
-    names(scoring) %||% rep(NA_character_, length(scoring)),
-    scoring_variable_name
-  )
-  unname(valid_scoring_variable_names(output_names))
-}
-
-scoring_variable_names_from_data_frame <- function(scoring) {
-  output_columns <- intersect(scoring_variable_name_columns, names(scoring))
-  if (length(output_columns) == 0) {
-    return(character())
-  }
-  output_column <- output_columns[[1]]
-
-  output_names <- as.character(scoring[[output_column]])
-  valid_scoring_variable_names(output_names)
-}
-
-scoring_variable_names_from_atomic <- function(scoring) {
-  output_names <- as.character(scoring)
-  if (is.null(names(scoring))) {
-    return(valid_scoring_variable_names(output_names))
-  }
-
-  named_outputs <- names(scoring)
-  use_names <- !is.na(named_outputs) & nzchar(named_outputs)
-  output_names[use_names] <- named_outputs[use_names]
-  valid_scoring_variable_names(output_names)
-}
-
-scoring_variable_record <- function(scoring, output_name) {
-  if (is.null(scoring) || is.atomic(scoring)) {
-    return(list())
-  }
-
-  if (is.data.frame(scoring)) {
-    return(scoring_variable_record_from_data_frame(scoring, output_name))
-  }
-
-  if (length(scoring) == 0) {
-    return(list())
-  }
-
-  scoring_names <- names(scoring) %||% rep(NA_character_, length(scoring))
-  named_index <- match(output_name, scoring_names)
-  if (!is.na(named_index)) {
-    return(scoring[[named_index]])
-  }
-
-  matches <- map_lgl(scoring, function(output) {
-    identical(scoring_variable_name(output), output_name)
-  })
-  matched_index <- match(TRUE, matches)
-  if (!is.na(matched_index)) {
-    return(scoring[[matched_index]])
-  }
-
-  list()
-}
-
-scoring_variable_record_from_data_frame <- function(scoring, output_name) {
-  output_columns <- intersect(scoring_variable_name_columns, names(scoring))
-  if (length(output_columns) == 0) {
-    return(list())
-  }
-  output_column <- output_columns[[1]]
-
-  output_names <- as.character(scoring[[output_column]])
-  matched_index <- match(output_name, output_names)
-  if (is.na(matched_index)) {
-    return(list())
-  }
-
-  as.list(scoring[matched_index, , drop = FALSE])
-}
-
-scoring_variable_name <- function(output, fallback_name = NA_character_) {
-  if (is.atomic(output) && length(output) == 1) {
-    return(scalar_character(output))
-  }
-
-  candidate <- scoring_variable_metadata_value(
-    output,
-    scoring_variable_name_columns
-  )
-  if (!is.na(candidate)) {
-    return(candidate)
-  }
-
-  scalar_character(fallback_name)
-}
-
-scoring_variable_response_column_id <- function(output, output_name) {
-  if (!is.list(output)) {
-    return(output_name)
-  }
-
-  candidate <- scoring_variable_metadata_value(
-    output,
-    scoring_variable_response_column_id_columns
-  )
-  if (!is.na(candidate)) {
-    return(candidate)
-  }
-
-  output_name
-}
-
-scoring_variable_metadata_value <- function(output, candidate_names) {
-  candidates <- map_chr(candidate_names, function(candidate_name) {
-    if (!candidate_name %in% names(output)) {
-      return(NA_character_)
-    }
-
-    scalar_character(output[[candidate_name]])
-  })
-  candidates <- valid_scoring_variable_names(candidates)
-  if (length(candidates) > 0) {
-    return(candidates[[1]])
-  }
-
-  NA_character_
+  scalar_character(category$ID)
 }
 
 normalise_embedded_data_fields <- function(mt, mt_d) {
   flat_fields <- normalise_flat_embedded_data_fields(mt)
-  flow_fields <- normalise_survey_flow_embedded_data_fields(mt, mt_d)
+  flow_fields <- normalise_survey_flow_embedded_data_fields(mt_d)
 
   merge_embedded_data_fields(flat_fields, flow_fields)
 }
 
 normalise_flat_embedded_data_fields <- function(mt) {
-  embedded_data <- mt$embedded_data %||% mt$embeddedData
+  embedded_data <- mt$embedded_data
   field_names <- embedded_data_field_names(embedded_data)
 
   fields <- map(field_names, function(field_name) {
@@ -337,8 +167,8 @@ normalise_flat_embedded_data_fields <- function(mt) {
   )
 }
 
-normalise_survey_flow_embedded_data_fields <- function(mt, mt_d) {
-  flow_items <- survey_flow_items(mt$flow %||% mt_d$flow)
+normalise_survey_flow_embedded_data_fields <- function(mt_d) {
+  flow_items <- survey_flow_items(mt_d$flow)
   if (length(flow_items) == 0) {
     return(empty_normalised_embedded_data_fields())
   }
@@ -386,9 +216,9 @@ empty_normalised_embedded_data_fields <- function() {
 
 merge_embedded_data_fields <- function(flat_fields, flow_fields) {
   fields <- flat_fields
-  for (field_name in names(flow_fields)) {
+  for (field_name in intersect(names(fields), names(flow_fields))) {
     fields[[field_name]] <- utils::modifyList(
-      fields[[field_name]] %||% list(),
+      fields[[field_name]],
       flow_fields[[field_name]]
     )
   }
@@ -424,20 +254,21 @@ filter_exported_embedded_data_fields <- function(
 }
 
 survey_flow_items <- function(flow) {
-  if (is.null(flow) || length(flow) == 0) {
+  if (is.null(flow) || length(flow) == 0 || !is.list(flow)) {
     return(list())
   }
 
-  if (!is.na(survey_flow_item_type(flow))) {
-    items <- flow$Flow %||% flow$flow
-    if (is.null(items)) {
-      return(list(flow))
+  item_type <- survey_flow_item_type(flow)
+  if (!is.na(item_type)) {
+    child_items <- survey_flow_items(flow[["Flow"]])
+    if (item_type %in% c("Block", "Standard", "EmbeddedData")) {
+      return(c(list(flow), child_items))
     }
 
-    return(survey_flow_items(items))
+    return(child_items)
   }
 
-  items <- flow$Flow %||% flow$flow %||% flow
+  items <- flow[["Flow"]] %||% flow
   if (!is.null(names(items))) {
     items <- unname(items)
   }
@@ -469,20 +300,19 @@ survey_flow_block_name <- function(item, block_lookup) {
 }
 
 survey_flow_block_id <- function(item) {
-  if (!identical(survey_flow_item_type(item), "Block")) {
+  if (!(survey_flow_item_type(item) %in% c("Block", "Standard"))) {
     return(NA_character_)
   }
 
-  scalar_character(
-    item$ID %||%
-      item$BlockID %||%
-      item$BlockId %||%
-      item$id
-  )
+  scalar_character(item$ID)
 }
 
 survey_flow_item_type <- function(item) {
-  scalar_character(item$Type %||% item$FlowType %||% item$type)
+  if (is.null(item) || !is.list(item)) {
+    return(NA_character_)
+  }
+
+  scalar_character(item$Type)
 }
 
 survey_flow_embedded_data_field_locations <- function(
@@ -511,33 +341,15 @@ survey_flow_embedded_data_field_locations <- function(
 }
 
 survey_flow_embedded_data_field_names <- function(item) {
-  embedded_data <- item$EmbeddedData %||%
-    item$EmbeddedDataFields %||%
-    item$Fields %||%
-    item$embeddedData %||%
-    item$embedded_data
-
+  embedded_data <- item$EmbeddedData
   if (is.null(embedded_data)) {
-    if (is_embedded_data_field_record(item)) {
-      return(valid_embedded_data_field_names(
-        embedded_data_field_name(item)
-      ))
-    }
-
     return(character())
   }
-  if (is_embedded_data_field_record(embedded_data)) {
-    return(valid_embedded_data_field_names(
-      embedded_data_field_name(embedded_data)
-    ))
-  }
 
-  embedded_data_field_names(embedded_data)
-}
-
-is_embedded_data_field_record <- function(field) {
-  is.list(field) &&
-    any(embedded_data_field_name_columns %in% names(field))
+  valid_embedded_data_field_names(map_chr(
+    embedded_data,
+    embedded_data_flow_field_name
+  ))
 }
 
 previous_survey_flow_block <- function(block_names, item_index) {
@@ -590,15 +402,6 @@ normalise_survey_flow_embedded_data_field <- function(locations) {
   )
 }
 
-embedded_data_field_name_columns <- c(
-  "name",
-  "fieldName",
-  "field_name",
-  "field",
-  "Field",
-  "DataField"
-)
-
 valid_embedded_data_field_names <- function(field_names) {
   field_names[!is.na(field_names) & nzchar(field_names)]
 }
@@ -608,91 +411,46 @@ embedded_data_field_names <- function(embedded_data) {
     return(character())
   }
 
-  if (is.data.frame(embedded_data)) {
-    return(embedded_data_field_names_from_data_frame(embedded_data))
+  if (!is.list(embedded_data)) {
+    return(character())
   }
 
-  if (is.atomic(embedded_data)) {
-    return(embedded_data_field_names_from_atomic(embedded_data))
-  }
-
-  field_names <- map2_chr(
-    embedded_data,
-    names(embedded_data) %||% rep(NA_character_, length(embedded_data)),
-    embedded_data_field_name
-  )
+  field_names <- map_chr(embedded_data, embedded_data_field_name)
   unname(valid_embedded_data_field_names(field_names))
 }
 
-embedded_data_field_names_from_data_frame <- function(embedded_data) {
-  field_columns <- intersect(
-    embedded_data_field_name_columns,
-    names(embedded_data)
-  )
-  if (length(field_columns) == 0) {
-    return(character())
+embedded_data_field_name <- function(field) {
+  if (is.null(field) || !is.list(field)) {
+    return(NA_character_)
   }
-  field_column <- field_columns[[1]]
 
-  field_names <- as.character(embedded_data[[field_column]])
-  valid_embedded_data_field_names(field_names)
+  scalar_character(field$name)
 }
 
-embedded_data_field_names_from_atomic <- function(embedded_data) {
-  field_names <- as.character(embedded_data)
-  if (is.null(names(embedded_data))) {
-    return(valid_embedded_data_field_names(field_names))
+embedded_data_flow_field_name <- function(field) {
+  if (is.null(field) || !is.list(field)) {
+    return(NA_character_)
   }
 
-  named_fields <- names(embedded_data)
-  use_names <- !is.na(named_fields) & nzchar(named_fields)
-  field_names[use_names] <- named_fields[use_names]
-  valid_embedded_data_field_names(field_names)
-}
-
-embedded_data_field_name <- function(field, fallback_name = NA_character_) {
-  if (is.atomic(field) && length(field) == 1) {
-    return(scalar_character(field))
-  }
-
-  candidates <- map_chr(
-    embedded_data_field_name_columns,
-    function(candidate_name) {
-      if (!candidate_name %in% names(field)) {
-        return(NA_character_)
-      }
-
-      scalar_character(field[[candidate_name]])
-    }
-  )
-  candidates <- valid_embedded_data_field_names(candidates)
-  if (length(candidates) > 0) {
-    return(candidates[[1]])
-  }
-
-  scalar_character(fallback_name)
+  scalar_character(field$Field)
 }
 
 normalise_text_analysis_sidecars <- function(
-  mt,
-  mt_d,
   questions,
-  response_column_map = NULL,
   response_column_classification = NULL
 ) {
-  sidecar_records <- text_analysis_sidecar_records(
-    mt,
-    mt_d,
-    response_column_map = response_column_map,
-    response_column_classification = response_column_classification
+  sidecar_records <- text_analysis_sidecars_from_response_column_map(
+    response_column_classification
   )
   if (length(sidecar_records) == 0) {
     return(empty_normalised_text_analysis_sidecars())
   }
 
-  sidecars <- imap(sidecar_records, function(sidecar, fallback_name) {
-    normalise_text_analysis_sidecar(sidecar, fallback_name, questions)
-  }) |>
+  sidecars <- map(
+    sidecar_records,
+    normalise_text_analysis_sidecar,
+    questions
+  ) |>
     discard(is.null)
 
   names(sidecars) <- map_chr(sidecars, "sidecar_name")
@@ -701,31 +459,6 @@ normalise_text_analysis_sidecars <- function(
     sidecars,
     class = c("qualtdict_normalised_text_analysis_sidecars", "list")
   )
-}
-
-text_analysis_sidecar_records <- function(
-  mt,
-  mt_d,
-  response_column_map = NULL,
-  response_column_classification = NULL
-) {
-  sources <- list(
-    mt$text_analysis,
-    mt$textAnalysis,
-    mt$textAnalysisSidecars,
-    mt$comments,
-    mt_d$text_analysis,
-    mt_d$textAnalysis,
-    mt_d$textAnalysisSidecars,
-    mt_d$comments,
-    text_analysis_sidecars_from_response_column_map(
-      response_column_map,
-      response_column_classification = response_column_classification
-    )
-  )
-  sources <- discard(sources, is.null)
-  records <- do.call(c, args = map(sources, text_analysis_sidecar_record_list))
-  deduplicate_text_analysis_sidecar_records(records %||% list())
 }
 
 response_column_map_ids <- function(response_column_map) {
@@ -755,7 +488,7 @@ response_column_map_row_ids <- function(response_column_map) {
 }
 
 response_column_map_id_columns <- function() {
-  c("qname", "ImportId", "importId", "response_column_id")
+  c("qname", "ImportId")
 }
 
 classify_response_column_map <- function(
@@ -1050,14 +783,10 @@ has_derived_response_column_map_fields <- function(main, sub, description) {
 }
 
 text_analysis_sidecars_from_response_column_map <- function(
-  response_column_map,
-  response_column_classification = NULL
+  response_column_classification
 ) {
   if (is.null(response_column_classification)) {
-    if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
-      return(list())
-    }
-    response_column_classification <- empty_response_column_map_classification()
+    return(list())
   }
   if (nrow(response_column_classification) == 0) {
     return(list())
@@ -1074,9 +803,9 @@ text_analysis_sidecars_from_response_column_map <- function(
     function(row_index) {
       sidecar <- sidecars[row_index, , drop = FALSE]
       list(
-        outputName = sidecar$display_name,
-        responseColumnId = sidecar$response_column_id,
-        questionId = sidecar$parent_qid,
+        sidecar_name = sidecar$display_name,
+        response_column_id = sidecar$response_column_id,
+        parent_qid = sidecar$parent_qid,
         main = sidecar$main,
         sub = sidecar$sub,
         description = sidecar$description
@@ -1118,86 +847,30 @@ response_column_map_scalar <- function(row, column) {
   scalar_character(row[[column]])
 }
 
-deduplicate_text_analysis_sidecar_records <- function(records) {
-  if (length(records) == 0) {
-    return(list())
-  }
-
-  fallback_names <- names(records) %||% rep(NA_character_, length(records))
-  keys <- map2_chr(
-    records,
-    fallback_names,
-    text_analysis_sidecar_record_key
-  )
-  records[!duplicated(keys)]
-}
-
-text_analysis_sidecar_record_key <- function(sidecar, fallback_name) {
-  sidecar_name <- text_analysis_sidecar_name(sidecar, fallback_name)
-  response_column_id <- text_analysis_sidecar_response_column_id(
-    sidecar,
-    sidecar_name
-  )
-  if (!is.na(response_column_id) && nzchar(response_column_id)) {
-    return(paste0("response_column_id:", response_column_id))
-  }
-
-  paste0("record_index:", fallback_name)
-}
-
-text_analysis_sidecar_record_list <- function(sidecars) {
-  if (is.null(sidecars) || length(sidecars) == 0) {
-    return(list())
-  }
-
-  if (is.data.frame(sidecars)) {
-    return(map(seq_len(nrow(sidecars)), function(row) {
-      as.list(sidecars[row, , drop = FALSE])
-    }))
-  }
-
-  if (is_text_analysis_sidecar_record(sidecars)) {
-    return(list(sidecars))
-  }
-
-  if (is.atomic(sidecars)) {
-    return(as.list(sidecars))
-  }
-
-  sidecars
-}
-
-is_text_analysis_sidecar_record <- function(sidecar) {
-  is.list(sidecar) &&
-    any(
-      c(
-        text_analysis_sidecar_name_columns,
-        text_analysis_sidecar_response_column_id_columns,
-        text_analysis_sidecar_parent_qid_columns
-      ) %in%
-        names(sidecar)
-    )
-}
-
 normalise_text_analysis_sidecar <- function(
   sidecar,
-  fallback_name,
   questions
 ) {
-  sidecar_name <- text_analysis_sidecar_name(sidecar, fallback_name)
-  if (is.na(sidecar_name) || !nzchar(sidecar_name)) {
+  sidecar_name <- scalar_character(sidecar$sidecar_name)
+  response_column_id <- scalar_character(sidecar$response_column_id)
+  if (
+    is.na(sidecar_name) ||
+      !nzchar(sidecar_name) ||
+      is.na(response_column_id) ||
+      !nzchar(response_column_id)
+  ) {
     return(NULL)
   }
 
-  parent_context <- text_analysis_sidecar_parent_context(sidecar, questions)
+  parent_context <- text_analysis_sidecar_parent_context(
+    scalar_character(sidecar$parent_qid),
+    questions
+  )
 
   structure(
     list(
       sidecar_name = sidecar_name,
-      response_column_id = text_analysis_sidecar_response_column_id(
-        sidecar,
-        sidecar_name
-      ),
+      response_column_id = response_column_id,
       question_text = paste("Text Analysis:", sidecar_name),
       parent_qid = parent_context$parent_qid,
       parent_question_name = parent_context$parent_question_name,
@@ -1207,8 +880,7 @@ normalise_text_analysis_sidecar <- function(
   )
 }
 
-text_analysis_sidecar_parent_context <- function(sidecar, questions) {
-  parent_qid <- text_analysis_sidecar_parent_qid(sidecar)
+text_analysis_sidecar_parent_context <- function(parent_qid, questions) {
   if (is.na(parent_qid)) {
     return(empty_text_analysis_sidecar_parent_context())
   }
@@ -1231,89 +903,6 @@ empty_text_analysis_sidecar_parent_context <- function() {
     parent_question_name = NA_character_,
     parent_block = NA_character_
   )
-}
-
-text_analysis_sidecar_name_columns <- c(
-  "outputName",
-  "output_name",
-  "name",
-  "fieldName",
-  "field_name",
-  "variableName",
-  "variable_name",
-  "DataField",
-  "id",
-  "ID"
-)
-
-text_analysis_sidecar_response_column_id_columns <- c(
-  "responseColumnId",
-  "responseColumnID",
-  "response_column_id",
-  "columnName",
-  "column_name",
-  "importId",
-  "import_id"
-)
-
-text_analysis_sidecar_parent_qid_columns <- c(
-  "questionId",
-  "questionID",
-  "question_id",
-  "parentQid",
-  "parent_qid",
-  "qid",
-  "QID"
-)
-
-text_analysis_sidecar_name <- function(
-  sidecar,
-  fallback_name = NA_character_
-) {
-  text_analysis_sidecar_scalar(
-    sidecar,
-    text_analysis_sidecar_name_columns,
-    fallback_name = fallback_name
-  )
-}
-
-text_analysis_sidecar_response_column_id <- function(sidecar, sidecar_name) {
-  text_analysis_sidecar_scalar(
-    sidecar,
-    text_analysis_sidecar_response_column_id_columns,
-    fallback_name = sidecar_name
-  )
-}
-
-text_analysis_sidecar_parent_qid <- function(sidecar) {
-  text_analysis_sidecar_scalar(
-    sidecar,
-    text_analysis_sidecar_parent_qid_columns
-  )
-}
-
-text_analysis_sidecar_scalar <- function(
-  sidecar,
-  columns,
-  fallback_name = NA_character_
-) {
-  if (is.atomic(sidecar) && length(sidecar) == 1) {
-    return(scalar_character(sidecar))
-  }
-
-  candidates <- map_chr(columns, function(candidate_name) {
-    if (!candidate_name %in% names(sidecar)) {
-      return(NA_character_)
-    }
-
-    scalar_character(sidecar[[candidate_name]])
-  })
-  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
-  if (length(candidates) > 0) {
-    return(candidates[[1]])
-  }
-
-  scalar_character(fallback_name)
 }
 
 empty_normalised_text_analysis_sidecars <- function() {

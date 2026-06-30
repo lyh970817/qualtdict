@@ -150,8 +150,7 @@ metadata_elements <- function() {
     "blocks",
     "responsecounts",
     "flow",
-    "embedded_data",
-    "comments"
+    "embedded_data"
   )
 }
 

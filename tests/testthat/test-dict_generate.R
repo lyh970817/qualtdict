@@ -220,7 +220,7 @@ test_that("dict_generate represents Scoring Variables", {
 
   expect_identical(
     scoring_rows$response_column_id,
-    c("Total Score", "Q1")
+    c("SC_TOTAL", "SC_Q1")
   )
   expect_identical(scoring_rows$row_source, rep("scoring", 2))
   expect_true(all(is.na(scoring_rows$qid)))
@@ -285,25 +285,27 @@ test_that("dict_generate represents Text-analysis Sidecars", {
 
   expect_identical(
     sidecar_rows$response_column_id,
-    c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC", "Unmatched Topic")
+    c(
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
+    )
   )
-  expect_identical(sidecar_rows$row_source, rep("text_analysis", 3))
-  expect_identical(sidecar_rows$qid, c("QID1", "QID1", NA_character_))
-  expect_identical(sidecar_rows$question_name, c("Q1", "Q1", NA_character_))
+  expect_identical(sidecar_rows$row_source, rep("text_analysis", 2))
+  expect_identical(sidecar_rows$qid, c("QID1", "QID1"))
+  expect_identical(sidecar_rows$question_name, c("Q1", "Q1"))
   expect_identical(
     sidecar_rows$block,
-    c("Main Block", "Main Block", NA_character_)
+    c("Main Block", "Main Block")
   )
   expect_identical(
     sidecar_rows$variable_name,
-    c("Q1_Sentiment", "Q1_Topic", "Q1.2")
+    c("Q1_Other_Sentiment", "Q1_Other_Parent_Topics")
   )
   expect_identical(
     sidecar_rows$question,
     c(
-      "Text Analysis: Q1 Sentiment",
-      "Text Analysis: Q1 Topic",
-      "Text Analysis: Q1"
+      "Text Analysis: Q1 Other - Sentiment",
+      "Text Analysis: Q1 Other - Parent Topics"
     )
   )
   expect_true(all(is.na(sidecar_rows$level)))
@@ -315,11 +317,14 @@ test_that("dict_generate represents Text-analysis Sidecars", {
   ]
   expect_identical(
     sidecar_findings$response_column_id,
-    c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC", "Unmatched Topic")
+    c(
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
+    )
   )
   expect_identical(
     unname(sidecar_findings$reason),
-    c("unsafe", "unsafe", "duplicate")
+    c("unsafe", "unsafe")
   )
 
   validation_findings <- dict_validate(dict)$validation_findings
@@ -330,7 +335,10 @@ test_that("dict_generate represents Text-analysis Sidecars", {
   ]
   expect_identical(
     repaired_findings$response_column_id,
-    c("QID1_TEXT_SENTIMENT", "QID1_TEXT_TOPIC", "Unmatched Topic")
+    c(
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
+    )
   )
 })
 
