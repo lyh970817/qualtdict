@@ -30,8 +30,36 @@ fetch_dictionary_metadata <- function(surveyID) {
       "scoring"
     )
   )
+  response_column_map <- tryCatch(
+    fetch_response_column_map(surveyID),
+    error = function(error) {
+      warning(
+        "Failed to fetch the Qualtrics response column map for `",
+        surveyID,
+        "`. Dictionaries will still be generated from survey metadata, ",
+        "but scoring and text-analysis sidecar filtering may be incomplete. ",
+        conditionMessage(error),
+        call. = FALSE
+      )
+      NULL
+    }
+  )
 
-  new_raw_qualtrics_metadata(surveyID, mt, mt_d)
+  new_raw_qualtrics_metadata(surveyID, mt, mt_d, response_column_map)
+}
+
+fetch_response_column_map <- function(surveyID) {
+  response_schema <- fetch_survey2(
+    surveyID = surveyID,
+    limit = 1,
+    import_id = TRUE,
+    convert = FALSE,
+    label = FALSE,
+    breakout_sets = TRUE,
+    verbose = FALSE
+  )
+
+  attr(response_schema, "column_map", exact = TRUE)
 }
 
 #' Build a raw Qualtrics metadata bundle
@@ -41,13 +69,19 @@ fetch_dictionary_metadata <- function(surveyID) {
 #'
 #' @keywords internal
 #' @noRd
-new_raw_qualtrics_metadata <- function(surveyID, metadata, description) {
+new_raw_qualtrics_metadata <- function(
+  surveyID,
+  metadata,
+  description,
+  response_column_map = NULL
+) {
   structure(
     list(
       surveyID = surveyID,
       survey_name = as.character(metadata$metadata$name),
       metadata = metadata,
-      description = description
+      description = description,
+      response_column_map = response_column_map
     ),
     class = c("qualtdict_raw_metadata", "list")
   )

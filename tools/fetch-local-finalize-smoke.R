@@ -156,7 +156,7 @@ metadata_elements <- function() {
 }
 
 description_elements <- function() {
-  c("questions", "metadata", "blocks", "flow")
+  c("questions", "metadata", "blocks", "flow", "scoring")
 }
 
 identifying_column <- function(name) {
@@ -426,7 +426,9 @@ write_artifacts <- function(survey) {
     metadata = metadata,
     description = description
   )
+  response_column_map <- attr(responses, "column_map", exact = TRUE)
   sanitized <- sanitize_responses(responses, allowed_levels)
+  attr(sanitized$data, "column_map") <- response_column_map
   rm(responses)
   gc(verbose = FALSE)
 

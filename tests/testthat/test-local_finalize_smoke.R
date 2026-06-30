@@ -10,6 +10,24 @@ skip_if_not(
 )
 source(helper_path)
 
+source_smoke_parity_helpers <- function(envir = parent.frame()) {
+  smoke_script <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "local-finalize-smoke.R"
+  )
+  smoke_lines <- readLines(smoke_script, warn = FALSE)
+  start <- grep("^column_sample <- function", smoke_lines)
+  end <- grep("^assert_response_column_id_parity <- function", smoke_lines) - 1L
+  eval(
+    parse(text = paste(smoke_lines[start:end], collapse = "\n")),
+    envir = envir
+  )
+}
+
+source_smoke_parity_helpers()
+
 test_that("parse_smoke_functions defaults to all smoke-covered functions", {
   expect_identical(
     parse_smoke_functions(NULL),
@@ -83,6 +101,102 @@ test_that("local smoke parity checks represented raw metadata variables", {
     "raw-to-dictionary parity is not a hard check",
     fixed = TRUE
   )
+})
+
+test_that("response column parity checks metadata-defined raw columns", {
+  metadata <- list(
+    embedded_data = list(
+      list(name = "Source Channel"),
+      list(fieldName = "Cohort")
+    )
+  )
+  description <- list(
+    scoring = list(
+      ScoringCategories = list(
+        list(ID = "SC_TOTAL", Name = "Total Score"),
+        list(ID = "SC_HIDDEN", Name = "Hidden Score")
+      )
+    )
+  )
+  response_column_map <- tibble::tibble(
+    ImportId = c(
+      "QID1",
+      "QID1_3_TEXT_SENTIMENT",
+      "SC_TOTAL",
+      "QID2_1_e476cefa310845248231594eTopics"
+    ),
+    description = c(
+      "Choose one",
+      "Q1 Other - Sentiment",
+      "Total Score",
+      "Q2 - Topics"
+    ),
+    main = c("Choose one", "Q1 Other", "Total Score", "Q2"),
+    sub = c("", "Sentiment", "", "Topics")
+  )
+  raw_response_columns <- c(
+    "startDate",
+    "QID1",
+    "QID1_DO_1",
+    "QID1_3_TEXT_SENTIMENT",
+    "QID2_1_e476cefa310845248231594eTopics",
+    "SC_TOTAL",
+    "Source Channel",
+    "Cohort"
+  )
+
+  parity <- response_column_id_parity(
+    dict_response_column_ids = c(
+      "QID1",
+      "QID1_3_TEXT_SENTIMENT",
+      "QID2_1_e476cefa310845248231594eTopics",
+      "SC_TOTAL",
+      "Source Channel"
+    ),
+    raw_response_columns = raw_response_columns,
+    metadata = metadata,
+    description = description,
+    response_column_map = response_column_map
+  )
+
+  expect_false(parity$ok)
+  expect_identical(parity$missing_from_raw_response, character())
+  expect_setequal(
+    parity$checked_raw_response_columns,
+    c(
+      "QID1",
+      "QID1_3_TEXT_SENTIMENT",
+      "QID2_1_e476cefa310845248231594eTopics",
+      "SC_TOTAL",
+      "Source Channel",
+      "Cohort"
+    )
+  )
+  expect_identical(parity$missing_from_dict, "Cohort")
+  expect_false("QID1_DO_1" %in% parity$checked_raw_response_columns)
+  expect_false("SC_HIDDEN" %in% parity$checked_raw_response_columns)
+})
+
+test_that("response column parity reports dict columns missing from raw", {
+  parity <- response_column_id_parity(
+    dict_response_column_ids = c("QID1", "SC_TOTAL"),
+    raw_response_columns = "QID1",
+    response_column_map = tibble::tibble(ImportId = "QID1")
+  )
+
+  expect_false(parity$ok)
+  expect_identical(parity$missing_from_raw_response, "SC_TOTAL")
+  expect_identical(parity$missing_from_dict, character())
+})
+
+test_that("response column parity skips raw questions without column maps", {
+  parity <- response_column_id_parity(
+    dict_response_column_ids = character(),
+    raw_response_columns = c("QID1", "QID1_DO_1")
+  )
+
+  expect_true(parity$ok)
+  expect_identical(parity$checked_raw_response_columns, character())
 })
 
 test_that("parse_smoke_functions trims whitespace and removes duplicates", {
