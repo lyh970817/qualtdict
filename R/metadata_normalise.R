@@ -65,8 +65,3 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     text_analysis_sidecars = text_analysis_sidecars
   )
 }
-
-response_column_map_ids <- function(response_column_map) {
-  ids <- response_column_map_row_ids(response_column_map)
-  ids[!is.na(ids) & nzchar(ids)]
-}

@@ -1,3 +1,8 @@
+response_column_map_ids <- function(response_column_map) {
+  ids <- response_column_map_row_ids(response_column_map)
+  ids[!is.na(ids) & nzchar(ids)]
+}
+
 response_column_map_row_ids <- function(response_column_map) {
   if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
     return(character())
