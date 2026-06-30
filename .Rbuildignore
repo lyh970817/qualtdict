@@ -30,6 +30,8 @@
 ^\.sandcastle/
 ^\.superpowers$
 ^\.superpowers/
+^\.worktrees$
+^\.worktrees/
 ^_pkgdown\.yml$
 ^codecov\.yml$
 ^codemeta\.json$
