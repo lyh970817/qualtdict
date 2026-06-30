@@ -81,7 +81,7 @@ test_that("local smoke artifact refresh requests represented metadata", {
   expect_match(fetch_text, 'attr(sanitized$data, "column_map"', fixed = TRUE)
 })
 
-test_that("local smoke parity checks represented raw metadata variables", {
+test_that("local smoke parity uses package response-column classification", {
   smoke_script <- testthat::test_path(
     "..",
     "..",
@@ -90,10 +90,15 @@ test_that("local smoke parity checks represented raw metadata variables", {
   )
   smoke_text <- paste(readLines(smoke_script, warn = FALSE), collapse = "\n")
 
-  expect_match(smoke_text, "raw_scoring_response_column", fixed = TRUE)
-  expect_match(smoke_text, "smoke_scoring_response_column_ids", fixed = TRUE)
-  expect_match(smoke_text, "raw_text_analysis_sidecar", fixed = TRUE)
-  expect_match(smoke_text, "smoke_embedded_data_field_names", fixed = TRUE)
+  expect_match(smoke_text, "classify_response_column_map", fixed = TRUE)
+  expect_match(smoke_text, "normalise_embedded_data_fields", fixed = TRUE)
+  expect_match(smoke_text, "normalise_scoring_variables", fixed = TRUE)
+  expect_no_match(smoke_text, "raw_text_analysis_sidecar", fixed = TRUE)
+  expect_no_match(
+    smoke_text,
+    "smoke_text_analysis_metric_suffix_pattern",
+    fixed = TRUE
+  )
   expect_match(smoke_text, "metadata = artifacts$metadata", fixed = TRUE)
   expect_match(smoke_text, "description = artifacts$description", fixed = TRUE)
   expect_no_match(
@@ -104,43 +109,29 @@ test_that("local smoke parity checks represented raw metadata variables", {
 })
 
 test_that("response column parity checks metadata-defined raw columns", {
-  metadata <- list(
-    embedded_data = list(
-      list(name = "Source Channel"),
-      list(fieldName = "Cohort")
-    )
-  )
-  description <- list(
-    scoring = list(
-      ScoringCategories = list(
-        list(ID = "SC_TOTAL", Name = "Total Score"),
-        list(ID = "SC_HIDDEN", Name = "Hidden Score")
-      )
-    )
-  )
-  response_column_map <- tibble::tibble(
-    ImportId = c(
-      "QID1",
-      "QID1_3_TEXT_SENTIMENT",
-      "SC_TOTAL",
-      "QID2_1_e476cefa310845248231594eTopics"
-    ),
-    description = c(
-      "Choose one",
-      "Q1 Other - Sentiment",
-      "Total Score",
-      "Q2 - Topics"
-    ),
-    main = c("Choose one", "Q1 Other", "Total Score", "Q2"),
-    sub = c("", "Sentiment", "", "Topics")
+  raw_metadata <- synthetic_column_map_sidecar_raw_metadata()
+  metadata <- raw_metadata$metadata
+  description <- raw_metadata$description
+  response_column_map <- raw_metadata$response_column_map
+  sidecar_ids <- c(
+    glad_sa6_text_analysis_sidecar_ids(),
+    edgi_signup_text_analysis_sidecar_ids()
   )
   raw_response_columns <- c(
-    "startDate",
+    "StartTime",
+    "EndDate",
+    "Q_URL",
     "QID1",
+    "QID1_3_TEXT",
+    "QID508_TEXT",
+    "QID700_1",
+    "QID121_1",
     "QID1_DO_1",
-    "QID1_3_TEXT_SENTIMENT",
-    "QID2_1_e476cefa310845248231594eTopics",
+    "x27_QID700_1",
+    "8_QID508_TEXT",
+    sidecar_ids,
     "SC_TOTAL",
+    "SC_HIDDEN",
     "Source Channel",
     "Cohort"
   )
@@ -148,8 +139,11 @@ test_that("response column parity checks metadata-defined raw columns", {
   parity <- response_column_id_parity(
     dict_response_column_ids = c(
       "QID1",
-      "QID1_3_TEXT_SENTIMENT",
-      "QID2_1_e476cefa310845248231594eTopics",
+      "QID1_3_TEXT",
+      "QID508_TEXT",
+      "QID700_1",
+      "QID121_1",
+      sidecar_ids,
       "SC_TOTAL",
       "Source Channel"
     ),
@@ -165,16 +159,60 @@ test_that("response column parity checks metadata-defined raw columns", {
     parity$checked_raw_response_columns,
     c(
       "QID1",
-      "QID1_3_TEXT_SENTIMENT",
-      "QID2_1_e476cefa310845248231594eTopics",
+      "QID1_3_TEXT",
+      "QID508_TEXT",
+      "QID700_1",
+      "QID121_1",
+      sidecar_ids,
       "SC_TOTAL",
       "Source Channel",
       "Cohort"
     )
   )
   expect_identical(parity$missing_from_dict, "Cohort")
+  expect_setequal(
+    parity$question_auxiliary_exported_columns,
+    c("x27_QID700_1", "8_QID508_TEXT")
+  )
   expect_false("QID1_DO_1" %in% parity$checked_raw_response_columns)
   expect_false("SC_HIDDEN" %in% parity$checked_raw_response_columns)
+  expect_false("StartTime" %in% parity$checked_raw_response_columns)
+  expect_false("EndDate" %in% parity$checked_raw_response_columns)
+  expect_false("Q_URL" %in% parity$checked_raw_response_columns)
+})
+
+test_that("response column parity reports question auxiliary diagnostics", {
+  raw_metadata <- synthetic_sbs_multiple_answer_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    qname = c("QID2#3_2_1", "QID2#3_4_2", "QID2#1_4_TEXT"),
+    ImportId = c("QID2#3_2_1", "QID2#3_4_2", "QID2#1_4_TEXT"),
+    description = c(
+      "Side by side - Multiple column - Second row - Checked A",
+      "Side by side - Multiple column - Fourth row - Checked B",
+      "Side by side - Text column - Fourth row"
+    ),
+    main = rep("Side by side", 3),
+    sub = c(
+      "Multiple column - Second row - Checked A",
+      "Multiple column - Fourth row - Checked B",
+      "Text column - Fourth row"
+    )
+  )
+
+  parity <- response_column_id_parity(
+    dict_response_column_ids = c("QID2#3_2_1", "QID2#3_4_2"),
+    raw_response_columns = raw_metadata$response_column_map$ImportId,
+    metadata = raw_metadata$metadata,
+    description = raw_metadata$description,
+    response_column_map = raw_metadata$response_column_map
+  )
+
+  expect_true(parity$ok)
+  expect_identical(parity$missing_from_dict, character())
+  expect_identical(
+    parity$question_auxiliary_exported_columns,
+    "QID2#1_4_TEXT"
+  )
 })
 
 test_that("response column parity reports dict columns missing from raw", {

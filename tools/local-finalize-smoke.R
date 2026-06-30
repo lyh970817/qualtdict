@@ -429,274 +429,203 @@ checked_response_columns <- function(
   description = NULL,
   response_column_map = NULL
 ) {
-  embedded_columns <- smoke_embedded_data_field_names(
+  classification <- smoke_response_column_classification(
     metadata,
-    description = description
+    description = description,
+    response_column_map = response_column_map,
+    raw_response_columns = raw_response_columns
   )
-  embedded_columns <- intersect(embedded_columns, raw_response_columns)
-  scoring_columns <- unique(c(
-    raw_response_columns[raw_scoring_response_column(raw_response_columns)],
-    smoke_scoring_response_column_ids(
-      description,
-      response_column_map = response_column_map
-    )
-  ))
-  scoring_columns <- intersect(scoring_columns, raw_response_columns)
-
-  unique(c(
-    smoke_question_response_column_ids(
-      response_column_map,
-      raw_response_columns = raw_response_columns
-    ),
-    scoring_columns,
-    raw_response_columns[raw_text_analysis_sidecar(raw_response_columns)],
-    embedded_columns
-  ))
-}
-
-smoke_question_response_column_ids <- function(
-  response_column_map,
-  raw_response_columns
-) {
-  response_column_ids <- smoke_response_column_map_ids(response_column_map)
-  response_column_ids <- response_column_ids[
-    grepl("^QID[0-9]+", response_column_ids) &
-      !raw_text_analysis_sidecar(response_column_ids)
+  checked_sources <- c(
+    "question",
+    "embedded_data",
+    "scoring",
+    "text_analysis"
+  )
+  checked_columns <- classification$response_column_id[
+    classification$row_source %in% checked_sources
   ]
-  intersect(response_column_ids, raw_response_columns)
-}
+  checked_columns <- intersect(checked_columns, raw_response_columns)
 
-smoke_response_column_map_ids <- function(response_column_map) {
-  if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
-    return(character())
+  if (!smoke_has_metadata(metadata, description)) {
+    checked_columns <- unique(c(
+      checked_columns,
+      smoke_raw_scoring_diagnostic_columns(raw_response_columns)
+    ))
   }
 
-  id_columns <- intersect(
-    c("ImportId", "importId", "response_column_id", "qname"),
-    names(response_column_map)
-  )
-  if (length(id_columns) == 0) {
-    return(character())
-  }
-
-  response_column_ids <- as.character(response_column_map[[id_columns[[1]]]])
-  response_column_ids[!is.na(response_column_ids) & nzchar(response_column_ids)]
+  checked_columns
 }
 
-raw_scoring_response_column <- function(raw_response_columns) {
-  grepl("^SC_", raw_response_columns) |
-    grepl("_SCORE$", raw_response_columns)
-}
-
-raw_text_analysis_sidecar <- function(raw_response_columns) {
-  text_sidecars <- grepl(
-    "^QID[0-9]+(?:#[^_]+)?(?:_[^_]+)*_TEXT_.+",
-    raw_response_columns
-  )
-  metric_sidecars <- grepl(
-    paste0(
-      "^QID[0-9]+(?:#[^_]+)?(?:_[^_]+)+[[:alnum:]]",
-      smoke_text_analysis_metric_suffix_pattern(),
-      "$"
-    ),
-    raw_response_columns,
-    ignore.case = TRUE
-  )
-
-  text_sidecars | metric_sidecars
-}
-
-smoke_text_analysis_metric_suffix_pattern <- function() {
-  paste0(
-    "(?:",
-    paste(
-      c(
-        "Actionability",
-        "Effort",
-        "EffortNumeric",
-        "EmotIntensity",
-        "Emotion",
-        "ParTopics",
-        "SenPol",
-        "SenScore",
-        "Sentiment",
-        "TopicHierarchy[0-9]+",
-        "TopicSenLabel",
-        "TopicSenScore",
-        "Topics"
-      ),
-      collapse = "|"
-    ),
-    ")"
-  )
-}
-
-smoke_embedded_data_field_names <- function(
-  metadata,
-  description = NULL
+question_auxiliary_exported_columns <- function(
+  raw_response_columns,
+  metadata = NULL,
+  description = NULL,
+  response_column_map = NULL
 ) {
-  if (!is.null(description)) {
-    normalise_embedded_data_fields <- getFromNamespace(
-      "normalise_embedded_data_fields",
-      "qualtdict"
-    )
-    raw_metadata <- metadata
-    if (is.null(raw_metadata)) {
-      raw_metadata <- list()
-    }
-    embedded_data <- normalise_embedded_data_fields(
-      raw_metadata,
-      description
-    )
-    response_column_ids <- vapply(
-      embedded_data,
-      function(field) {
-        smoke_scalar_character(field$response_column_id)
-      },
-      character(1)
-    )
-    response_column_ids <- smoke_valid_embedded_data_field_names(
-      response_column_ids
-    )
-    if (length(response_column_ids) > 0) {
-      return(response_column_ids)
-    }
+  classification <- smoke_response_column_classification(
+    metadata,
+    description = description,
+    response_column_map = response_column_map,
+    raw_response_columns = raw_response_columns
+  )
+  question_auxiliary_rows <- classification$row_source == "question_auxiliary"
+  question_auxiliary_columns <-
+    classification$response_column_id[question_auxiliary_rows]
+  intersect(question_auxiliary_columns, raw_response_columns)
+}
+
+smoke_response_column_classification <- function(
+  metadata,
+  description,
+  response_column_map,
+  raw_response_columns = NULL
+) {
+  has_response_column_map <- !is.null(response_column_map) &&
+    is.data.frame(response_column_map) &&
+    nrow(response_column_map) > 0
+  if (!has_response_column_map && !smoke_has_metadata(metadata, description)) {
+    return(smoke_empty_response_column_classification())
   }
 
   if (is.null(metadata)) {
-    return(character())
+    metadata <- list()
   }
-
-  embedded_data <- metadata$embedded_data
-  if (is.null(embedded_data)) {
-    embedded_data <- metadata$embeddedData
-  }
-  if (is.null(embedded_data) || length(embedded_data) == 0) {
-    return(character())
-  }
-
-  if (is.data.frame(embedded_data)) {
-    return(smoke_embedded_data_field_names_from_data_frame(embedded_data))
-  }
-  if (is.atomic(embedded_data)) {
-    return(smoke_embedded_data_field_names_from_atomic(embedded_data))
-  }
-
-  fallback_names <- names(embedded_data)
-  if (is.null(fallback_names)) {
-    fallback_names <- rep(NA_character_, length(embedded_data))
-  }
-  field_names <- vapply(
-    seq_along(embedded_data),
-    function(index) {
-      smoke_embedded_data_field_name(
-        embedded_data[[index]],
-        fallback_name = fallback_names[[index]]
-      )
-    },
-    character(1)
-  )
-  smoke_valid_embedded_data_field_names(field_names)
-}
-
-smoke_embedded_data_field_name_columns <- function() {
-  c("name", "fieldName", "field_name", "field", "Field", "DataField")
-}
-
-smoke_valid_embedded_data_field_names <- function(field_names) {
-  field_names <- as.character(field_names)
-  field_names[!is.na(field_names) & nzchar(field_names)]
-}
-
-smoke_embedded_data_field_names_from_data_frame <- function(embedded_data) {
-  field_columns <- intersect(
-    smoke_embedded_data_field_name_columns(),
-    names(embedded_data)
-  )
-  if (length(field_columns) == 0) {
-    return(character())
-  }
-
-  smoke_valid_embedded_data_field_names(
-    embedded_data[[field_columns[[1]]]]
-  )
-}
-
-smoke_embedded_data_field_names_from_atomic <- function(embedded_data) {
-  field_names <- as.character(embedded_data)
-  if (is.null(names(embedded_data))) {
-    return(smoke_valid_embedded_data_field_names(field_names))
-  }
-
-  named_fields <- names(embedded_data)
-  use_names <- !is.na(named_fields) & nzchar(named_fields)
-  field_names[use_names] <- named_fields[use_names]
-  smoke_valid_embedded_data_field_names(field_names)
-}
-
-smoke_embedded_data_field_name <- function(
-  field,
-  fallback_name = NA_character_
-) {
-  if (is.atomic(field) && length(field) == 1) {
-    return(smoke_scalar_character(field))
-  }
-  if (!is.list(field)) {
-    return(smoke_scalar_character(fallback_name))
-  }
-
-  candidates <- vapply(
-    smoke_embedded_data_field_name_columns(),
-    function(candidate_name) {
-      if (!candidate_name %in% names(field)) {
-        return(NA_character_)
-      }
-
-      smoke_scalar_character(field[[candidate_name]])
-    },
-    character(1)
-  )
-  candidates <- smoke_valid_embedded_data_field_names(candidates)
-  if (length(candidates) > 0) {
-    return(candidates[[1]])
-  }
-
-  smoke_scalar_character(fallback_name)
-}
-
-smoke_scalar_character <- function(value) {
-  if (is.null(value) || length(value) == 0 || all(is.na(value))) {
-    return(NA_character_)
-  }
-
-  as.character(value[[1]])
-}
-
-smoke_scoring_response_column_ids <- function(
-  description,
-  response_column_map = NULL
-) {
   if (is.null(description)) {
-    return(character())
+    description <- list()
   }
 
+  normalise_qualtrics_questions <- getFromNamespace(
+    "normalise_qualtrics_questions",
+    "qualtdict"
+  )
+  normalise_embedded_data_fields <- getFromNamespace(
+    "normalise_embedded_data_fields",
+    "qualtdict"
+  )
+  filter_exported_embedded_data_fields <- getFromNamespace(
+    "filter_exported_embedded_data_fields",
+    "qualtdict"
+  )
   normalise_scoring_variables <- getFromNamespace(
     "normalise_scoring_variables",
     "qualtdict"
+  )
+  classify_response_column_map <- getFromNamespace(
+    "classify_response_column_map",
+    "qualtdict"
+  )
+
+  questions <- if (is.null(metadata$questions)) {
+    list()
+  } else {
+    normalise_qualtrics_questions(metadata, description)
+  }
+  embedded_data <- normalise_embedded_data_fields(metadata, description)
+  embedded_data <- filter_exported_embedded_data_fields(
+    embedded_data,
+    response_column_map,
+    raw_response_columns = raw_response_columns
   )
   scoring <- normalise_scoring_variables(
     description,
     response_column_map = response_column_map
   )
+
+  classification <- if (has_response_column_map) {
+    classify_response_column_map(
+      response_column_map,
+      questions = questions,
+      embedded_data = embedded_data,
+      scoring = scoring
+    )
+  } else {
+    smoke_empty_response_column_classification()
+  }
+  smoke_append_embedded_data_classification(
+    classification,
+    embedded_data,
+    raw_response_columns
+  )
+}
+
+smoke_empty_response_column_classification <- function() {
+  data.frame(
+    response_column_id = character(),
+    row_source = character(),
+    parent_qid = character(),
+    display_name = character(),
+    main = character(),
+    sub = character(),
+    description = character(),
+    reason = character(),
+    stringsAsFactors = FALSE
+  )
+}
+
+smoke_has_metadata <- function(metadata, description) {
+  !is.null(metadata) || !is.null(description)
+}
+
+smoke_append_embedded_data_classification <- function(
+  classification,
+  embedded_data,
+  raw_response_columns
+) {
+  response_column_ids <- smoke_normalised_response_column_ids(embedded_data)
+  response_column_ids <- intersect(response_column_ids, raw_response_columns)
+  response_column_ids <- setdiff(
+    response_column_ids,
+    classification$response_column_id
+  )
+  if (length(response_column_ids) == 0) {
+    return(classification)
+  }
+
+  rbind(
+    classification,
+    data.frame(
+      response_column_id = response_column_ids,
+      row_source = rep("embedded_data", length(response_column_ids)),
+      parent_qid = rep(NA_character_, length(response_column_ids)),
+      display_name = response_column_ids,
+      main = rep(NA_character_, length(response_column_ids)),
+      sub = rep(NA_character_, length(response_column_ids)),
+      description = rep(NA_character_, length(response_column_ids)),
+      reason = rep("raw_embedded_data", length(response_column_ids)),
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+smoke_normalised_response_column_ids <- function(records) {
+  if (is.null(records) || length(records) == 0) {
+    return(character())
+  }
+
   response_column_ids <- vapply(
-    scoring,
-    function(variable) {
-      smoke_scalar_character(variable$response_column_id)
+    records,
+    function(record) {
+      if (
+        is.null(record$response_column_id) ||
+          length(record$response_column_id) == 0 ||
+          all(is.na(record$response_column_id))
+      ) {
+        return(NA_character_)
+      }
+
+      as.character(record$response_column_id[[1]])
     },
     character(1)
   )
   response_column_ids[
     !is.na(response_column_ids) & nzchar(response_column_ids)
+  ]
+}
+
+smoke_raw_scoring_diagnostic_columns <- function(raw_response_columns) {
+  raw_response_columns[
+    grepl("^SC_", raw_response_columns) |
+      grepl("_SCORE$", raw_response_columns)
   ]
 }
 
@@ -730,6 +659,12 @@ response_column_id_parity <- function(
     checked_raw_response_columns,
     dict_response_column_ids
   )
+  question_auxiliary_columns <- question_auxiliary_exported_columns(
+    raw_response_columns,
+    metadata = metadata,
+    description = description,
+    response_column_map = response_column_map
+  )
 
   list(
     ok = length(missing_from_raw_response) == 0 &&
@@ -737,6 +672,7 @@ response_column_id_parity <- function(
     dict_response_column_ids = dict_response_column_ids,
     raw_response_columns = raw_response_columns,
     checked_raw_response_columns = checked_raw_response_columns,
+    question_auxiliary_exported_columns = question_auxiliary_columns,
     missing_from_raw_response = missing_from_raw_response,
     missing_from_dict = missing_from_dict
   )

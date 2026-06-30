@@ -198,6 +198,48 @@ test_that("dict_generate represents response column-map sidecars", {
   )
 })
 
+test_that("dict_generate uses column-map classification for sidecars", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_column_map_sidecar_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  sidecar_rows <- dict[dict$row_source == "text_analysis", ]
+  expected_sidecars <- c(
+    glad_sa6_text_analysis_sidecar_ids(),
+    edgi_signup_text_analysis_sidecar_ids()
+  )
+
+  expect_setequal(sidecar_rows$response_column_id, expected_sidecars)
+  expect_identical(nrow(sidecar_rows), 15L)
+  expect_true(all(sidecar_rows$qid %in% c("QID694", "QID121")))
+  expect_false("QID508_TEXT" %in% sidecar_rows$response_column_id)
+  expect_false("QID626_TEXT" %in% sidecar_rows$response_column_id)
+  expect_false("QID429_TEXT" %in% sidecar_rows$response_column_id)
+  expect_false("QID700_1" %in% sidecar_rows$response_column_id)
+  expect_false("QID121_1" %in% sidecar_rows$response_column_id)
+
+  ordinary_ids <- c(
+    "QID508_TEXT",
+    "QID626_TEXT",
+    "QID429_TEXT",
+    "QID700_1",
+    "QID121_1"
+  )
+  ordinary_rows <- dict[dict$response_column_id %in% ordinary_ids, ]
+  expect_true(all(ordinary_rows$row_source == "question"))
+
+  metadata_rows <- dict[
+    dict$row_source %in% c("embedded_data", "scoring"),
+  ]
+  expect_true("Source Channel" %in% metadata_rows$response_column_id)
+  expect_true("SC_TOTAL" %in% metadata_rows$response_column_id)
+  expect_false("Cohort" %in% metadata_rows$response_column_id)
+  expect_false("SC_HIDDEN" %in% metadata_rows$response_column_id)
+})
+
 test_that("dict_generate represents Scoring Variables", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {
