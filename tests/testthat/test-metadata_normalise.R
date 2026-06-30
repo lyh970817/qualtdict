@@ -200,4 +200,17 @@ test_that("normalised capability constructors preserve current object shapes", {
   )
   expect_length(classification, 8)
   expect_identical(nrow(classification), 0L)
+
+  rows <- data.frame(
+    response_column_id = "QID1_3_TEXT_SENTIMENT",
+    row_source = "text_analysis",
+    parent_qid = "QID1",
+    display_name = "Q1 Other - Sentiment",
+    main = "Q1 Other",
+    sub = "Sentiment",
+    description = "Q1 Other - Sentiment",
+    reason = "derived_question",
+    stringsAsFactors = FALSE
+  )
+  expect_identical(new_response_column_map_classification(rows), rows)
 })

@@ -55,6 +55,23 @@ classify_response_column_map <- function(
   new_response_column_map_classification(rows)
 }
 
+new_response_column_map_classification <- function(rows = NULL) {
+  if (is.null(rows)) {
+    return(tibble::tibble(
+      response_column_id = character(),
+      row_source = character(),
+      parent_qid = character(),
+      display_name = character(),
+      main = character(),
+      sub = character(),
+      description = character(),
+      reason = character()
+    ))
+  }
+
+  rows
+}
+
 empty_response_column_map_classification <- function() {
   new_response_column_map_classification()
 }
