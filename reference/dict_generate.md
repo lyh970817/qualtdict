@@ -91,7 +91,9 @@ Scoring Variables defined by survey description metadata use
 `row_source = "scoring"`. Embedded Data Fields remain unassigned by
 Survey Block unless `embedded_data_block_assignment` explicitly requests
 Survey Flow adjacency assignment. Scoring Variables remain unassigned by
-Survey Block.
+Survey Block. Text-analysis Sidecars defined by Qualtrics metadata use
+`row_source = "text_analysis"` and inherit parent `qid`,
+`question_name`, and `block` when a clear parent QID can be determined.
 
 When `variable_name = "semantic_name"`, the Variable Dictionary also
 includes `semantic_name`. Semantic Names are readable best-effort
