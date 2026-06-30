@@ -272,6 +272,17 @@ test_that("Scoring Variable names normalise from supported shapes", {
     "Total"
   )
   expect_identical(
+    normalise_scoring_variables(
+      list(
+        scoring = tibble::tibble(
+          Name = "Total",
+          responseColumnId = "SC_TOTAL"
+        )
+      )
+    )[["Total"]]$response_column_id,
+    "SC_TOTAL"
+  )
+  expect_identical(
     scoring_variable_names(tibble::tibble(other = "Total")),
     character()
   )
@@ -316,11 +327,23 @@ test_that("Scoring Variable names normalise from supported shapes", {
     list()
   )
   expect_identical(
-    scoring_variable_record(c("Total"), "Total"),
+    scoring_variable_record("Total", "Total"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record(list(), "Missing"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record(tibble::tibble(other = "Total"), "Total"),
     list()
   )
   expect_identical(
     scoring_variable_record(tibble::tibble(name = "Total"), "Total"),
+    list(name = "Total")
+  )
+  expect_identical(
+    scoring_variable_record(tibble::tibble(name = "Total"), "Missing"),
     list()
   )
   expect_identical(
