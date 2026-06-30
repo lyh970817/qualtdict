@@ -273,7 +273,12 @@ with_artifact_fetches <- function(survey, artifacts, expr) {
       raw_metadata_constructor(
         surveyID = surveyID,
         metadata = artifacts$metadata,
-        description = artifacts$description
+        description = artifacts$description,
+        response_column_map = attr(
+          artifacts$responses,
+          "column_map",
+          exact = TRUE
+        )
       )
     }
   )
@@ -418,9 +423,225 @@ column_sample <- function(x, limit = 20) {
   )
 }
 
+checked_response_columns <- function(
+  raw_response_columns,
+  metadata = NULL,
+  description = NULL,
+  response_column_map = NULL
+) {
+  embedded_columns <- smoke_embedded_data_field_names(
+    metadata,
+    description = description
+  )
+  embedded_columns <- intersect(embedded_columns, raw_response_columns)
+  scoring_columns <- unique(c(
+    raw_response_columns[raw_scoring_response_column(raw_response_columns)],
+    smoke_scoring_response_column_ids(
+      description,
+      response_column_map = response_column_map
+    )
+  ))
+  scoring_columns <- intersect(scoring_columns, raw_response_columns)
+
+  unique(c(
+    raw_response_columns[raw_question_response_column(raw_response_columns)],
+    scoring_columns,
+    raw_response_columns[raw_text_analysis_sidecar(raw_response_columns)],
+    embedded_columns
+  ))
+}
+
+raw_question_response_column <- function(raw_response_columns) {
+  grepl("^QID[0-9]+", raw_response_columns)
+}
+
+raw_scoring_response_column <- function(raw_response_columns) {
+  grepl("^SC_", raw_response_columns) |
+    grepl("_SCORE$", raw_response_columns)
+}
+
+raw_text_analysis_sidecar <- function(raw_response_columns) {
+  grepl(
+    "^QID[0-9]+(?:#[^_]+)?(?:_[^_]+)*_TEXT_.+",
+    raw_response_columns
+  )
+}
+
+smoke_embedded_data_field_names <- function(
+  metadata,
+  description = NULL
+) {
+  if (!is.null(description)) {
+    normalise_embedded_data_fields <- getFromNamespace(
+      "normalise_embedded_data_fields",
+      "qualtdict"
+    )
+    raw_metadata <- metadata
+    if (is.null(raw_metadata)) {
+      raw_metadata <- list()
+    }
+    embedded_data <- normalise_embedded_data_fields(
+      raw_metadata,
+      description
+    )
+    response_column_ids <- vapply(
+      embedded_data,
+      function(field) {
+        smoke_scalar_character(field$response_column_id)
+      },
+      character(1)
+    )
+    response_column_ids <- smoke_valid_embedded_data_field_names(
+      response_column_ids
+    )
+    if (length(response_column_ids) > 0) {
+      return(response_column_ids)
+    }
+  }
+
+  if (is.null(metadata)) {
+    return(character())
+  }
+
+  embedded_data <- metadata$embedded_data
+  if (is.null(embedded_data)) {
+    embedded_data <- metadata$embeddedData
+  }
+  if (is.null(embedded_data) || length(embedded_data) == 0) {
+    return(character())
+  }
+
+  if (is.data.frame(embedded_data)) {
+    return(smoke_embedded_data_field_names_from_data_frame(embedded_data))
+  }
+  if (is.atomic(embedded_data)) {
+    return(smoke_embedded_data_field_names_from_atomic(embedded_data))
+  }
+
+  fallback_names <- names(embedded_data)
+  if (is.null(fallback_names)) {
+    fallback_names <- rep(NA_character_, length(embedded_data))
+  }
+  field_names <- vapply(
+    seq_along(embedded_data),
+    function(index) {
+      smoke_embedded_data_field_name(
+        embedded_data[[index]],
+        fallback_name = fallback_names[[index]]
+      )
+    },
+    character(1)
+  )
+  smoke_valid_embedded_data_field_names(field_names)
+}
+
+smoke_embedded_data_field_name_columns <- function() {
+  c("name", "fieldName", "field_name", "field", "Field", "DataField")
+}
+
+smoke_valid_embedded_data_field_names <- function(field_names) {
+  field_names <- as.character(field_names)
+  field_names[!is.na(field_names) & nzchar(field_names)]
+}
+
+smoke_embedded_data_field_names_from_data_frame <- function(embedded_data) {
+  field_columns <- intersect(
+    smoke_embedded_data_field_name_columns(),
+    names(embedded_data)
+  )
+  if (length(field_columns) == 0) {
+    return(character())
+  }
+
+  smoke_valid_embedded_data_field_names(
+    embedded_data[[field_columns[[1]]]]
+  )
+}
+
+smoke_embedded_data_field_names_from_atomic <- function(embedded_data) {
+  field_names <- as.character(embedded_data)
+  if (is.null(names(embedded_data))) {
+    return(smoke_valid_embedded_data_field_names(field_names))
+  }
+
+  named_fields <- names(embedded_data)
+  use_names <- !is.na(named_fields) & nzchar(named_fields)
+  field_names[use_names] <- named_fields[use_names]
+  smoke_valid_embedded_data_field_names(field_names)
+}
+
+smoke_embedded_data_field_name <- function(
+  field,
+  fallback_name = NA_character_
+) {
+  if (is.atomic(field) && length(field) == 1) {
+    return(smoke_scalar_character(field))
+  }
+  if (!is.list(field)) {
+    return(smoke_scalar_character(fallback_name))
+  }
+
+  candidates <- vapply(
+    smoke_embedded_data_field_name_columns(),
+    function(candidate_name) {
+      if (!candidate_name %in% names(field)) {
+        return(NA_character_)
+      }
+
+      smoke_scalar_character(field[[candidate_name]])
+    },
+    character(1)
+  )
+  candidates <- smoke_valid_embedded_data_field_names(candidates)
+  if (length(candidates) > 0) {
+    return(candidates[[1]])
+  }
+
+  smoke_scalar_character(fallback_name)
+}
+
+smoke_scalar_character <- function(value) {
+  if (is.null(value) || length(value) == 0 || all(is.na(value))) {
+    return(NA_character_)
+  }
+
+  as.character(value[[1]])
+}
+
+smoke_scoring_response_column_ids <- function(
+  description,
+  response_column_map = NULL
+) {
+  if (is.null(description)) {
+    return(character())
+  }
+
+  normalise_scoring_variables <- getFromNamespace(
+    "normalise_scoring_variables",
+    "qualtdict"
+  )
+  scoring <- normalise_scoring_variables(
+    description,
+    response_column_map = response_column_map
+  )
+  response_column_ids <- vapply(
+    scoring,
+    function(variable) {
+      smoke_scalar_character(variable$response_column_id)
+    },
+    character(1)
+  )
+  response_column_ids[
+    !is.na(response_column_ids) & nzchar(response_column_ids)
+  ]
+}
+
 response_column_id_parity <- function(
   dict_response_column_ids,
-  raw_response_columns
+  raw_response_columns,
+  metadata = NULL,
+  description = NULL,
+  response_column_map = NULL
 ) {
   dict_response_column_ids <- unique(as.character(dict_response_column_ids))
   dict_response_column_ids <- dict_response_column_ids[
@@ -435,27 +656,20 @@ response_column_id_parity <- function(
     raw_response_columns
   )
 
-  # ADR 0005 records the planned Metadata-defined Export Variable contract, but
-  # that ADR has not been implemented yet. Until Embedded Data Fields, Scoring
-  # Variables, and Text-analysis Sidecars are represented in Variable
-  # Dictionaries, keep the stricter raw-to-dictionary parity check disabled.
-  #
-  # nolint start: commented_code_linter
-  # checked_raw_response_columns <- raw_response_columns[
-  #   grepl("(^|_)QID[0-9]+", raw_response_columns) |
-  #     grepl("^SC_", raw_response_columns) |
-  #     grepl("_SCORE$", raw_response_columns)
-  # ]
-  # missing_from_dict <- setdiff(
-  #   checked_raw_response_columns,
-  #   dict_response_column_ids
-  # )
-  # nolint end
-  checked_raw_response_columns <- character()
-  missing_from_dict <- character()
+  checked_raw_response_columns <- checked_response_columns(
+    raw_response_columns,
+    metadata = metadata,
+    description = description,
+    response_column_map = response_column_map
+  )
+  missing_from_dict <- setdiff(
+    checked_raw_response_columns,
+    dict_response_column_ids
+  )
 
   list(
-    ok = length(missing_from_raw_response) == 0,
+    ok = length(missing_from_raw_response) == 0 &&
+      length(missing_from_dict) == 0,
     dict_response_column_ids = dict_response_column_ids,
     raw_response_columns = raw_response_columns,
     checked_raw_response_columns = checked_raw_response_columns,
@@ -500,8 +714,8 @@ stop_response_column_id_parity <- function(survey, parity) {
     messages <- c(
       messages,
       paste0(
-        "QID/scoring raw response columns missing from the Variable ",
-        "Dictionary: ",
+        "Question-backed and Metadata-defined raw response columns missing ",
+        "from the Variable Dictionary: ",
         column_sample(parity$missing_from_dict)
       )
     )
@@ -513,10 +727,20 @@ stop_response_column_id_parity <- function(survey, parity) {
   ))
 }
 
-assert_response_column_id_parity <- function(survey, dict, responses, run_dir) {
+assert_response_column_id_parity <- function(
+  survey,
+  dict,
+  responses,
+  run_dir,
+  metadata = NULL,
+  description = NULL
+) {
   parity <- response_column_id_parity(
     dict_response_column_ids = dict[["response_column_id"]],
-    raw_response_columns = names(responses)
+    raw_response_columns = names(responses),
+    metadata = metadata,
+    description = description,
+    response_column_map = attr(responses, "column_map", exact = TRUE)
   )
   write_response_column_id_parity(survey, parity, run_dir)
 
@@ -718,7 +942,9 @@ run_survey <- function(
         survey = survey,
         dict = results[[1]]$objects$dict,
         responses = artifacts$responses,
-        run_dir = run_dir
+        run_dir = run_dir,
+        metadata = artifacts$metadata,
+        description = artifacts$description
       )
     )
     lapply(results, function(result) {
