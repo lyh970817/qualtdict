@@ -11,7 +11,8 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
       "surveyID",
       "survey_name",
       "questions",
-      "embedded_data"
+      "embedded_data",
+      "scoring"
     )
   )
   expect_identical(normalised_metadata$surveyID, "SV_SYNTHETIC")
@@ -26,6 +27,11 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
     "qualtdict_normalised_embedded_data_fields"
   )
   expect_length(normalised_metadata$embedded_data, 0)
+  expect_s3_class(
+    normalised_metadata$scoring,
+    "qualtdict_normalised_scoring_variables"
+  )
+  expect_length(normalised_metadata$scoring, 0)
 
   question <- normalised_metadata$questions$QID1
   expect_s3_class(question, "qualtdict_normalised_question")
@@ -225,6 +231,131 @@ test_that("Embedded Data Field names normalise from supported flat shapes", {
       list(DataField = "Panel")
     )),
     c("Standalone", "Campaign", "Panel")
+  )
+})
+
+test_that("Scoring Variables normalise from survey description metadata", {
+  scoring <- normalise_qualtrics_metadata(
+    synthetic_scoring_raw_metadata()
+  )$scoring
+
+  expect_named(scoring, c("Total Score", "Q1"))
+  expect_identical(
+    scoring[["Total Score"]]$response_column_id,
+    "Total Score"
+  )
+  expect_identical(
+    scoring[["Total Score"]]$question_text,
+    "Scoring Variable: Total Score"
+  )
+})
+
+test_that("Scoring Variables normalise from nested scoring categories", {
+  scoring <- normalise_qualtrics_metadata(
+    synthetic_nested_scoring_raw_metadata()
+  )$scoring
+
+  expect_named(scoring, c("Total Score", "SC_SCREEN"))
+  expect_identical(
+    scoring[["Total Score"]]$response_column_id,
+    "SC_TOTAL"
+  )
+  expect_identical(
+    scoring[["SC_SCREEN"]]$response_column_id,
+    "SC_SCREEN"
+  )
+})
+
+test_that("Scoring Variable names normalise from supported shapes", {
+  expect_identical(
+    scoring_variable_names(tibble::tibble(name = c("Total", "", NA))),
+    "Total"
+  )
+  expect_identical(
+    normalise_scoring_variables(
+      list(
+        scoring = tibble::tibble(
+          Name = "Total",
+          responseColumnId = "SC_TOTAL"
+        )
+      )
+    )[["Total"]]$response_column_id,
+    "SC_TOTAL"
+  )
+  expect_identical(
+    scoring_variable_names(tibble::tibble(other = "Total")),
+    character()
+  )
+  expect_identical(
+    scoring_variable_names(c("Total", "", NA)),
+    "Total"
+  )
+  expect_identical(
+    scoring_variable_names(c(Total = "ignored", "")),
+    "Total"
+  )
+  expect_identical(
+    scoring_variable_names(list(
+      "Standalone",
+      Weighted = list(responseColumnId = "SC_1"),
+      list(outputName = "Percent"),
+      list(ID = "SC_2")
+    )),
+    c("Standalone", "Weighted", "Percent", "SC_2")
+  )
+  expect_identical(
+    scoring_variable_names(
+      scoring_variable_definitions(
+        list(ScoringCategories = list(list(ID = "SC_3", Name = "Nested")))
+      )
+    ),
+    "Nested"
+  )
+  expect_identical(
+    scoring_variable_response_column_id(
+      list(name = "Weighted", responseColumnId = "SC_1"),
+      "Weighted"
+    ),
+    "SC_1"
+  )
+  expect_identical(
+    scoring_variable_response_column_id("SC_4", "SC_4"),
+    "SC_4"
+  )
+  expect_identical(
+    scoring_variable_record(NULL, "Missing"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record("Total", "Total"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record(list(), "Missing"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record(tibble::tibble(other = "Total"), "Total"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record(tibble::tibble(name = "Total"), "Total"),
+    list(name = "Total")
+  )
+  expect_identical(
+    scoring_variable_record(tibble::tibble(name = "Total"), "Missing"),
+    list()
+  )
+  expect_identical(
+    scoring_variable_record(
+      list(Total = list(responseColumnId = "SC_5")),
+      "Total"
+    ),
+    list(responseColumnId = "SC_5")
+  )
+  expect_identical(
+    scoring_variable_record(list(list(name = "Other")), "Missing"),
+    list()
   )
 })
 

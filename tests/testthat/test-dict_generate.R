@@ -107,6 +107,71 @@ test_that("dict_generate represents flat Embedded Data Fields", {
   )
 })
 
+test_that("dict_generate represents Scoring Variables", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_scoring_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  scoring_rows <- dict[dict$row_source == "scoring", ]
+
+  expect_identical(
+    scoring_rows$response_column_id,
+    c("Total Score", "Q1")
+  )
+  expect_identical(scoring_rows$row_source, rep("scoring", 2))
+  expect_true(all(is.na(scoring_rows$qid)))
+  expect_true(all(is.na(scoring_rows$question_name)))
+  expect_true(all(is.na(scoring_rows$block)))
+  expect_identical(
+    scoring_rows$variable_name,
+    c("Total_Score", "Q1.2")
+  )
+  expect_identical(
+    scoring_rows$question,
+    c("Scoring Variable: Total Score", "Scoring Variable: Q1")
+  )
+  expect_true(all(is.na(scoring_rows$level)))
+  expect_true(all(is.na(scoring_rows$label)))
+
+  findings <- dict_validate(dict)$validation_findings
+  scoring_findings <- findings[
+    findings$response_column_id %in% scoring_rows$response_column_id,
+  ]
+  expect_identical(
+    scoring_findings$finding,
+    c("repaired_variable_name", "repaired_variable_name")
+  )
+  expect_identical(
+    scoring_findings$reason,
+    c("unsafe", "duplicate")
+  )
+})
+
+test_that("dict_generate represents nested Scoring Categories", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_nested_scoring_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  scoring_rows <- dict[dict$row_source == "scoring", ]
+
+  expect_identical(
+    scoring_rows$response_column_id,
+    c("SC_TOTAL", "SC_SCREEN")
+  )
+  expect_identical(
+    scoring_rows$variable_name,
+    c("Total_Score", "SC_SCREEN")
+  )
+  expect_true(all(is.na(scoring_rows$qid)))
+  expect_true(all(is.na(scoring_rows$block)))
+})
+
 test_that("dict_generate assigns Embedded Data Fields to previous blocks", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {
