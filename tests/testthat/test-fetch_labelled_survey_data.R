@@ -627,3 +627,159 @@ test_that("survey_split_blocks preserves unassigned Export Variables", {
     "ED1"
   )
 })
+
+test_that("Labelled Survey Data matches loop-prefixed MC text columns", {
+  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    x1_QID2 = "2",
+    x1_QID2_2_TEXT = "Crisp",
+    x2_QID2 = "1",
+    x2_QID2_2_TEXT = NA_character_
+  )
+
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
+
+  expect_named(
+    labelled_data,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "Q2",
+      "Q2.1",
+      "Q2.2",
+      "Q2.3"
+    )
+  )
+  expect_identical(unname(as.vector(labelled_data$Q2)), "2")
+  expect_identical(unname(as.vector(labelled_data[["Q2.1"]])), "Crisp")
+  expect_identical(unname(as.vector(labelled_data[["Q2.2"]])), "1")
+  expect_identical(
+    attr(labelled_data[["Q2.1"]], "label"),
+    "Explain your Apples answer"
+  )
+})
+
+test_that("Labelled Survey Data can match Loop and Merge response columns", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    x1_QID2_TEXT = "Because they are crisp",
+    x2_QID2_TEXT = "Because they are sweet"
+  )
+
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
+
+  expect_named(
+    labelled_data,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "Q2",
+      "Q2.1"
+    )
+  )
+  expect_identical(
+    unname(as.vector(labelled_data[["Q2"]])),
+    "Because they are crisp"
+  )
+  expect_identical(
+    unname(as.vector(labelled_data[["Q2.1"]])),
+    "Because they are sweet"
+  )
+  expect_identical(
+    attr(labelled_data[["Q2"]], "label"),
+    "Why did you choose Apples?"
+  )
+  expect_identical(
+    attr(labelled_data[["Q2.1"]], "label"),
+    "Why did you choose Bananas?"
+  )
+})
+
+test_that("Labelled Survey Data names by response column", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionName <- "1 Bad Name"
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  attr(dict, "class") <- c("qualtdict", class(dict))
+  survey <- tibble::tibble(
+    externalDataReference = "R_1",
+    startDate = "2026-06-01",
+    endDate = "2026-06-01",
+    QID1 = "1",
+    QID1_3_TEXT = "Because"
+  )
+
+  labelled_data <- survey_recode(
+    dict = dict,
+    dat = survey,
+    extra_columns = default_extra_columns(),
+    unanswer_recode = NULL,
+    unanswer_recode_multi = NULL
+  )
+
+  expect_named(
+    labelled_data,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "X1_Bad_Name",
+      "X1_Bad_Name.1"
+    )
+  )
+  expect_identical(unname(as.vector(labelled_data$X1_Bad_Name)), 1)
+  expect_identical(
+    unname(as.vector(labelled_data[["X1_Bad_Name.1"]])),
+    "Because"
+  )
+  expect_identical(
+    attr(labelled_data[["X1_Bad_Name.1"]], "label"),
+    "Choose one"
+  )
+})
