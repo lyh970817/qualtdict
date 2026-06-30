@@ -71,14 +71,17 @@ by Labelled Survey Data. Question-backed rows use
 \code{row_source = "question"}. Flat Embedded Data Fields defined by
 Qualtrics metadata use \code{row_source = "embedded_data"}. Scoring
 Variables defined by survey description metadata use
-\code{row_source = "scoring"}. Embedded Data Fields remain unassigned by
+\code{row_source = "scoring"}. Text-analysis Sidecars discovered from the
+response column map use \code{row_source = "text_analysis"} and inherit
+parent \code{qid}, \code{question_name}, and \code{block} when a clear
+parent QID can be determined. Embedded Data Fields remain unassigned by
 Survey Block unless
 \code{embedded_data_block_assignment} explicitly requests Survey Flow
-adjacency assignment. Scoring Variables remain unassigned by Survey Block.
-Text-analysis Sidecars defined by Qualtrics metadata
-use \code{row_source = "text_analysis"} and inherit parent \code{qid},
-\code{question_name}, and \code{block} when a clear parent QID can be
-determined.
+adjacency assignment. That assignment is based on Survey Flow returned by
+\code{fetch_description()}, where Embedded Data nodes carry field payloads;
+the type-only Survey Flow returned by \code{metadata()} is not used for
+Embedded Data Field locations. Scoring Variables remain unassigned by Survey
+Block.
 
 When \code{variable_name = "semantic_name"}, the Variable Dictionary also
 includes \code{semantic_name}. Semantic Names are readable best-effort

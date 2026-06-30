@@ -5,11 +5,11 @@ Status: accepted
 qualtdict will include Metadata-defined Export Variables in Variable
 Dictionaries alongside ordinary question-backed rows. Embedded Data Fields,
 Scoring Variables, and Text-analysis Sidecars are first-class Variable
-Dictionary rows when Qualtrics metadata defines them. They use the same
-`response_column_id` provenance key as question-backed rows, and the public
-Variable Dictionary schema will add `row_source` immediately after
-`response_column_id` to identify the kind of metadata fact that produced each
-row.
+Dictionary rows when Qualtrics metadata and response column metadata define
+them. They use the same `response_column_id` provenance key as question-backed
+rows, and the public Variable Dictionary schema will add `row_source`
+immediately after `response_column_id` to identify the kind of fact that
+produced each row.
 
 Initial `row_source` values are `question`, `embedded_data`, `scoring`, and
 `text_analysis`.
@@ -59,6 +59,8 @@ clear single-block relationship.
 Text-analysis Sidecars use `row_source = "text_analysis"`. When a sidecar has a
 clear parent QID, it inherits that parent question's `qid`, `question_name`, and
 `block`. If the parent cannot be determined, those fields remain `NA`.
+Text-analysis Sidecars are discovered from the response column map
+classification, not from the direct `metadata()` comments payload.
 
 Metadata-defined Export Variables use existing display metadata columns.
 `question` carries a human-readable description, while `item`, `level`, and
@@ -102,6 +104,14 @@ This policy applies only to Embedded Data Fields with a specific Survey Flow
 location. Embedded Data Fields known only from a flat metadata list remain
 `block = NA` regardless of the assignment policy.
 
+Embedded Data Field locations are read from the Survey Flow returned by
+`fetch_description()`, where Embedded Data nodes include
+`EmbeddedData[[i]]$Field`. The Survey Flow returned by `metadata()` can contain
+type-only Embedded Data nodes and is not used for field locations. The flat
+`metadata()` `embedded_data` list remains the complete source of Embedded Data
+Field rows; `fetch_description()` Survey Flow only adds `previous_block` and
+`next_block` candidates for those rows.
+
 If `"previous"` or `"next"` is requested and some Embedded Data Fields cannot be
 assigned, qualtdict leaves those fields with `block = NA` and emits one
 aggregate warning when `quiet = FALSE`. The warning is suppressed when
@@ -134,10 +144,10 @@ The public Variable Dictionary schema changes by adding `row_source` immediately
 after `response_column_id`.
 
 Dictionary generation must request and normalise additional Qualtrics metadata:
-embedded data from `metadata()` and scoring metadata from
-`fetch_description()`. Text-analysis Sidecars require metadata support for
-definition and parentage; parent-QID-derived block assignment is allowed only
-when the parent can be determined.
+flat embedded data from `metadata()`, Embedded Data Field Survey Flow locations
+and scoring metadata from `fetch_description()`, and Text-analysis Sidecars from
+response column map classification. Text-analysis parent-QID-derived block
+assignment is allowed only when the parent can be determined.
 
 Validation and Labelled Export must treat metadata-defined rows as represented
 dictionary rows while avoiding question-specific assumptions about levels,
