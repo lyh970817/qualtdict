@@ -96,6 +96,16 @@ synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata
 }
 
+synthetic_nested_survey_flow_embedded_data_raw_metadata <- function() {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$metadata$flow$Flow[[3]] <- list(
+    Type = "Branch",
+    Flow = list(raw_metadata$metadata$flow$Flow[[3]])
+  )
+
+  raw_metadata
+}
+
 synthetic_ambiguous_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$flow <- list(

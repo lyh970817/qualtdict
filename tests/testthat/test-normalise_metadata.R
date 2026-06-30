@@ -102,6 +102,26 @@ test_that("Survey Flow Embedded Data Fields normalise with block candidates", {
   )
 })
 
+test_that("nested Survey Flow Embedded Data Fields normalise with candidates", {
+  raw_metadata <- synthetic_nested_survey_flow_embedded_data_raw_metadata()
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  embedded_data <- normalised_metadata$embedded_data
+
+  expect_named(
+    embedded_data,
+    c("Before Main", "Between Blocks", "After Follow-up")
+  )
+  expect_identical(
+    embedded_data[["Between Blocks"]]$previous_block,
+    "Main Block"
+  )
+  expect_identical(
+    embedded_data[["Between Blocks"]]$next_block,
+    "Follow-up Block"
+  )
+})
+
 test_that("Survey Flow Embedded Data normalisation handles defensive shapes", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$flow <- list(
@@ -115,6 +135,55 @@ test_that("Survey Flow Embedded Data normalisation handles defensive shapes", {
     0
   )
 
+  raw_metadata$metadata$flow <- list(
+    first = list(Type = "EmbeddedData", Field = "Named Flow Field")
+  )
+  embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
+
+  expect_named(embedded_data, "Named Flow Field")
+  expect_identical(
+    embedded_data[["Named Flow Field"]]$previous_block,
+    NA_character_
+  )
+  expect_identical(
+    embedded_data[["Named Flow Field"]]$next_block,
+    NA_character_
+  )
+
+  raw_metadata$description$block <- NULL
+  raw_metadata$metadata$flow <- list(
+    Flow = list(
+      list(Type = "Block", ID = "BL_1"),
+      list(Type = "EmbeddedData", Field = "No Block Lookup")
+    )
+  )
+  embedded_data <- normalise_survey_flow_embedded_data_fields(
+    raw_metadata$metadata,
+    raw_metadata$description
+  )
+
+  expect_named(embedded_data, "No Block Lookup")
+  expect_identical(
+    embedded_data[["No Block Lookup"]]$previous_block,
+    NA_character_
+  )
+
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$flow <- list(
+    Flow = list(
+      list(Type = "EmbeddedData", Field = "No Next Block"),
+      list(Type = "Block", ID = "BL_UNKNOWN")
+    )
+  )
+  embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
+
+  expect_named(embedded_data, "No Next Block")
+  expect_identical(
+    embedded_data[["No Next Block"]]$next_block,
+    NA_character_
+  )
+
+  raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$flow <- list(
     Type = "EmbeddedData",
     EmbeddedData = list(Field = "Single Flow Field")

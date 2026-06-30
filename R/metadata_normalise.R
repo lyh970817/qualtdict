@@ -123,19 +123,25 @@ survey_flow_items <- function(flow) {
     return(list())
   }
 
-  items <- flow$Flow %||% flow$flow
-  if (is.null(items)) {
-    if (!is.na(survey_flow_item_type(flow))) {
+  if (!is.na(survey_flow_item_type(flow))) {
+    items <- flow$Flow %||% flow$flow
+    if (is.null(items)) {
       return(list(flow))
     }
 
-    items <- flow
-  }
-  if (is.null(names(items))) {
-    return(items)
+    return(survey_flow_items(items))
   }
 
-  unname(items)
+  items <- flow$Flow %||% flow$flow %||% flow
+  if (!is.null(names(items))) {
+    items <- unname(items)
+  }
+
+  unlist(
+    map(items, survey_flow_items),
+    recursive = FALSE,
+    use.names = FALSE
+  )
 }
 
 survey_flow_block_lookup <- function(blocks) {

@@ -164,6 +164,26 @@ test_that("dict_generate assigns Embedded Data Fields to next blocks", {
   )
 })
 
+test_that("dict_generate assigns nested Embedded Data Fields", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_nested_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate(
+    "SV_SYNTHETIC",
+    variable_name = "question_name",
+    embedded_data_block_assignment = "previous"
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_identical(
+    embedded_rows$block,
+    c(NA_character_, "Main Block", "Follow-up Block")
+  )
+})
+
 test_that("dict_generate leaves flat Embedded Data Fields unassigned", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {
