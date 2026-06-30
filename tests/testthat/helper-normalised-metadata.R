@@ -103,6 +103,240 @@ synthetic_text_analysis_raw_metadata <- function() {
   raw_metadata
 }
 
+glad_sa6_text_analysis_sidecar_ids <- function() {
+  c(
+    "QID694_TEXT_9079b4e757e24533be35ff4cTopics",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaActionability",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaEffort",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaEffortNumeric",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaEmotIntensity",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaEmotion",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaParTopics",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaSenPol",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaSenScore",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaSentiment",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaTopicSenLabel",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaTopicSenScore",
+    "QID694_TEXT_9079b4e7_gaygfh795aeaTopicHierarchy1"
+  )
+}
+
+edgi_signup_text_analysis_sidecar_ids <- function() {
+  c(
+    "QID121_1_e476cefa310845248231594eParTopics",
+    "QID121_1_e476cefa310845248231594eTopics"
+  )
+}
+
+synthetic_column_map_sidecar_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID508 <- list(
+    questionName = "DEM.AGE.1.0",
+    questionType = list(type = "TE", selector = "SL", subSelector = NULL),
+    questionText = "CurrentAge",
+    blocks = list(),
+    columns = list(),
+    choices = list(),
+    subQuestions = list()
+  )
+  raw_metadata$metadata$questions$QID626 <- list(
+    questionName = "DEM.DIS.2txt.0",
+    questionType = list(type = "TE", selector = "ML", subSelector = NULL),
+    questionText = "DisabilityAdditionalInfo",
+    blocks = list(),
+    columns = list(),
+    choices = list(),
+    subQuestions = list()
+  )
+  raw_metadata$metadata$questions$QID429 <- list(
+    questionName = "UXP.INF.1txt.0",
+    questionType = list(type = "TE", selector = "ESTB", subSelector = NULL),
+    questionText = paste(
+      "Is there any other information you would like to share",
+      "that relates to this study?"
+    ),
+    blocks = list(),
+    columns = list(),
+    choices = list(),
+    subQuestions = list()
+  )
+  raw_metadata$metadata$questions$QID694 <- list(
+    questionName = "CAM.TV.1txt.0",
+    questionType = list(type = "TE", selector = "SL", subSelector = NULL),
+    questionText = "CAM.TV.1txt.0",
+    blocks = list(),
+    columns = list(),
+    choices = list(),
+    subQuestions = list()
+  )
+  raw_metadata$metadata$questions$QID121 <- list(
+    questionName = "ED.ANT.6.0",
+    questionType = list(type = "TE", selector = "FORM", subSelector = NULL),
+    questionText = "ED.ANT.6.0",
+    blocks = list(),
+    columns = list(),
+    choices = list(
+      `1` = list(recode = "1", description = "First text field"),
+      `2` = list(recode = "2", description = "Second text field")
+    ),
+    subQuestions = list()
+  )
+  raw_metadata$metadata$questions$QID700 <- list(
+    questionName = "CHECK.ALL",
+    questionType = list(type = "MC", selector = "MAVR", subSelector = "TX"),
+    questionText = "Select all that apply",
+    blocks = list(),
+    columns = list(),
+    choices = list(
+      `1` = list(recode = "1", description = "First choice"),
+      `2` = list(recode = "2", description = "Second choice")
+    ),
+    subQuestions = list()
+  )
+
+  extra_qids <- c("QID508", "QID626", "QID429", "QID694", "QID121", "QID700")
+  raw_metadata$description$block$BL_1$BlockElements <- c(
+    raw_metadata$description$block$BL_1$BlockElements,
+    lapply(extra_qids, function(qid) list(QuestionID = qid))
+  )
+  for (qid in extra_qids) {
+    raw_metadata$description$question[[qid]] <- list(
+      Validation = list(Settings = list(ContentType = NULL))
+    )
+  }
+  raw_metadata$metadata$embedded_data <- list(
+    list(name = "Source Channel"),
+    list(name = "Cohort")
+  )
+  raw_metadata$description$scoring <- list(
+    ScoringCategories = list(
+      list(ID = "SC_TOTAL", Name = "Total Score"),
+      list(ID = "SC_HIDDEN", Name = "Hidden Score")
+    )
+  )
+
+  glad_ids <- glad_sa6_text_analysis_sidecar_ids()
+  glad_sub <- c(
+    "Topics",
+    "Actionability",
+    "Effort",
+    "Effort Numeric",
+    "Emotion Intensity",
+    "Emotion",
+    "Parent Topics",
+    "Sentiment Polarity",
+    "Sentiment Score",
+    "Sentiment",
+    "Topic Sentiment Label",
+    "Topic Sentiment Score",
+    "Topic Hierarchy Level 1"
+  )
+  edgi_ids <- edgi_signup_text_analysis_sidecar_ids()
+  edgi_sub <- c("Parent Topics", "Topics")
+  ordinary_ids <- c(
+    "QID1",
+    "QID1_3_TEXT",
+    "QID508_TEXT",
+    "QID626_TEXT",
+    "QID429_TEXT",
+    "QID700_1",
+    "QID121_1",
+    "QID700_DO_1",
+    "x27_QID700_1",
+    "8_QID508_TEXT"
+  )
+  system_ids <- c("StartTime", "EndDate", "Q_URL")
+
+  raw_metadata$response_column_map <- tibble::tibble(
+    qname = c(
+      system_ids,
+      ordinary_ids,
+      glad_ids,
+      edgi_ids,
+      "Source Channel",
+      "SC_TOTAL"
+    ),
+    ImportId = c(
+      system_ids,
+      c(
+        "QID1",
+        "QID1_3_TEXT",
+        "QID508_TEXT",
+        "QID626_TEXT",
+        "QID429_TEXT",
+        "QID700",
+        "QID121_1",
+        "QID700",
+        "QID700",
+        "QID508_TEXT"
+      ),
+      glad_ids,
+      edgi_ids,
+      "Source Channel",
+      "SC_TOTAL"
+    ),
+    description = c(
+      "Start Time",
+      "End Date",
+      "Survey URL",
+      "Choose one",
+      "Choose one - Other",
+      "CurrentAge",
+      "DisabilityAdditionalInfo",
+      "Other study information",
+      "Select all that apply - First choice",
+      "ED.ANT.6.0 - First text field",
+      "Select all that apply - Display Order - First choice",
+      "Select all that apply - First choice",
+      "CurrentAge",
+      paste("CAM.TV.1txt.0 -", glad_sub),
+      paste("ED.ANT.6.0_1 -", edgi_sub),
+      "Source Channel",
+      "Total Score"
+    ),
+    main = c(
+      "Start Time",
+      "End Date",
+      "Survey URL",
+      "Choose one",
+      "Choose one",
+      "CurrentAge",
+      "DisabilityAdditionalInfo",
+      "Other study information",
+      "Select all that apply",
+      "ED.ANT.6.0",
+      "Select all that apply",
+      "Select all that apply",
+      "CurrentAge",
+      rep("CAM.TV.1txt.0", length(glad_ids)),
+      rep("ED.ANT.6.0_1", length(edgi_ids)),
+      "Source Channel",
+      "Total Score"
+    ),
+    sub = c(
+      "",
+      "",
+      "",
+      "",
+      "Other",
+      "",
+      "",
+      "",
+      "First choice",
+      "First text field",
+      "Display Order - First choice",
+      "First choice",
+      "",
+      glad_sub,
+      edgi_sub,
+      "",
+      ""
+    )
+  )
+
+  raw_metadata
+}
+
 synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1

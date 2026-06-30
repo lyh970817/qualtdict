@@ -79,6 +79,33 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   )
 })
 
+test_that("metadata normalisation accepts qualtRics description aliases", {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$description$blocks <- raw_metadata$description$block
+  raw_metadata$description$questions <- raw_metadata$description$question
+  raw_metadata$description$block <- NULL
+  raw_metadata$description$question <- NULL
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expect_identical(
+    normalised_metadata$questions$QID1$survey_block,
+    "Main Block"
+  )
+  expect_identical(
+    normalised_metadata$questions$QID1$content_type,
+    "Number"
+  )
+  expect_identical(
+    normalised_metadata$embedded_data[["Between Blocks"]]$previous_block,
+    "Main Block"
+  )
+  expect_identical(
+    normalised_metadata$embedded_data[["Between Blocks"]]$next_block,
+    "Follow-up Block"
+  )
+})
+
 test_that("Text-analysis Sidecars normalise with parent question context", {
   raw_metadata <- synthetic_text_analysis_raw_metadata()
 
@@ -113,7 +140,202 @@ test_that("Text-analysis Sidecars normalise with parent question context", {
   expect_true(is.na(text_analysis[["Q1"]]$parent_block))
 })
 
+test_that("Text-analysis Sidecars normalise from response column maps", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    ImportId = c(
+      "QID1_3_TEXT",
+      "QID1_3_TEXT_SENTIMENT",
+      "QID1_3_e476cefa310845248231594eParTopics"
+    ),
+    description = c(
+      "Choose one - Other",
+      "Q1 Other - Sentiment",
+      "Q1 Other - Parent Topics"
+    ),
+    main = c("Choose one", "Q1 Other", "Q1 Other"),
+    sub = c("", "Sentiment", "Parent Topics")
+  )
+
+  text_analysis <- normalise_qualtrics_metadata(raw_metadata)$text_analysis
+
+  expect_named(
+    text_analysis,
+    c("Q1 Other - Sentiment", "Q1 Other - Parent Topics")
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Sentiment"]]$response_column_id,
+    "QID1_3_TEXT_SENTIMENT"
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Parent Topics"]]$response_column_id,
+    "QID1_3_e476cefa310845248231594eParTopics"
+  )
+  expect_identical(text_analysis[["Q1 Other - Sentiment"]]$parent_qid, "QID1")
+  expect_identical(
+    text_analysis[["Q1 Other - Sentiment"]]$parent_question_name,
+    "Q1"
+  )
+  expect_identical(
+    text_analysis[["Q1 Other - Sentiment"]]$parent_block,
+    "Main Block"
+  )
+})
+
+test_that("column-map classification identifies metadata-defined exports", {
+  raw_metadata <- synthetic_column_map_sidecar_raw_metadata()
+  questions <- normalise_qualtrics_questions(
+    raw_metadata$metadata,
+    raw_metadata$description
+  )
+  embedded_data <- normalise_embedded_data_fields(
+    raw_metadata$metadata,
+    raw_metadata$description
+  )
+  scoring <- normalise_scoring_variables(
+    raw_metadata$description,
+    response_column_map = raw_metadata$response_column_map
+  )
+
+  classified <- classify_response_column_map(
+    raw_metadata$response_column_map,
+    questions = questions,
+    embedded_data = embedded_data,
+    scoring = scoring
+  )
+
+  row_source <- stats::setNames(
+    classified$row_source,
+    classified$response_column_id
+  )
+  expect_identical(row_source[["Source Channel"]], "embedded_data")
+  expect_identical(row_source[["SC_TOTAL"]], "scoring")
+  expect_false("SC_HIDDEN" %in% classified$response_column_id)
+  expect_identical(row_source[["StartTime"]], "system")
+  expect_identical(row_source[["EndDate"]], "system")
+  expect_identical(row_source[["Q_URL"]], "system")
+  expect_identical(row_source[["QID508_TEXT"]], "question")
+  expect_identical(row_source[["QID626_TEXT"]], "question")
+  expect_identical(row_source[["QID429_TEXT"]], "question")
+  expect_identical(row_source[["QID700_1"]], "question")
+  expect_identical(row_source[["QID121_1"]], "question")
+  expect_identical(row_source[["QID700_DO_1"]], "question_auxiliary")
+  expect_identical(row_source[["x27_QID700_1"]], "question_auxiliary")
+  expect_identical(row_source[["8_QID508_TEXT"]], "question_auxiliary")
+  expect_true(all(
+    glad_sa6_text_analysis_sidecar_ids() %in%
+      classified$response_column_id[classified$row_source == "text_analysis"]
+  ))
+  expect_true(all(
+    edgi_signup_text_analysis_sidecar_ids() %in%
+      classified$response_column_id[classified$row_source == "text_analysis"]
+  ))
+})
+
+test_that("Text-analysis Sidecars use column-map classification", {
+  raw_metadata <- synthetic_column_map_sidecar_raw_metadata()
+
+  text_analysis <- normalise_qualtrics_metadata(raw_metadata)$text_analysis
+  text_analysis_ids <- map_chr(text_analysis, "response_column_id")
+
+  expect_setequal(
+    text_analysis_ids,
+    c(
+      glad_sa6_text_analysis_sidecar_ids(),
+      edgi_signup_text_analysis_sidecar_ids()
+    )
+  )
+  expect_length(text_analysis_ids, 15)
+  expect_false("QID508_TEXT" %in% text_analysis_ids)
+  expect_false("QID626_TEXT" %in% text_analysis_ids)
+  expect_false("QID429_TEXT" %in% text_analysis_ids)
+  expect_false("QID700_1" %in% text_analysis_ids)
+  expect_false("QID121_1" %in% text_analysis_ids)
+  expect_false("QID700_DO_1" %in% text_analysis_ids)
+  expect_false("x27_QID700_1" %in% text_analysis_ids)
+  expect_false("8_QID508_TEXT" %in% text_analysis_ids)
+  expect_identical(text_analysis[[1]]$parent_qid, "QID694")
+  expect_identical(text_analysis[[14]]$parent_qid, "QID121")
+})
+
+test_that("Text-analysis Sidecars do not require known metric suffixes", {
+  raw_metadata <- synthetic_column_map_sidecar_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    qname = "QID694_TEXT_9079b4e7_gaygfh795aeaModelLabel",
+    ImportId = "QID694_TEXT_9079b4e7_gaygfh795aeaModelLabel",
+    description = "CAM.TV.1txt.0 - Model Label",
+    main = "CAM.TV.1txt.0",
+    sub = "Model Label"
+  )
+
+  text_analysis <- normalise_qualtrics_metadata(raw_metadata)$text_analysis
+
+  expect_named(text_analysis, "CAM.TV.1txt.0 - Model Label")
+  expect_identical(
+    text_analysis[[1]]$response_column_id,
+    "QID694_TEXT_9079b4e7_gaygfh795aeaModelLabel"
+  )
+})
+
+test_that("ordinary SBS response columns are not Text-analysis Sidecars", {
+  raw_metadata <- synthetic_sbs_multiple_answer_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    qname = c("QID2#3_2_1", "QID2#3_4_2", "QID2#1_4_TEXT"),
+    ImportId = c("QID2#3_2_1", "QID2#3_4_2", "QID2#1_4_TEXT"),
+    description = c(
+      "Side by side - Multiple column - Second row - Checked A",
+      "Side by side - Multiple column - Fourth row - Checked B",
+      "Side by side - Text column - Fourth row"
+    ),
+    main = rep("Side by side", 3),
+    sub = c(
+      "Multiple column - Second row - Checked A",
+      "Multiple column - Fourth row - Checked B",
+      "Text column - Fourth row"
+    )
+  )
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  classified <- classify_response_column_map(
+    raw_metadata$response_column_map,
+    questions = normalised_metadata$questions,
+    embedded_data = normalised_metadata$embedded_data,
+    scoring = normalised_metadata$scoring
+  )
+
+  expect_length(normalised_metadata$text_analysis, 0)
+  expect_identical(
+    classified$row_source,
+    c("question", "question", "question_auxiliary")
+  )
+  expect_false(any(classified$row_source == "text_analysis"))
+})
+
 test_that("Text-analysis Sidecar fallback paths normalise", {
+  expect_identical(text_analysis_sidecar_records(list(), list()), list())
+  expect_identical(
+    classify_response_column_map(
+      tibble::tibble(),
+      questions = list(),
+      embedded_data = list(),
+      scoring = list()
+    ),
+    empty_response_column_map_classification()
+  )
+  expect_identical(
+    ordinary_question_response_column_ids(list()),
+    character()
+  )
+  expect_identical(
+    text_analysis_sidecars_from_response_column_map(
+      tibble::tibble(ImportId = "QID1_TEXT_SENTIMENT")
+    ),
+    list()
+  )
+  expect_identical(
+    response_column_map_ids(tibble::tibble(other = "QID1_TEXT_SENTIMENT")),
+    character()
+  )
   expect_null(
     normalise_text_analysis_sidecar(
       list(outputName = ""),
@@ -160,6 +382,39 @@ test_that("Text-analysis Sidecar record shapes normalise", {
     text_analysis_sidecar_record_list(c(Sentiment = "QID1_TEXT_SENTIMENT")),
     list(Sentiment = "QID1_TEXT_SENTIMENT")
   )
+  expect_identical(
+    text_analysis_sidecar_record_key(list(), NA),
+    "record_index:NA"
+  )
+})
+
+test_that("response-column map classifier reports edge-case unknown reasons", {
+  raw_metadata <- synthetic_column_map_sidecar_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    qname = c(NA_character_, "QID999_derived", "QID694_derived_empty"),
+    ImportId = c(NA_character_, "QID999_derived", "QID694_derived_empty"),
+    description = c(NA_character_, "Unknown parent derived row", ""),
+    main = c(NA_character_, "Unknown parent", ""),
+    sub = c(NA_character_, "Derived row", "")
+  )
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  classified <- classify_response_column_map(
+    raw_metadata$response_column_map,
+    questions = normalised_metadata$questions,
+    embedded_data = normalised_metadata$embedded_data,
+    scoring = normalised_metadata$scoring
+  )
+
+  expect_identical(
+    classified$reason,
+    c(
+      "missing_response_column_id",
+      "no_known_parent_qid",
+      "no_derived_column_map_fields"
+    )
+  )
+  expect_identical(classified$row_source, rep("unknown", 3))
 })
 
 test_that("Survey Flow Embedded Data Fields normalise with block candidates", {
@@ -353,6 +608,18 @@ test_that("Scoring Variables normalise from nested scoring categories", {
     scoring[["SC_SCREEN"]]$response_column_id,
     "SC_SCREEN"
   )
+})
+
+test_that("Scoring Variables skip non-exported response columns when known", {
+  raw_metadata <- synthetic_nested_scoring_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    ImportId = "SC_TOTAL"
+  )
+
+  scoring <- normalise_qualtrics_metadata(raw_metadata)$scoring
+
+  expect_named(scoring, "Total Score")
+  expect_identical(scoring[["Total Score"]]$response_column_id, "SC_TOTAL")
 })
 
 test_that("Scoring Variable names normalise from supported shapes", {
