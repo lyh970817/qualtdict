@@ -343,7 +343,7 @@ normalise_survey_flow_embedded_data_fields <- function(mt, mt_d) {
     return(empty_normalised_embedded_data_fields())
   }
 
-  block_lookup <- survey_flow_block_lookup(description_blocks(mt_d))
+  block_lookup <- survey_flow_block_lookup(mt_d[["blocks"]])
   block_names <- map_chr(
     flow_items,
     survey_flow_block_name,
@@ -1374,7 +1374,7 @@ normalise_question_block_metadata <- function(mt, mt_d, qids) {
 }
 
 block_metadata <- function(mt, mt_d) {
-  imap(description_blocks(mt_d), function(block, block_id) {
+  imap(mt_d[["blocks"]], function(block, block_id) {
     looping_options <- block$Options$LoopingOptions
     list(
       description = block$Description,
@@ -1385,14 +1385,6 @@ block_metadata <- function(mt, mt_d) {
       looping_column_names = mt$loopAndMerge[[block_id]]$columnNames
     )
   })
-}
-
-description_blocks <- function(mt_d) {
-  mt_d$block %||% mt_d$blocks
-}
-
-description_questions <- function(mt_d) {
-  mt_d$question %||% mt_d$questions
 }
 
 question_metadata <- function(mt) {
@@ -1412,7 +1404,7 @@ question_metadata <- function(mt) {
 }
 
 normalise_question_content_types <- function(mt_d, qids) {
-  content_type_meta <- description_questions(mt_d) |>
+  content_type_meta <- mt_d[["questions"]] |>
     map("Validation") |>
     map("Settings") |>
     map("ContentType") |>

@@ -93,7 +93,7 @@ test_that("generated dictionary finalisation supplies default findings", {
 
 test_that("metadata fetching combines Qualtrics metadata endpoints", {
   metadata <- list(metadata = list(name = "Fetched Survey"))
-  description <- list(block = list(), question = list())
+  description <- list(blocks = list(), questions = list())
   local_mocked_bindings(
     metadata2 = function(surveyID, elements) {
       expect_identical(surveyID, "SV_FETCH")
@@ -125,7 +125,7 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
 
 test_that("metadata fetching degrades without response column maps", {
   metadata <- list(metadata = list(name = "Fetched Survey"))
-  description <- list(block = list(), question = list())
+  description <- list(blocks = list(), questions = list())
   local_mocked_bindings(
     metadata2 = function(surveyID, elements) {
       metadata

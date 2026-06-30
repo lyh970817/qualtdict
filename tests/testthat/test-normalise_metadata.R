@@ -79,33 +79,6 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   )
 })
 
-test_that("metadata normalisation accepts qualtRics description aliases", {
-  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
-  raw_metadata$description$blocks <- raw_metadata$description$block
-  raw_metadata$description$questions <- raw_metadata$description$question
-  raw_metadata$description$block <- NULL
-  raw_metadata$description$question <- NULL
-
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
-
-  expect_identical(
-    normalised_metadata$questions$QID1$survey_block,
-    "Main Block"
-  )
-  expect_identical(
-    normalised_metadata$questions$QID1$content_type,
-    "Number"
-  )
-  expect_identical(
-    normalised_metadata$embedded_data[["Between Blocks"]]$previous_block,
-    "Main Block"
-  )
-  expect_identical(
-    normalised_metadata$embedded_data[["Between Blocks"]]$next_block,
-    "Follow-up Block"
-  )
-})
-
 test_that("Text-analysis Sidecars normalise with parent question context", {
   raw_metadata <- synthetic_text_analysis_raw_metadata()
 
@@ -500,7 +473,7 @@ test_that("Survey Flow Embedded Data normalisation handles defensive shapes", {
     NA_character_
   )
 
-  raw_metadata$description$block <- NULL
+  raw_metadata$description$blocks <- NULL
   raw_metadata$metadata$flow <- list(
     Flow = list(
       list(Type = "Block", ID = "BL_1"),
@@ -779,12 +752,12 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
   raw_metadata$metadata$questions$QID1$questionName <- "1 Bad Name"
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
   raw_metadata$metadata$questions$QID2$questionName <- "1 Bad Name"
-  raw_metadata$description$block$BL_1$BlockElements <- list(
+  raw_metadata$description$blocks$BL_1$BlockElements <- list(
     list(QuestionID = "QID1"),
     list(QuestionID = "QID2")
   )
-  raw_metadata$description$question$QID2 <-
-    raw_metadata$description$question$QID1
+  raw_metadata$description$questions$QID2 <-
+    raw_metadata$description$questions$QID1
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
   dict <- variable_dictionary_from_normalised_metadata(
@@ -1248,12 +1221,12 @@ test_that("semantic-name dictionaries use final variable_name repair", {
   raw_metadata$metadata$questions$QID1$questionText <- "123 bad name"
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
   raw_metadata$metadata$questions$QID2$questionName <- "Q2"
-  raw_metadata$description$block$BL_1$BlockElements <- list(
+  raw_metadata$description$blocks$BL_1$BlockElements <- list(
     list(QuestionID = "QID1"),
     list(QuestionID = "QID2")
   )
-  raw_metadata$description$question$QID2 <-
-    raw_metadata$description$question$QID1
+  raw_metadata$description$questions$QID2 <-
+    raw_metadata$description$questions$QID1
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
   dict <- variable_dictionary_from_normalised_metadata(
