@@ -107,6 +107,151 @@ test_that("dict_generate represents flat Embedded Data Fields", {
   )
 })
 
+test_that("dict_generate assigns Embedded Data Fields to previous blocks", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate(
+    "SV_SYNTHETIC",
+    variable_name = "question_name",
+    embedded_data_block_assignment = "previous"
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_identical(
+    embedded_rows$response_column_id,
+    c("Before Main", "Between Blocks", "After Follow-up")
+  )
+  expect_identical(
+    embedded_rows$block,
+    c(NA_character_, "Main Block", "Follow-up Block")
+  )
+})
+
+test_that("dict_generate defaults flow Embedded Data Fields to no block", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_true(all(is.na(embedded_rows$block)))
+})
+
+test_that("dict_generate assigns Embedded Data Fields to next blocks", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate(
+    "SV_SYNTHETIC",
+    variable_name = "question_name",
+    embedded_data_block_assignment = "next"
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_identical(
+    embedded_rows$block,
+    c("Main Block", "Follow-up Block", NA_character_)
+  )
+})
+
+test_that("dict_generate assigns nested Embedded Data Fields", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_nested_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate(
+    "SV_SYNTHETIC",
+    variable_name = "question_name",
+    embedded_data_block_assignment = "previous"
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_identical(
+    embedded_rows$block,
+    c(NA_character_, "Main Block", "Follow-up Block")
+  )
+})
+
+test_that("dict_generate leaves flat Embedded Data Fields unassigned", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_flat_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- dict_generate(
+    "SV_SYNTHETIC",
+    variable_name = "question_name",
+    embedded_data_block_assignment = "previous"
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_true(all(is.na(embedded_rows$block)))
+})
+
+test_that("dict_generate warns once for partial Embedded Data assignment", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  expect_warning(
+    dict <- dict_generate(
+      "SV_SYNTHETIC",
+      variable_name = "question_name",
+      embedded_data_block_assignment = "previous",
+      quiet = FALSE
+    ),
+    "Some Embedded Data Fields could not be assigned"
+  )
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_identical(
+    embedded_rows$block,
+    c(NA_character_, "Main Block", "Follow-up Block")
+  )
+  expect_silent(
+    dict_generate(
+      "SV_SYNTHETIC",
+      variable_name = "question_name",
+      embedded_data_block_assignment = "previous",
+      quiet = TRUE
+    )
+  )
+})
+
+test_that("dict_generate leaves ambiguous Embedded Data Fields unassigned", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_ambiguous_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  dict <- suppressWarnings(dict_generate(
+    "SV_SYNTHETIC",
+    variable_name = "question_name",
+    embedded_data_block_assignment = "previous",
+    quiet = FALSE
+  ))
+  embedded_rows <- dict[dict$row_source == "embedded_data", ]
+
+  expect_identical(embedded_rows$response_column_id, "Duplicated Field")
+  expect_true(is.na(embedded_rows$block))
+})
+
 test_that("dict_validate reports repaired Embedded Data Field names", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {
