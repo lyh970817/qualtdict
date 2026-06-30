@@ -74,41 +74,36 @@ test_that("nested Survey Flow Embedded Data Fields normalise with candidates", {
 })
 
 test_that("metadata flow does not locate Embedded Data Fields", {
-  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$flow <- list(
+    Flow = list(
+      list(type = "EmbeddedData"),
+      list(Type = "EmbeddedData", Field = "Ignored Flow Field")
+    )
+  )
+  raw_metadata$description$flow <- list()
 
-  embedded_data <- normalise_embedded_data_fields(
-    raw_metadata$metadata,
-    raw_metadata$description
+  expect_length(
+    normalise_qualtrics_metadata(raw_metadata)$embedded_data,
+    0
+  )
+})
+
+test_that("description Survey Flow locations merge only onto flat fields", {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$metadata$embedded_data <- embedded_data_records(
+    c("Before Main", "Flat Only")
   )
 
+  embedded_data <- normalise_qualtrics_metadata(raw_metadata)$embedded_data
+
+  expect_named(embedded_data, c("Before Main", "Flat Only"))
   expect_identical(
     embedded_data[["Before Main"]]$next_block,
     "Main Block"
   )
   expect_null(embedded_data[["Flat Only"]]$previous_block)
   expect_null(embedded_data[["Flat Only"]]$next_block)
-})
-
-test_that("description Survey Flow locations merge only onto flat fields", {
-  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
-  raw_metadata$description$blocks <- NULL
-
-  embedded_data <- normalise_survey_flow_embedded_data_fields(
-    raw_metadata$description
-  )
-
-  expect_named(
-    embedded_data,
-    c("Before Main", "Between Blocks", "After Follow-up")
-  )
-  expect_identical(
-    embedded_data[["Between Blocks"]]$previous_block,
-    NA_character_
-  )
-  expect_identical(
-    embedded_data[["Between Blocks"]]$next_block,
-    NA_character_
-  )
 })
 
 test_that("description Survey Flow Embedded Data skips missing block lookups", {
