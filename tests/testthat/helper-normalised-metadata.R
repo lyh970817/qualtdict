@@ -62,6 +62,69 @@ synthetic_flat_embedded_data_raw_metadata <- function() {
   raw_metadata
 }
 
+synthetic_survey_flow_embedded_data_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
+  raw_metadata$metadata$questions$QID2$questionName <- "Q2"
+  raw_metadata$metadata$questions$QID2$questionText <- "Follow-up question"
+  raw_metadata$description$question$QID2 <-
+    raw_metadata$description$question$QID1
+  raw_metadata$description$block$BL_2 <- raw_metadata$description$block$BL_1
+  raw_metadata$description$block$BL_2$Description <- "Follow-up Block"
+  raw_metadata$description$block$BL_2$BlockElements <- list(
+    list(QuestionID = "QID2")
+  )
+  raw_metadata$metadata$flow <- list(
+    Flow = list(
+      list(
+        Type = "EmbeddedData",
+        EmbeddedData = list(list(Field = "Before Main"))
+      ),
+      list(Type = "Block", ID = "BL_1"),
+      list(
+        Type = "EmbeddedData",
+        EmbeddedData = list(list(Field = "Between Blocks"))
+      ),
+      list(Type = "Block", ID = "BL_2"),
+      list(
+        Type = "EmbeddedData",
+        EmbeddedData = list(list(Field = "After Follow-up"))
+      )
+    )
+  )
+
+  raw_metadata
+}
+
+synthetic_nested_survey_flow_embedded_data_raw_metadata <- function() {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$metadata$flow$Flow[[3]] <- list(
+    Type = "Branch",
+    Flow = list(raw_metadata$metadata$flow$Flow[[3]])
+  )
+
+  raw_metadata
+}
+
+synthetic_ambiguous_survey_flow_embedded_data_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$flow <- list(
+    Flow = list(
+      list(
+        Type = "EmbeddedData",
+        EmbeddedData = list(list(Field = "Duplicated Field"))
+      ),
+      list(Type = "Block", ID = "BL_1"),
+      list(
+        Type = "EmbeddedData",
+        EmbeddedData = list(list(Field = "Duplicated Field"))
+      )
+    )
+  )
+
+  raw_metadata
+}
+
 synthetic_loop_and_merge_raw_metadata <- function(
   question_text = "Why did you choose ${lm://Field/1}?"
 ) {
