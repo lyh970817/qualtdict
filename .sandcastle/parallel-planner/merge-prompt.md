@@ -9,16 +9,36 @@ Branch-to-issue mapping:
 
 {{ISSUE_BRANCHES}}
 
+# BASE BRANCH POLICY
+
+The GitHub base branch is always `main`. The publisher may be running from a
+dedicated runner branch such as `sandcastle/runner`; do not treat the current
+checkout branch as the PR base, and never open PRs against the runner branch.
+
+Use `origin/main` as the current base for diffs, rebases, and mergeability
+checks. Before publishing or re-checking a branch, run `git fetch origin main`.
+Open PRs with `gh pr create --base main --head <branch>`.
+
+After each PR merge, update local base state without checking out local `main`.
+If this checkout has a `sandcastle/runner` branch, switch back to it and
+fast-forward it from `origin/main`:
+
+`git switch sandcastle/runner && git fetch origin main && git merge --ff-only origin/main`
+
+If this checkout is already on local `main` and no runner branch is being used,
+`git pull --ff-only` is acceptable. Do not merge completed issue branches into
+any local base branch; the GitHub PR merge is the merge.
+
 For each branch:
 
-1. Inspect the branch diff against the current base branch.
+1. Inspect the branch diff against `origin/main`.
 2. Run `Rscript -e 'devtools::test()'` for that branch before publishing it.
    Do not run `devtools::check()` manually; R CMD check belongs to the
    configured pre-push hook and should run during `git push`.
 3. If tests or the pre-push hook fail, fix the issue on the branch, commit the
    fix, and rerun the relevant check before proceeding.
 4. Push the branch with `git push -u origin <branch>`.
-5. Open a pull request with `gh pr create`, targeting the current base branch.
+5. Open a pull request with `gh pr create --base main --head <branch>`.
    Include a closing keyword such as `Fixes #<ID>` in the PR body so GitHub
    closes the issue when the PR merges.
 6. If a PR already exists for the branch, update/reuse it instead of creating a
@@ -51,7 +71,8 @@ the smoke command exits before treating the agent as idle. Missing artifacts
 are not a failure; report that the smoke check could not be run.
 
 Do not merge branches locally into the base branch. The PR merge is the merge.
-After each PR merge, update the local base branch with `git pull --ff-only`.
+After each PR merge, update the runner/base state as described in the base
+branch policy above.
 
 # CLOSE ISSUES
 

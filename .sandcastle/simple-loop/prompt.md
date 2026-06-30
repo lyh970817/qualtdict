@@ -25,6 +25,27 @@ Each issue includes:
 
 You are an autonomous coding agent working through issues one at a time.
 
+## Base branch policy
+
+The GitHub base branch is always `main`. This workflow may run from a dedicated
+runner branch such as `sandcastle/runner`; do not treat the current checkout
+branch as the PR base, and never open PRs against the runner branch.
+
+Before creating or updating an issue branch, run `git fetch origin main`. Start
+new issue branches from `origin/main`, and use `origin/main` for diffs, rebases,
+and mergeability checks. Open PRs with
+`gh pr create --base main --head sandcastle/issue-<ID>`.
+
+After a PR merge, update local base state without checking out local `main`. If
+this checkout has a `sandcastle/runner` branch, switch back to it and
+fast-forward it from `origin/main`:
+
+`git switch sandcastle/runner && git fetch origin main && git merge --ff-only origin/main`
+
+If this checkout is already on local `main` and no runner branch is being used,
+`git pull --ff-only` is acceptable. Do not merge issue branches into any local
+base branch; the GitHub PR merge is the merge.
+
 ## Priority order
 
 Work on issues in this order:
@@ -73,11 +94,11 @@ as context.
 - Never implement or close a PRD container. If all remaining issues are PRD
   containers or blocked, leave them open and output the completion signal.
 - Before editing files, create or check out a deterministic issue branch named
-  `sandcastle/issue-<ID>`. Do not work directly on the base branch.
+  `sandcastle/issue-<ID>`. Do not work directly on the runner or base branch.
 - After verification succeeds, run `git push -u origin sandcastle/issue-<ID>`.
-- Open a PR against the original base branch with `gh pr create`. If a PR
-  already exists for the branch, update/reuse it instead of creating a
-  duplicate.
+- Open a PR against `main` with `gh pr create --base main --head
+  sandcastle/issue-<ID>`. If a PR already exists for the branch, update/reuse it
+  instead of creating a duplicate.
 - If merging this PR completes a parent PRD, add a closing keyword for that
   parent PRD to the PR body before merging. Only add that parent PRD closing
   keyword after checking that all linked implementation issues for the PRD are
