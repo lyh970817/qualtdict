@@ -28,7 +28,7 @@ synthetic_mc_text_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -42,7 +42,7 @@ synthetic_mc_text_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = "ValidNumber")
@@ -195,12 +195,12 @@ synthetic_column_map_sidecar_raw_metadata <- function() {
   )
 
   extra_qids <- c("QID508", "QID626", "QID429", "QID694", "QID121", "QID700")
-  raw_metadata$description$block$BL_1$BlockElements <- c(
-    raw_metadata$description$block$BL_1$BlockElements,
+  raw_metadata$description$blocks$BL_1$BlockElements <- c(
+    raw_metadata$description$blocks$BL_1$BlockElements,
     lapply(extra_qids, function(qid) list(QuestionID = qid))
   )
   for (qid in extra_qids) {
-    raw_metadata$description$question[[qid]] <- list(
+    raw_metadata$description$questions[[qid]] <- list(
       Validation = list(Settings = list(ContentType = NULL))
     )
   }
@@ -342,11 +342,11 @@ synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1
   raw_metadata$metadata$questions$QID2$questionName <- "Q2"
   raw_metadata$metadata$questions$QID2$questionText <- "Follow-up question"
-  raw_metadata$description$question$QID2 <-
-    raw_metadata$description$question$QID1
-  raw_metadata$description$block$BL_2 <- raw_metadata$description$block$BL_1
-  raw_metadata$description$block$BL_2$Description <- "Follow-up Block"
-  raw_metadata$description$block$BL_2$BlockElements <- list(
+  raw_metadata$description$questions$QID2 <-
+    raw_metadata$description$questions$QID1
+  raw_metadata$description$blocks$BL_2 <- raw_metadata$description$blocks$BL_1
+  raw_metadata$description$blocks$BL_2$Description <- "Follow-up Block"
+  raw_metadata$description$blocks$BL_2$BlockElements <- list(
     list(QuestionID = "QID2")
   )
   raw_metadata$metadata$flow <- list(
@@ -440,7 +440,7 @@ synthetic_loop_and_merge_raw_metadata <- function(
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_SOURCE = list(
           Description = "Source Block",
           BlockElements = list(
@@ -469,7 +469,7 @@ synthetic_loop_and_merge_raw_metadata <- function(
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = "ValidNumber")
@@ -490,7 +490,7 @@ synthetic_multi_field_loop_and_merge_raw_metadata <- function() {
     "Compare ${lm://Field/1} with ${lm://Field/2}"
   )
 
-  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$Static <- list(
+  raw_metadata$description$blocks$BL_LOOP$Options$LoopingOptions$Static <- list(
     x1 = list(`1` = "", `2` = "Red fruit"),
     x2 = list(`1` = "", `2` = "Yellow fruit")
   )
@@ -504,10 +504,10 @@ synthetic_static_loop_and_merge_raw_metadata <- function() {
   )
 
   raw_metadata$metadata$questions$QID1 <- NULL
-  raw_metadata$description$question$QID1 <- NULL
-  raw_metadata$description$block$BL_SOURCE <- NULL
-  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$QID <- NULL
-  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$Static <- list(
+  raw_metadata$description$questions$QID1 <- NULL
+  raw_metadata$description$blocks$BL_SOURCE <- NULL
+  raw_metadata$description$blocks$BL_LOOP$Options$LoopingOptions$QID <- NULL
+  raw_metadata$description$blocks$BL_LOOP$Options$LoopingOptions$Static <- list(
     `1` = list(`1` = "Apples", `2` = "Red fruit"),
     `2` = list(`1` = "Bananas", `2` = "Yellow fruit")
   )
@@ -543,7 +543,7 @@ synthetic_matrix_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -557,7 +557,7 @@ synthetic_matrix_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = "ValidNumber")
@@ -596,7 +596,7 @@ synthetic_mc_x_choice_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -610,7 +610,7 @@ synthetic_mc_x_choice_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID126879611 = list(
           Validation = list(
             Settings = list(ContentType = NULL)
@@ -653,7 +653,7 @@ synthetic_mc_recode_raw_metadata <- function(selector = "MACOL") {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -667,7 +667,7 @@ synthetic_mc_recode_raw_metadata <- function(selector = "MACOL") {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = NULL)
@@ -735,7 +735,7 @@ synthetic_sbs_multiple_answer_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -749,7 +749,7 @@ synthetic_sbs_multiple_answer_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID2 = list(
           Validation = list(
             Settings = list(ContentType = NULL)
@@ -845,7 +845,7 @@ synthetic_slider_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -859,7 +859,7 @@ synthetic_slider_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = NULL)
@@ -881,7 +881,7 @@ synthetic_numeric_looped_text_raw_metadata <- function() {
     }),
     as.character(1:12)
   )
-  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$Static <-
+  raw_metadata$description$blocks$BL_LOOP$Options$LoopingOptions$Static <-
     stats::setNames(
       lapply(1:12, function(i) list(`1` = "")),
       as.character(1:12)
@@ -889,12 +889,12 @@ synthetic_numeric_looped_text_raw_metadata <- function() {
 
   raw_metadata$metadata$questions$QID2$questionName <- "Q3"
   names(raw_metadata$metadata$questions)[2] <- "QID3"
-  raw_metadata$description$block$BL_LOOP$BlockElements <- list(
+  raw_metadata$description$blocks$BL_LOOP$BlockElements <- list(
     list(QuestionID = "QID3")
   )
-  raw_metadata$description$question$QID3 <-
-    raw_metadata$description$question$QID2
-  raw_metadata$description$question$QID2 <- NULL
+  raw_metadata$description$questions$QID3 <-
+    raw_metadata$description$questions$QID2
+  raw_metadata$description$questions$QID2 <- NULL
 
   raw_metadata
 }
@@ -909,7 +909,7 @@ synthetic_static_numeric_looped_text_raw_metadata <- function() {
     `2` = list(recode = "0", description = "Loop 0"),
     `3` = list(recode = "-88", description = "Loop -88")
   )
-  raw_metadata$description$block$BL_LOOP$Options$LoopingOptions$Static <-
+  raw_metadata$description$blocks$BL_LOOP$Options$LoopingOptions$Static <-
     stats::setNames(
       lapply(1:12, function(i) list(`1` = "")),
       as.character(1:12)
@@ -917,12 +917,12 @@ synthetic_static_numeric_looped_text_raw_metadata <- function() {
 
   raw_metadata$metadata$questions$QID2$questionName <- "Q3"
   names(raw_metadata$metadata$questions)[2] <- "QID3"
-  raw_metadata$description$block$BL_LOOP$BlockElements <- list(
+  raw_metadata$description$blocks$BL_LOOP$BlockElements <- list(
     list(QuestionID = "QID3")
   )
-  raw_metadata$description$question$QID3 <-
-    raw_metadata$description$question$QID2
-  raw_metadata$description$question$QID2 <- NULL
+  raw_metadata$description$questions$QID3 <-
+    raw_metadata$description$questions$QID2
+  raw_metadata$description$questions$QID2 <- NULL
 
   raw_metadata
 }
@@ -969,7 +969,7 @@ synthetic_matrix_source_looped_text_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_SOURCE = list(
           Description = "Source Block",
           BlockElements = list(
@@ -999,7 +999,7 @@ synthetic_matrix_source_looped_text_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = "ValidNumber")

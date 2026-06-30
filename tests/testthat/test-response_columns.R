@@ -20,7 +20,7 @@ synthetic_timing_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -34,7 +34,7 @@ synthetic_timing_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = NULL)
@@ -67,7 +67,7 @@ synthetic_file_upload_raw_metadata <- function() {
       )
     ),
     description = list(
-      block = list(
+      blocks = list(
         BL_1 = list(
           Description = "Main Block",
           BlockElements = list(
@@ -81,7 +81,7 @@ synthetic_file_upload_raw_metadata <- function() {
           )
         )
       ),
-      question = list(
+      questions = list(
         QID1 = list(
           Validation = list(
             Settings = list(ContentType = NULL)
@@ -111,7 +111,10 @@ test_that("render_response_columns renders MC rows with aligned facts", {
 })
 
 test_that(
-  "render_response_columns uses recode suffixes for x-named MC choices",
+  paste(
+    "render_response_columns uses recode suffixes",
+    "for x-named MC choices"
+  ),
   {
     question <- normalise_qualtrics_metadata(
       synthetic_mc_x_choice_raw_metadata()
@@ -303,7 +306,10 @@ test_that("render_response_columns renders mixed SBS column cases", {
 })
 
 test_that(
-  "render_response_columns warns and falls back for unrendered shapes",
+  paste(
+    "render_response_columns warns and falls back",
+    "for unrendered shapes"
+  ),
   {
     raw_metadata <- synthetic_mc_text_raw_metadata()
     question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
@@ -339,7 +345,10 @@ test_that("response column render context separates bare and rendering qids", {
 })
 
 test_that(
-  "resolve_response_column_qid preserves current precedence and error",
+  paste(
+    "resolve_response_column_qid preserves current precedence",
+    "and error"
+  ),
   {
     question_fact <- normalise_qualtrics_metadata(
       synthetic_mc_text_raw_metadata()
@@ -361,7 +370,10 @@ test_that(
 )
 
 test_that(
-  "response column render facts unwrap non-SBS levels and labels only",
+  paste(
+    "response column render facts unwrap non-SBS levels",
+    "and labels only"
+  ),
   {
     mc_question_fact <- normalise_qualtrics_metadata(
       synthetic_mc_text_raw_metadata()
@@ -416,7 +428,10 @@ test_that("SBS row item shape carries text-entry item rows", {
 })
 
 test_that(
-  "response column renderer context preserves unsupported type fallback",
+  paste(
+    "response column renderer context preserves unsupported type",
+    "fallback"
+  ),
   {
     question_fact <- normalise_qualtrics_metadata(
       synthetic_mc_text_raw_metadata()
