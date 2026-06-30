@@ -107,6 +107,38 @@ test_that("dict_generate represents flat Embedded Data Fields", {
   )
 })
 
+test_that(
+  paste(
+    "dict_generate handles flat fields",
+    "with qualtRics description aliases"
+  ),
+  {
+    local_mocked_bindings(
+      fetch_dictionary_metadata = function(surveyID) {
+        raw_metadata <- synthetic_flat_embedded_data_raw_metadata()
+        raw_metadata$description$blocks <- raw_metadata$description$block
+        raw_metadata$description$questions <- raw_metadata$description$question
+        raw_metadata$description$block <- NULL
+        raw_metadata$description$question <- NULL
+        raw_metadata
+      }
+    )
+
+    dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+    embedded_rows <- dict[dict$row_source == "embedded_data", ]
+    question_rows <- dict[dict$row_source == "question", ]
+
+    expect_identical(
+      embedded_rows$response_column_id,
+      c("Source Channel", "Q1")
+    )
+    expect_true(all(is.na(embedded_rows$qid)))
+    expect_true(all(is.na(embedded_rows$question_name)))
+    expect_identical(unique(question_rows$block), "Main Block")
+    expect_identical(unique(question_rows$content_type), "Number")
+  }
+)
+
 test_that("dict_generate represents Scoring Variables", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {

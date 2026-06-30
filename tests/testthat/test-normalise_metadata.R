@@ -79,6 +79,33 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   )
 })
 
+test_that("metadata normalisation accepts qualtRics description aliases", {
+  raw_metadata <- synthetic_survey_flow_embedded_data_raw_metadata()
+  raw_metadata$description$blocks <- raw_metadata$description$block
+  raw_metadata$description$questions <- raw_metadata$description$question
+  raw_metadata$description$block <- NULL
+  raw_metadata$description$question <- NULL
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expect_identical(
+    normalised_metadata$questions$QID1$survey_block,
+    "Main Block"
+  )
+  expect_identical(
+    normalised_metadata$questions$QID1$content_type,
+    "Number"
+  )
+  expect_identical(
+    normalised_metadata$embedded_data[["Between Blocks"]]$previous_block,
+    "Main Block"
+  )
+  expect_identical(
+    normalised_metadata$embedded_data[["Between Blocks"]]$next_block,
+    "Follow-up Block"
+  )
+})
+
 test_that("Text-analysis Sidecars normalise with parent question context", {
   raw_metadata <- synthetic_text_analysis_raw_metadata()
 

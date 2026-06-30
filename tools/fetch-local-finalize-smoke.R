@@ -93,7 +93,10 @@ response_limit <- arg_value("--response-limit")
 if (!is.null(response_limit)) {
   response_limit <- suppressWarnings(as.integer(response_limit))
   if (is.na(response_limit) || response_limit < 1) {
-    stop("`--response-limit` must be an integer greater than zero.", call. = FALSE)
+    stop(
+      "`--response-limit` must be an integer greater than zero.",
+      call. = FALSE
+    )
   }
 }
 
@@ -108,7 +111,10 @@ read_config <- function(path) {
   config <- jsonlite::fromJSON(path, simplifyVector = FALSE)
   surveys <- config$surveys
   if (!is.list(surveys) || length(surveys) == 0) {
-    stop("Survey config must contain a non-empty `surveys` array.", call. = FALSE)
+    stop(
+      "Survey config must contain a non-empty `surveys` array.",
+      call. = FALSE
+    )
   }
   surveys
 }
@@ -138,7 +144,15 @@ validate_survey <- function(survey) {
 }
 
 metadata_elements <- function() {
-  c("questions", "metadata", "blocks", "responsecounts", "flow", "comments")
+  c(
+    "questions",
+    "metadata",
+    "blocks",
+    "responsecounts",
+    "flow",
+    "embedded_data",
+    "comments"
+  )
 }
 
 description_elements <- function() {
@@ -197,9 +211,15 @@ sanitize_identifier <- function(x, name) {
   y <- as.character(x)
   prefix <- "ID"
   if (grepl("email", tolower(name))) {
-    y[non_missing] <- sprintf("person_%06d@example.invalid", seq_along(non_missing))
+    y[non_missing] <- sprintf(
+      "person_%06d@example.invalid",
+      seq_along(non_missing)
+    )
   } else if (grepl("ip", tolower(name))) {
-    y[non_missing] <- sprintf("192.0.2.%d", ((seq_along(non_missing) - 1) %% 254) + 1)
+    y[non_missing] <- sprintf(
+      "192.0.2.%d",
+      ((seq_along(non_missing) - 1) %% 254) + 1
+    )
   } else {
     y[non_missing] <- sprintf("%s_%06d", prefix, seq_along(non_missing))
   }
@@ -223,7 +243,9 @@ sanitize_date <- function(x) {
 }
 
 sanitize_allowed_levels <- function(x, allowed_levels) {
-  allowed_levels <- allowed_levels[!is.na(allowed_levels) & nzchar(allowed_levels)]
+  allowed_levels <- allowed_levels[
+    !is.na(allowed_levels) & nzchar(allowed_levels)
+  ]
   if (length(allowed_levels) == 0) {
     return(NULL)
   }
@@ -302,7 +324,10 @@ sanitize_column <- function(x, name, allowed_levels = character()) {
     return(list(values = sanitize_logical(x), strategy = "logical"))
   }
   if (is.character(x) && code_like_character(x)) {
-    return(list(values = sanitize_code_like(x), strategy = "code_like_character"))
+    return(list(
+      values = sanitize_code_like(x),
+      strategy = "code_like_character"
+    ))
   }
   list(values = sanitize_text(x), strategy = "text")
 }
