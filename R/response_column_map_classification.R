@@ -1,8 +1,12 @@
+#' Return non-empty Response Column IDs from a response column map
+#' @noRd
 response_column_map_ids <- function(response_column_map) {
   ids <- response_column_map_row_ids(response_column_map)
   ids[!is.na(ids) & nzchar(ids)]
 }
 
+#' Resolve row-aligned Response Column IDs from response column map columns
+#' @noRd
 response_column_map_row_ids <- function(response_column_map) {
   if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
     return(character())
@@ -24,10 +28,14 @@ response_column_map_row_ids <- function(response_column_map) {
   ids
 }
 
+#' Response column map fields that may carry Response Column IDs
+#' @noRd
 response_column_map_id_columns <- function() {
   c("qname", "ImportId")
 }
 
+#' Classify response column map rows by Dictionary Row Source
+#' @noRd
 classify_response_column_map <- function(
   response_column_map,
   questions,
@@ -60,6 +68,8 @@ classify_response_column_map <- function(
   new_response_column_map_classification(rows)
 }
 
+#' Build a response column map classification table
+#' @noRd
 new_response_column_map_classification <- function(rows = NULL) {
   if (is.null(rows)) {
     return(tibble::tibble(
@@ -77,10 +87,14 @@ new_response_column_map_classification <- function(rows = NULL) {
   rows
 }
 
+#' Empty response column map classification table
+#' @noRd
 empty_response_column_map_classification <- function() {
   new_response_column_map_classification()
 }
 
+#' Classify one response column map row
+#' @noRd
 classify_response_column_map_row <- function(
   row_index,
   response_column_id,
@@ -123,6 +137,8 @@ classify_response_column_map_row <- function(
   )
 }
 
+#' Resolve the row class for one response column map context
+#' @noRd
 response_column_map_row_class <- function(
   response_column_id,
   parent_qid,
@@ -156,6 +172,8 @@ response_column_map_row_class <- function(
   response_column_map_class("unknown", "no_derived_column_map_fields")
 }
 
+#' Response column map classification rules in priority order
+#' @noRd
 response_column_map_classification_rules <- function() {
   list(
     response_column_map_missing_id_class,
@@ -171,6 +189,8 @@ response_column_map_classification_rules <- function() {
   )
 }
 
+#' Classify rows with missing Response Column IDs
+#' @noRd
 response_column_map_missing_id_class <- function(context) {
   response_column_id <- context$response_column_id
   if (is.na(response_column_id) || !nzchar(response_column_id)) {
@@ -178,36 +198,48 @@ response_column_map_missing_id_class <- function(context) {
   }
 }
 
+#' Classify Embedded Data Field rows
+#' @noRd
 response_column_map_embedded_data_class <- function(context) {
   if (context$response_column_id %in% context$embedded_data_ids) {
     response_column_map_class("embedded_data", "embedded_data")
   }
 }
 
+#' Classify Scoring Variable rows
+#' @noRd
 response_column_map_scoring_class <- function(context) {
   if (context$response_column_id %in% context$scoring_ids) {
     response_column_map_class("scoring", "scoring")
   }
 }
 
+#' Classify question-backed rows
+#' @noRd
 response_column_map_question_class <- function(context) {
   if (context$response_column_id %in% context$ordinary_question_ids) {
     response_column_map_class("question", "rendered_question")
   }
 }
 
+#' Classify system metadata rows
+#' @noRd
 response_column_map_system_class <- function(context) {
   if (is_system_response_column(context$response_column_id)) {
     response_column_map_class("system", "system_metadata")
   }
 }
 
+#' Classify display-order auxiliary rows
+#' @noRd
 response_column_map_display_order_class <- function(context) {
   if (is_display_order_response_column(context$response_column_id)) {
     response_column_map_class("question_auxiliary", "display_order")
   }
 }
 
+#' Classify rows that lack a known parent QID
+#' @noRd
 response_column_map_missing_parent_class <- function(context) {
   parent_qid <- context$parent_qid
   if (is.na(parent_qid) || !parent_qid %in% names(context$questions)) {
@@ -215,18 +247,24 @@ response_column_map_missing_parent_class <- function(context) {
   }
 }
 
+#' Classify loop-prefixed QID-shaped auxiliary rows
+#' @noRd
 response_column_map_loop_prefixed_class <- function(context) {
   if (is_loop_prefixed_qid_response_column(context$response_column_id)) {
     response_column_map_class("question_auxiliary", "ordinary_loop_qid_shape")
   }
 }
 
+#' Classify ordinary QID-shaped auxiliary rows
+#' @noRd
 response_column_map_ordinary_qid_class <- function(context) {
   if (is_ordinary_qid_response_column(context$response_column_id)) {
     response_column_map_class("question_auxiliary", "ordinary_qid_shape")
   }
 }
 
+#' Classify Text-analysis Sidecar rows
+#' @noRd
 response_column_map_text_analysis_class <- function(context) {
   if (
     has_derived_response_column_map_fields(
@@ -239,10 +277,14 @@ response_column_map_text_analysis_class <- function(context) {
   }
 }
 
+#' Build a response column map class result
+#' @noRd
 response_column_map_class <- function(row_source, reason) {
   list(row_source = row_source, reason = reason)
 }
 
+#' Render ordinary question-backed Response Column IDs
+#' @noRd
 ordinary_question_response_column_ids <- function(questions) {
   if (is.null(questions) || length(questions) == 0) {
     return(character())
@@ -259,6 +301,8 @@ ordinary_question_response_column_ids <- function(questions) {
   unique(unname(unlist(ids, use.names = FALSE)))
 }
 
+#' Return non-empty Response Column IDs from normalised records
+#' @noRd
 normalised_response_column_ids <- function(records) {
   if (is.null(records) || length(records) == 0) {
     return(character())
@@ -270,12 +314,16 @@ normalised_response_column_ids <- function(records) {
   ids[!is.na(ids) & nzchar(ids)]
 }
 
+#' Return whether a Response Column ID is system metadata
+#' @noRd
 is_system_response_column <- function(response_column_id) {
   response_column_id %in%
     system_response_column_ids() ||
     grepl("^Q_", response_column_id)
 }
 
+#' Known Qualtrics system metadata Response Column IDs
+#' @noRd
 system_response_column_ids <- function() {
   c(
     "StartTime",
@@ -303,6 +351,8 @@ system_response_column_ids <- function() {
   )
 }
 
+#' Return whether a Response Column ID has ordinary QID shape
+#' @noRd
 is_ordinary_qid_response_column <- function(response_column_id) {
   grepl("^QID[0-9]+$", response_column_id) ||
     grepl("^QID[0-9]+_[^_]+$", response_column_id) ||
@@ -310,10 +360,14 @@ is_ordinary_qid_response_column <- function(response_column_id) {
     grepl("^QID[0-9]+#[^_]+_[^_]+(?:_[^_]+)?$", response_column_id)
 }
 
+#' Return whether a Response Column ID is display order
+#' @noRd
 is_display_order_response_column <- function(response_column_id) {
   grepl("^QID[0-9]+_DO_[^_]+$", response_column_id)
 }
 
+#' Return whether a Response Column ID has loop-prefixed QID shape
+#' @noRd
 is_loop_prefixed_qid_response_column <- function(response_column_id) {
   grepl(
     "^[^_]+_QID[0-9]+(?:#[^_]+)?(?:_[^_]+)*(?:_TEXT)?$",
@@ -321,12 +375,16 @@ is_loop_prefixed_qid_response_column <- function(response_column_id) {
   )
 }
 
+#' Return whether derived response column map fields are present
+#' @noRd
 has_derived_response_column_map_fields <- function(main, sub, description) {
   fields <- c(main, sub, description)
   fields <- fields[!is.na(fields)]
   any(nzchar(fields))
 }
 
+#' Resolve the display name for a response column map row
+#' @noRd
 response_column_map_display_name <- function(row, response_column_id) {
   candidates <- c(
     row[["description"]],
@@ -343,6 +401,8 @@ response_column_map_display_name <- function(row, response_column_id) {
   candidates[[1]]
 }
 
+#' Resolve the parent QID from a Response Column ID
+#' @noRd
 response_column_map_parent_qid <- function(response_column_id) {
   if (is.na(response_column_id) || !nzchar(response_column_id)) {
     return(NA_character_)
@@ -352,6 +412,8 @@ response_column_map_parent_qid <- function(response_column_id) {
   parent_qid %||% NA_character_
 }
 
+#' Return one scalar response column map field
+#' @noRd
 response_column_map_scalar <- function(row, column) {
   if (!column %in% names(row)) {
     return(NA_character_)
