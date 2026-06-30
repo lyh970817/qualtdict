@@ -19,23 +19,6 @@ new_normalised_metadata <- function(
   )
 }
 
-new_response_column_map_classification <- function(rows = NULL) {
-  if (is.null(rows)) {
-    return(tibble::tibble(
-      response_column_id = character(),
-      row_source = character(),
-      parent_qid = character(),
-      display_name = character(),
-      main = character(),
-      sub = character(),
-      description = character(),
-      reason = character()
-    ))
-  }
-
-  tibble::as_tibble(rows)
-}
-
 new_normalised_text_analysis_sidecars <- function(sidecars = list()) {
   structure(
     sidecars,
