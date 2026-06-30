@@ -47,6 +47,44 @@ test_that("local smoke tests use a build-safe helper bootstrap", {
   expect_match(test_text, "source\\(helper_path\\)")
 })
 
+test_that("local smoke artifact refresh requests represented metadata", {
+  fetch_script <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "fetch-local-finalize-smoke.R"
+  )
+  fetch_text <- paste(readLines(fetch_script, warn = FALSE), collapse = "\n")
+
+  expect_match(fetch_text, '"embedded_data"', fixed = TRUE)
+  expect_match(fetch_text, '"comments"', fixed = TRUE)
+  expect_match(fetch_text, '"scoring"', fixed = TRUE)
+  expect_match(fetch_text, 'attr(responses, "column_map"', fixed = TRUE)
+  expect_match(fetch_text, 'attr(sanitized$data, "column_map"', fixed = TRUE)
+})
+
+test_that("local smoke parity checks represented raw metadata variables", {
+  smoke_script <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "local-finalize-smoke.R"
+  )
+  smoke_text <- paste(readLines(smoke_script, warn = FALSE), collapse = "\n")
+
+  expect_match(smoke_text, "raw_scoring_response_column", fixed = TRUE)
+  expect_match(smoke_text, "smoke_scoring_response_column_ids", fixed = TRUE)
+  expect_match(smoke_text, "raw_text_analysis_sidecar", fixed = TRUE)
+  expect_match(smoke_text, "smoke_embedded_data_field_names", fixed = TRUE)
+  expect_match(smoke_text, "metadata = artifacts$metadata", fixed = TRUE)
+  expect_match(smoke_text, "description = artifacts$description", fixed = TRUE)
+  expect_no_match(
+    smoke_text,
+    "raw-to-dictionary parity is not a hard check",
+    fixed = TRUE
+  )
+})
+
 test_that("parse_smoke_functions trims whitespace and removes duplicates", {
   expect_identical(
     parse_smoke_functions(paste0(
