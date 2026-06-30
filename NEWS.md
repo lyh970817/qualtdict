@@ -1,5 +1,12 @@
 # qualtdict 0.0.0.9000
 
+- `dict_generate()` now preserves question context while representing
+  Embedded Data Fields when Qualtrics description metadata uses the
+  `blocks`/`questions` structure returned by `qualtRics::fetch_description()`.
+
+- Local finalization smoke artifact refresh now captures Qualtrics
+  `embedded_data` metadata for Embedded Data Field inspection.
+
 - `dict_generate()` now represents Scoring Variables from Qualtrics survey
   description metadata as Metadata-defined Export Variable rows with
   `row_source = "scoring"`.
