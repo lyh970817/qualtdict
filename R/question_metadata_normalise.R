@@ -1,5 +1,4 @@
 #' Merge raw question, block, and content-type metadata
-#' @keywords internal
 #' @noRd
 normalise_qualtrics_questions <- function(mt, mt_d) {
   question_meta <- question_metadata(mt)

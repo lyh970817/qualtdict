@@ -1,5 +1,4 @@
 #' Coerce a possibly missing scalar to character
-#' @keywords internal
 #' @noRd
 scalar_character <- function(x) {
   if (is.null(x) || length(x) == 0 || all(is.na(x))) {
@@ -11,7 +10,6 @@ scalar_character <- function(x) {
 
 #' Build one package-owned normalised question fact
 #' @importFrom rlang %||%
-#' @keywords internal
 #' @noRd
 normalise_question_fact <- function(qid, question, block, content_type) {
   question_name <- scalar_character(question$questionName)
@@ -47,12 +45,12 @@ normalise_question_fact <- function(qid, question, block, content_type) {
 }
 
 #' Build package-owned response choice facts
-#' @keywords internal
 #' @noRd
 normalise_response_choices <- function(choices) {
   imap(choices, function(choice, choice_id) {
     label <- scalar_character(choice$label %||% choice$description)
-    text_entry <- "text_entry" %in% names(choice) ||
+    text_entry <- "text_entry" %in%
+      names(choice) ||
       "textEntry" %in% names(choice)
     analyze <- choice$analyze
     if (is.null(analyze) || length(analyze) == 0 || is.na(analyze[[1]])) {
@@ -73,14 +71,12 @@ normalise_response_choices <- function(choices) {
 }
 
 #' Build package-owned response item facts
-#' @keywords internal
 #' @noRd
 normalise_response_items <- function(items) {
   imap(items, function(item, item_id) {
     item_text <- scalar_character(item$item_text %||% item$choiceText)
     item_label <- scalar_character(item$item_label %||% item$description)
-    text_entry <- "text_entry" %in% names(item) ||
-      "textEntry" %in% names(item)
+    text_entry <- "text_entry" %in% names(item) || "textEntry" %in% names(item)
 
     list(
       item_id = item_id,
@@ -96,7 +92,6 @@ normalise_response_items <- function(items) {
 }
 
 #' Build package-owned SBS column facts
-#' @keywords internal
 #' @noRd
 normalise_column_facts <- function(columns) {
   imap(columns, function(column, column_id) {
@@ -104,8 +99,10 @@ normalise_column_facts <- function(columns) {
 
     list(
       column_id = column_id,
-      question_text = scalar_character(column$question_text %||%
-        column$questionText),
+      question_text = scalar_character(
+        column$question_text %||%
+          column$questionText
+      ),
       question_type = question_type,
       response_choices = normalise_response_choices(column$choices)
     )
@@ -113,7 +110,6 @@ normalise_column_facts <- function(columns) {
 }
 
 #' Return a question fact field with optional legacy fallback
-#' @keywords internal
 #' @noRd
 question_fact_value <- function(question, owned_name, legacy_name = NULL) {
   value <- question[[owned_name]]
@@ -125,7 +121,6 @@ question_fact_value <- function(question, owned_name, legacy_name = NULL) {
 }
 
 #' Return package-owned question type facts
-#' @keywords internal
 #' @noRd
 question_fact_question_type <- function(question) {
   question_type <- question_fact_value(
@@ -145,80 +140,72 @@ question_fact_question_type <- function(question) {
   list(
     type = scalar_character(question_type$type),
     selector = scalar_character(question_type$selector),
-    sub_selector = if (is.null(sub_selector) ||
-      (length(sub_selector) == 1 && is.na(sub_selector))) {
-        NULL
-      } else {
-        scalar_character(sub_selector)
-      }
+    sub_selector = if (
+      is.null(sub_selector) ||
+        (length(sub_selector) == 1 && is.na(sub_selector))
+    ) {
+      NULL
+    } else {
+      scalar_character(sub_selector)
+    }
   )
 }
 
 #' Return a package-owned question name
-#' @keywords internal
 #' @noRd
 question_fact_question_name <- function(question) {
   question_fact_value(question, "question_name", "questionName")
 }
 
 #' Return a package-owned question text
-#' @keywords internal
 #' @noRd
 question_fact_question_text <- function(question) {
   question_fact_value(question, "question_text", "questionText")
 }
 
 #' Return a package-owned survey block
-#' @keywords internal
 #' @noRd
 question_fact_survey_block <- function(question) {
   question_fact_value(question, "survey_block", "block")
 }
 
 #' Return package-owned response choices
-#' @keywords internal
 #' @noRd
 question_fact_response_choices <- function(question) {
   question_fact_value(question, "response_choices", "choices")
 }
 
 #' Return package-owned response items
-#' @keywords internal
 #' @noRd
 question_fact_response_items <- function(question) {
   question_fact_value(question, "response_items", "subQuestions")
 }
 
 #' Return package-owned column facts
-#' @keywords internal
 #' @noRd
 question_fact_column_facts <- function(question) {
   question_fact_value(question, "column_facts", "columns")
 }
 
 #' Return package-owned Loop and Merge prefix facts
-#' @keywords internal
 #' @noRd
 question_fact_looping_prefix <- function(question) {
   question_fact_value(question, "looping_prefix")
 }
 
 #' Return package-owned Loop and Merge source facts
-#' @keywords internal
 #' @noRd
 question_fact_looping_qid <- function(question) {
   question_fact_value(question, "looping_qid")
 }
 
 #' Return package-owned Loop and Merge static row facts
-#' @keywords internal
 #' @noRd
 question_fact_looping_static <- function(question) {
   question_fact_value(question, "looping_static")
 }
 
 #' Return package-owned Loop and Merge column-name facts
-#' @keywords internal
 #' @noRd
 question_fact_looping_column_names <- function(question) {
   question_fact_value(question, "looping_column_names")

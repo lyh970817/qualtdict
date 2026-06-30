@@ -1,12 +1,10 @@
 #' Make Variable Dictionary names export-safe and unique
-#' @keywords internal
 #' @noRd
 repair_variable_names <- function(candidates) {
   make.unique(repair_variable_name_base(candidates))
 }
 
 #' Make Variable Dictionary names export-safe without uniqueness repair
-#' @keywords internal
 #' @noRd
 repair_variable_name_base <- function(candidates) {
   repaired <- str_replace_all(candidates, "[^0-9A-Za-z_\\.]", "_")
@@ -17,7 +15,6 @@ repair_variable_name_base <- function(candidates) {
 }
 
 #' Empty repaired-name Validation Findings table
-#' @keywords internal
 #' @noRd
 empty_variable_name_findings <- function() {
   tibble(
@@ -29,15 +26,20 @@ empty_variable_name_findings <- function() {
 }
 
 #' Repair final Variable Dictionary names and attach Validation Findings
-#' @keywords internal
 #' @noRd
 repair_variable_dictionary_names <- function(dict) {
   response_column_id <- unique(dict[["response_column_id"]])
-  original_candidates <- vapply(response_column_id, function(id) {
-    dict[["variable_name"]][match(id, dict[["response_column_id"]])]
-  }, character(1))
+  original_candidates <- vapply(
+    response_column_id,
+    function(id) {
+      dict[["variable_name"]][match(id, dict[["response_column_id"]])]
+    },
+    character(1)
+  )
   repaired_candidates <- repair_variable_names(original_candidates)
-  reasons <- map2_chr(original_candidates, repaired_candidates,
+  reasons <- map2_chr(
+    original_candidates,
+    repaired_candidates,
     variable_name_repair_reason
   )
 
@@ -58,10 +60,11 @@ repair_variable_dictionary_names <- function(dict) {
 }
 
 #' Explain a Variable Name repair
-#' @keywords internal
 #' @noRd
-variable_name_repair_reason <- function(original_candidate,
-                                        repaired_candidate) {
+variable_name_repair_reason <- function(
+  original_candidate,
+  repaired_candidate
+) {
   base_repair <- repair_variable_name_base(original_candidate)
 
   reasons <- character()

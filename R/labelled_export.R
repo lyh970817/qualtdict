@@ -183,8 +183,7 @@ resolve_extra_columns <- function(
   extra_columns[extra_columns %in% colnames(dat)]
 }
 
-#' Add labels to survey
-#' @keywords internal
+#' Rename and label downloaded survey data from a Variable Dictionary
 #' @noRd
 survey_recode <- function(
   dict,
@@ -236,10 +235,9 @@ survey_recode <- function(
 }
 
 
-#' Add labels to each variable in survey (`sjlabelled` uses `haven`)
+#' Apply variable and value labels to one Export Variable
 #' @importFrom sjlabelled set_label set_labels
 #' @importFrom haven read_xpt
-#' @keywords internal
 #' @noRd
 survey_var_recode <- function(
   var,
