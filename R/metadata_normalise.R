@@ -21,9 +21,10 @@ new_normalised_metadata <- function(
 
 #' Normalise raw Qualtrics metadata
 #'
-#' The normalised metadata model is internal and question-level for this tracer
-#' bullet. It owns the merged question, block, loop, and content-type metadata
-#' that dictionary row generation consumes.
+#' The normalised metadata model is internal. It normalises raw Qualtrics
+#' metadata into package-owned Normalised Question Facts plus
+#' Metadata-defined Export Variables and assembles
+#' `qualtdict_normalised_metadata`.
 #'
 #' @keywords internal
 #' @noRd

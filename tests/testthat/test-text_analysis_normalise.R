@@ -165,6 +165,10 @@ test_that("Text-analysis Sidecar column-map helpers normalise", {
       parent_block = NA_character_
     )
   )
+  expect_identical(
+    text_analysis_sidecar_parent_context("QID999", list()),
+    empty_text_analysis_sidecar_parent_context()
+  )
 
   classification <- tibble::tibble(
     response_column_id = "QID1_TEXT_SENTIMENT",
