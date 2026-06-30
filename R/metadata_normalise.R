@@ -16,6 +16,11 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     raw_metadata$description
   )
   scoring <- normalise_scoring_variables(raw_metadata$description)
+  text_analysis <- normalise_text_analysis_sidecars(
+    raw_metadata$metadata,
+    raw_metadata$description,
+    questions
+  )
 
   structure(
     list(
@@ -23,7 +28,8 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
       survey_name = raw_metadata$survey_name,
       questions = questions,
       embedded_data = embedded_data,
-      scoring = scoring
+      scoring = scoring,
+      text_analysis = text_analysis
     ),
     class = c("qualtdict_normalised_metadata", "list")
   )
@@ -609,6 +615,211 @@ embedded_data_field_name <- function(field, fallback_name = NA_character_) {
   }
 
   scalar_character(fallback_name)
+}
+
+normalise_text_analysis_sidecars <- function(mt, mt_d, questions) {
+  sidecar_records <- text_analysis_sidecar_records(mt, mt_d)
+  if (length(sidecar_records) == 0) {
+    return(empty_normalised_text_analysis_sidecars())
+  }
+
+  sidecars <- imap(sidecar_records, function(sidecar, fallback_name) {
+    normalise_text_analysis_sidecar(sidecar, fallback_name, questions)
+  }) |>
+    discard(is.null)
+
+  names(sidecars) <- map_chr(sidecars, "sidecar_name")
+
+  structure(
+    sidecars,
+    class = c("qualtdict_normalised_text_analysis_sidecars", "list")
+  )
+}
+
+text_analysis_sidecar_records <- function(mt, mt_d) {
+  sources <- list(
+    mt$text_analysis,
+    mt$textAnalysis,
+    mt$textAnalysisSidecars,
+    mt$comments,
+    mt_d$text_analysis,
+    mt_d$textAnalysis,
+    mt_d$textAnalysisSidecars,
+    mt_d$comments
+  )
+  sources <- discard(sources, is.null)
+  if (length(sources) == 0) {
+    return(list())
+  }
+
+  do.call(c, args = map(sources, text_analysis_sidecar_record_list))
+}
+
+text_analysis_sidecar_record_list <- function(sidecars) {
+  if (is.null(sidecars) || length(sidecars) == 0) {
+    return(list())
+  }
+
+  if (is.data.frame(sidecars)) {
+    return(map(seq_len(nrow(sidecars)), function(row) {
+      as.list(sidecars[row, , drop = FALSE])
+    }))
+  }
+
+  if (is_text_analysis_sidecar_record(sidecars)) {
+    return(list(sidecars))
+  }
+
+  if (is.atomic(sidecars)) {
+    return(as.list(sidecars))
+  }
+
+  sidecars
+}
+
+is_text_analysis_sidecar_record <- function(sidecar) {
+  is.list(sidecar) &&
+    any(
+      c(
+        text_analysis_sidecar_name_columns,
+        text_analysis_sidecar_response_column_id_columns,
+        text_analysis_sidecar_parent_qid_columns
+      ) %in%
+        names(sidecar)
+    )
+}
+
+normalise_text_analysis_sidecar <- function(
+  sidecar,
+  fallback_name,
+  questions
+) {
+  sidecar_name <- text_analysis_sidecar_name(sidecar, fallback_name)
+  if (is.na(sidecar_name) || !nzchar(sidecar_name)) {
+    return(NULL)
+  }
+
+  parent_qid <- text_analysis_sidecar_parent_qid(sidecar)
+  parent_question <- NULL
+  if (!is.na(parent_qid)) {
+    parent_question <- questions[[parent_qid]]
+  }
+  if (is.na(parent_qid) || is.null(parent_question)) {
+    parent_qid <- NA_character_
+  }
+
+  structure(
+    list(
+      sidecar_name = sidecar_name,
+      response_column_id = text_analysis_sidecar_response_column_id(
+        sidecar,
+        sidecar_name
+      ),
+      question_text = paste("Text Analysis:", sidecar_name),
+      parent_qid = parent_qid,
+      parent_question_name = if (!is.na(parent_qid)) {
+        parent_question$question_name
+      } else {
+        NA_character_
+      },
+      parent_block = if (!is.na(parent_qid)) {
+        parent_question$survey_block
+      } else {
+        NA_character_
+      }
+    ),
+    class = c("qualtdict_normalised_text_analysis_sidecar", "list")
+  )
+}
+
+text_analysis_sidecar_name_columns <- c(
+  "outputName",
+  "output_name",
+  "name",
+  "fieldName",
+  "field_name",
+  "variableName",
+  "variable_name",
+  "DataField",
+  "id",
+  "ID"
+)
+
+text_analysis_sidecar_response_column_id_columns <- c(
+  "responseColumnId",
+  "responseColumnID",
+  "response_column_id",
+  "columnName",
+  "column_name",
+  "importId",
+  "import_id"
+)
+
+text_analysis_sidecar_parent_qid_columns <- c(
+  "questionId",
+  "questionID",
+  "question_id",
+  "parentQid",
+  "parent_qid",
+  "qid",
+  "QID"
+)
+
+text_analysis_sidecar_name <- function(
+  sidecar,
+  fallback_name = NA_character_
+) {
+  text_analysis_sidecar_scalar(
+    sidecar,
+    text_analysis_sidecar_name_columns,
+    fallback_name = fallback_name
+  )
+}
+
+text_analysis_sidecar_response_column_id <- function(sidecar, sidecar_name) {
+  text_analysis_sidecar_scalar(
+    sidecar,
+    text_analysis_sidecar_response_column_id_columns,
+    fallback_name = sidecar_name
+  )
+}
+
+text_analysis_sidecar_parent_qid <- function(sidecar) {
+  text_analysis_sidecar_scalar(
+    sidecar,
+    text_analysis_sidecar_parent_qid_columns
+  )
+}
+
+text_analysis_sidecar_scalar <- function(
+  sidecar,
+  columns,
+  fallback_name = NA_character_
+) {
+  if (is.atomic(sidecar) && length(sidecar) == 1) {
+    return(scalar_character(sidecar))
+  }
+
+  candidates <- map_chr(columns, function(candidate_name) {
+    if (!candidate_name %in% names(sidecar)) {
+      return(NA_character_)
+    }
+
+    scalar_character(sidecar[[candidate_name]])
+  })
+  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
+  if (length(candidates) > 0) {
+    return(candidates[[1]])
+  }
+
+  scalar_character(fallback_name)
+}
+
+empty_normalised_text_analysis_sidecars <- function() {
+  structure(
+    list(),
+    class = c("qualtdict_normalised_text_analysis_sidecars", "list")
+  )
 }
 
 #' Merge raw question, block, and content-type metadata

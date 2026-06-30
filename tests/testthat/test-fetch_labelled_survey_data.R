@@ -171,6 +171,52 @@ test_that(
   }
 )
 
+test_that(
+  paste(
+    "fetch_labelled_survey_data includes",
+    "Text-analysis Sidecars by default"
+  ),
+  {
+    dict <- minimal_export_dict(
+      response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
+      row_source = c("question", "text_analysis"),
+      variable_name = c("q1", "Q1_Text_Sentiment"),
+      qid = c("QID1", "QID1"),
+      question_name = c("q1", "q1"),
+      block = c("Block A", "Block A"),
+      question = c("Question q1", "Text Analysis: Q1 Text Sentiment"),
+      label = c("Yes", NA_character_),
+      level = c("1", NA_character_),
+      type = c("MC", NA_character_),
+      selector = c("SAVR", NA_character_),
+      sub_selector = c("TX", NA_character_)
+    )
+    local_mocked_bindings(
+      fetch_survey2 = function(...) {
+        tibble::tibble(
+          QID1 = "1",
+          QID1_TEXT_SENTIMENT = "positive"
+        )
+      }
+    )
+
+    dat <- fetch_labelled_survey_data(
+      dict,
+      extra_columns = NULL,
+      unanswer_recode_multi = 0
+    )
+
+    expect_named(dat, c("q1", "Q1_Text_Sentiment"))
+    expect_identical(as.character(dat$Q1_Text_Sentiment), "positive")
+    expect_identical(
+      sjlabelled::get_label(dat$Q1_Text_Sentiment),
+      "Text Analysis: Q1 Text Sentiment"
+    )
+    expect_null(attr(dat$Q1_Text_Sentiment, "labels", exact = TRUE))
+    expect_identical(nrow(labelled_export_findings(dat)), 0L)
+  }
+)
+
 test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -274,6 +320,38 @@ test_that("fetch_labelled_survey_data reports missing Scoring Variables", {
   expect_identical(findings$response_column_id, "Total Score")
   expect_true(is.na(findings$qid))
   expect_identical(findings$variable_name, "Total_Score")
+  expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
+})
+
+test_that("fetch_labelled_survey_data reports missing Text-analysis Sidecars", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
+    row_source = c("question", "text_analysis"),
+    variable_name = c("q1", "Q1_Text_Sentiment"),
+    qid = c("QID1", "QID1"),
+    question_name = c("q1", "q1"),
+    block = c("Block A", "Block A"),
+    question = c("Question q1", "Text Analysis: Q1 Text Sentiment"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "1")
+    }
+  )
+
+  dat <- fetch_labelled_survey_data(dict, extra_columns = NULL)
+  findings <- labelled_export_findings(dat)
+
+  expect_named(dat, "q1")
+  expect_identical(findings$finding, "missing_response_column_id")
+  expect_identical(findings$response_column_id, "QID1_TEXT_SENTIMENT")
+  expect_identical(findings$qid, "QID1")
+  expect_identical(findings$variable_name, "Q1_Text_Sentiment")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 
