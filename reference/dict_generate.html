@@ -51,6 +51,7 @@ qualtRics."></head><body>
 <span>  block_sep <span class="op">=</span> <span class="st">"."</span>,</span>
 <span>  semantic_name_preprocess <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  preprocess <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  embedded_data_block_assignment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"previous"</span>, <span class="st">"next"</span><span class="op">)</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -101,6 +102,14 @@ this function are not included in the returned Variable Dictionary.</p></dd>
 <code>semantic_name_preprocess</code>.</p></dd>
 
 
+<dt id="arg-embedded-data-block-assignment">embedded_data_block_assignment<a class="anchor" aria-label="anchor" href="#arg-embedded-data-block-assignment"></a></dt>
+<dd><p>String. Survey Flow adjacency policy
+for assigning Embedded Data Fields to Survey Blocks. Use <code>"none"</code> to
+leave Embedded Data Fields unassigned, <code>"previous"</code> to assign fields
+with an unambiguous Survey Flow location to the nearest previous Survey
+Block, or <code>"next"</code> to assign them to the nearest next Survey Block.</p></dd>
+
+
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
 <dd><p>Boolean. If <code>TRUE</code>, suppress routine progress messages and
 progress bars. Defaults to <code>TRUE</code>.</p></dd>
@@ -119,7 +128,10 @@ identifier, <code>row_source</code> as the Dictionary Row Source,
 <code>variable_name</code> as the final export-safe Dictionary Variable Name used
 by Labelled Survey Data. Question-backed rows use
 <code>row_source = "question"</code>. Flat Embedded Data Fields defined by
-Qualtrics metadata use <code>row_source = "embedded_data"</code>.</p>
+Qualtrics metadata use <code>row_source = "embedded_data"</code>. Embedded Data
+Fields remain unassigned by Survey Block unless
+<code>embedded_data_block_assignment</code> explicitly requests Survey Flow
+adjacency assignment.</p>
 <p>When <code>variable_name = "semantic_name"</code>, the Variable Dictionary also
 includes <code>semantic_name</code>. Semantic Names are readable best-effort
 conveniences generated from survey text and metadata; they are not stable
