@@ -3,6 +3,11 @@
 ## qualtdict 0.0.0.9000
 
 - [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  now represents Scoring Variables from Qualtrics survey description
+  metadata as Metadata-defined Export Variable rows with
+  `row_source = "scoring"`.
+
+- [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   now accepts `embedded_data_block_assignment` to optionally assign
   Survey Flow Embedded Data Fields to the nearest previous or next
   Survey Block while leaving them unassigned by default.
