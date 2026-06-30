@@ -214,3 +214,45 @@ test_that("normalised capability constructors preserve current object shapes", {
   )
   expect_identical(new_response_column_map_classification(rows), rows)
 })
+
+test_that("raw Qualtrics metadata normalises into package-owned metadata", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_s3_class(normalised_metadata, "qualtdict_normalised_metadata")
+  expect_named(
+    normalised_metadata,
+    c(
+      "surveyID",
+      "survey_name",
+      "questions",
+      "embedded_data",
+      "scoring",
+      "text_analysis"
+    )
+  )
+  expect_identical(normalised_metadata$surveyID, "SV_SYNTHETIC")
+  expect_identical(normalised_metadata$survey_name, "Synthetic Survey")
+  expect_s3_class(
+    normalised_metadata$questions,
+    "qualtdict_normalised_questions"
+  )
+  expect_named(normalised_metadata$questions, "QID1")
+  expect_s3_class(
+    normalised_metadata$embedded_data,
+    "qualtdict_normalised_embedded_data_fields"
+  )
+  expect_length(normalised_metadata$embedded_data, 0)
+  expect_s3_class(
+    normalised_metadata$scoring,
+    "qualtdict_normalised_scoring_variables"
+  )
+  expect_length(normalised_metadata$scoring, 0)
+  expect_s3_class(
+    normalised_metadata$text_analysis,
+    "qualtdict_normalised_text_analysis_sidecars"
+  )
+  expect_length(normalised_metadata$text_analysis, 0)
+})
