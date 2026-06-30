@@ -8,6 +8,12 @@
   `row_source = "scoring"`.
 
 - [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  now represents Text-analysis Sidecars from Qualtrics metadata as
+  Metadata-defined Export Variable rows with
+  `row_source = "text_analysis"` and parent question context when a
+  clear parent QID is available.
+
+- [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   now accepts `embedded_data_block_assignment` to optionally assign
   Survey Flow Embedded Data Fields to the nearest previous or next
   Survey Block while leaving them unassigned by default.
