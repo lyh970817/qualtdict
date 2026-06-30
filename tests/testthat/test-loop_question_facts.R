@@ -207,20 +207,171 @@ test_that(
   }
 )
 
-test_that(
-  "Loop expansion preserves text-entry response column qid",
-  {
-    raw_metadata <- synthetic_looped_mc_text_raw_metadata()
-    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+test_that("Loop expansion preserves text-entry response column qid", {
+  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-    expanded <- expand_loop_question_facts(normalised_metadata$questions)
-    looped <- expanded[
-      vapply(expanded, function(x) isTRUE(x$looping), logical(1))
-    ]
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  looped <- expanded[
+    vapply(expanded, function(x) isTRUE(x$looping), logical(1))
+  ]
 
-    expect_identical(
-      unname(vapply(looped, `[[`, character(1), "response_column_qid")),
-      c("x1_QID2", "x2_QID2")
-    )
-  }
-)
+  expect_identical(
+    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    c("x1_QID2", "x2_QID2")
+  )
+})
+
+test_that("normalised metadata renders supported Loop and Merge rows", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_identical(target_rows$qid, c("QID2", "QID2"))
+  expect_identical(target_rows$question_name, c("Q2", "Q2"))
+  expect_identical(target_rows$variable_name, c("Q2", "Q2.1"))
+  expect_identical(
+    target_rows$question,
+    c("Why did you choose Apples?", "Why did you choose Bananas?")
+  )
+  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_true(all(is.na(target_rows$item)))
+  expect_identical(target_rows$type, c("TE", "TE"))
+  expect_identical(target_rows$selector, c("SL", "SL"))
+  expect_identical(attr(dict, "survey_name"), "Loop Survey")
+  expect_identical(attr(dict, "surveyID"), "SV_LOOP")
+})
+
+test_that("normalised metadata renders supported extra Loop and Merge fields", {
+  raw_metadata <- synthetic_multi_field_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_identical(
+    target_rows$question,
+    c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
+  )
+  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+})
+
+test_that("static Loop and Merge rows render when source QID is absent", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  raw_metadata$metadata$questions$QID1 <- NULL
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalise_qualtrics_metadata(raw_metadata),
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    c("x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+  expect_identical(target_rows$loop_option, c("x1", "x2"))
+})
+
+test_that("normalised metadata renders static Loop and Merge rows", {
+  raw_metadata <- synthetic_static_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    c("1_QID2_TEXT", "2_QID2_TEXT")
+  )
+  expect_identical(
+    target_rows$question,
+    c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
+  )
+  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+})
+
+test_that("static numeric loop prefixes do not fall back to source QIDs", {
+  raw_metadata <- synthetic_static_numeric_looped_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID3", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    paste0(1:12, "_QID3_TEXT")
+  )
+  expect_false(any(grepl(
+    "^QID[0-9]+_QID3_TEXT$",
+    target_rows$response_column_id
+  )))
+  expect_identical(target_rows$loop_option, as.character(1:12))
+})
+
+test_that("matrix source Loop and Merge prefixes use source response rows", {
+  raw_metadata <- synthetic_matrix_source_looped_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+  expect_identical(
+    target_rows$response_column_id,
+    c("1_QID2_TEXT", "2_QID2_TEXT", "3_QID2_TEXT")
+  )
+  expect_false(any(grepl("^QID1_QID2_TEXT$", target_rows$response_column_id)))
+  expect_identical(
+    target_rows$loop_option,
+    c("Condition 1", "Condition 2", "Condition 3")
+  )
+})
