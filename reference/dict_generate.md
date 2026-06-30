@@ -14,6 +14,7 @@ dict_generate(
   block_sep = ".",
   semantic_name_preprocess = NULL,
   preprocess = NULL,
+  embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 )
 ```
@@ -60,6 +61,14 @@ dict_generate(
 
   Deprecated compatibility alias for `semantic_name_preprocess`.
 
+- embedded_data_block_assignment:
+
+  String. Survey Flow adjacency policy for assigning Embedded Data
+  Fields to Survey Blocks. Use `"none"` to leave Embedded Data Fields
+  unassigned, `"previous"` to assign fields with an unambiguous Survey
+  Flow location to the nearest previous Survey Block, or `"next"` to
+  assign them to the nearest next Survey Block.
+
 - quiet:
 
   Boolean. If `TRUE`, suppress routine progress messages and progress
@@ -78,6 +87,9 @@ as the raw Qualtrics naming reference, and `variable_name` as the final
 export-safe Dictionary Variable Name used by Labelled Survey Data.
 Question-backed rows use `row_source = "question"`. Flat Embedded Data
 Fields defined by Qualtrics metadata use `row_source = "embedded_data"`.
+Embedded Data Fields remain unassigned by Survey Block unless
+`embedded_data_block_assignment` explicitly requests Survey Flow
+adjacency assignment.
 
 When `variable_name = "semantic_name"`, the Variable Dictionary also
 includes `semantic_name`. Semantic Names are readable best-effort

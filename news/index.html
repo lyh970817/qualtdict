@@ -35,7 +35,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9000" id="qualtdict-0009000">qualtdict 0.0.0.9000<a class="anchor" aria-label="anchor" href="#qualtdict-0009000"></a></h2>
-<ul><li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now represents flat Embedded Data Fields from Qualtrics metadata as Metadata-defined Export Variable rows with <code>row_source = "embedded_data"</code>.</p></li>
+<ul><li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now accepts <code>embedded_data_block_assignment</code> to optionally assign Survey Flow Embedded Data Fields to the nearest previous or next Survey Block while leaving them unassigned by default.</p></li>
+<li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now represents flat Embedded Data Fields from Qualtrics metadata as Metadata-defined Export Variable rows with <code>row_source = "embedded_data"</code>.</p></li>
 <li><p><code><a href="../reference/dict_split_blocks.html">dict_split_blocks()</a></code> and <code><a href="../reference/survey_split_blocks.html">survey_split_blocks()</a></code> now preserve unassigned Variable Dictionary rows in a <code>"..unassigned"</code> split.</p></li>
 <li><p>Improved rOpenSci package-check readiness by narrowing package imports, cleaning examples, reducing duplicated parameter documentation, and removing unused internal helpers.</p></li>
 </ul></div>
