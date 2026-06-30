@@ -57,7 +57,8 @@ variable_dictionary_from_normalised_metadata <- function(
       normalised_metadata$embedded_data,
       embedded_data_block_assignment = embedded_data_block_assignment,
       quiet = quiet
-    )
+    ),
+    variable_dictionary_scoring_rows(normalised_metadata$scoring)
   )
   if (length(json) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
@@ -205,6 +206,38 @@ warn_unassigned_embedded_data_rows <- function(
   }
 
   invisible()
+}
+
+variable_dictionary_scoring_rows <- function(scoring) {
+  imap(
+    scoring %||% list(),
+    variable_dictionary_scoring_row
+  )
+}
+
+variable_dictionary_scoring_row <- function(variable, output_name) {
+  output_name <- variable$output_name %||% output_name
+
+  list(
+    qid = NA_character_,
+    response_column_id = variable$response_column_id %||% output_name,
+    row_source = "scoring",
+    question_name = NA_character_,
+    variable_name = output_name,
+    block = NA_character_,
+    question = variable$question_text %||%
+      paste("Scoring Variable:", output_name),
+    looping_question = NA_character_,
+    item = NA_character_,
+    level = NA_character_,
+    label = NA_character_,
+    type = NA_character_,
+    selector = NA_character_,
+    content_type = NA_character_,
+    sub_selector = NA_character_,
+    looping_option = NA_character_,
+    looping = FALSE
+  )
 }
 
 prepare_variable_dictionary_rows <- function(json) {

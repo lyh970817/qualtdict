@@ -125,6 +125,52 @@ test_that(
   }
 )
 
+test_that(
+  paste(
+    "fetch_labelled_survey_data includes",
+    "Scoring Variables by default"
+  ),
+  {
+    dict <- minimal_export_dict(
+      response_column_id = c("QID1", "Total Score"),
+      row_source = c("question", "scoring"),
+      variable_name = c("q1", "Total_Score"),
+      qid = c("QID1", NA_character_),
+      question_name = c("q1", NA_character_),
+      block = c("Block A", NA_character_),
+      question = c("Question q1", "Scoring Variable: Total Score"),
+      label = c("Yes", NA_character_),
+      level = c("1", NA_character_),
+      type = c("MC", NA_character_),
+      selector = c("SAVR", NA_character_),
+      sub_selector = c("TX", NA_character_)
+    )
+    local_mocked_bindings(
+      fetch_survey2 = function(...) {
+        tibble::tibble(
+          QID1 = "1",
+          `Total Score` = "7"
+        )
+      }
+    )
+
+    dat <- fetch_labelled_survey_data(
+      dict,
+      extra_columns = NULL,
+      unanswer_recode_multi = 0
+    )
+
+    expect_named(dat, c("q1", "Total_Score"))
+    expect_identical(as.character(dat$Total_Score), "7")
+    expect_identical(
+      sjlabelled::get_label(dat$Total_Score),
+      "Scoring Variable: Total Score"
+    )
+    expect_null(attr(dat$Total_Score, "labels", exact = TRUE))
+    expect_identical(nrow(labelled_export_findings(dat)), 0L)
+  }
+)
+
 test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -196,6 +242,38 @@ test_that("fetch_labelled_survey_data reports missing Embedded Data Fields", {
   expect_identical(findings$response_column_id, "Source Channel")
   expect_true(is.na(findings$qid))
   expect_identical(findings$variable_name, "Source_Channel")
+  expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
+})
+
+test_that("fetch_labelled_survey_data reports missing Scoring Variables", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "Total Score"),
+    row_source = c("question", "scoring"),
+    variable_name = c("q1", "Total_Score"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
+    block = c("Block A", NA_character_),
+    question = c("Question q1", "Scoring Variable: Total Score"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "1")
+    }
+  )
+
+  dat <- fetch_labelled_survey_data(dict, extra_columns = NULL)
+  findings <- labelled_export_findings(dat)
+
+  expect_named(dat, "q1")
+  expect_identical(findings$finding, "missing_response_column_id")
+  expect_identical(findings$response_column_id, "Total Score")
+  expect_true(is.na(findings$qid))
+  expect_identical(findings$variable_name, "Total_Score")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 

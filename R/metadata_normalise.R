@@ -15,16 +15,214 @@ normalise_qualtrics_metadata <- function(raw_metadata) {
     raw_metadata$metadata,
     raw_metadata$description
   )
+  scoring <- normalise_scoring_variables(raw_metadata$description)
 
   structure(
     list(
       surveyID = raw_metadata$surveyID,
       survey_name = raw_metadata$survey_name,
       questions = questions,
-      embedded_data = embedded_data
+      embedded_data = embedded_data,
+      scoring = scoring
     ),
     class = c("qualtdict_normalised_metadata", "list")
   )
+}
+
+normalise_scoring_variables <- function(mt_d) {
+  scoring <- mt_d$scoring %||%
+    mt_d$Scoring %||%
+    mt_d$scoringData %||%
+    mt_d$ScoringData
+  scoring <- scoring_variable_definitions(scoring)
+  output_names <- scoring_variable_names(scoring)
+
+  variables <- map(output_names, function(output_name) {
+    output <- scoring_variable_record(scoring, output_name)
+    response_column_id <- scoring_variable_response_column_id(
+      output,
+      output_name
+    )
+
+    structure(
+      list(
+        output_name = output_name,
+        response_column_id = response_column_id,
+        question_text = paste("Scoring Variable:", output_name)
+      ),
+      class = c("qualtdict_normalised_scoring_variable", "list")
+    )
+  })
+  names(variables) <- output_names
+
+  structure(
+    variables,
+    class = c("qualtdict_normalised_scoring_variables", "list")
+  )
+}
+
+scoring_variable_name_columns <- c(
+  "name",
+  "Name",
+  "outputName",
+  "OutputName",
+  "scoreName",
+  "ScoreName",
+  "fieldName",
+  "FieldName",
+  "ID",
+  "id"
+)
+
+scoring_variable_response_column_id_columns <- c(
+  "response_column_id",
+  "responseColumnId",
+  "responseColumnID",
+  "columnName",
+  "ColumnName",
+  "exportTag",
+  "ExportTag",
+  "importId",
+  "ImportId",
+  "ID",
+  "id"
+)
+
+scoring_variable_definition_columns <- c(
+  "ScoringCategories",
+  "scoringCategories",
+  "scoring_categories",
+  "categories",
+  "Categories"
+)
+
+scoring_variable_definitions <- function(scoring) {
+  if (is.null(scoring) || !is.list(scoring)) {
+    return(scoring)
+  }
+
+  definition_columns <- intersect(
+    scoring_variable_definition_columns,
+    names(scoring)
+  )
+  if (length(definition_columns) == 0) {
+    return(scoring)
+  }
+
+  scoring[[definition_columns[[1]]]]
+}
+
+valid_scoring_variable_names <- function(output_names) {
+  output_names[!is.na(output_names) & nzchar(output_names)]
+}
+
+scoring_variable_names <- function(scoring) {
+  if (is.null(scoring) || length(scoring) == 0) {
+    return(character())
+  }
+
+  if (is.data.frame(scoring)) {
+    return(scoring_variable_names_from_data_frame(scoring))
+  }
+
+  if (is.atomic(scoring)) {
+    return(scoring_variable_names_from_atomic(scoring))
+  }
+
+  output_names <- map2_chr(
+    scoring,
+    names(scoring) %||% rep(NA_character_, length(scoring)),
+    scoring_variable_name
+  )
+  unname(valid_scoring_variable_names(output_names))
+}
+
+scoring_variable_names_from_data_frame <- function(scoring) {
+  output_columns <- intersect(scoring_variable_name_columns, names(scoring))
+  if (length(output_columns) == 0) {
+    return(character())
+  }
+
+  output_names <- as.character(scoring[[output_columns[[1]]]])
+  valid_scoring_variable_names(output_names)
+}
+
+scoring_variable_names_from_atomic <- function(scoring) {
+  output_names <- as.character(scoring)
+  if (is.null(names(scoring))) {
+    return(valid_scoring_variable_names(output_names))
+  }
+
+  named_outputs <- names(scoring)
+  use_names <- !is.na(named_outputs) & nzchar(named_outputs)
+  output_names[use_names] <- named_outputs[use_names]
+  valid_scoring_variable_names(output_names)
+}
+
+scoring_variable_record <- function(scoring, output_name) {
+  if (is.null(scoring) || is.atomic(scoring) || is.data.frame(scoring)) {
+    return(list())
+  }
+
+  named_index <- match(output_name, names(scoring))
+  if (!is.na(named_index)) {
+    return(scoring[[named_index]])
+  }
+
+  matches <- map_lgl(scoring, function(output) {
+    identical(scoring_variable_name(output), output_name)
+  })
+  if (any(matches)) {
+    return(scoring[[which(matches)[[1]]]])
+  }
+
+  list()
+}
+
+scoring_variable_name <- function(output, fallback_name = NA_character_) {
+  if (is.atomic(output) && length(output) == 1) {
+    return(scalar_character(output))
+  }
+
+  candidates <- map_chr(
+    scoring_variable_name_columns,
+    function(candidate_name) {
+      if (!candidate_name %in% names(output)) {
+        return(NA_character_)
+      }
+
+      scalar_character(output[[candidate_name]])
+    }
+  )
+  candidates <- valid_scoring_variable_names(candidates)
+  if (length(candidates) > 0) {
+    return(candidates[[1]])
+  }
+
+  scalar_character(fallback_name)
+}
+
+scoring_variable_response_column_id <- function(output, output_name) {
+  if (!is.list(output)) {
+    return(output_name)
+  }
+
+  candidates <- map_chr(
+    scoring_variable_response_column_id_columns,
+    function(candidate_name) {
+      if (!candidate_name %in% names(output)) {
+        return(NA_character_)
+      }
+
+      scalar_character(output[[candidate_name]])
+    }
+  )
+  candidates <- valid_scoring_variable_names(candidates)
+  if (length(candidates) > 0) {
+    return(candidates[[1]])
+  }
+
+  output_name
 }
 
 normalise_embedded_data_fields <- function(mt, mt_d) {
