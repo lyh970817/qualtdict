@@ -26,7 +26,8 @@ fetch_dictionary_metadata <- function(surveyID) {
       "questions",
       "metadata",
       "blocks",
-      "flow"
+      "flow",
+      "scoring"
     )
   )
 

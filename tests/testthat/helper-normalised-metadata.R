@@ -62,6 +62,26 @@ synthetic_flat_embedded_data_raw_metadata <- function() {
   raw_metadata
 }
 
+synthetic_scoring_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$description$scoring <- list(
+    list(name = "Total Score"),
+    list(name = "Q1")
+  )
+  raw_metadata
+}
+
+synthetic_nested_scoring_raw_metadata <- function() {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$description$scoring <- list(
+    ScoringCategories = list(
+      list(ID = "SC_TOTAL", Name = "Total Score"),
+      list(ID = "SC_SCREEN")
+    )
+  )
+  raw_metadata
+}
+
 synthetic_survey_flow_embedded_data_raw_metadata <- function() {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   raw_metadata$metadata$questions$QID2 <- raw_metadata$metadata$questions$QID1

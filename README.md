@@ -80,7 +80,9 @@ identifier, `question_name` as the raw Qualtrics naming reference, and
 `variable_name` as the final export-safe Dictionary Variable Name.
 Question-backed rows use `row_source = "question"`, and flat Embedded
 Data Fields defined by Qualtrics metadata use
-`row_source = "embedded_data"`.
+`row_source = "embedded_data"`. Scoring Variables defined by survey
+description metadata use `row_source = "scoring"` and remain unassigned
+by Survey Block.
 
 ``` r
 survey_id <- "SV_XXXXXXXXXXXXXXXX"
