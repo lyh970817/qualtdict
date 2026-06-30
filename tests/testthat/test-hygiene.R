@@ -120,7 +120,7 @@ test_that("pkgcheck-targeted functions stay under the line limit", {
   flagged_functions <- list(
     list(path = "R/dict_generate.R", name = "dict_generate"),
     list(
-      path = "R/metadata_normalise.R",
+      path = "R/question_metadata_normalise.R",
       name = "normalise_qualtrics_questions"
     ),
     list(path = "R/semantic_name.R", name = "generate_semantic_names"),
