@@ -11,10 +11,18 @@
 #' @importFrom utils globalVariables
 
 globalVariables(c(
-  ".", "label", "level", "pair",
-  "name", "variable_name", "semantic_name", "semantic_block",
+  ".",
+  "label",
+  "level",
+  "pair",
+  "name",
+  "variable_name",
+  "semantic_name",
+  "semantic_block",
   "semantic_question",
-  "response_column_id", "original_candidate", "repaired_candidate",
+  "response_column_id",
+  "original_candidate",
+  "repaired_candidate",
   "reason"
 ))
 
@@ -38,10 +46,9 @@ close_progress_bar <- function(progress_bar) {
   }
 }
 
-#' Given a two-column dataframe find which row is not one-to-one
+#' Find rows that violate a one-to-one mapping
 #' @param cols A dataframe with two columns
 #' @importFrom rlang := .data
-#' @keywords internal
 #' @noRd
 which_not_onetoone <- function(cols) {
   which_not_oneto <- function(cols, from, to) {
@@ -57,9 +64,8 @@ which_not_onetoone <- function(cols) {
   )
 }
 
-#' Given a two-column dataframe determine which row is one-to-one (logical)
+#' Return whether two columns form a one-to-one mapping
 #' @param cols A dataframe with two columns
-#' @keywords internal
 #' @noRd
 is_onetoone <- function(cols) {
   !any(map_dbl(which_not_onetoone(cols), nrow) > 0)
@@ -67,22 +73,22 @@ is_onetoone <- function(cols) {
 
 #' Convert NULL or a list of NULLs to NA
 #' @param x NULL or a list of NULLs
-#' @keywords internal
 #' @noRd
 null_na <- function(x) {
   # A list created with NULL values will have lengths of all 0
-  if (is.null(x) ||
-    all(map_dbl(x, length) == 0)) {
+  if (
+    is.null(x) ||
+      all(map_dbl(x, length) == 0)
+  ) {
     NA
   } else {
     x
   }
 }
 
-#' Convert html special characeters
+#' Convert HTML entities to text
 #' @param data A dataframe
 #' @importFrom xml2 xml_text read_html
-#' @keywords internal
 #' @noRd
 convert_html <- function(data) {
   unescape_html <- function(x) {
@@ -108,10 +114,9 @@ convert_html <- function(data) {
     )
 }
 
-#' Suppose x = f(unique(y)), find f(y)
+#' Expand values aligned with unique keys back to the original keys
 #' @param x A character vector
 #' @param y A character vector
-#' @keywords internal
 #' @noRd
 unique_expand <- function(x, y) {
   if (all(is.na(x))) {
@@ -122,8 +127,7 @@ unique_expand <- function(x, y) {
   recode(y, !!!setNames(x, unique(y)))
 }
 
-#' `paste` but with seperator associated with NA removed
-#' @keywords internal
+#' Paste values after removing NULL or all-NA arguments
 #' @noRd
 paste_narm <- function(...) {
   args <- list(...)
@@ -135,8 +139,7 @@ paste_narm <- function(...) {
   do.call(paste, args)
 }
 
-#' `unlist` that preserve names
-#' @keywords internal
+#' Unlist values while preserving names
 #' @noRd
 unlist_nm <- function(list) {
   if (length(list) == 0) {
@@ -150,15 +153,13 @@ unlist_nm <- function(list) {
 }
 
 #' Order a list by name
-#' @keywords internal
 #' @noRd
 order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
 
-#' Function factory for maximum five times of retries when failed
+#' Wrap a function with up to five retry attempts
 #' @param f A function
-#' @keywords internal
 #' @noRd
 retry <- function(f) {
   function(...) {
@@ -183,19 +184,16 @@ retry <- function(f) {
 
 #' Retry version of `fetch_survey`
 #' @importFrom qualtRics fetch_survey
-#' @keywords internal
 #' @noRd
 fetch_survey2 <- retry(fetch_survey)
 
 #' Retry version of `metadata`
 #' @importFrom qualtRics metadata
-#' @keywords internal
 #' @noRd
 metadata2 <- retry(metadata)
 
 #' Retry version of `fetch_description`
 #' @importFrom qualtRics fetch_description
-#' @keywords internal
 #' @noRd
 fetch_description2 <- retry(fetch_description)
 

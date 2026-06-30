@@ -1,21 +1,17 @@
-#' Render Qualtrics Response Column ID rows
-#'
-#' The renderer accepts one normalised question fact and returns row-aligned
-#' response-column facts. Loop and Merge expansion stays upstream; callers may
-#' pass an already-prefixed response-column `response_column_qid`, but this
-#' function does not
-#' choose loop options or substitute loop text.
-#'
-#' @keywords internal
+#' Resolve the Response Column ID QID used for rendering
 #' @noRd
-resolve_response_column_qid <- function(question_fact,
-                                        response_column_qid = NULL) {
+resolve_response_column_qid <- function(
+  question_fact,
+  response_column_qid = NULL
+) {
   if (is.null(response_column_qid)) {
     response_column_qid <- question_fact$qid
   }
-  if (is.null(response_column_qid) ||
-    length(response_column_qid) == 0 ||
-    is.na(response_column_qid[[1]])) {
+  if (
+    is.null(response_column_qid) ||
+      length(response_column_qid) == 0 ||
+      is.na(response_column_qid[[1]])
+  ) {
     stop("`qid` is required to render response columns.", call. = FALSE)
   }
 
@@ -23,12 +19,13 @@ resolve_response_column_qid <- function(question_fact,
 }
 
 #' Build Response Column ID Rendering context
-#' @keywords internal
 #' @noRd
-new_response_column_render_context <- function(question_fact,
-                                               response_column_qid,
-                                               shape,
-                                               question_type) {
+new_response_column_render_context <- function(
+  question_fact,
+  response_column_qid,
+  shape,
+  question_type
+) {
   list(
     question_fact = question_fact,
     response_column_qid = response_column_qid,
@@ -41,7 +38,6 @@ new_response_column_render_context <- function(question_fact,
 }
 
 #' Normalize renderer inputs while preserving SBS list-shaped facts
-#' @keywords internal
 #' @noRd
 response_column_render_facts <- function(shape, type) {
   level <- shape$level
@@ -63,14 +59,7 @@ response_column_render_facts <- function(shape, type) {
   )
 }
 
-#' Render Qualtrics Response Column ID rows
-#'
-#' The renderer accepts one normalised question fact and returns row-aligned
-#' response-column facts. Loop and Merge expansion stays upstream; callers may
-#' pass an already-prefixed response-column `response_column_qid`, but this
-#' function does not choose loop options or substitute loop text.
-#'
-#' @keywords internal
+#' Render row-aligned Response Column ID facts
 #' @noRd
 render_response_columns <- function(question_fact, response_column_qid = NULL) {
   response_column_qid <- resolve_response_column_qid(
@@ -95,7 +84,6 @@ render_response_columns <- function(question_fact, response_column_qid = NULL) {
 }
 
 #' Build row-aligned response-column tibble
-#' @keywords internal
 #' @noRd
 response_column_rows <- function(context, response_column_id) {
   row_count <- length(response_column_id)
@@ -124,7 +112,6 @@ response_column_rows <- function(context, response_column_id) {
 }
 
 #' Empty response-column fact table
-#' @keywords internal
 #' @noRd
 empty_response_columns <- function() {
   tibble(
@@ -137,7 +124,6 @@ empty_response_columns <- function() {
 }
 
 #' Insert text-entry IDs after text-capable choices or items
-#' @keywords internal
 #' @noRd
 add_text <- function(x, has_text, label = FALSE) {
   x <- unlist(x)
@@ -146,10 +132,7 @@ add_text <- function(x, has_text, label = FALSE) {
       pos <- has_text[i] + (i - 1)
       text <- names(x)[pos]
       text_nm <- x[pos]
-      x <- append(x,
-        paste0(text_nm, "_TEXT"),
-        after = pos
-      )
+      x <- append(x, paste0(text_nm, "_TEXT"), after = pos)
 
       names(x)[pos + 1] <- paste0(text, "_TEXT")
     }
@@ -158,7 +141,6 @@ add_text <- function(x, has_text, label = FALSE) {
 }
 
 #' Repeat QIDs to align with rendered item and choice rows
-#' @keywords internal
 #' @noRd
 rep_qid <- function(qid, item, choice_len) {
   if (is.null(item)) {
@@ -174,7 +156,6 @@ rep_qid <- function(qid, item, choice_len) {
 }
 
 #' Repeat item facts to align with rendered choice rows
-#' @keywords internal
 #' @noRd
 rep_item <- function(x, item, choice_len) {
   map(choice_len, function(c) {
@@ -189,7 +170,6 @@ rep_item <- function(x, item, choice_len) {
 }
 
 #' Repeat level facts to align with rendered item rows
-#' @keywords internal
 #' @noRd
 rep_level <- function(level, item) {
   if (is.null(item)) {
@@ -208,7 +188,6 @@ rep_level <- function(level, item) {
 }
 
 #' Flatten a rendered fact and align it to response-column rows
-#' @keywords internal
 #' @noRd
 response_column_row_vector <- function(x, row_count = length(x)) {
   if (length(x) == 0) {
@@ -239,7 +218,6 @@ response_column_row_vector <- function(x, row_count = length(x)) {
 }
 
 #' Build row facts used by response-column rendering
-#' @keywords internal
 #' @noRd
 response_column_shape <- function(question) {
   question <- remove_empty_choice_labels(question)
@@ -269,7 +247,6 @@ response_column_shape <- function(question) {
 }
 
 #' Build generic choice facts used by response-column rendering
-#' @keywords internal
 #' @noRd
 response_column_choice_shape <- function(question) {
   response_choices <- question_fact_response_choices(question)
@@ -292,7 +269,6 @@ response_column_choice_shape <- function(question) {
 }
 
 #' Build generic item facts used by response-column rendering
-#' @keywords internal
 #' @noRd
 response_column_item_shape <- function(question) {
   response_items <- question_fact_response_items(question)
@@ -307,15 +283,16 @@ response_column_item_shape <- function(question) {
 }
 
 #' Build response-column shape from row-aligned facts
-#' @keywords internal
 #' @noRd
-new_response_column_shape <- function(question,
-                                      item,
-                                      level,
-                                      label,
-                                      level_len,
-                                      col_len = 0,
-                                      col_type = character()) {
+new_response_column_shape <- function(
+  question,
+  item,
+  level,
+  label,
+  level_len,
+  col_len = 0,
+  col_type = character()
+) {
   list(
     question = question,
     item = item,
@@ -328,7 +305,6 @@ new_response_column_shape <- function(question,
 }
 
 #' Remove empty Qualtrics choice labels before rendering rows
-#' @keywords internal
 #' @noRd
 remove_empty_choice_labels <- function(question) {
   response_choices <- question_fact_response_choices(question)
@@ -342,7 +318,6 @@ remove_empty_choice_labels <- function(question) {
 }
 
 #' Remove non-exported choices only when choices render independent columns
-#' @keywords internal
 #' @noRd
 remove_non_exported_choice_columns <- function(question) {
   if (!question_choices_render_independent_columns(question)) {
@@ -363,7 +338,6 @@ remove_non_exported_choice_columns <- function(question) {
 }
 
 #' Does each choice produce a distinct response column?
-#' @keywords internal
 #' @noRd
 question_choices_render_independent_columns <- function(question) {
   question_type <- question_fact_question_type(question)
@@ -382,11 +356,8 @@ question_choices_render_independent_columns <- function(question) {
 }
 
 #' Build SBS-specific row shape
-#' @keywords internal
 #' @noRd
-response_column_sbs_shape <- function(question,
-                                      shape,
-                                      has_text_sub) {
+response_column_sbs_shape <- function(question, shape, has_text_sub) {
   column_shape <- response_column_sbs_column_shape(question)
   item <- response_column_sbs_item_shape(question, has_text_sub)
   value_shape <- response_column_sbs_value_shape(
@@ -418,7 +389,6 @@ response_column_sbs_shape <- function(question,
 }
 
 #' Build SBS column facts used by response-column rendering
-#' @keywords internal
 #' @noRd
 response_column_sbs_column_shape <- function(question) {
   column_facts <- question_fact_column_facts(question)
@@ -435,7 +405,6 @@ response_column_sbs_column_shape <- function(question) {
 }
 
 #' Build SBS row item facts used by response-column rendering
-#' @keywords internal
 #' @noRd
 response_column_sbs_item_shape <- function(question, has_text_sub) {
   response_items <- question_fact_response_items(question)
@@ -444,12 +413,13 @@ response_column_sbs_item_shape <- function(question, has_text_sub) {
 }
 
 #' Build SBS row-aligned question text facts
-#' @keywords internal
 #' @noRd
-response_column_sbs_questions <- function(question,
-                                          column_facts,
-                                          item,
-                                          level_len) {
+response_column_sbs_questions <- function(
+  question,
+  column_facts,
+  item,
+  level_len
+) {
   top_question <- question_fact_question_text(question)
   question_text <- map(column_facts, "question_text") |>
     map2(length(item), rep) |>
@@ -463,12 +433,13 @@ response_column_sbs_questions <- function(question,
 }
 
 #' Build SBS level and label facts used by response-column rendering
-#' @keywords internal
 #' @noRd
-response_column_sbs_value_shape <- function(column_facts,
-                                            item,
-                                            level_len,
-                                            col_type) {
+response_column_sbs_value_shape <- function(
+  column_facts,
+  item,
+  level_len,
+  col_type
+) {
   if (length(column_facts) != 0) {
     return(list(
       level_len = level_len,
@@ -492,7 +463,6 @@ response_column_sbs_value_shape <- function(column_facts,
 }
 
 #' Build SBS response levels from column choices
-#' @keywords internal
 #' @noRd
 response_column_sbs_levels <- function(column_facts, col_type) {
   map(column_facts, "response_choices") |>
@@ -506,7 +476,6 @@ response_column_sbs_levels <- function(column_facts, col_type) {
 }
 
 #' Render row-aligned item facts
-#' @keywords internal
 #' @noRd
 render_response_column_items <- function(context) {
   facts <- context$render_facts
@@ -518,7 +487,6 @@ render_response_column_items <- function(context) {
 }
 
 #' Render row-aligned level facts
-#' @keywords internal
 #' @noRd
 render_response_column_levels <- function(context, response_column_id) {
   facts <- context$render_facts
@@ -535,7 +503,6 @@ render_response_column_levels <- function(context, response_column_id) {
 }
 
 #' Render row-aligned label facts
-#' @keywords internal
 #' @noRd
 render_response_column_labels <- function(context, response_column_id) {
   facts <- context$render_facts
@@ -552,7 +519,6 @@ render_response_column_labels <- function(context, response_column_id) {
 }
 
 #' Render Response Column IDs for one context
-#' @keywords internal
 #' @noRd
 render_response_column_ids <- function(context) {
   renderer <- response_column_renderer_for_context(context)
@@ -560,7 +526,6 @@ render_response_column_ids <- function(context) {
 }
 
 #' Resolve Response Column ID renderer for one context
-#' @keywords internal
 #' @noRd
 response_column_renderer_for_context <- function(context) {
   renderer <- response_column_renderer_table()
@@ -581,7 +546,6 @@ response_column_renderer_for_context <- function(context) {
 }
 
 #' Response Column ID renderer dispatch table
-#' @keywords internal
 #' @noRd
 response_column_renderer_table <- function() {
   list(
@@ -604,7 +568,6 @@ response_column_renderer_table <- function() {
 }
 
 #' Multiple choice Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_mc_renderer_table <- function() {
   list(
@@ -622,7 +585,6 @@ response_column_mc_renderer_table <- function() {
 }
 
 #' Matrix Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_matrix_renderer_table <- function() {
   list(
@@ -644,7 +606,6 @@ response_column_matrix_renderer_table <- function() {
 }
 
 #' Likert matrix Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_likert_renderer_table <- function() {
   list(
@@ -659,7 +620,6 @@ response_column_likert_renderer_table <- function() {
 }
 
 #' Slider Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_slider_renderer_table <- function() {
   list(
@@ -670,7 +630,6 @@ response_column_slider_renderer_table <- function() {
 }
 
 #' Constant sum Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_cs_renderer_table <- function() {
   list(
@@ -682,7 +641,6 @@ response_column_cs_renderer_table <- function() {
 }
 
 #' Text entry Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_te_renderer_table <- function() {
   list(
@@ -694,7 +652,6 @@ response_column_te_renderer_table <- function() {
 }
 
 #' Display block Response Column ID renderers
-#' @keywords internal
 #' @noRd
 response_column_display_renderer_table <- function() {
   list(
@@ -884,12 +841,14 @@ render_carried_forward_sbs_qids <- function(qid, item) {
   qid
 }
 
-sbs_rendering_columns <- function(qid,
-                                  col_len,
-                                  item,
-                                  level,
-                                  choice_len,
-                                  col_type) {
+sbs_rendering_columns <- function(
+  qid,
+  col_len,
+  item,
+  level,
+  choice_len,
+  col_type
+) {
   col_sub_selector <- sbs_column_sub_selectors(col_type)
   row_names <- names(item)
 
@@ -1014,16 +973,27 @@ render_sbs_single_answer_row <- function(row) {
 }
 
 timing_qid <- function(context) {
-  paste0(context$response_column_qid, c(
-    "_FIRST_CLICK", "_LAST_CLICK", "_PAGE_SUBMIT",
-    "_CLICK_COUNT"
-  ))
+  paste0(
+    context$response_column_qid,
+    c(
+      "_FIRST_CLICK",
+      "_LAST_CLICK",
+      "_PAGE_SUBMIT",
+      "_CLICK_COUNT"
+    )
+  )
 }
 
 file_upload_qid <- function(context) {
-  paste0(context$response_column_qid, c(
-    "_FILE_ID", "_FILE_NAME", "_FILE_SIZE", "_FILE_TYPE"
-  ))
+  paste0(
+    context$response_column_qid,
+    c(
+      "_FILE_ID",
+      "_FILE_NAME",
+      "_FILE_SIZE",
+      "_FILE_TYPE"
+    )
+  )
 }
 
 not_applicable_qid <- function(context) {

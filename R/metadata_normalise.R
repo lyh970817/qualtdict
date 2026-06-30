@@ -26,7 +26,6 @@ new_normalised_metadata <- function(
 #' Metadata-defined Export Variables and assembles
 #' `qualtdict_normalised_metadata`.
 #'
-#' @keywords internal
 #' @noRd
 normalise_qualtrics_metadata <- function(raw_metadata) {
   survey_question_facts <- normalise_qualtrics_questions(

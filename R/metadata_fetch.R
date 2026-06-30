@@ -4,7 +4,6 @@
 #' model so synthetic fixtures can exercise dictionary generation without live
 #' API access.
 #'
-#' @keywords internal
 #' @noRd
 fetch_dictionary_metadata <- function(surveyID) {
   mt <- metadata2(
@@ -66,7 +65,6 @@ fetch_response_column_map <- function(surveyID) {
 #' Tests can construct this object from synthetic Qualtrics-shaped lists and
 #' feed it into `normalise_qualtrics_metadata()`.
 #'
-#' @keywords internal
 #' @noRd
 new_raw_qualtrics_metadata <- function(
   surveyID,

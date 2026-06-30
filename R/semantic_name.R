@@ -1,9 +1,8 @@
-#' Generate Semantic Names from dictionary
+#' Generate Semantic Names for question-backed dictionary rows
 #' @importFrom tidyr unite
 #' @importFrom stringi stri_count_words
 #' @importFrom rlang hash
 #' @importFrom utils head
-#' @keywords internal
 #' @noRd
 generate_semantic_names <- function(
   json,

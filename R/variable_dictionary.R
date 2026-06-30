@@ -35,7 +35,6 @@ variable_dictionary_semantic_columns <- append(
 #' identity columns. The internal normalised metadata model is allowed to
 #' evolve; this function is the adapter that keeps `dict_generate()` small.
 #'
-#' @keywords internal
 #' @noRd
 variable_dictionary_from_normalised_metadata <- function(
   normalised_metadata,
@@ -310,7 +309,6 @@ clean_variable_dictionary_rows <- function(json, use_semantic_name) {
 }
 
 #' Empty Variable Dictionary from normalised metadata
-#' @keywords internal
 #' @noRd
 empty_variable_dictionary_from_normalised_metadata <- function(
   normalised_metadata,

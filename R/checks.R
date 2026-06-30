@@ -1,7 +1,6 @@
-#' Is boolean (length-1 logical)
+#' Check that an argument is a single non-missing logical value
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_isboolean <-
   function(arg) {
@@ -18,10 +17,9 @@ checkarg_isboolean <-
     }
   }
 
-#' Is string (length-1 character)
+#' Check that an argument is a single character string
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_isstring <-
   function(arg, null_okay = TRUE) {
@@ -42,10 +40,9 @@ checkarg_isstring <-
     }
   }
 
-#' Is character vector with no missing values:
+#' Check that an argument is a character vector with no missing values
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_ischaracter <-
   function(arg, null_okay = TRUE) {
@@ -78,15 +75,15 @@ checkarg_ischaracter <-
     }
   }
 
-#' Is deprecated variable_name alias
+#' Check the deprecated variable name selector argument
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_isname <- function(arg) {
   test <-
-    length(arg) == 1 && !is.null(arg) &&
-      arg %in% c("question_name", "semantic_name", "easy_name")
+    length(arg) == 1 &&
+    !is.null(arg) &&
+    arg %in% c("question_name", "semantic_name", "easy_name")
 
   if (!test) {
     rlang::abort(
@@ -101,15 +98,15 @@ checkarg_isname <- function(arg) {
   }
 }
 
-#' Is one of `c("question_name", "semantic_name")`
+#' Check the variable name selector argument
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_isvariable_name <- function(arg) {
   test <-
-    length(arg) == 1 && !is.null(arg) &&
-      arg %in% c("question_name", "semantic_name")
+    length(arg) == 1 &&
+    !is.null(arg) &&
+    arg %in% c("question_name", "semantic_name")
 
   if (!test) {
     rlang::abort(
@@ -124,10 +121,9 @@ checkarg_isvariable_name <- function(arg) {
   }
 }
 
-#' Is function
+#' Check that an argument is a function
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_isfunction <- function(arg, null_okay = TRUE) {
   if (null_okay && is.null(arg)) {
@@ -148,10 +144,9 @@ checkarg_isfunction <- function(arg, null_okay = TRUE) {
 }
 
 
-#' Is a `qualtdict`
+#' Check that an argument is a qualtdict object
 #' @importFrom rlang abort
 #' @importFrom glue glue
-#' @keywords internal
 #' @noRd
 checkarg_isqualtdict <- function(arg) {
   test <- inherits(arg, "qualtdict")

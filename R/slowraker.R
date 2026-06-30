@@ -1,3 +1,4 @@
+#' Calculate keyword scores for candidate word groups
 #' @importFrom slowraker smart_words
 #' @noRd
 calc_keyword_scores <- function(cand_words, all_words) {
@@ -9,10 +10,13 @@ calc_keyword_scores <- function(cand_words, all_words) {
   all_wrd_cnts <- as.matrix(table(all_words)[rownames(wrd_cnts)])
 
   temp_score1 <- vapply(
-    rownames(wrd_cnts), function(x) {
+    rownames(wrd_cnts),
+    function(x) {
       sum(
         vapply(
-          cand_words, function(q) ifelse(x %in% q, length(q) - 1, 0), numeric(1)
+          cand_words,
+          function(q) ifelse(x %in% q, length(q) - 1, 0),
+          numeric(1)
         )
       )
     },
@@ -25,9 +29,16 @@ calc_keyword_scores <- function(cand_words, all_words) {
   unlist(lapply(cand_words, function(x) sum(word_scores[x])))
 }
 
-slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
-                            stem, stop_pos,
-                            word_token_annotator, pos_annotator) {
+slowrake_atomic <- function(
+  txt,
+  stop_words,
+  all_words,
+  word_min_char,
+  stem,
+  stop_pos,
+  word_token_annotator,
+  pos_annotator
+) {
   txt <- paste0(txt, ".")
 
   if (!grepl("[[:alpha:]]", txt)) {
@@ -62,7 +73,9 @@ slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
   collapse <- function(x) paste(x, collapse = " ")
   keyword <- vapply(cand_words, collapse, character(1))
 
-  if (stem) cand_words <- lapply(cand_words, SnowballC::wordStem)
+  if (stem) {
+    cand_words <- lapply(cand_words, SnowballC::wordStem)
+  }
 
   score <- calc_keyword_scores(cand_words, all_words)
 
@@ -78,13 +91,15 @@ slowrake_atomic <- function(txt, stop_words, all_words, word_min_char,
   slowraker2$process_keyword_df(keyword_df)
 }
 
-slowrake <- function(txt,
-                     all_words,
-                     stop_words = smart_words,
-                     stop_pos = c("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"),
-                     word_min_char = 3,
-                     stem = TRUE,
-                     quiet = TRUE) {
+slowrake <- function(
+  txt,
+  all_words,
+  stop_words = smart_words,
+  stop_pos = c("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"),
+  word_min_char = 3,
+  stem = TRUE,
+  quiet = TRUE
+) {
   num_docs <- length(txt)
   one_doc <- num_docs == 1
 
@@ -107,7 +122,9 @@ slowrake <- function(txt,
   collapse <- function(x) paste(x, collapse = " ")
   all_words <- vapply(all_words, collapse, character(1))
 
-  if (stem) all_words <- lapply(all_words, SnowballC::wordStem)
+  if (stem) {
+    all_words <- lapply(all_words, SnowballC::wordStem)
+  }
 
   for (i in seq_along(txt)) {
     all_out[[i]] <- slowrake_atomic(
@@ -140,7 +157,8 @@ slowrake <- function(txt,
 slowraker2 <- structure(
   mapply(
     function(.internals, i) getFromNamespace(i, "slowraker"),
-    .internals, .internals
+    .internals,
+    .internals
   ),
   class = "internal"
 )
