@@ -85,6 +85,14 @@ capability does not choose Loop Options or substitute Loop and Merge question
 text.
 _Avoid_: QID recoding, column-name generation, loop expansion
 
+**Response Column Map Classification**:
+The package-owned interpretation of Qualtrics response column map rows as
+question-backed rows, Metadata-defined Export Variables, system metadata,
+question auxiliary columns, or unknown rows. It links response column map
+entries to Dictionary Row Source decisions without changing Response Column
+IDs.
+_Avoid_: Sidecar detection, raw column parsing
+
 **Dictionary Variable Name**:
 The analyst-facing variable name assigned by qualtdict. Stored in the Variable
 Dictionary as `variable_name`; it may be selected from a Qualtrics Question Name
