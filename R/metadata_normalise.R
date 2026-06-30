@@ -19,6 +19,101 @@ new_normalised_metadata <- function(
   )
 }
 
+new_normalised_embedded_data_fields <- function(fields = list()) {
+  structure(
+    fields,
+    class = c("qualtdict_normalised_embedded_data_fields", "list")
+  )
+}
+
+new_normalised_embedded_data_field <- function(
+  field_name,
+  response_column_id = field_name,
+  question_text = paste("Embedded Data:", field_name),
+  previous_block = NULL,
+  next_block = NULL
+) {
+  field <- list(
+    field_name = field_name,
+    response_column_id = response_column_id,
+    question_text = question_text
+  )
+
+  if (!is.null(previous_block) || !is.null(next_block)) {
+    field$previous_block <- previous_block
+    field$next_block <- next_block
+  }
+
+  structure(
+    field,
+    class = c("qualtdict_normalised_embedded_data_field", "list")
+  )
+}
+
+new_normalised_scoring_variables <- function(variables = list()) {
+  structure(
+    variables,
+    class = c("qualtdict_normalised_scoring_variables", "list")
+  )
+}
+
+new_normalised_scoring_variable <- function(
+  output_name,
+  response_column_id,
+  question_text = paste("Scoring Variable:", output_name)
+) {
+  structure(
+    list(
+      output_name = output_name,
+      response_column_id = response_column_id,
+      question_text = question_text
+    ),
+    class = c("qualtdict_normalised_scoring_variable", "list")
+  )
+}
+
+new_response_column_map_classification <- function(rows = NULL) {
+  if (is.null(rows)) {
+    return(tibble::tibble(
+      response_column_id = character(),
+      row_source = character(),
+      parent_qid = character(),
+      display_name = character(),
+      main = character(),
+      sub = character(),
+      description = character(),
+      reason = character()
+    ))
+  }
+
+  tibble::as_tibble(rows)
+}
+
+new_normalised_text_analysis_sidecars <- function(sidecars = list()) {
+  structure(
+    sidecars,
+    class = c("qualtdict_normalised_text_analysis_sidecars", "list")
+  )
+}
+
+new_normalised_text_analysis_sidecar <- function(
+  sidecar_name,
+  response_column_id,
+  parent_context
+) {
+  structure(
+    list(
+      sidecar_name = sidecar_name,
+      response_column_id = response_column_id,
+      question_text = paste("Text Analysis:", sidecar_name),
+      parent_qid = parent_context$parent_qid,
+      parent_question_name = parent_context$parent_question_name,
+      parent_block = parent_context$parent_block
+    ),
+    class = c("qualtdict_normalised_text_analysis_sidecar", "list")
+  )
+}
+
 #' Normalise raw Qualtrics metadata
 #'
 #' The normalised metadata model is internal and question-level for this tracer
@@ -80,10 +175,7 @@ normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
     response_column_map
   )
 
-  structure(
-    variables,
-    class = c("qualtdict_normalised_scoring_variables", "list")
-  )
+  new_normalised_scoring_variables(variables)
 }
 
 scoring_categories <- function(scoring) {
@@ -100,10 +192,7 @@ scoring_categories <- function(scoring) {
 }
 
 empty_normalised_scoring_variables <- function() {
-  structure(
-    list(),
-    class = c("qualtdict_normalised_scoring_variables", "list")
-  )
+  new_normalised_scoring_variables()
 }
 
 filter_exported_scoring_variables <- function(variables, response_column_map) {
@@ -130,13 +219,9 @@ normalise_scoring_variable <- function(category) {
     return(NULL)
   }
 
-  structure(
-    list(
-      output_name = output_name,
-      response_column_id = response_column_id,
-      question_text = paste("Scoring Variable:", output_name)
-    ),
-    class = c("qualtdict_normalised_scoring_variable", "list")
+  new_normalised_scoring_variable(
+    output_name = output_name,
+    response_column_id = response_column_id
   )
 }
 
@@ -168,21 +253,13 @@ normalise_flat_embedded_data_fields <- function(mt) {
   field_names <- embedded_data_field_names(embedded_data)
 
   fields <- map(field_names, function(field_name) {
-    structure(
-      list(
-        field_name = field_name,
-        response_column_id = field_name,
-        question_text = paste("Embedded Data:", field_name)
-      ),
-      class = c("qualtdict_normalised_embedded_data_field", "list")
+    new_normalised_embedded_data_field(
+      field_name = field_name
     )
   })
   names(fields) <- field_names
 
-  structure(
-    fields,
-    class = c("qualtdict_normalised_embedded_data_fields", "list")
-  )
+  new_normalised_embedded_data_fields(fields)
 }
 
 normalise_survey_flow_embedded_data_fields <- function(mt_d) {
@@ -219,17 +296,11 @@ normalise_survey_flow_embedded_data_fields <- function(mt_d) {
   })
   names(fields) <- map_chr(fields, "field_name")
 
-  structure(
-    fields,
-    class = c("qualtdict_normalised_embedded_data_fields", "list")
-  )
+  new_normalised_embedded_data_fields(fields)
 }
 
 empty_normalised_embedded_data_fields <- function() {
-  structure(
-    list(),
-    class = c("qualtdict_normalised_embedded_data_fields", "list")
-  )
+  new_normalised_embedded_data_fields()
 }
 
 merge_embedded_data_fields <- function(flat_fields, flow_fields) {
@@ -241,10 +312,7 @@ merge_embedded_data_fields <- function(flat_fields, flow_fields) {
     )
   }
 
-  structure(
-    fields,
-    class = c("qualtdict_normalised_embedded_data_fields", "list")
-  )
+  new_normalised_embedded_data_fields(fields)
 }
 
 filter_exported_embedded_data_fields <- function(
@@ -265,10 +333,7 @@ filter_exported_embedded_data_fields <- function(
   })
   fields <- fields[keep]
 
-  structure(
-    fields,
-    class = c("qualtdict_normalised_embedded_data_fields", "list")
-  )
+  new_normalised_embedded_data_fields(fields)
 }
 
 survey_flow_items <- function(flow) {
@@ -408,15 +473,10 @@ normalise_survey_flow_embedded_data_field <- function(locations) {
     next_block <- NA_character_
   }
 
-  structure(
-    list(
-      field_name = field_name,
-      response_column_id = field_name,
-      question_text = paste("Embedded Data:", field_name),
-      previous_block = previous_block,
-      next_block = next_block
-    ),
-    class = c("qualtdict_normalised_embedded_data_field", "list")
+  new_normalised_embedded_data_field(
+    field_name = field_name,
+    previous_block = previous_block,
+    next_block = next_block
   )
 }
 
@@ -473,10 +533,7 @@ normalise_text_analysis_sidecars <- function(
 
   names(sidecars) <- map_chr(sidecars, "sidecar_name")
 
-  structure(
-    sidecars,
-    class = c("qualtdict_normalised_text_analysis_sidecars", "list")
-  )
+  new_normalised_text_analysis_sidecars(sidecars)
 }
 
 response_column_map_ids <- function(response_column_map) {
@@ -538,20 +595,11 @@ classify_response_column_map <- function(
     scoring_ids = scoring_ids
   )
 
-  rows
+  new_response_column_map_classification(rows)
 }
 
 empty_response_column_map_classification <- function() {
-  tibble(
-    response_column_id = character(),
-    row_source = character(),
-    parent_qid = character(),
-    display_name = character(),
-    main = character(),
-    sub = character(),
-    description = character(),
-    reason = character()
-  )
+  new_response_column_map_classification()
 }
 
 classify_response_column_map_row <- function(
@@ -885,16 +933,10 @@ normalise_text_analysis_sidecar <- function(
     questions
   )
 
-  structure(
-    list(
-      sidecar_name = sidecar_name,
-      response_column_id = response_column_id,
-      question_text = paste("Text Analysis:", sidecar_name),
-      parent_qid = parent_context$parent_qid,
-      parent_question_name = parent_context$parent_question_name,
-      parent_block = parent_context$parent_block
-    ),
-    class = c("qualtdict_normalised_text_analysis_sidecar", "list")
+  new_normalised_text_analysis_sidecar(
+    sidecar_name = sidecar_name,
+    response_column_id = response_column_id,
+    parent_context = parent_context
   )
 }
 
@@ -924,10 +966,7 @@ empty_text_analysis_sidecar_parent_context <- function() {
 }
 
 empty_normalised_text_analysis_sidecars <- function() {
-  structure(
-    list(),
-    class = c("qualtdict_normalised_text_analysis_sidecars", "list")
-  )
+  new_normalised_text_analysis_sidecars()
 }
 
 #' Merge raw question, block, and content-type metadata
