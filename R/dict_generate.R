@@ -33,7 +33,8 @@
 #' prefixes returned by \code{block_pattern}. Defaults to ".".
 #' @details
 #' The returned Variable Dictionary preserves \code{response_column_id} as the
-#' downloaded Response Column ID, \code{qid} as the bare QID,
+#' downloaded Response Column ID, \code{qid} as the bare Qualtrics question
+#' identifier,
 #' \code{row_source} as the Dictionary Row Source,
 #' \code{question_name} as the raw Qualtrics naming reference, and
 #' \code{variable_name} as the final export-safe Dictionary Variable Name used

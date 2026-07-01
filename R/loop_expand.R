@@ -163,7 +163,7 @@ loop_expanded_question_fact <- function(loop_row, context) {
   looped_question_fact[["looping_prefix"]] <- loop_row$prefix
   looped_question_fact[["looping_qid"]] <- context$looping_qid
   looped_question_fact[["qid"]] <- question_fact[["qid"]]
-  looped_question_fact[["response_column_qid"]] <-
+  looped_question_fact[["base_response_column_id"]] <-
     loop_response_column_id(
       paste(loop_row$prefix, question_fact[["qid"]], sep = "_")
     )
