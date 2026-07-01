@@ -1,4 +1,4 @@
-test_that("render_response_columns skips display block questions", {
+test_that("display block questions render no rows", {
   question <- normalise_question_fact(
     qid = "QID1",
     question = list(
