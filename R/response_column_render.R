@@ -676,6 +676,19 @@ render_response_column_id_with_choice_level_suffix <- function(context) {
   paste(context$base_response_column_id, mc_choice_ids(level), sep = "_")
 }
 
+#' Render Response Column IDs with level suffixes
+#' @noRd
+render_response_column_id_with_level_suffix <- function(context) {
+  level <- context$render_facts$level
+  # Add recode values to the end of the Response Column IDs and then add the
+  # Qualtrics internal index to text-entry Response Column IDs for multiple
+  # choice questions allowing for only one choice.
+  add_text_mc(
+    paste(context$base_response_column_id, mc_recode_ids(level), sep = "_"),
+    level
+  )
+}
+
 #' Render Response Column IDs with named label suffixes
 #' @noRd
 render_response_column_id_with_named_label_suffix <- function(context) {
