@@ -88,7 +88,7 @@ test_that("unsupported shapes warn and fall back to Base Response Column ID", {
 
   expect_warning(
     rendered <- render_response_columns(question, "x1_QID1"),
-    "falling back to the bare QID.",
+    "falling back to the Base Response Column ID.",
     fixed = TRUE
   )
   expect_identical(rendered$response_column_id, "x1_QID1")
@@ -112,7 +112,7 @@ test_that(
     shape <- response_column_shape(question_fact)
     context <- new_response_column_render_context(
       question_fact = question_fact,
-      response_column_qid = "QID1",
+      base_response_column_id = "QID1",
       shape = shape,
       question_type = question_fact$question_type
     )
