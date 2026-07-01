@@ -47,6 +47,29 @@ slowrake_atomic <- function(
     return(NA)
   }
 
+  txt <- slowrake_remove_pos_tags(
+    txt,
+    stop_pos,
+    word_token_annotator,
+    pos_annotator
+  )
+  cand_words <- slowrake_candidate_words(txt, stop_words, word_min_char)
+  if (length(cand_words) == 0) {
+    return(NA)
+  }
+
+  keyword_df <- slowrake_keyword_df(cand_words, all_words, stem)
+  slowraker2$process_keyword_df(keyword_df)
+}
+
+#' Remove stopped parts of speech before keyword extraction
+#' @noRd
+slowrake_remove_pos_tags <- function(
+  txt,
+  stop_pos,
+  word_token_annotator,
+  pos_annotator
+) {
   if (!is.null(stop_pos)) {
     pos_word_df <- tryCatch(
       slowraker2$get_pos_tags(txt, word_token_annotator, pos_annotator),
@@ -55,23 +78,20 @@ slowrake_atomic <- function(
     txt <- slowraker2$stop_pos_tags(pos_word_df, stop_pos)
   }
 
+  txt
+}
+
+#' Build candidate word groups for keyword extraction
+#' @noRd
+slowrake_candidate_words <- function(txt, stop_words, word_min_char) {
   txt <- tolower(txt)
-
   cand_words <- slowraker2$get_cand_words(txt, stop_words)
-  cand_words <- slowraker2$filter_words(cand_words, word_min_char)
+  slowraker2$filter_words(cand_words, word_min_char)
+}
 
-  # drop dashes. have to do this at this point instead of sooner b/c we want to
-  # apply min word length filter on the complete hyphenated word, not on each
-  # component word. note: we are still limited by fact that single letters are
-  # in list of stopwords and r thinks that - is a word boundary, so the "k" in
-  # "k-means" will be dropped.
-
-  if (length(cand_words) == 0) {
-    return(NA)
-  }
-
-  # Convert word vectors into keywords (a word vector contains the words in a
-  # keyword)
+#' Build a scored keyword data frame
+#' @noRd
+slowrake_keyword_df <- function(cand_words, all_words, stem) {
   collapse <- function(x) paste(x, collapse = " ")
   keyword <- vapply(cand_words, collapse, character(1))
 
@@ -90,7 +110,7 @@ slowrake_atomic <- function(
     keyword_df$stem <- vapply(cand_words, collapse, character(1))
   }
 
-  slowraker2$process_keyword_df(keyword_df)
+  keyword_df
 }
 
 #' Run RAKE keyword extraction for text values
