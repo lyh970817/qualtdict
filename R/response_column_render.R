@@ -801,7 +801,7 @@ render_response_column_id_with_named_label_suffix <- function(context) {
 #' Render text-entry Response Column IDs
 #' @noRd
 render_response_column_id_with_text_suffix <- function(context) {
-  paste(context$base_response_column_id, "TEXT", sep = "_")
+  text(context)
 }
 
 #' Repeat Response Column IDs across levels
