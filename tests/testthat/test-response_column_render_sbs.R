@@ -78,7 +78,7 @@ test_that("SBS carried-forward rows use subquestion response column IDs", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
-test_that("SBS row item shape carries text-entry item rows", {
+test_that("SBS shape preparation carries text-entry item rows", {
   question_fact <- normalise_qualtrics_metadata(
     synthetic_sbs_text_subquestion_raw_metadata()
   )$questions$QID2
