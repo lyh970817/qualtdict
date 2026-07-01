@@ -1,11 +1,11 @@
-#' Return non-empty Response Column IDs from a response column map
+#' Return non-empty Response Column IDs for classification rows
 #' @noRd
 response_column_map_ids <- function(response_column_map) {
   ids <- response_column_map_row_ids(response_column_map)
   ids[!is.na(ids) & nzchar(ids)]
 }
 
-#' Resolve row-aligned Response Column IDs from response column map columns
+#' Resolve row-aligned Response Column IDs for classification rows
 #' @noRd
 response_column_map_row_ids <- function(response_column_map) {
   if (is.null(response_column_map) || !is.data.frame(response_column_map)) {
@@ -28,13 +28,13 @@ response_column_map_row_ids <- function(response_column_map) {
   ids
 }
 
-#' Response column map fields that may carry Response Column IDs
+#' Fields used by Response Column Map Classification
 #' @noRd
 response_column_map_id_columns <- function() {
   c("qname", "ImportId")
 }
 
-#' Classify response column map rows by Dictionary Row Source
+#' Classify rows by Dictionary Row Source
 #' @noRd
 classify_response_column_map <- function(
   response_column_map,
@@ -68,7 +68,7 @@ classify_response_column_map <- function(
   new_response_column_map_classification(rows)
 }
 
-#' Build a response column map classification table
+#' Build a Response Column Map Classification table
 #' @noRd
 new_response_column_map_classification <- function(rows = NULL) {
   if (is.null(rows)) {
@@ -87,13 +87,13 @@ new_response_column_map_classification <- function(rows = NULL) {
   rows
 }
 
-#' Empty response column map classification table
+#' Empty Response Column Map Classification table
 #' @noRd
 empty_response_column_map_classification <- function() {
   new_response_column_map_classification()
 }
 
-#' Classify one response column map row
+#' Classify one Response Column Map Classification row
 #' @noRd
 classify_response_column_map_row <- function(
   row_index,
@@ -137,7 +137,7 @@ classify_response_column_map_row <- function(
   )
 }
 
-#' Resolve the row class for one response column map context
+#' Resolve the row class for one Response Column Map Classification context
 #' @noRd
 response_column_map_row_class <- function(
   response_column_id,
@@ -172,7 +172,7 @@ response_column_map_row_class <- function(
   response_column_map_class("unknown", "no_derived_column_map_fields")
 }
 
-#' Response column map classification rules in priority order
+#' Response Column Map Classification rules in priority order
 #' @noRd
 response_column_map_classification_rules <- function() {
   list(
@@ -277,7 +277,7 @@ response_column_map_text_analysis_class <- function(context) {
   }
 }
 
-#' Build a response column map class result
+#' Build a Response Column Map Classification result
 #' @noRd
 response_column_map_class <- function(row_source, reason) {
   list(row_source = row_source, reason = reason)
@@ -375,7 +375,7 @@ is_loop_prefixed_qid_response_column <- function(response_column_id) {
   )
 }
 
-#' Return whether derived response column map fields are present
+#' Return whether derived Response Column Map Classification fields are present
 #' @noRd
 has_derived_response_column_map_fields <- function(main, sub, description) {
   fields <- c(main, sub, description)
@@ -383,7 +383,7 @@ has_derived_response_column_map_fields <- function(main, sub, description) {
   any(nzchar(fields))
 }
 
-#' Resolve the display name for a response column map row
+#' Resolve the display name for a Response Column Map Classification row
 #' @noRd
 response_column_map_display_name <- function(row, response_column_id) {
   candidates <- c(
@@ -412,7 +412,7 @@ response_column_map_parent_qid <- function(response_column_id) {
   parent_qid %||% NA_character_
 }
 
-#' Return one scalar response column map field
+#' Return one scalar Response Column Map Classification field
 #' @noRd
 response_column_map_scalar <- function(row, column) {
   if (!column %in% names(row)) {

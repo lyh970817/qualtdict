@@ -33,16 +33,17 @@
 #' prefixes returned by \code{block_pattern}. Defaults to ".".
 #' @details
 #' The returned Variable Dictionary preserves \code{response_column_id} as the
-#' downloaded response-column key, \code{qid} as the bare Qualtrics question
-#' identifier, \code{row_source} as the Dictionary Row Source,
+#' downloaded Response Column ID, \code{qid} as the bare QID,
+#' \code{row_source} as the Dictionary Row Source,
 #' \code{question_name} as the raw Qualtrics naming reference, and
 #' \code{variable_name} as the final export-safe Dictionary Variable Name used
 #' by Labelled Survey Data. Question-backed rows use
 #' \code{row_source = "question"}. Flat Embedded Data Fields defined by
 #' Qualtrics metadata use \code{row_source = "embedded_data"}. Scoring
 #' Variables defined by survey description metadata use
-#' \code{row_source = "scoring"}. Text-analysis Sidecars discovered from the
-#' response column map use \code{row_source = "text_analysis"} and inherit
+#' \code{row_source = "scoring"}. Text-analysis Sidecars discovered from
+#' Response Column Map Classification use \code{row_source = "text_analysis"}
+#' and inherit
 #' parent \code{qid}, \code{question_name}, and \code{block} when a clear
 #' parent QID can be determined. Embedded Data Fields remain unassigned by
 #' Survey Block unless
@@ -128,6 +129,8 @@ dict_generate <- function(
   finalise_generated_dictionary(dict, use_semantic_name)
 }
 
+#' Check arguments for Variable Dictionary generation
+#' @noRd
 check_dict_generate_args <- function(
   surveyID,
   block_pattern,
@@ -144,6 +147,8 @@ check_dict_generate_args <- function(
   checkarg_isboolean(quiet)
 }
 
+#' Resolve the requested Dictionary Variable Name source
+#' @noRd
 resolve_dict_generate_variable_name <- function(variable_name, name) {
   if (!is.null(name)) {
     checkarg_isname(name)
@@ -165,6 +170,8 @@ resolve_dict_generate_variable_name <- function(variable_name, name) {
   variable_name
 }
 
+#' Resolve the Semantic Name preprocessing function
+#' @noRd
 resolve_semantic_name_preprocess <- function(
   semantic_name_preprocess,
   preprocess
@@ -182,6 +189,8 @@ resolve_semantic_name_preprocess <- function(
   semantic_name_preprocess
 }
 
+#' Select columns for the generated Variable Dictionary
+#' @noRd
 generated_dictionary_columns <- function(dict, use_semantic_name) {
   dict_columns <- c(
     "response_column_id",
@@ -209,6 +218,8 @@ generated_dictionary_columns <- function(dict, use_semantic_name) {
   dict_columns
 }
 
+#' Finalise generated Variable Dictionary rows
+#' @noRd
 finalise_generated_dictionary <- function(dict, use_semantic_name) {
   dict_columns <- generated_dictionary_columns(dict, use_semantic_name)
   variable_name_findings <- attr(dict, "variable_name_findings", exact = TRUE)

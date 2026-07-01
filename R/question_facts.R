@@ -8,7 +8,7 @@ scalar_character <- function(x) {
   as.character(x[[1]])
 }
 
-#' Build one package-owned normalised question fact
+#' Build one package-owned Normalised Question Fact
 #' @importFrom rlang %||%
 #' @noRd
 normalise_question_fact <- function(qid, question, block, content_type) {
@@ -109,7 +109,7 @@ normalise_column_facts <- function(columns) {
   })
 }
 
-#' Return a question fact field with optional legacy fallback
+#' Return a Normalised Question Fact field with optional legacy fallback
 #' @noRd
 question_fact_value <- function(question, owned_name, legacy_name = NULL) {
   value <- question[[owned_name]]
@@ -163,7 +163,7 @@ question_fact_question_text <- function(question) {
   question_fact_value(question, "question_text", "questionText")
 }
 
-#' Return a package-owned survey block
+#' Return a package-owned Survey Block
 #' @noRd
 question_fact_survey_block <- function(question) {
   question_fact_value(question, "survey_block", "block")
@@ -205,7 +205,7 @@ question_fact_looping_static <- function(question) {
   question_fact_value(question, "looping_static")
 }
 
-#' Return package-owned Loop and Merge column-name facts
+#' Return package-owned Loop and Merge metadata field facts
 #' @noRd
 question_fact_looping_column_names <- function(question) {
   question_fact_value(question, "looping_column_names")

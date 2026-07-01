@@ -26,6 +26,8 @@ globalVariables(c(
   "reason"
 ))
 
+#' Create a progress bar when output is not quiet
+#' @noRd
 new_progress_bar <- function(total, quiet = TRUE) {
   if (quiet || total == 0) {
     return(NULL)
@@ -34,12 +36,16 @@ new_progress_bar <- function(total, quiet = TRUE) {
   utils::txtProgressBar(min = 0, max = total, style = 3)
 }
 
+#' Advance a progress bar when present
+#' @noRd
 tick_progress_bar <- function(progress_bar, value) {
   if (!is.null(progress_bar)) {
     utils::setTxtProgressBar(progress_bar, value)
   }
 }
 
+#' Close a progress bar when present
+#' @noRd
 close_progress_bar <- function(progress_bar) {
   if (!is.null(progress_bar)) {
     close(progress_bar)

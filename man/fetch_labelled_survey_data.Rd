@@ -16,8 +16,9 @@ fetch_labelled_survey_data(
 \item{dict}{A Variable Dictionary returned by
 \code{\link[qualtdict]{dict_generate}}.}
 
-\item{extra_columns}{A character vector of raw response columns to retain in
-the Labelled Survey Data in addition to Export Variables. Defaults to
+\item{extra_columns}{A character vector of downloaded survey data columns to
+retain in the Labelled Survey Data in addition to Export Variables. Defaults
+to
 \code{c("externalDataReference", "startDate", "endDate")}. Missing
 user-specified columns error; missing default columns warn and are skipped.
 Use \code{NULL} to retain no extra columns.}
@@ -31,7 +32,7 @@ Dictionary. \code{"validation"} excludes rows with Validation Findings.}
 \code{include_questions} may be passed through. qualtdict owns
 \code{surveyID}, \code{import_id}, \code{convert}, \code{label}, and
 \code{breakout_sets}; passing those arguments errors because they are needed
-for reliable dictionary-to-response-column mapping.}
+for reliable Variable Dictionary to Response Column ID matching.}
 
 \item{quiet}{Boolean. If \code{TRUE}, suppress routine validation messages.
 Defaults to \code{TRUE}.}
@@ -51,7 +52,7 @@ metadata using \code{sjlabelled}.
 Live calls require Qualtrics credentials configured for \code{qualtRics}
 because response data are downloaded from the Qualtrics API. \code{qualtdict}
 owns the \code{fetch_survey()} settings needed for reliable
-Variable-Dictionary-to-response-column matching:
+Variable Dictionary to Response Column ID matching:
 \code{import_id = TRUE}, \code{label = FALSE}, \code{convert = FALSE}, and
 \code{breakout_sets = TRUE}. User-supplied passthrough arguments cannot
 override those settings.

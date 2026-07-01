@@ -84,6 +84,8 @@ dict_validate <- function(dict, quiet = TRUE) {
   )
 }
 
+#' Prepare a Variable Dictionary for level-label validation
+#' @noRd
 question_level_label_validation_dict <- function(dict) {
   dict[dict_question_rows(dict), ]
 }

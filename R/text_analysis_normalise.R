@@ -1,3 +1,5 @@
+#' Build normalised Text-analysis Sidecar records
+#' @noRd
 new_normalised_text_analysis_sidecars <- function(sidecars = list()) {
   structure(
     sidecars,
@@ -5,6 +7,8 @@ new_normalised_text_analysis_sidecars <- function(sidecars = list()) {
   )
 }
 
+#' Build one normalised Text-analysis Sidecar record
+#' @noRd
 new_normalised_text_analysis_sidecar <- function(
   sidecar_name,
   response_column_id,
@@ -23,6 +27,9 @@ new_normalised_text_analysis_sidecar <- function(
   )
 }
 
+#' Normalise Text-analysis Sidecars from Response Column Map Classification
+#' rows
+#' @noRd
 normalise_text_analysis_sidecars <- function(
   questions,
   response_column_classification = NULL
@@ -46,6 +53,9 @@ normalise_text_analysis_sidecars <- function(
   new_normalised_text_analysis_sidecars(sidecars)
 }
 
+#' Extract Text-analysis Sidecar facts from Response Column Map Classification
+#' rows
+#' @noRd
 text_analysis_sidecars_from_response_column_map <- function(
   response_column_classification
 ) {
@@ -78,6 +88,8 @@ text_analysis_sidecars_from_response_column_map <- function(
   )
 }
 
+#' Normalise one Text-analysis Sidecar
+#' @noRd
 normalise_text_analysis_sidecar <- function(
   sidecar,
   questions
@@ -105,6 +117,8 @@ normalise_text_analysis_sidecar <- function(
   )
 }
 
+#' Resolve parent question context for a Text-analysis Sidecar
+#' @noRd
 text_analysis_sidecar_parent_context <- function(parent_qid, questions) {
   if (is.na(parent_qid)) {
     return(empty_text_analysis_sidecar_parent_context())
@@ -122,6 +136,8 @@ text_analysis_sidecar_parent_context <- function(parent_qid, questions) {
   )
 }
 
+#' Empty parent question context for a Text-analysis Sidecar
+#' @noRd
 empty_text_analysis_sidecar_parent_context <- function() {
   list(
     parent_qid = NA_character_,
@@ -130,6 +146,8 @@ empty_text_analysis_sidecar_parent_context <- function() {
   )
 }
 
+#' Empty normalised Text-analysis Sidecar records
+#' @noRd
 empty_normalised_text_analysis_sidecars <- function() {
   new_normalised_text_analysis_sidecars()
 }
