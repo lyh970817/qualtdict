@@ -787,7 +787,7 @@ render_response_column_id_with_choice_level_suffix <- function(context) {
   paste(context$base_response_column_id, mc_choice_ids(level), sep = "_")
 }
 
-#' Render Response Column IDs with named level suffixes
+#' Render Response Column IDs with named label suffixes
 #' @noRd
 render_response_column_id_with_named_label_suffix <- function(context) {
   # Add recode values to the end of the Base Response Column ID.

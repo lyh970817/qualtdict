@@ -46,19 +46,25 @@ test_that("render_response_columns preserves loop-prefixed base IDs", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
-test_that("render_response_columns preserves already-prefixed loop qids", {
-  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
-  question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID2
+test_that(
+  paste(
+    "render_response_columns preserves already-prefixed",
+    "Base Response Column IDs"
+  ),
+  {
+    raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+    question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID2
 
-  rendered <- render_response_columns(question, "x1_QID2")
+    rendered <- render_response_columns(question, "x1_QID2")
 
-  expect_identical(
-    rendered$response_column_id,
-    c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT")
-  )
-  expect_identical(unname(rendered$level), c("1", "2", "2_TEXT"))
-  expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
-})
+    expect_identical(
+      rendered$response_column_id,
+      c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT")
+    )
+    expect_identical(unname(rendered$level), c("1", "2", "2_TEXT"))
+    expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
+  }
+)
 
 test_that("render context separates QID and Base Response Column ID", {
   question_fact <- normalise_qualtrics_metadata(
