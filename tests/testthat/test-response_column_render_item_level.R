@@ -11,6 +11,18 @@ test_that("matrix item-level rows render in stable order", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
+test_that("item-or-level fallback uses item IDs when items are present", {
+  rendered <- render_response_column_fixture(
+    synthetic_matrix_raw_metadata(),
+    "QID1"
+  )
+
+  expect_identical(
+    unique(rendered$response_column_id),
+    c("QID1_x1", "QID1_x2")
+  )
+})
+
 test_that("render_response_columns renders matrix rows in stable order", {
   raw_metadata <- synthetic_matrix_raw_metadata()
   question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
