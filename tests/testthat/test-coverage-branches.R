@@ -288,9 +288,16 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
 })
 
 test_that("Response Column ID helpers cover fallback shapes", {
-  expect_identical(rep_qid("QID1", NULL, 2), c("QID1", "QID1"))
   expect_identical(
-    rep_qid(c("QID1", "QID1"), c(x1 = "A", x2_TEXT = "Other"), 2),
+    repeat_response_column_ids("QID1", NULL, 2),
+    c("QID1", "QID1")
+  )
+  expect_identical(
+    repeat_response_column_ids(
+      c("QID1", "QID1"),
+      c(x1 = "A", x2_TEXT = "Other"),
+      2
+    ),
     c("QID1", "QID1", "QID1")
   )
   expect_error(
@@ -329,25 +336,49 @@ test_that("Response Column ID helpers cover fallback shapes", {
   expect_identical(mc_recode_ids(c("1", "2_TEXT")), c("1", "2_TEXT"))
 
   empty_context <- list(
-    response_column_qid = "QID1",
+    base_response_column_id = "QID1",
     render_facts = list(level = character())
   )
-  expect_identical(suf_level_qid_macol(empty_context), "QID1")
-  expect_identical(suf_level_qid_mavr(empty_context), "QID1")
-  expect_identical(suf_choice_level_qid(empty_context), "QID1")
+  expect_identical(
+    render_macol_response_column_id_with_level_suffix(empty_context),
+    "QID1"
+  )
+  expect_identical(
+    render_mavr_response_column_id_with_level_suffix(empty_context),
+    "QID1"
+  )
+  expect_identical(
+    render_response_column_id_with_choice_level_suffix(empty_context),
+    "QID1"
+  )
 
   level_context <- list(
-    response_column_qid = "QID1",
+    base_response_column_id = "QID1",
     render_facts = list(
       item = c(row1 = "Row 1", row2 = "Row 2"),
       level = c(x1 = "1", x2_TEXT = "2_TEXT")
     )
   )
-  expect_identical(suf_nmlabel_qid(level_context), c("QID1_x1", "QID1_x2_TEXT"))
-  expect_length(suf_item_suf_level_qid(level_context), 4)
-  expect_length(suf_level_suf_item_qid(level_context), 4)
-  expect_identical(text(level_context), "QID1_TEXT")
-  expect_identical(render_carried_forward_sbs_qids("QID1", NULL), "QID1")
+  expect_identical(
+    render_response_column_id_with_named_label_suffix(level_context),
+    c("QID1_x1", "QID1_x2_TEXT")
+  )
+  expect_length(
+    render_response_column_id_with_item_and_level_suffixes(level_context),
+    4
+  )
+  expect_length(
+    render_response_column_id_with_level_and_item_suffixes(level_context),
+    4
+  )
+  expect_identical(
+    render_response_column_id_with_text_suffix(level_context),
+    "QID1_TEXT"
+  )
+  expect_identical(
+    render_carried_forward_sbs_response_column_ids("QID1", NULL),
+    "QID1"
+  )
   expect_identical(
     sbs_column_sub_selectors(c("TE", "MC")),
     c(NA_character_, NA_character_)
@@ -401,7 +432,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
 
   no_row_question <- list(qid = "QID1", question_name = "Q1")
   local_mocked_bindings(
-    render_response_columns = function(qjson, response_column_qid) {
+    render_response_columns = function(qjson, base_response_column_id) {
       tibble::tibble(
         response_column_id = character(),
         question = character(),
