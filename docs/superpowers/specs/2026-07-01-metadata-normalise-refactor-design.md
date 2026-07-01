@@ -407,23 +407,12 @@ phases.
 
 ### Phase 2: Response Column ID Rendering
 
-Treat `R/response_column_render.R` as a separate refactor. It is also large,
-but it is large within one capability rather than mixing unrelated
-capabilities.
+Phase 2 now has its own design spec:
 
-Likely target files:
+- `docs/superpowers/specs/2026-07-01-response-column-render-refactor-design.md`
 
-```text
-R/response_column_render.R
-R/response_column_render_mc.R
-R/response_column_render_matrix.R
-R/response_column_render_sbs.R
-R/response_column_render_special.R
-```
-
-Phase 2 must preserve rendered Response Column IDs and row-aligned facts. It
-should run Loop and Merge regression tests because Response Column ID Rendering
-consumes Loop-expanded Question Facts.
+Treat that file as canonical for Response Column ID Rendering implementation
+decisions.
 
 ### Phase 3: Loop and Merge Support
 
@@ -434,9 +423,9 @@ Rendering. Preserve the existing domain seam:
   Question Facts.
 - Response Column ID Rendering consumes Normalised Question Facts or
   Loop-expanded Question Facts.
-- Response Column ID Rendering may receive an already-prefixed
-  `response_column_qid`, but it does not choose Loop Options or substitute Loop
-  and Merge text.
+- Response Column ID Rendering may receive an already-prefixed Base Response
+  Column ID, but it does not choose Loop Options or substitute Loop and Merge
+  text.
 
 Phase 3 should focus on Loop and Merge expansion clarity and tests, not on
 Response Column ID Rendering internals.

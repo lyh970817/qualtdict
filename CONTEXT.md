@@ -85,6 +85,12 @@ capability does not choose Loop Options or substitute Loop and Merge question
 text.
 _Avoid_: QID recoding, column-name generation, loop expansion
 
+**Base Response Column ID**:
+The Response Column ID stem supplied to Response Column ID Rendering before
+question-shape-specific suffixes are added. It may be a bare QID or may already
+include a Loop and Merge prefix; it is not necessarily a QID.
+_Avoid_: response column QID, rendered QID
+
 **Response Column Map Classification**:
 The package-owned interpretation of Qualtrics response column map rows as
 question-backed rows, Metadata-defined Export Variables, system metadata,
