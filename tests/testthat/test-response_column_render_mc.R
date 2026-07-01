@@ -96,6 +96,29 @@ test_that("multiple-answer columns use numeric choice recodes", {
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
+test_that("MC renderer preserves recodes and text-entry choice IDs", {
+  rendered <- render_response_column_fixture(
+    synthetic_mc_recode_raw_metadata(),
+    "QID1"
+  )
+
+  expect_identical(
+    rendered$response_column_id,
+    c(
+      "QID1_1",
+      "QID1_2",
+      "QID1_-88",
+      "QID1_-99",
+      "QID1_0",
+      "QID1_9_TEXT"
+    )
+  )
+  expect_identical(
+    unname(rendered$level),
+    c("1", "2", "-88", "-99", "0", "0_TEXT")
+  )
+})
+
 test_that("multiple-answer response columns use recodes for x choice IDs", {
   raw_metadata <- synthetic_mc_x_choice_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
