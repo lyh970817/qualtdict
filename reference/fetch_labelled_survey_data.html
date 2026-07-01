@@ -71,8 +71,9 @@ metadata using <code>sjlabelled</code>.</p>
 
 
 <dt id="arg-extra-columns">extra_columns<a class="anchor" aria-label="anchor" href="#arg-extra-columns"></a></dt>
-<dd><p>A character vector of raw response columns to retain in
-the Labelled Survey Data in addition to Export Variables. Defaults to
+<dd><p>A character vector of downloaded survey data columns to
+retain in the Labelled Survey Data in addition to Export Variables. Defaults
+to
 <code>c("externalDataReference", "startDate", "endDate")</code>. Missing
 user-specified columns error; missing default columns warn and are skipped.
 Use <code>NULL</code> to retain no extra columns.</p></dd>
@@ -90,7 +91,7 @@ Dictionary. <code>"validation"</code> excludes rows with Validation Findings.</p
 <code>include_questions</code> may be passed through. qualtdict owns
 <code>surveyID</code>, <code>import_id</code>, <code>convert</code>, <code>label</code>, and
 <code>breakout_sets</code>; passing those arguments errors because they are needed
-for reliable dictionary-to-response-column mapping.</p></dd>
+for reliable Variable Dictionary to Response Column ID matching.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
@@ -108,7 +109,7 @@ Defaults to <code>TRUE</code>.</p></dd>
     <p>Live calls require Qualtrics credentials configured for <code>qualtRics</code>
 because response data are downloaded from the Qualtrics API. <code>qualtdict</code>
 owns the <code>fetch_survey()</code> settings needed for reliable
-Variable-Dictionary-to-response-column matching:
+Variable Dictionary to Response Column ID matching:
 <code>import_id = TRUE</code>, <code>label = FALSE</code>, <code>convert = FALSE</code>, and
 <code>breakout_sets = TRUE</code>. User-supplied passthrough arguments cannot
 override those settings.</p>

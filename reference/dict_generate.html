@@ -122,22 +122,26 @@ progress bars. Defaults to <code>TRUE</code>.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The returned Variable Dictionary preserves <code>response_column_id</code> as the
-downloaded response-column key, <code>qid</code> as the bare Qualtrics question
-identifier, <code>row_source</code> as the Dictionary Row Source,
+downloaded Response Column ID, <code>qid</code> as the bare QID,
+<code>row_source</code> as the Dictionary Row Source,
 <code>question_name</code> as the raw Qualtrics naming reference, and
 <code>variable_name</code> as the final export-safe Dictionary Variable Name used
 by Labelled Survey Data. Question-backed rows use
 <code>row_source = "question"</code>. Flat Embedded Data Fields defined by
 Qualtrics metadata use <code>row_source = "embedded_data"</code>. Scoring
 Variables defined by survey description metadata use
-<code>row_source = "scoring"</code>. Embedded Data Fields remain unassigned by
+<code>row_source = "scoring"</code>. Text-analysis Sidecars discovered from
+Response Column Map Classification use <code>row_source = "text_analysis"</code>
+and inherit
+parent <code>qid</code>, <code>question_name</code>, and <code>block</code> when a clear
+parent QID can be determined. Embedded Data Fields remain unassigned by
 Survey Block unless
 <code>embedded_data_block_assignment</code> explicitly requests Survey Flow
-adjacency assignment. Scoring Variables remain unassigned by Survey Block.
-Text-analysis Sidecars defined by Qualtrics metadata
-use <code>row_source = "text_analysis"</code> and inherit parent <code>qid</code>,
-<code>question_name</code>, and <code>block</code> when a clear parent QID can be
-determined.</p>
+adjacency assignment. That assignment is based on Survey Flow returned by
+<code>fetch_description()</code>, where Embedded Data nodes carry field payloads;
+the type-only Survey Flow returned by <code>metadata()</code> is not used for
+Embedded Data Field locations. Scoring Variables remain unassigned by Survey
+Block.</p>
 <p>When <code>variable_name = "semantic_name"</code>, the Variable Dictionary also
 includes <code>semantic_name</code>. Semantic Names are readable best-effort
 conveniences generated from survey text and metadata; they are not stable

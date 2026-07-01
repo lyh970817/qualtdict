@@ -28,8 +28,8 @@ fetch_labelled_survey_data(
 
 - extra_columns:
 
-  A character vector of raw response columns to retain in the Labelled
-  Survey Data in addition to Export Variables. Defaults to
+  A character vector of downloaded survey data columns to retain in the
+  Labelled Survey Data in addition to Export Variables. Defaults to
   `c("externalDataReference", "startDate", "endDate")`. Missing
   user-specified columns error; missing default columns warn and are
   skipped. Use `NULL` to retain no extra columns.
@@ -47,7 +47,8 @@ fetch_labelled_survey_data(
   Filtering arguments such as `include_questions` may be passed through.
   qualtdict owns `surveyID`, `import_id`, `convert`, `label`, and
   `breakout_sets`; passing those arguments errors because they are
-  needed for reliable dictionary-to-response-column mapping.
+  needed for reliable Variable Dictionary to Response Column ID
+  matching.
 
 - quiet:
 
@@ -63,8 +64,8 @@ Labelled Survey Data: a data frame whose Export Variables are renamed to
 
 Live calls require Qualtrics credentials configured for `qualtRics`
 because response data are downloaded from the Qualtrics API. `qualtdict`
-owns the `fetch_survey()` settings needed for reliable
-Variable-Dictionary-to-response-column matching: `import_id = TRUE`,
+owns the `fetch_survey()` settings needed for reliable Variable
+Dictionary to Response Column ID matching: `import_id = TRUE`,
 `label = FALSE`, `convert = FALSE`, and `breakout_sets = TRUE`.
 User-supplied passthrough arguments cannot override those settings.
 
