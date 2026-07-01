@@ -81,19 +81,23 @@ A Variable Dictionary: a `qualtdict` data frame.
 ## Details
 
 The returned Variable Dictionary preserves `response_column_id` as the
-downloaded response-column key, `qid` as the bare Qualtrics question
-identifier, `row_source` as the Dictionary Row Source, `question_name`
-as the raw Qualtrics naming reference, and `variable_name` as the final
-export-safe Dictionary Variable Name used by Labelled Survey Data.
-Question-backed rows use `row_source = "question"`. Flat Embedded Data
-Fields defined by Qualtrics metadata use `row_source = "embedded_data"`.
-Scoring Variables defined by survey description metadata use
-`row_source = "scoring"`. Embedded Data Fields remain unassigned by
-Survey Block unless `embedded_data_block_assignment` explicitly requests
-Survey Flow adjacency assignment. Scoring Variables remain unassigned by
-Survey Block. Text-analysis Sidecars defined by Qualtrics metadata use
-`row_source = "text_analysis"` and inherit parent `qid`,
-`question_name`, and `block` when a clear parent QID can be determined.
+downloaded Response Column ID, `qid` as the bare QID, `row_source` as
+the Dictionary Row Source, `question_name` as the raw Qualtrics naming
+reference, and `variable_name` as the final export-safe Dictionary
+Variable Name used by Labelled Survey Data. Question-backed rows use
+`row_source = "question"`. Flat Embedded Data Fields defined by
+Qualtrics metadata use `row_source = "embedded_data"`. Scoring Variables
+defined by survey description metadata use `row_source = "scoring"`.
+Text-analysis Sidecars discovered from Response Column Map
+Classification use `row_source = "text_analysis"` and inherit parent
+`qid`, `question_name`, and `block` when a clear parent QID can be
+determined. Embedded Data Fields remain unassigned by Survey Block
+unless `embedded_data_block_assignment` explicitly requests Survey Flow
+adjacency assignment. That assignment is based on Survey Flow returned
+by `fetch_description()`, where Embedded Data nodes carry field
+payloads; the type-only Survey Flow returned by `metadata()` is not used
+for Embedded Data Field locations. Scoring Variables remain unassigned
+by Survey Block.
 
 When `variable_name = "semantic_name"`, the Variable Dictionary also
 includes `semantic_name`. Semantic Names are readable best-effort

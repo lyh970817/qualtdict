@@ -54,6 +54,12 @@ finalization phase when local smoke artifacts are available. Read
 workflow. Missing artifacts are not a failure of the feature work;
 report that the smoke check could not be run.
 
+## Worktree Location
+
+Create any temporary Git worktrees for agent work under `.worktrees/` at
+the repository root. The directory is ignored by Git and keeps parallel
+checkouts out of the main source tree.
+
 ## Commit & Pull Request Guidelines
 
 Ignore the non-failing `pkgcheck` suffix “but no badges on README” when
