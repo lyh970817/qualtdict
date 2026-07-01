@@ -60,7 +60,7 @@ test_that("render_response_columns preserves already-prefixed loop qids", {
   expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
 })
 
-test_that("response column render context separates bare and rendering qids", {
+test_that("render context separates QID and Base Response Column ID", {
   question_fact <- normalise_qualtrics_metadata(
     synthetic_looped_mc_text_raw_metadata()
   )$questions$QID2
@@ -70,39 +70,33 @@ test_that("response column render context separates bare and rendering qids", {
 
   context <- new_response_column_render_context(
     question_fact = question_fact,
-    response_column_qid = "x1_QID2",
+    base_response_column_id = "x1_QID2",
     shape = shape,
     question_type = question_type
   )
 
-  expect_identical(context$response_column_qid, "x1_QID2")
+  expect_identical(context$base_response_column_id, "x1_QID2")
   expect_identical(context$question_fact$qid, "QID2")
 })
 
-test_that(
-  paste(
-    "resolve_response_column_qid preserves current precedence",
-    "and error"
-  ),
-  {
-    question_fact <- normalise_qualtrics_metadata(
-      synthetic_mc_text_raw_metadata()
-    )$questions$QID1
+test_that("resolve_base_response_column_id preserves precedence and error", {
+  question_fact <- normalise_qualtrics_metadata(
+    synthetic_mc_text_raw_metadata()
+  )$questions$QID1
 
-    expect_identical(resolve_response_column_qid(question_fact), "QID1")
-    expect_identical(
-      resolve_response_column_qid(question_fact, "x1_QID1"),
-      "x1_QID1"
-    )
+  expect_identical(resolve_base_response_column_id(question_fact), "QID1")
+  expect_identical(
+    resolve_base_response_column_id(question_fact, "x1_QID1"),
+    "x1_QID1"
+  )
 
-    question_fact$qid <- NA_character_
-    expect_error(
-      resolve_response_column_qid(question_fact),
-      "`qid` is required to render response columns.",
-      fixed = TRUE
-    )
-  }
-)
+  question_fact$qid <- NA_character_
+  expect_error(
+    resolve_base_response_column_id(question_fact),
+    "`qid` is required to render response columns.",
+    fixed = TRUE
+  )
+})
 
 test_that(
   paste(
@@ -144,9 +138,9 @@ test_that("response column choice shape carries text-entry levels and labels", {
   )
 })
 
-test_that("item_or_level_qid preserves choice ids when there is no item", {
+test_that("item-or-level rendering preserves choice ids with no item", {
   context <- list(
-    response_column_qid = "QIDX",
+    base_response_column_id = "QIDX",
     render_facts = list(
       item = NULL,
       level = c(x1 = "1", x2 = "2")
@@ -154,7 +148,7 @@ test_that("item_or_level_qid preserves choice ids when there is no item", {
   )
 
   expect_identical(
-    item_or_level_qid(context),
+    render_response_column_id_with_item_or_level_suffix(context),
     c("QIDX_x1", "QIDX_x2")
   )
 })

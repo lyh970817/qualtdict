@@ -1,34 +1,34 @@
-#' Resolve the Response Column ID QID used for rendering
+#' Resolve the Base Response Column ID used for rendering
 #' @noRd
-resolve_response_column_qid <- function(
+resolve_base_response_column_id <- function(
   question_fact,
-  response_column_qid = NULL
+  base_response_column_id = NULL
 ) {
-  if (is.null(response_column_qid)) {
-    response_column_qid <- question_fact$qid
+  if (is.null(base_response_column_id)) {
+    base_response_column_id <- question_fact$qid
   }
   if (
-    is.null(response_column_qid) ||
-      length(response_column_qid) == 0 ||
-      is.na(response_column_qid[[1]])
+    is.null(base_response_column_id) ||
+      length(base_response_column_id) == 0 ||
+      is.na(base_response_column_id[[1]])
   ) {
     stop("`qid` is required to render response columns.", call. = FALSE)
   }
 
-  response_column_qid
+  base_response_column_id
 }
 
 #' Build Response Column ID Rendering context
 #' @noRd
 new_response_column_render_context <- function(
   question_fact,
-  response_column_qid,
+  base_response_column_id,
   shape,
   question_type
 ) {
   list(
     question_fact = question_fact,
-    response_column_qid = response_column_qid,
+    base_response_column_id = base_response_column_id,
     shape = shape,
     render_facts = response_column_render_facts(shape, question_type$type),
     type = question_type$type,
@@ -61,17 +61,20 @@ response_column_render_facts <- function(shape, type) {
 
 #' Render row-aligned Response Column ID facts
 #' @noRd
-render_response_columns <- function(question_fact, response_column_qid = NULL) {
-  response_column_qid <- resolve_response_column_qid(
+render_response_columns <- function(
+  question_fact,
+  base_response_column_id = NULL
+) {
+  base_response_column_id <- resolve_base_response_column_id(
     question_fact,
-    response_column_qid
+    base_response_column_id
   )
 
   question_type <- question_fact_question_type(question_fact)
   shape <- response_column_shape(question_fact)
   context <- new_response_column_render_context(
     question_fact = question_fact,
-    response_column_qid = response_column_qid,
+    base_response_column_id = base_response_column_id,
     shape = shape,
     question_type = question_type
   )
@@ -140,13 +143,13 @@ add_text <- function(x, has_text, label = FALSE) {
   }
 }
 
-#' Repeat QIDs to align with rendered item and choice rows
+#' Repeat Response Column IDs to align with rendered item and choice rows
 #' @noRd
-rep_qid <- function(qid, item, choice_len) {
+repeat_response_column_ids <- function(response_column_id, item, choice_len) {
   if (is.null(item)) {
-    return(rep(qid, times = choice_len))
+    return(rep(response_column_id, times = choice_len))
   }
-  map2(qid, names(item), function(id, nam) {
+  map2(response_column_id, names(item), function(id, nam) {
     if (grepl("TEXT", nam, fixed = TRUE)) {
       return(id)
     }
@@ -542,7 +545,7 @@ response_column_renderer_for_context <- function(context) {
     renderer <- renderer[[context$type]]
   }
 
-  renderer %||% not_applicable_qid
+  renderer %||% render_unsupported_response_column_ids
 }
 
 #' Response Column ID renderer dispatch table
@@ -554,15 +557,19 @@ response_column_renderer_table <- function() {
     Slider = response_column_slider_renderer_table(),
     CS = response_column_cs_renderer_table(),
     TE = response_column_te_renderer_table(),
-    SBS = list(SBSMatrix = sbs_qid),
-    Timing = list(PageTimer = timing_qid),
-    SS = list(TA = rep_level_qid),
-    FileUpload = list(FileUpload = file_upload_qid),
-    PGR = list(DragAndDrop = list(NoColumns = not_applicable_qid)),
-    DD = list(DL = suf_item_rep_level_qid),
-    Draw = list(Signature = file_upload_qid),
-    HL = list(Text = suf_level_suf_item_qid),
-    Meta = list(Browser = not_applicable_qid),
+    SBS = list(SBSMatrix = render_sbs_response_column_ids),
+    Timing = list(PageTimer = render_timing_response_column_ids),
+    SS = list(TA = render_response_column_id_repeated_by_level),
+    FileUpload = list(FileUpload = render_file_upload_response_column_ids),
+    PGR = list(
+      DragAndDrop = list(NoColumns = render_unsupported_response_column_ids)
+    ),
+    DD = list(
+      DL = render_response_column_id_with_item_suffix_repeated_by_level
+    ),
+    Draw = list(Signature = render_file_upload_response_column_ids),
+    HL = list(Text = render_response_column_id_with_level_and_item_suffixes),
+    Meta = list(Browser = render_unsupported_response_column_ids),
     DB = response_column_display_renderer_table()
   )
 }
@@ -571,37 +578,41 @@ response_column_renderer_table <- function() {
 #' @noRd
 response_column_mc_renderer_table <- function() {
   list(
-    MACOL = list(TX = suf_level_qid_macol),
-    MAVR = list(TX = suf_level_qid_mavr),
-    MAHR = list(TX = suf_level_qid),
-    MSB = suf_level_qid,
-    SAVR = list(TX = rep_level_qid),
-    SACOL = list(TX = rep_level_qid),
-    DL = rep_level_qid,
-    SAHR = list(TX = rep_level_qid),
-    SB = rep_level_qid,
-    NPS = rep_level_qid
+    MACOL = list(TX = render_macol_response_column_id_with_level_suffix),
+    MAVR = list(TX = render_mavr_response_column_id_with_level_suffix),
+    MAHR = list(TX = render_response_column_id_with_level_suffix),
+    MSB = render_response_column_id_with_level_suffix,
+    SAVR = list(TX = render_response_column_id_repeated_by_level),
+    SACOL = list(TX = render_response_column_id_repeated_by_level),
+    DL = render_response_column_id_repeated_by_level,
+    SAHR = list(TX = render_response_column_id_repeated_by_level),
+    SB = render_response_column_id_repeated_by_level,
+    NPS = render_response_column_id_repeated_by_level
   )
 }
 
 #' Matrix Response Column ID renderers
 #' @noRd
 response_column_matrix_renderer_table <- function() {
+  item_and_level <- render_response_column_id_with_item_and_level_suffixes
+  item_suffix_repeated <-
+    render_response_column_id_with_item_suffix_repeated_by_level
+
   list(
     Likert = response_column_likert_renderer_table(),
     TE = list(
-      Short = suf_item_suf_level_qid,
-      Medium = suf_item_suf_level_qid,
-      Long = suf_item_suf_level_qid
+      Short = item_and_level,
+      Medium = item_and_level,
+      Long = item_and_level
     ),
     Profile = list(
-      SingleAnswer = suf_item_rep_level_qid,
-      DL = suf_item_rep_level_qid
+      SingleAnswer = item_suffix_repeated,
+      DL = item_suffix_repeated
     ),
-    Bipolar = suf_item_rep_level_qid,
-    RO = suf_item_suf_level_qid,
-    MaxDiff = suf_item_rep_level_qid,
-    CS = list(WTB = suf_item_suf_level_qid)
+    Bipolar = item_suffix_repeated,
+    RO = item_and_level,
+    MaxDiff = item_suffix_repeated,
+    CS = list(WTB = item_and_level)
   )
 }
 
@@ -609,13 +620,13 @@ response_column_matrix_renderer_table <- function() {
 #' @noRd
 response_column_likert_renderer_table <- function() {
   list(
-    MultipleAnswer = suf_item_suf_level_qid,
-    DL = suf_item_rep_level_qid,
-    SingleAnswer = item_or_level_qid,
-    DND = item_or_level_qid,
-    SACV = item_or_level_qid,
-    SACH = item_or_level_qid,
-    SACCOL = item_or_level_qid
+    MultipleAnswer = render_response_column_id_with_item_and_level_suffixes,
+    DL = render_response_column_id_with_item_suffix_repeated_by_level,
+    SingleAnswer = render_response_column_id_with_item_or_level_suffix,
+    DND = render_response_column_id_with_item_or_level_suffix,
+    SACV = render_response_column_id_with_item_or_level_suffix,
+    SACH = render_response_column_id_with_item_or_level_suffix,
+    SACCOL = render_response_column_id_with_item_or_level_suffix
   )
 }
 
@@ -623,9 +634,9 @@ response_column_likert_renderer_table <- function() {
 #' @noRd
 response_column_slider_renderer_table <- function() {
   list(
-    HSLIDER = suf_level_qid,
-    HBAR = suf_level_qid,
-    STAR = suf_level_qid
+    HSLIDER = render_response_column_id_with_level_suffix,
+    HBAR = render_response_column_id_with_level_suffix,
+    STAR = render_response_column_id_with_level_suffix
   )
 }
 
@@ -633,10 +644,10 @@ response_column_slider_renderer_table <- function() {
 #' @noRd
 response_column_cs_renderer_table <- function() {
   list(
-    HR = list(TX = suf_nmlabel_qid),
-    VRTL = list(TX = item_or_level_qid),
-    HBAR = item_or_level_qid,
-    HSLIDER = item_or_level_qid
+    HR = list(TX = render_response_column_id_with_named_label_suffix),
+    VRTL = list(TX = render_response_column_id_with_item_or_level_suffix),
+    HBAR = render_response_column_id_with_item_or_level_suffix,
+    HSLIDER = render_response_column_id_with_item_or_level_suffix
   )
 }
 
@@ -644,10 +655,10 @@ response_column_cs_renderer_table <- function() {
 #' @noRd
 response_column_te_renderer_table <- function() {
   list(
-    FORM = suf_nmlabel_qid,
-    SL = suf_text_qid,
-    ML = suf_text_qid,
-    ESTB = suf_text_qid
+    FORM = render_response_column_id_with_named_label_suffix,
+    SL = render_response_column_id_with_text_suffix,
+    ML = render_response_column_id_with_text_suffix,
+    ESTB = render_response_column_id_with_text_suffix
   )
 }
 
@@ -655,45 +666,45 @@ response_column_te_renderer_table <- function() {
 #' @noRd
 response_column_display_renderer_table <- function() {
   list(
-    TB = questiontext_qid,
-    PTB = questiontext_qid,
-    FLB = questiontext_qid,
+    TB = render_no_response_column_ids,
+    PTB = render_no_response_column_ids,
+    FLB = render_no_response_column_ids,
     GRB = list(
-      WTXB = questiontext_qid,
-      WOTXB = questiontext_qid
+      WTXB = render_no_response_column_ids,
+      WOTXB = render_no_response_column_ids
     )
   )
 }
 
 #' Render no Response Column IDs for display text questions
 #' @noRd
-questiontext_qid <- function(context) {
+render_no_response_column_ids <- function(context) {
   character()
 }
 
 #' Add Qualtrics text-entry IDs to multiple choice Response Column IDs
 #' @noRd
-add_text_mc <- function(new_qid, level) {
-  # For computed QIDs for multiple choice questions allowing for only one
-  # choice with text options, add Qualtrics internal index to the end of
-  # the QID for text options
+add_text_mc <- function(response_column_id, level) {
+  # For computed Response Column IDs for multiple choice questions allowing
+  # for only one choice with text options, add the Qualtrics internal index to
+  # the end of the text-entry Response Column IDs.
   text_pos <- grep("TEXT", level, fixed = TRUE)
   if (length(text_pos) > 0 && !is.null(names(level))) {
     for (pos in text_pos) {
       level_suffix <- paste0("_", level[[pos]])
-      if (endsWith(new_qid[[pos]], level_suffix)) {
+      if (endsWith(response_column_id[[pos]], level_suffix)) {
         prefix <- substr(
-          new_qid[[pos]],
+          response_column_id[[pos]],
           1,
-          nchar(new_qid[[pos]]) - nchar(level_suffix)
+          nchar(response_column_id[[pos]]) - nchar(level_suffix)
         )
       } else {
-        prefix <- new_qid[[pos]]
+        prefix <- response_column_id[[pos]]
       }
-      new_qid[[pos]] <- paste(prefix, names(level)[[pos]], sep = "_")
+      response_column_id[[pos]] <- paste(prefix, names(level)[[pos]], sep = "_")
     }
   }
-  new_qid
+  response_column_id
 }
 
 #' Resolve multiple choice IDs for Response Column ID rendering
@@ -732,56 +743,56 @@ mc_recode_ids <- function(level) {
 
 #' Render Response Column IDs with level suffixes
 #' @noRd
-suf_level_qid <- function(context) {
+render_response_column_id_with_level_suffix <- function(context) {
   level <- context$render_facts$level
-  # Add recode values to the end of the QIDs and then add Qualtrics internal
-  # index to the end of QIDs with text options belonging to multiple choice
-  # questions allowing for only one choice
+  # Add recode values to the end of the Response Column IDs and then add the
+  # Qualtrics internal index to text-entry Response Column IDs for multiple
+  # choice questions allowing for only one choice.
   add_text_mc(
-    paste(context$response_column_qid, mc_recode_ids(level), sep = "_"),
+    paste(context$base_response_column_id, mc_recode_ids(level), sep = "_"),
     level
   )
 }
 
 #' Render MACOL Response Column IDs with level suffixes
 #' @noRd
-suf_level_qid_macol <- function(context) {
+render_macol_response_column_id_with_level_suffix <- function(context) {
   level <- context$render_facts$level
   if (length(level) == 0) {
-    return(context$response_column_qid)
+    return(context$base_response_column_id)
   }
 
-  paste(context$response_column_qid, mc_recode_ids(level), sep = "_")
+  paste(context$base_response_column_id, mc_recode_ids(level), sep = "_")
 }
 
 #' Render MAVR Response Column IDs with level suffixes
 #' @noRd
-suf_level_qid_mavr <- function(context) {
+render_mavr_response_column_id_with_level_suffix <- function(context) {
   level <- context$render_facts$level
   if (length(level) == 0) {
-    return(context$response_column_qid)
+    return(context$base_response_column_id)
   }
 
-  paste(context$response_column_qid, mc_recode_ids(level), sep = "_")
+  paste(context$base_response_column_id, mc_recode_ids(level), sep = "_")
 }
 
 #' Render Response Column IDs with choice-level suffixes
 #' @noRd
-suf_choice_level_qid <- function(context) {
+render_response_column_id_with_choice_level_suffix <- function(context) {
   level <- context$render_facts$level
   if (length(level) == 0) {
-    return(context$response_column_qid)
+    return(context$base_response_column_id)
   }
 
-  paste(context$response_column_qid, mc_choice_ids(level), sep = "_")
+  paste(context$base_response_column_id, mc_choice_ids(level), sep = "_")
 }
 
 #' Render Response Column IDs with named level suffixes
 #' @noRd
-suf_nmlabel_qid <- function(context) {
-  # Add recode values to the end of the QID
+render_response_column_id_with_named_label_suffix <- function(context) {
+  # Add recode values to the end of the Base Response Column ID.
   paste(
-    context$response_column_qid,
+    context$base_response_column_id,
     names(context$render_facts$level),
     sep = "_"
   )
@@ -789,98 +800,103 @@ suf_nmlabel_qid <- function(context) {
 
 #' Render text-entry Response Column IDs
 #' @noRd
-suf_text_qid <- function(context) {
-  paste(context$response_column_qid, "TEXT", sep = "_")
+render_response_column_id_with_text_suffix <- function(context) {
+  paste(context$base_response_column_id, "TEXT", sep = "_")
 }
 
 #' Repeat Response Column IDs across levels
 #' @noRd
-rep_level_qid <- function(context) {
+render_response_column_id_repeated_by_level <- function(context) {
   level <- context$render_facts$level
-  add_text_mc(rep(context$response_column_qid, length(level)), level)
+  add_text_mc(rep(context$base_response_column_id, length(level)), level)
 }
 
 #' Render Response Column IDs with item and level suffixes
 #' @noRd
-suf_item_suf_level_qid <- function(context) {
+render_response_column_id_with_item_and_level_suffixes <- function(context) {
   facts <- context$render_facts
   level <- mc_choice_ids(facts$level)
-  paste_narm(context$response_column_qid, names(facts$item), sep = "_") |>
+  paste_narm(context$base_response_column_id, names(facts$item), sep = "_") |>
     map(paste, level, sep = "_") |>
     unlist()
 }
 
 #' Render Response Column IDs with level and item suffixes
 #' @noRd
-suf_level_suf_item_qid <- function(context) {
+render_response_column_id_with_level_and_item_suffixes <- function(context) {
   facts <- context$render_facts
   level <- mc_choice_ids(facts$level)
-  paste_narm(context$response_column_qid, level, sep = "_") |>
+  paste_narm(context$base_response_column_id, level, sep = "_") |>
     map(paste, names(facts$item), sep = "_") |>
     unlist()
 }
 
 #' Render item-suffixed Response Column IDs repeated across levels
 #' @noRd
-suf_item_rep_level_qid <- function(context) {
+render_response_column_id_with_item_suffix_repeated_by_level <- function(
+  context
+) {
   facts <- context$render_facts
-  paste_narm(context$response_column_qid, names(facts$item), sep = "_") |>
-    rep_qid(facts$item, facts$level_len)
+  paste_narm(context$base_response_column_id, names(facts$item), sep = "_") |>
+    repeat_response_column_ids(facts$item, facts$level_len)
 }
 
 #' Render item-based or level-based Response Column IDs
 #' @noRd
-item_or_level_qid <- function(context) {
+render_response_column_id_with_item_or_level_suffix <- function(context) {
   if (is.null(context$render_facts$item)) {
-    return(suf_choice_level_qid(context))
+    return(render_response_column_id_with_choice_level_suffix(context))
   }
 
-  suf_item_rep_level_qid(context)
+  render_response_column_id_with_item_suffix_repeated_by_level(context)
 }
 
 #' Render a bare text-entry Response Column ID
 #' @noRd
 text <- function(context) {
-  paste(context$response_column_qid, "TEXT", sep = "_")
+  paste(context$base_response_column_id, "TEXT", sep = "_")
 }
 
 #' Render side-by-side Response Column IDs
 #' @noRd
-sbs_qid <- function(context) {
+render_sbs_response_column_ids <- function(context) {
   facts <- context$render_facts
   if (length(facts$col_type) == 0) {
-    return(render_carried_forward_sbs_qids(
-      context$response_column_qid,
+    return(render_carried_forward_sbs_response_column_ids(
+      context$base_response_column_id,
       facts$item
     ))
   }
 
   sbs_rendering_columns(
-    qid = context$response_column_qid,
+    base_response_column_id = context$base_response_column_id,
     col_len = facts$col_len,
     item = facts$item,
     level = facts$level,
     choice_len = facts$level_len,
     col_type = facts$col_type
   ) |>
-    map(render_sbs_column_qids) |>
+    map(render_sbs_column_response_column_ids) |>
     unlist()
 }
 
 #' Render carried-forward side-by-side Response Column IDs
 #' @noRd
-render_carried_forward_sbs_qids <- function(qid, item) {
+render_carried_forward_sbs_response_column_ids <- function(
+  base_response_column_id,
+  item
+) {
   if (!is.null(item) && length(item) > 0) {
-    return(paste_narm(qid, names(item), sep = "_"))
+    return(paste_narm(base_response_column_id, names(item), sep = "_"))
   }
 
-  qid
+  base_response_column_id
 }
 
 #' Build side-by-side rendering column facts
 #' @noRd
 sbs_rendering_columns <- function(
-  qid,
+  base_response_column_id,
   col_len,
   item,
   level,
@@ -892,7 +908,11 @@ sbs_rendering_columns <- function(
 
   lapply(seq_len(col_len), function(col_index) {
     column_id <- sbs_column_id(level, col_index)
-    row_ids <- paste(paste(qid, column_id, sep = "#"), row_names, sep = "_")
+    row_ids <- paste(
+      paste(base_response_column_id, column_id, sep = "#"),
+      row_names,
+      sep = "_"
+    )
     column_level <- level[[col_index]]
 
     list(
@@ -950,9 +970,9 @@ sbs_column_choice_ids <- function(column_level, column_type, choice_count) {
 
 #' Render Response Column IDs for one side-by-side column
 #' @noRd
-render_sbs_column_qids <- function(column) {
+render_sbs_column_response_column_ids <- function(column) {
   map(seq_along(column$row_ids), function(row_index) {
-    render_sbs_row_qid(sbs_row_context(column, row_index))
+    render_sbs_row_response_column_ids(sbs_row_context(column, row_index))
   }) |>
     unlist()
 }
@@ -972,7 +992,7 @@ sbs_row_context <- function(column, row_index) {
 
 #' Render a side-by-side row Response Column ID
 #' @noRd
-render_sbs_row_qid <- function(row) {
+render_sbs_row_response_column_ids <- function(row) {
   if (sbs_row_is_text_entry_column(row)) {
     return(render_sbs_text_entry_column_row(row))
   }
@@ -1038,9 +1058,9 @@ render_sbs_single_answer_row <- function(row) {
 
 #' Render timing question Response Column IDs
 #' @noRd
-timing_qid <- function(context) {
+render_timing_response_column_ids <- function(context) {
   paste0(
-    context$response_column_qid,
+    context$base_response_column_id,
     c(
       "_FIRST_CLICK",
       "_LAST_CLICK",
@@ -1052,9 +1072,9 @@ timing_qid <- function(context) {
 
 #' Render file-upload Response Column IDs
 #' @noRd
-file_upload_qid <- function(context) {
+render_file_upload_response_column_ids <- function(context) {
   paste0(
-    context$response_column_qid,
+    context$base_response_column_id,
     c(
       "_FILE_ID",
       "_FILE_NAME",
@@ -1066,12 +1086,12 @@ file_upload_qid <- function(context) {
 
 #' Render fallback Response Column IDs for unsupported question shapes
 #' @noRd
-not_applicable_qid <- function(context) {
+render_unsupported_response_column_ids <- function(context) {
   warn_msg <- paste0(
-    context$response_column_qid,
+    context$base_response_column_id,
     " uses a question type without a specific response-column renderer; ",
-    "falling back to the bare QID."
+    "falling back to the Base Response Column ID."
   )
   warning(warn_msg)
-  context$response_column_qid
+  context$base_response_column_id
 }
