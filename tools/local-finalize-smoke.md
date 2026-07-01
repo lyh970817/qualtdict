@@ -101,16 +101,17 @@ survey before comparing or writing hash baselines:
 
 - every Variable Dictionary `response_column_id` is present in the raw fetched
   response data.
-- every checked raw response column is represented in the Variable Dictionary.
+- every non-system raw response column is represented in the Variable
+  Dictionary.
 
-The checked raw response set includes ordinary question columns listed in the
-stored Qualtrics response `column_map`, plus metadata-defined export variables
-that this package represents: Embedded Data fields, exported Scoring Variables,
-and Text-analysis Sidecars. Qualtrics helper columns that are not in the response
-`column_map`, such as display-order helpers, are not treated as dictionary rows.
-If an older local artifact has no stored `column_map`, ordinary raw question
-raw-to-dictionary parity is skipped for that artifact, but metadata-defined raw
-columns are still checked where their metadata is available.
+The raw-to-dictionary side excludes only Qualtrics system columns such as
+`StartTime`, `EndDate`, and `Q_URL`. Question auxiliary columns, display-order
+helpers, and unknown raw response columns are not exempt from parity. The saved
+`<survey-alias>-response-column-id-parity.json` artifact records
+`system_raw_response_columns`, `non_system_raw_response_columns`, and
+`raw_response_column_classification` so missing columns can still be diagnosed
+by Response Column Map Classification row source and reason. The classification
+is diagnostic only; it does not filter the raw-side parity obligation.
 
 Parity mismatches are hard failures for both `check` and `bless`; they cannot
 be accepted by updating baselines.

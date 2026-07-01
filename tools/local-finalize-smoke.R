@@ -6,8 +6,14 @@ usage <- function() {
       "Usage:",
       "  Rscript tools/local-finalize-smoke.R check",
       "  Rscript tools/local-finalize-smoke.R bless",
-      "  Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data",
-      "  Rscript tools/local-finalize-smoke.R check --variable-name question_name",
+      paste0(
+        "  Rscript tools/local-finalize-smoke.R check ",
+        "--functions fetch_labelled_survey_data"
+      ),
+      paste0(
+        "  Rscript tools/local-finalize-smoke.R check ",
+        "--variable-name question_name"
+      ),
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
@@ -423,39 +429,6 @@ column_sample <- function(x, limit = 20) {
   )
 }
 
-checked_response_columns <- function(
-  raw_response_columns,
-  metadata = NULL,
-  description = NULL,
-  response_column_map = NULL
-) {
-  classification <- smoke_response_column_classification(
-    metadata,
-    description = description,
-    response_column_map = response_column_map,
-    raw_response_columns = raw_response_columns
-  )
-  checked_sources <- c(
-    "question",
-    "embedded_data",
-    "scoring",
-    "text_analysis"
-  )
-  checked_columns <- classification$response_column_id[
-    classification$row_source %in% checked_sources
-  ]
-  checked_columns <- intersect(checked_columns, raw_response_columns)
-
-  if (!smoke_has_metadata(metadata, description)) {
-    checked_columns <- unique(c(
-      checked_columns,
-      smoke_raw_scoring_diagnostic_columns(raw_response_columns)
-    ))
-  }
-
-  checked_columns
-}
-
 question_auxiliary_exported_columns <- function(
   raw_response_columns,
   metadata = NULL,
@@ -472,6 +445,100 @@ question_auxiliary_exported_columns <- function(
   question_auxiliary_columns <-
     classification$response_column_id[question_auxiliary_rows]
   intersect(question_auxiliary_columns, raw_response_columns)
+}
+
+system_raw_response_columns <- function(raw_response_columns) {
+  is_system_response_column <- getFromNamespace(
+    "is_system_response_column",
+    "qualtdict"
+  )
+  raw_response_columns[vapply(
+    raw_response_columns,
+    is_system_response_column,
+    logical(1)
+  )]
+}
+
+non_system_raw_response_columns <- function(raw_response_columns) {
+  setdiff(
+    raw_response_columns,
+    system_raw_response_columns(raw_response_columns)
+  )
+}
+
+raw_response_column_classification <- function(
+  raw_response_columns,
+  dict_response_column_ids,
+  metadata = NULL,
+  description = NULL,
+  response_column_map = NULL
+) {
+  classification <- smoke_response_column_classification(
+    metadata,
+    description = description,
+    response_column_map = response_column_map,
+    raw_response_columns = raw_response_columns
+  )
+  if (nrow(classification) > 0) {
+    classification <- classification[
+      !duplicated(classification$response_column_id),
+      ,
+      drop = FALSE
+    ]
+  }
+
+  row_index <- match(raw_response_columns, classification$response_column_id)
+  diagnostics <- smoke_empty_response_column_classification()
+  if (length(raw_response_columns) > 0) {
+    diagnostics <- data.frame(
+      response_column_id = raw_response_columns,
+      row_source = classification$row_source[row_index],
+      parent_qid = classification$parent_qid[row_index],
+      display_name = classification$display_name[row_index],
+      main = classification$main[row_index],
+      sub = classification$sub[row_index],
+      description = classification$description[row_index],
+      reason = classification$reason[row_index],
+      stringsAsFactors = FALSE
+    )
+  }
+
+  system_excluded <- raw_response_columns %in%
+    system_raw_response_columns(raw_response_columns)
+  unclassified <- is.na(diagnostics$row_source) |
+    !nzchar(diagnostics$row_source)
+  diagnostics$row_source[unclassified & system_excluded] <- "system"
+  diagnostics$reason[unclassified & system_excluded] <- "system_metadata"
+  diagnostics$row_source[unclassified & !system_excluded] <- "unclassified"
+  diagnostics$reason[unclassified & !system_excluded] <-
+    "not_in_response_column_classification"
+
+  parent_qid_missing <- is.na(diagnostics$parent_qid) |
+    !nzchar(diagnostics$parent_qid)
+  if (any(parent_qid_missing)) {
+    response_column_map_parent_qid <- getFromNamespace(
+      "response_column_map_parent_qid",
+      "qualtdict"
+    )
+    diagnostics$parent_qid[parent_qid_missing] <- vapply(
+      diagnostics$response_column_id[parent_qid_missing],
+      response_column_map_parent_qid,
+      character(1)
+    )
+  }
+  parent_type_fields <- smoke_parent_question_type_fields(
+    diagnostics$parent_qid,
+    metadata = metadata,
+    description = description
+  )
+  diagnostics$parent_type <- parent_type_fields$parent_type
+  diagnostics$parent_selector <- parent_type_fields$parent_selector
+  diagnostics$parent_sub_selector <- parent_type_fields$parent_sub_selector
+  diagnostics$present_in_dict <-
+    diagnostics$response_column_id %in% dict_response_column_ids
+  diagnostics$system_excluded <- system_excluded
+
+  diagnostics
 }
 
 smoke_response_column_classification <- function(
@@ -566,6 +633,50 @@ smoke_has_metadata <- function(metadata, description) {
   !is.null(metadata) || !is.null(description)
 }
 
+smoke_parent_question_type_fields <- function(
+  parent_qid,
+  metadata = NULL,
+  description = NULL
+) {
+  fields <- data.frame(
+    parent_type = rep(NA_character_, length(parent_qid)),
+    parent_selector = rep(NA_character_, length(parent_qid)),
+    parent_sub_selector = rep(NA_character_, length(parent_qid)),
+    stringsAsFactors = FALSE
+  )
+  if (is.null(metadata) || is.null(metadata$questions)) {
+    return(fields)
+  }
+  if (is.null(description)) {
+    description <- list()
+  }
+
+  normalise_qualtrics_questions <- getFromNamespace(
+    "normalise_qualtrics_questions",
+    "qualtdict"
+  )
+  question_fact_question_type <- getFromNamespace(
+    "question_fact_question_type",
+    "qualtdict"
+  )
+  questions <- normalise_qualtrics_questions(metadata, description)
+  for (index in seq_along(parent_qid)) {
+    qid <- parent_qid[[index]]
+    if (is.na(qid) || !qid %in% names(questions)) {
+      next
+    }
+
+    question_type <- question_fact_question_type(questions[[qid]])
+    fields$parent_type[[index]] <- question_type$type %||% NA_character_
+    fields$parent_selector[[index]] <- question_type$selector %||%
+      NA_character_
+    fields$parent_sub_selector[[index]] <- question_type$sub_selector %||%
+      NA_character_
+  }
+
+  fields
+}
+
 smoke_append_embedded_data_classification <- function(
   classification,
   embedded_data,
@@ -622,13 +733,6 @@ smoke_normalised_response_column_ids <- function(records) {
   ]
 }
 
-smoke_raw_scoring_diagnostic_columns <- function(raw_response_columns) {
-  raw_response_columns[
-    grepl("^SC_", raw_response_columns) |
-      grepl("_SCORE$", raw_response_columns)
-  ]
-}
-
 response_column_id_parity <- function(
   dict_response_column_ids,
   raw_response_columns,
@@ -649,18 +753,21 @@ response_column_id_parity <- function(
     raw_response_columns
   )
 
-  checked_raw_response_columns <- checked_response_columns(
+  system_columns <- system_raw_response_columns(raw_response_columns)
+  non_system_columns <- non_system_raw_response_columns(raw_response_columns)
+  missing_from_dict <- setdiff(
+    non_system_columns,
+    dict_response_column_ids
+  )
+  question_auxiliary_columns <- question_auxiliary_exported_columns(
     raw_response_columns,
     metadata = metadata,
     description = description,
     response_column_map = response_column_map
   )
-  missing_from_dict <- setdiff(
-    checked_raw_response_columns,
-    dict_response_column_ids
-  )
-  question_auxiliary_columns <- question_auxiliary_exported_columns(
+  classification <- raw_response_column_classification(
     raw_response_columns,
+    dict_response_column_ids,
     metadata = metadata,
     description = description,
     response_column_map = response_column_map
@@ -671,8 +778,10 @@ response_column_id_parity <- function(
       length(missing_from_dict) == 0,
     dict_response_column_ids = dict_response_column_ids,
     raw_response_columns = raw_response_columns,
-    checked_raw_response_columns = checked_raw_response_columns,
+    system_raw_response_columns = system_columns,
+    non_system_raw_response_columns = non_system_columns,
     question_auxiliary_exported_columns = question_auxiliary_columns,
+    raw_response_column_classification = classification,
     missing_from_raw_response = missing_from_raw_response,
     missing_from_dict = missing_from_dict
   )
@@ -714,8 +823,8 @@ stop_response_column_id_parity <- function(survey, parity) {
     messages <- c(
       messages,
       paste0(
-        "Question-backed and Metadata-defined raw response columns missing ",
-        "from the Variable Dictionary: ",
+        "Non-system raw response columns missing from the Variable ",
+        "Dictionary: ",
         column_sample(parity$missing_from_dict)
       )
     )
@@ -1053,7 +1162,10 @@ for (result in results) {
 cat("Wrote current run artifacts to ", run_dir, "\n", sep = "")
 if (status != 0L) {
   cat(
-    "Inspect the current run artifacts, then run `bless` if changes are intended.\n"
+    paste0(
+      "Inspect the current run artifacts, then run `bless` if changes ",
+      "are intended.\n"
+    )
   )
 }
 quit(status = status)

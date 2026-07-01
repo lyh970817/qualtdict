@@ -107,7 +107,7 @@ test_that("local smoke parity uses package response-column classification", {
   )
 })
 
-test_that("response column parity checks metadata-defined raw columns", {
+test_that("response column parity checks all non-system raw columns", {
   raw_metadata <- synthetic_column_map_sidecar_raw_metadata()
   metadata <- raw_metadata$metadata
   description <- raw_metadata$description
@@ -155,29 +155,64 @@ test_that("response column parity checks metadata-defined raw columns", {
   expect_false(parity$ok)
   expect_identical(parity$missing_from_raw_response, character())
   expect_setequal(
-    parity$checked_raw_response_columns,
+    parity$non_system_raw_response_columns,
     c(
       "QID1",
       "QID1_3_TEXT",
       "QID508_TEXT",
       "QID700_1",
       "QID121_1",
+      "QID1_DO_1",
+      "x27_QID700_1",
+      "8_QID508_TEXT",
       sidecar_ids,
       "SC_TOTAL",
+      "SC_HIDDEN",
       "Source Channel",
       "Cohort"
     )
   )
-  expect_identical(parity$missing_from_dict, "Cohort")
+  expect_setequal(
+    parity$missing_from_dict,
+    c(
+      "QID1_DO_1",
+      "x27_QID700_1",
+      "8_QID508_TEXT",
+      "SC_HIDDEN",
+      "Cohort"
+    )
+  )
   expect_setequal(
     parity$question_auxiliary_exported_columns,
     c("x27_QID700_1", "8_QID508_TEXT")
   )
-  expect_false("QID1_DO_1" %in% parity$checked_raw_response_columns)
-  expect_false("SC_HIDDEN" %in% parity$checked_raw_response_columns)
-  expect_false("StartTime" %in% parity$checked_raw_response_columns)
-  expect_false("EndDate" %in% parity$checked_raw_response_columns)
-  expect_false("Q_URL" %in% parity$checked_raw_response_columns)
+  expect_setequal(
+    parity$system_raw_response_columns,
+    c("StartTime", "EndDate", "Q_URL")
+  )
+  expect_false("StartTime" %in% parity$non_system_raw_response_columns)
+  expect_false("EndDate" %in% parity$non_system_raw_response_columns)
+  expect_false("Q_URL" %in% parity$non_system_raw_response_columns)
+  expect_true(all(
+    c(
+      "response_column_id",
+      "row_source",
+      "reason",
+      "parent_type",
+      "parent_selector",
+      "parent_sub_selector",
+      "present_in_dict",
+      "system_excluded"
+    ) %in%
+      names(parity$raw_response_column_classification)
+  ))
+  row_source <- stats::setNames(
+    parity$raw_response_column_classification$row_source,
+    parity$raw_response_column_classification$response_column_id
+  )
+  expect_identical(row_source[["QID1_DO_1"]], "unclassified")
+  expect_identical(row_source[["x27_QID700_1"]], "question_auxiliary")
+  expect_identical(row_source[["StartTime"]], "system")
 })
 
 test_that("response column parity reports question auxiliary diagnostics", {
@@ -206,8 +241,8 @@ test_that("response column parity reports question auxiliary diagnostics", {
     response_column_map = raw_metadata$response_column_map
   )
 
-  expect_true(parity$ok)
-  expect_identical(parity$missing_from_dict, character())
+  expect_false(parity$ok)
+  expect_identical(parity$missing_from_dict, "QID2#1_4_TEXT")
   expect_identical(
     parity$question_auxiliary_exported_columns,
     "QID2#1_4_TEXT"
@@ -226,14 +261,21 @@ test_that("response column parity reports dict columns missing from raw", {
   expect_identical(parity$missing_from_dict, character())
 })
 
-test_that("response column parity skips raw questions without column maps", {
+test_that("response column parity checks raw questions without column maps", {
   parity <- response_column_id_parity(
     dict_response_column_ids = character(),
     raw_response_columns = c("QID1", "QID1_DO_1")
   )
 
-  expect_true(parity$ok)
-  expect_identical(parity$checked_raw_response_columns, character())
+  expect_false(parity$ok)
+  expect_identical(
+    parity$non_system_raw_response_columns,
+    c("QID1", "QID1_DO_1")
+  )
+  expect_identical(
+    parity$missing_from_dict,
+    c("QID1", "QID1_DO_1")
+  )
 })
 
 test_that("parse_smoke_functions trims whitespace and removes duplicates", {
