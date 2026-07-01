@@ -101,8 +101,8 @@ variable_dictionary_question_rows <- function(question_meta) {
 variable_dictionary_question_row <- function(qjson, qid) {
   question_type <- question_fact_question_type(qjson)
   question_name <- question_fact_question_name(qjson)
-  response_column_qid <- qjson$response_column_qid %||% qid
-  response_columns <- render_response_columns(qjson, response_column_qid)
+  base_response_column_id <- qjson$base_response_column_id %||% qid
+  response_columns <- render_response_columns(qjson, base_response_column_id)
   if (nrow(response_columns) == 0) {
     return(NULL)
   }

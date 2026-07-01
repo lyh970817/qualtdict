@@ -13,7 +13,7 @@ test_that("Loop and Merge adapter expands static source question facts", {
     c("QID2", "QID2")
   )
   expect_identical(
-    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    unname(vapply(looped, `[[`, character(1), "base_response_column_id")),
     c("x1_QID2", "x2_QID2")
   )
   expect_identical(
@@ -37,7 +37,7 @@ test_that("Loop and Merge adapter expands matrix source question facts", {
 
   expect_length(looped, 3)
   expect_identical(
-    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    unname(vapply(looped, `[[`, character(1), "base_response_column_id")),
     c("1_QID2", "2_QID2", "3_QID2")
   )
   expect_identical(
@@ -77,7 +77,7 @@ test_that("Loop and Merge adapter expands static rows without source", {
 
   expect_length(looped, 2)
   expect_identical(
-    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    unname(vapply(looped, `[[`, character(1), "base_response_column_id")),
     c("1_QID2", "2_QID2")
   )
   expect_identical(
@@ -210,7 +210,7 @@ test_that(
   }
 )
 
-test_that("Loop expansion preserves text-entry response column qid", {
+test_that("Loop expansion preserves text-entry base response column id", {
   raw_metadata <- synthetic_looped_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
@@ -220,7 +220,7 @@ test_that("Loop expansion preserves text-entry response column qid", {
   ]
 
   expect_identical(
-    unname(vapply(looped, `[[`, character(1), "response_column_qid")),
+    unname(vapply(looped, `[[`, character(1), "base_response_column_id")),
     c("x1_QID2", "x2_QID2")
   )
 })
