@@ -22,6 +22,8 @@ normalise_qualtrics_questions <- function(mt, mt_d) {
   structure(question_meta, class = c("qualtdict_normalised_questions", "list"))
 }
 
+#' Normalise Survey Block metadata for Normalised Question Facts
+#' @noRd
 normalise_question_block_metadata <- function(mt, mt_d, qids) {
   block_meta <- block_metadata(mt, mt_d) |>
     map(function(block) {
@@ -56,6 +58,8 @@ normalise_question_block_metadata <- function(mt, mt_d, qids) {
     order_name()
 }
 
+#' Extract raw Survey Block metadata
+#' @noRd
 block_metadata <- function(mt, mt_d) {
   imap(mt_d[["blocks"]], function(block, block_id) {
     looping_options <- block$Options$LoopingOptions
@@ -70,6 +74,8 @@ block_metadata <- function(mt, mt_d) {
   })
 }
 
+#' Extract raw question metadata fields
+#' @noRd
 question_metadata <- function(mt) {
   map(
     mt$questions,
@@ -86,6 +92,8 @@ question_metadata <- function(mt) {
   )
 }
 
+#' Normalise question content types
+#' @noRd
 normalise_question_content_types <- function(mt_d, qids) {
   content_type_meta <- mt_d[["questions"]] |>
     map("Validation") |>
@@ -98,6 +106,8 @@ normalise_question_content_types <- function(mt_d, qids) {
     order_name()
 }
 
+#' Default Survey Block metadata for unassigned questions
+#' @noRd
 default_question_block_metadata <- function() {
   list(
     description = NA_character_,

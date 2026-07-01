@@ -1,3 +1,5 @@
+#' Build a normalised metadata bundle
+#' @noRd
 new_normalised_metadata <- function(
   survey_id,
   survey_name,

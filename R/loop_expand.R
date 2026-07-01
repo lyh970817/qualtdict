@@ -1,4 +1,4 @@
-#' Expand Loop and Merge question facts
+#' Expand Loop and Merge Normalised Question Facts
 #' @noRd
 expand_loop_question_facts <- function(survey_question_facts) {
   imap(survey_question_facts, function(question_fact, bare_qid) {
@@ -12,7 +12,7 @@ expand_loop_question_facts <- function(survey_question_facts) {
     unlist(recursive = FALSE)
 }
 
-#' Build Loop and Merge expansion context for one question fact
+#' Build Loop and Merge expansion context for one Normalised Question Fact
 #' @noRd
 new_loop_expansion_context <- function(question_fact, survey_question_facts) {
   looping_qid <- scalar_character(question_fact_looping_qid(question_fact))
@@ -34,7 +34,7 @@ new_loop_expansion_context <- function(question_fact, survey_question_facts) {
   )
 }
 
-#' Return whether one question fact should be loop-expanded
+#' Return whether one Normalised Question Fact should be loop-expanded
 #' @noRd
 loop_question_fact_should_expand <- function(context) {
   has_static_loop <- !is.null(context$looping_static) &&
@@ -54,7 +54,7 @@ loop_question_fact_should_expand <- function(context) {
   TRUE
 }
 
-#' Expand one question fact or mark it as not looping
+#' Expand one Normalised Question Fact or mark it as not looping
 #' @noRd
 expand_loop_question_fact <- function(context) {
   if (!loop_question_fact_should_expand(context)) {
@@ -69,14 +69,14 @@ expand_loop_question_fact <- function(context) {
   map(loop_rows, loop_expanded_question_fact, context = context)
 }
 
-#' Mark a question fact as not loop-expanded
+#' Mark a Normalised Question Fact as not loop-expanded
 #' @noRd
 mark_question_fact_not_looping <- function(question_fact) {
   question_fact[["looping"]] <- FALSE
   question_fact
 }
 
-#' Build Loop and Merge row facts for one question fact
+#' Build Loop and Merge row facts for one Normalised Question Fact
 #' @noRd
 loop_rows_for_context <- function(context) {
   loop_options <- loop_options_for_context(context)
@@ -103,7 +103,7 @@ loop_rows_for_context <- function(context) {
   })
 }
 
-#' Build Loop and Merge options for one question fact
+#' Build Loop and Merge options for one Normalised Question Fact
 #' @noRd
 loop_options_for_context <- function(context) {
   static_prefixes <- context$static_prefixes
@@ -194,7 +194,7 @@ loop_options_from_static_fields <- function(looping_static, static_prefixes) {
   loop_options
 }
 
-#' Return a Loop and Merge-specific response column identifier
+#' Return a Loop and Merge-specific Response Column ID
 #' @noRd
 loop_response_column_id <- function(response_column_id) {
   str_replace(
@@ -219,6 +219,8 @@ loop_options_from_static_choices <- function(
   loop_options_from_choice_source(source, static_prefixes)
 }
 
+#' Resolve the source of Loop Option choices
+#' @noRd
 loop_choice_source <- function(looping_prefixes, choices, static_prefixes) {
   if (is.null(choices) || length(static_prefixes) == 0) {
     return(new_loop_choice_source("missing"))
@@ -231,18 +233,26 @@ loop_choice_source <- function(looping_prefixes, choices, static_prefixes) {
   loop_choice_source_from_direct_ids(choices, static_prefixes)
 }
 
+#' Build a Loop Option choice source
+#' @noRd
 new_loop_choice_source <- function(type, choices = NULL) {
   list(type = type, choices = choices)
 }
 
+#' Return whether a Loop Option choice source is missing
+#' @noRd
 loop_choice_source_is_missing <- function(source) {
   identical(source$type, "missing")
 }
 
+#' Return whether looping prefixes are present
+#' @noRd
 has_looping_prefixes <- function(looping_prefixes) {
   !is.null(looping_prefixes) && length(looping_prefixes) > 0
 }
 
+#' Resolve Loop Option choices from static prefixes
+#' @noRd
 loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
@@ -279,6 +289,8 @@ loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   )
 }
 
+#' Resolve Loop Option choices from direct choice IDs
+#' @noRd
 loop_choice_source_from_direct_ids <- function(choices, static_prefixes) {
   if (!all(static_prefixes %in% names(choices))) {
     return(new_loop_choice_source("missing"))
@@ -287,6 +299,8 @@ loop_choice_source_from_direct_ids <- function(choices, static_prefixes) {
   new_loop_choice_source("direct", choices)
 }
 
+#' Resolve static choices by ID or recode
+#' @noRd
 static_choices_by_id_or_recode <- function(choices, static_prefixes) {
   choice_recodes <- map_chr(choices, ~ scalar_character(.x$recode))
   choice_by_recode <- setNames(choices, choice_recodes)
@@ -302,6 +316,8 @@ static_choices_by_id_or_recode <- function(choices, static_prefixes) {
   })
 }
 
+#' Build fallback choices from static prefixes
+#' @noRd
 fallback_static_choices <- function(static_prefixes) {
   setNames(
     lapply(static_prefixes, fallback_static_choice),
@@ -309,10 +325,14 @@ fallback_static_choices <- function(static_prefixes) {
   )
 }
 
+#' Build one fallback static choice
+#' @noRd
 fallback_static_choice <- function(prefix) {
   list(description = prefix, choiceText = prefix)
 }
 
+#' Resolve Loop Options from a choice source
+#' @noRd
 loop_options_from_choice_source <- function(source, static_prefixes) {
   static_prefixes <- static_prefixes[static_prefixes %in% names(source$choices)]
   loop_options <- vapply(
@@ -326,6 +346,8 @@ loop_options_from_choice_source <- function(source, static_prefixes) {
   loop_options
 }
 
+#' Resolve a Loop Option label from a choice
+#' @noRd
 loop_option_label <- function(choice) {
   option <- choice[["description"]]
   if (is.null(option) || is.na(option) || option == "") {
@@ -373,7 +395,7 @@ loop_field_values_from_static <- function(looping_static, prefixes) {
   )
 }
 
-#' Resolve Loop and Merge fields from metadata column names
+#' Resolve Loop and Merge fields from metadata column fields
 #' @noRd
 loop_field_values_from_column_names <- function(column_names, prefixes) {
   if (is.null(column_names) || length(prefixes) == 0) {
@@ -386,10 +408,14 @@ loop_field_values_from_column_names <- function(column_names, prefixes) {
   )
 }
 
+#' Empty Loop and Merge field values for prefixes
+#' @noRd
 empty_loop_field_values <- function(prefixes) {
   setNames(vector("list", length(prefixes)), prefixes)
 }
 
+#' Parse Loop and Merge field records from metadata column fields
+#' @noRd
 loop_column_field_records <- function(column_names, prefixes) {
   records <- lapply(names(column_names), function(field_name) {
     loop_column_field_record(field_name, column_names[[field_name]])
@@ -401,6 +427,8 @@ loop_column_field_records <- function(column_names, prefixes) {
   )
 }
 
+#' Build one Loop and Merge column field record
+#' @noRd
 loop_column_field_record <- function(field_name, values) {
   list(
     field_number = loop_column_field_number(field_name),
@@ -408,14 +436,20 @@ loop_column_field_record <- function(field_name, values) {
   )
 }
 
+#' Resolve the Loop and Merge field number
+#' @noRd
 loop_column_field_number <- function(field_name) {
   str_match(field_name, "^field([0-9]+)$")[, 2]
 }
 
+#' Return whether one Loop and Merge field record is valid
+#' @noRd
 valid_loop_column_field_record <- function(record, prefixes) {
   !is.na(record$field_number) && length(record$values) == length(prefixes)
 }
 
+#' Combine Loop and Merge field records by prefix
+#' @noRd
 loop_field_values_from_records <- function(records, prefixes) {
   values_by_prefix <- empty_loop_field_values(prefixes)
 
@@ -430,6 +464,8 @@ loop_field_values_from_records <- function(records, prefixes) {
   values_by_prefix
 }
 
+#' Add one Loop and Merge field record to prefix values
+#' @noRd
 add_loop_field_record_values <- function(values_by_prefix, prefixes, record) {
   for (index in seq_along(prefixes)) {
     value <- scalar_character(record$values[[index]])

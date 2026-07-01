@@ -1,3 +1,5 @@
+#' Convert nested Variable Dictionary rows to a data frame
+#' @noRd
 to_dataframe <- function(json) {
   map_df(json, map_df, unlist)
 }
@@ -87,11 +89,15 @@ variable_dictionary_from_normalised_metadata <- function(
   )
 }
 
+#' Build question-backed Variable Dictionary rows
+#' @noRd
 variable_dictionary_question_rows <- function(question_meta) {
   imap(question_meta, variable_dictionary_question_row) |>
     discard(is.null)
 }
 
+#' Build Variable Dictionary rows for one Normalised Question Fact
+#' @noRd
 variable_dictionary_question_row <- function(qjson, qid) {
   question_type <- question_fact_question_type(qjson)
   question_name <- question_fact_question_name(qjson)
@@ -126,6 +132,8 @@ variable_dictionary_question_row <- function(qjson, qid) {
   )
 }
 
+#' Build Embedded Data Field Variable Dictionary rows
+#' @noRd
 variable_dictionary_embedded_data_rows <- function(
   embedded_data,
   embedded_data_block_assignment = "none",
@@ -145,6 +153,8 @@ variable_dictionary_embedded_data_rows <- function(
   rows
 }
 
+#' Build one Embedded Data Field Variable Dictionary row
+#' @noRd
 variable_dictionary_embedded_data_row <- function(
   field,
   embedded_data_block_assignment = "none"
@@ -173,6 +183,8 @@ variable_dictionary_embedded_data_row <- function(
   )
 }
 
+#' Resolve the Survey Block for an Embedded Data Field row
+#' @noRd
 embedded_data_field_block <- function(field, embedded_data_block_assignment) {
   switch(
     embedded_data_block_assignment,
@@ -182,6 +194,8 @@ embedded_data_field_block <- function(field, embedded_data_block_assignment) {
   )
 }
 
+#' Warn about unassigned Embedded Data Field rows
+#' @noRd
 warn_unassigned_embedded_data_rows <- function(
   rows,
   embedded_data_block_assignment,
@@ -205,6 +219,8 @@ warn_unassigned_embedded_data_rows <- function(
   invisible()
 }
 
+#' Build Scoring Variable rows for a Variable Dictionary
+#' @noRd
 variable_dictionary_scoring_rows <- function(scoring) {
   map(
     scoring %||% list(),
@@ -212,6 +228,8 @@ variable_dictionary_scoring_rows <- function(scoring) {
   )
 }
 
+#' Build one Scoring Variable row for a Variable Dictionary
+#' @noRd
 variable_dictionary_scoring_row <- function(variable) {
   list(
     qid = NA_character_,
@@ -234,6 +252,8 @@ variable_dictionary_scoring_row <- function(variable) {
   )
 }
 
+#' Build Text-analysis Sidecar rows for a Variable Dictionary
+#' @noRd
 variable_dictionary_text_analysis_rows <- function(text_analysis) {
   map(
     text_analysis %||% list(),
@@ -241,6 +261,8 @@ variable_dictionary_text_analysis_rows <- function(text_analysis) {
   )
 }
 
+#' Build one Text-analysis Sidecar row for a Variable Dictionary
+#' @noRd
 variable_dictionary_text_analysis_row <- function(sidecar) {
   list(
     qid = sidecar$parent_qid %||% NA_character_,
@@ -263,6 +285,8 @@ variable_dictionary_text_analysis_row <- function(sidecar) {
   )
 }
 
+#' Prepare raw Variable Dictionary rows
+#' @noRd
 prepare_variable_dictionary_rows <- function(json) {
   json <- json |>
     to_dataframe() |>
@@ -272,6 +296,8 @@ prepare_variable_dictionary_rows <- function(json) {
   json
 }
 
+#' Finalise Variable Dictionary rows from normalised metadata
+#' @noRd
 finalise_variable_dictionary_rows <- function(
   json,
   normalised_metadata,
@@ -284,6 +310,8 @@ finalise_variable_dictionary_rows <- function(
   repair_variable_dictionary_names(json)
 }
 
+#' Clean Variable Dictionary row fields before final repair
+#' @noRd
 clean_variable_dictionary_rows <- function(json, use_semantic_name) {
   if (!"variable_name" %in% names(json)) {
     json$variable_name <- NA_character_

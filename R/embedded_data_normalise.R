@@ -1,3 +1,5 @@
+#' Build normalised Embedded Data Field records
+#' @noRd
 new_normalised_embedded_data_fields <- function(fields = list()) {
   structure(
     fields,
@@ -5,6 +7,8 @@ new_normalised_embedded_data_fields <- function(fields = list()) {
   )
 }
 
+#' Build one normalised Embedded Data Field record
+#' @noRd
 new_normalised_embedded_data_field <- function(
   field_name,
   response_column_id = field_name,
@@ -30,6 +34,8 @@ new_normalised_embedded_data_field <- function(
   )
 }
 
+#' Normalise Embedded Data Fields from Qualtrics metadata
+#' @noRd
 normalise_embedded_data_fields <- function(mt, mt_d) {
   flat_fields <- normalise_flat_embedded_data_fields(mt)
   flow_fields <- normalise_survey_flow_embedded_data_fields(mt_d)
@@ -37,6 +43,8 @@ normalise_embedded_data_fields <- function(mt, mt_d) {
   merge_embedded_data_fields(flat_fields, flow_fields)
 }
 
+#' Normalise flat Embedded Data Fields
+#' @noRd
 normalise_flat_embedded_data_fields <- function(mt) {
   embedded_data <- mt$embedded_data
   field_names <- embedded_data_field_names(embedded_data)
@@ -51,6 +59,8 @@ normalise_flat_embedded_data_fields <- function(mt) {
   new_normalised_embedded_data_fields(fields)
 }
 
+#' Normalise Survey Flow Embedded Data Fields
+#' @noRd
 normalise_survey_flow_embedded_data_fields <- function(mt_d) {
   flow_items <- survey_flow_items(mt_d$flow)
   if (length(flow_items) == 0) {
@@ -88,10 +98,14 @@ normalise_survey_flow_embedded_data_fields <- function(mt_d) {
   new_normalised_embedded_data_fields(fields)
 }
 
+#' Empty normalised Embedded Data Field records
+#' @noRd
 empty_normalised_embedded_data_fields <- function() {
   new_normalised_embedded_data_fields()
 }
 
+#' Merge flat and Survey Flow Embedded Data Field records
+#' @noRd
 merge_embedded_data_fields <- function(flat_fields, flow_fields) {
   fields <- flat_fields
   for (field_name in intersect(names(fields), names(flow_fields))) {
@@ -104,6 +118,8 @@ merge_embedded_data_fields <- function(flat_fields, flow_fields) {
   new_normalised_embedded_data_fields(fields)
 }
 
+#' Keep Embedded Data Fields represented by exported Response Column IDs
+#' @noRd
 filter_exported_embedded_data_fields <- function(
   fields,
   response_column_map,
@@ -125,6 +141,8 @@ filter_exported_embedded_data_fields <- function(
   new_normalised_embedded_data_fields(fields)
 }
 
+#' Flatten Survey Flow items relevant to metadata normalisation
+#' @noRd
 survey_flow_items <- function(flow) {
   if (is.null(flow) || length(flow) == 0 || !is.list(flow)) {
     return(list())
@@ -152,6 +170,8 @@ survey_flow_items <- function(flow) {
   )
 }
 
+#' Build a lookup from Survey Flow block IDs to Survey Blocks
+#' @noRd
 survey_flow_block_lookup <- function(blocks) {
   if (is.null(blocks) || length(blocks) == 0) {
     return(character())
@@ -162,6 +182,8 @@ survey_flow_block_lookup <- function(blocks) {
   })
 }
 
+#' Resolve the Survey Block for one Survey Flow item
+#' @noRd
 survey_flow_block_name <- function(item, block_lookup) {
   block_id <- survey_flow_block_id(item)
   if (is.na(block_id) || !block_id %in% names(block_lookup)) {
@@ -171,6 +193,8 @@ survey_flow_block_name <- function(item, block_lookup) {
   block_lookup[[block_id]] %||% NA_character_
 }
 
+#' Resolve the Survey Flow block ID for one item
+#' @noRd
 survey_flow_block_id <- function(item) {
   if (!(survey_flow_item_type(item) %in% c("Block", "Standard"))) {
     return(NA_character_)
@@ -179,6 +203,8 @@ survey_flow_block_id <- function(item) {
   scalar_character(item$ID)
 }
 
+#' Resolve the Survey Flow item type
+#' @noRd
 survey_flow_item_type <- function(item) {
   if (is.null(item) || !is.list(item)) {
     return(NA_character_)
@@ -187,6 +213,8 @@ survey_flow_item_type <- function(item) {
   scalar_character(item$Type)
 }
 
+#' Locate Embedded Data Fields within Survey Flow
+#' @noRd
 survey_flow_embedded_data_field_locations <- function(
   item,
   item_index,
@@ -212,6 +240,8 @@ survey_flow_embedded_data_field_locations <- function(
   })
 }
 
+#' Resolve Embedded Data Field names from one Survey Flow item
+#' @noRd
 survey_flow_embedded_data_field_names <- function(item) {
   embedded_data <- item$EmbeddedData
   if (is.null(embedded_data)) {
@@ -224,6 +254,8 @@ survey_flow_embedded_data_field_names <- function(item) {
   ))
 }
 
+#' Resolve the previous Survey Block for a Survey Flow item
+#' @noRd
 previous_survey_flow_block <- function(block_names, item_index) {
   if (item_index <= 1) {
     return(NA_character_)
@@ -238,6 +270,8 @@ previous_survey_flow_block <- function(block_names, item_index) {
   previous_blocks[[length(previous_blocks)]]
 }
 
+#' Resolve the next Survey Block for a Survey Flow item
+#' @noRd
 next_survey_flow_block <- function(block_names, item_index) {
   if (item_index >= length(block_names)) {
     return(NA_character_)
@@ -252,6 +286,8 @@ next_survey_flow_block <- function(block_names, item_index) {
   next_blocks[[1]]
 }
 
+#' Normalise one Survey Flow Embedded Data Field
+#' @noRd
 normalise_survey_flow_embedded_data_field <- function(locations) {
   field_name <- locations[[1]]$field_name
   if (length(locations) == 1) {
@@ -269,10 +305,14 @@ normalise_survey_flow_embedded_data_field <- function(locations) {
   )
 }
 
+#' Keep valid Embedded Data Field names
+#' @noRd
 valid_embedded_data_field_names <- function(field_names) {
   field_names[!is.na(field_names) & nzchar(field_names)]
 }
 
+#' Resolve Embedded Data Field names from metadata
+#' @noRd
 embedded_data_field_names <- function(embedded_data) {
   if (is.null(embedded_data) || length(embedded_data) == 0) {
     return(character())
@@ -286,6 +326,8 @@ embedded_data_field_names <- function(embedded_data) {
   unname(valid_embedded_data_field_names(field_names))
 }
 
+#' Resolve one flat Embedded Data Field name
+#' @noRd
 embedded_data_field_name <- function(field) {
   if (is.null(field) || !is.list(field)) {
     return(NA_character_)
@@ -294,6 +336,8 @@ embedded_data_field_name <- function(field) {
   scalar_character(field$name)
 }
 
+#' Resolve one Survey Flow Embedded Data Field name
+#' @noRd
 embedded_data_flow_field_name <- function(field) {
   if (is.null(field) || !is.list(field)) {
     return(NA_character_)

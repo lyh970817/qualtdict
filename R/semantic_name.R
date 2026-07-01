@@ -49,6 +49,8 @@ generate_semantic_names <- function(
   json
 }
 
+#' Select source text used for Semantic Name generation
+#' @noRd
 semantic_name_texts <- function(json_makename) {
   texts <- json_makename$item
   missing_text <- is.na(texts) | !nzchar(texts)
@@ -68,6 +70,8 @@ semantic_name_texts <- function(json_makename) {
   texts
 }
 
+#' Generate cached keywords for Semantic Name generation
+#' @noRd
 semantic_name_keywords <- function(texts, quiet = TRUE) {
   unique_texts <- unique(texts)
   cleaned_unique_texts <- clean_semantic_name_text(unique_texts)
@@ -92,6 +96,8 @@ semantic_name_keywords <- function(texts, quiet = TRUE) {
   keywords
 }
 
+#' Build the cache path for Semantic Name keywords
+#' @noRd
 semantic_name_cache_path <- function(cleaned_unique_texts, all_words) {
   paste0(
     tempdir(),
@@ -105,6 +111,8 @@ semantic_name_cache_path <- function(cleaned_unique_texts, all_words) {
   )
 }
 
+#' Add Semantic Name component columns
+#' @noRd
 add_semantic_name_components <- function(
   json_makename,
   texts,
@@ -132,6 +140,8 @@ add_semantic_name_components <- function(
     select(semantic_name, everything())
 }
 
+#' Build question-derived Semantic Name components
+#' @noRd
 semantic_question_components <- function(texts, keywords) {
   unique_texts <- unique(texts)
   cleaned_unique_texts <- clean_semantic_name_text(unique_texts)
@@ -147,6 +157,8 @@ semantic_question_components <- function(texts, keywords) {
   })
 }
 
+#' Build Survey Block-derived Semantic Name components
+#' @noRd
 semantic_block_components <- function(json_makename, block_pattern) {
   if (!is.null(block_pattern)) {
     block_components <- map_chr(unique(json_makename$block), block_pattern)
@@ -156,6 +168,8 @@ semantic_block_components <- function(json_makename, block_pattern) {
   NA
 }
 
+#' Add row-shape suffixes to Semantic Names
+#' @noRd
 add_semantic_name_suffixes <- function(json_makename, response_column_id) {
   txt_qs <- grep("_TEXT", response_column_id, fixed = TRUE)
   json_makename$semantic_name[txt_qs] <-
@@ -170,6 +184,8 @@ add_semantic_name_suffixes <- function(json_makename, response_column_id) {
   json_makename
 }
 
+#' Add matrix suffixes to Semantic Names
+#' @noRd
 add_matrix_semantic_name_suffixes <- function(json_makename) {
   add_label_qs <-
     json_makename$type == "Matrix" &
@@ -186,6 +202,8 @@ add_matrix_semantic_name_suffixes <- function(json_makename) {
   json_makename
 }
 
+#' Add side-by-side suffixes to Semantic Names
+#' @noRd
 add_sbs_semantic_name_suffixes <- function(json_makename) {
   sbs_matrix <- json_makename$type == "SBS"
   json_makename$semantic_name[sbs_matrix] <-
@@ -198,6 +216,8 @@ add_sbs_semantic_name_suffixes <- function(json_makename) {
   json_makename
 }
 
+#' Add Loop Option suffixes to Semantic Names
+#' @noRd
 add_loop_semantic_name_suffixes <- function(json_makename) {
   add_loop_option_qs <- as.logical(json_makename$looping)
   loop_json <- json_makename[add_loop_option_qs, ]
@@ -209,6 +229,8 @@ add_loop_semantic_name_suffixes <- function(json_makename) {
   json_makename
 }
 
+#' Build a label-derived Semantic Name suffix
+#' @noRd
 semantic_name_label_suffix <- function(x) {
   str_remove_all(
     str_replace_all(
@@ -220,11 +242,15 @@ semantic_name_label_suffix <- function(x) {
   )
 }
 
+#' Clean source text for Semantic Name generation
+#' @noRd
 clean_semantic_name_text <- function(text) {
   str_remove_all(text, "\\(.+\\)") |>
     str_remove_all("[[:punct:]]")
 }
 
+#' Order Semantic Name keyword words by source text order
+#' @noRd
 semantic_name_source_order_component <- function(
   keywords,
   source_text,

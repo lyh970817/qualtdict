@@ -1,7 +1,11 @@
+#' Default extra columns retained in Labelled Survey Data
+#' @noRd
 default_extra_columns <- function() {
   c("externalDataReference", "startDate", "endDate")
 }
 
+#' Arguments owned by qualtdict when fetching survey data
+#' @noRd
 owned_fetch_survey_args <- function() {
   c(
     "surveyID",
@@ -15,6 +19,8 @@ owned_fetch_survey_args <- function() {
   )
 }
 
+#' Prepare arguments for the owned fetch_survey call
+#' @noRd
 prepare_fetch_survey_args <- function(args, dict) {
   blocked_args <- intersect(names(args), owned_fetch_survey_args())
   if (length(blocked_args) > 0) {
@@ -35,6 +41,8 @@ prepare_fetch_survey_args <- function(args, dict) {
   args
 }
 
+#' Exclude Variable Dictionary rows with selected findings
+#' @noRd
 exclude_dict_findings <- function(
   dict,
   exclude_findings = c("none", "validation"),
@@ -66,6 +74,8 @@ exclude_dict_findings <- function(
   copy_qualtdict_attrs(dict[!exclude_rows, ], dict)
 }
 
+#' Copy qualtdict object attributes after row filtering
+#' @noRd
 copy_qualtdict_attrs <- function(dict, source) {
   attr(dict, "class") <- attr(source, "class")
   attr(dict, "surveyID") <- attr(source, "surveyID", exact = TRUE)
@@ -78,6 +88,8 @@ copy_qualtdict_attrs <- function(dict, source) {
   dict
 }
 
+#' Filter Variable Name repair findings to retained rows
+#' @noRd
 filter_variable_findings <- function(findings, dict) {
   if (is.null(findings) || nrow(findings) == 0) {
     return(empty_variable_name_findings())
@@ -88,6 +100,8 @@ filter_variable_findings <- function(findings, dict) {
   ]
 }
 
+#' Empty Labelled Export Findings table
+#' @noRd
 empty_labelled_export_findings <- function() {
   tibble(
     finding = character(),
@@ -127,6 +141,8 @@ labelled_export_findings <- function(x) {
   findings
 }
 
+#' Find Variable Dictionary rows missing from downloaded survey data
+#' @noRd
 missing_response_column_findings <- function(dict, dat) {
   response_column_id <- dict_response_column_id(dict)
   missing <- !response_column_id %in% colnames(dat)
@@ -149,6 +165,8 @@ missing_response_column_findings <- function(dict, dat) {
     distinct(.data$response_column_id, .keep_all = TRUE)
 }
 
+#' Resolve retained extra columns from downloaded survey data
+#' @noRd
 resolve_extra_columns <- function(
   dat,
   extra_columns,
@@ -276,6 +294,8 @@ survey_var_recode <- function(
   return(var)
 }
 
+#' Build labelling context for one Export Variable
+#' @noRd
 survey_var_recode_context <- function(var_dict) {
   # Multiple rows for a question, only first one chosen.
   type <- var_dict[["type"]][1]
@@ -293,12 +313,16 @@ survey_var_recode_context <- function(var_dict) {
   )
 }
 
+#' Return whether one Export Variable should be coerced to numeric
+#' @noRd
 survey_var_should_coerce_numeric <- function(context) {
   !context$is_text_var &&
     !is.na(context$content_type) &&
     context$content_type == "Number"
 }
 
+#' Build value-label facts for one Export Variable
+#' @noRd
 survey_var_label_facts <- function(
   var_dict,
   context,

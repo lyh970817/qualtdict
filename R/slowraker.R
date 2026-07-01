@@ -29,6 +29,8 @@ calc_keyword_scores <- function(cand_words, all_words) {
   unlist(lapply(cand_words, function(x) sum(word_scores[x])))
 }
 
+#' Run RAKE keyword extraction for one text value
+#' @noRd
 slowrake_atomic <- function(
   txt,
   stop_words,
@@ -91,6 +93,8 @@ slowrake_atomic <- function(
   slowraker2$process_keyword_df(keyword_df)
 }
 
+#' Run RAKE keyword extraction for text values
+#' @noRd
 slowrake <- function(
   txt,
   all_words,

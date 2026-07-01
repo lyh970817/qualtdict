@@ -1,3 +1,5 @@
+#' Build a qualtdict validation result
+#' @noRd
 new_qualtdict_validation <- function(validation_findings, level_label_pairs) {
   structure(
     list(
@@ -10,6 +12,8 @@ new_qualtdict_validation <- function(validation_findings, level_label_pairs) {
   )
 }
 
+#' Validation Finding schema columns
+#' @noRd
 validation_finding_columns <- function() {
   c(
     "finding",
@@ -24,6 +28,8 @@ validation_finding_columns <- function() {
   )
 }
 
+#' Empty Validation Findings table
+#' @noRd
 empty_validation_findings <- function() {
   tibble(
     finding = character(),
@@ -38,6 +44,8 @@ empty_validation_findings <- function() {
   )
 }
 
+#' Normalise Validation Findings to the package schema
+#' @noRd
 normalize_validation_findings <- function(findings) {
   if (is.null(findings) || nrow(findings) == 0) {
     return(empty_validation_findings())
@@ -53,6 +61,8 @@ normalize_validation_findings <- function(findings) {
   findings
 }
 
+#' Build level-label pairs used for validation
+#' @noRd
 validation_level_label_pairs <- function(split_dict, quiet = TRUE) {
   if (length(split_dict) == 0) {
     return(tibble(pair = list(), qid = list()))
@@ -76,6 +86,8 @@ validation_level_label_pairs <- function(split_dict, quiet = TRUE) {
     summarize(qid = list(name), .groups = "drop")
 }
 
+#' Build Validation Findings for repaired Dictionary Variable Names
+#' @noRd
 repaired_name_validation_findings <- function(dict) {
   repaired_names <- attr(dict, "variable_name_findings", exact = TRUE)
   if (is.null(repaired_names)) {
@@ -89,6 +101,8 @@ repaired_name_validation_findings <- function(dict) {
   normalize_validation_findings(repaired_names)
 }
 
+#' Build Validation Findings for Dictionary Variable Names
+#' @noRd
 variable_name_validation_findings <- function(dict) {
   names_by_response_column <- tibble(
     response_column_id = as.character(dict_response_column_id(dict)),
@@ -103,6 +117,8 @@ variable_name_validation_findings <- function(dict) {
   )
 }
 
+#' Find inconsistent Dictionary Variable Names by Response Column ID
+#' @noRd
 inconsistent_response_column_names <- function(names_by_response_column) {
   findings <- names_by_response_column |>
     group_by(.data$response_column_id) |>
@@ -118,6 +134,8 @@ inconsistent_response_column_names <- function(names_by_response_column) {
   normalize_validation_findings(findings)
 }
 
+#' Find duplicate Dictionary Variable Names
+#' @noRd
 duplicate_variable_names <- function(names_by_response_column) {
   findings <- names_by_response_column |>
     group_by(.data$variable_name) |>
@@ -133,6 +151,8 @@ duplicate_variable_names <- function(names_by_response_column) {
   normalize_validation_findings(findings)
 }
 
+#' Find unsafe Dictionary Variable Names
+#' @noRd
 unsafe_variable_names <- function(names_by_response_column) {
   repaired_variable_name <- repair_variable_name_base(
     names_by_response_column$variable_name
@@ -151,6 +171,8 @@ unsafe_variable_names <- function(names_by_response_column) {
   normalize_validation_findings(findings)
 }
 
+#' Build Validation Findings for level-label issues
+#' @noRd
 level_label_validation_findings <- function(mistake) {
   if (nrow(mistake) == 0) {
     return(empty_validation_findings())
@@ -161,6 +183,8 @@ level_label_validation_findings <- function(mistake) {
   normalize_validation_findings(mistake)
 }
 
+#' Check one Response Column ID for level-label issues
+#' @noRd
 check_item <- function(dat, response_column_id) {
   item_name <- dict_variable_name(dat)[
     dict_response_column_id(dat) == response_column_id
@@ -194,6 +218,8 @@ check_item <- function(dat, response_column_id) {
   }
 }
 
+#' Check split Variable Dictionary rows for level-label issues
+#' @noRd
 check_json <- function(split_jsons, quiet = TRUE) {
   progress_bar <- new_progress_bar(length(split_jsons), quiet = quiet)
   on.exit(close_progress_bar(progress_bar), add = TRUE)

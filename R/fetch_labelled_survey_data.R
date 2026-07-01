@@ -7,8 +7,9 @@
 #' metadata using \code{sjlabelled}.
 #'
 #' @inheritParams dict_validate
-#' @param extra_columns A character vector of raw response columns to retain in
-#' the Labelled Survey Data in addition to Export Variables. Defaults to
+#' @param extra_columns A character vector of downloaded survey data columns to
+#' retain in the Labelled Survey Data in addition to Export Variables. Defaults
+#' to
 #' \code{c("externalDataReference", "startDate", "endDate")}. Missing
 #' user-specified columns error; missing default columns warn and are skipped.
 #' Use \code{NULL} to retain no extra columns.
@@ -20,12 +21,12 @@
 #' \code{include_questions} may be passed through. qualtdict owns
 #' \code{surveyID}, \code{import_id}, \code{convert}, \code{label}, and
 #' \code{breakout_sets}; passing those arguments errors because they are needed
-#' for reliable dictionary-to-response-column mapping.
+#' for reliable Variable Dictionary to Response Column ID matching.
 #' @details
 #' Live calls require Qualtrics credentials configured for \code{qualtRics}
 #' because response data are downloaded from the Qualtrics API. \code{qualtdict}
 #' owns the \code{fetch_survey()} settings needed for reliable
-#' Variable-Dictionary-to-response-column matching:
+#' Variable Dictionary to Response Column ID matching:
 #' \code{import_id = TRUE}, \code{label = FALSE}, \code{convert = FALSE}, and
 #' \code{breakout_sets = TRUE}. User-supplied passthrough arguments cannot
 #' override those settings.
@@ -52,11 +53,12 @@
 #'   )
 #' }
 fetch_labelled_survey_data <- function(
-    dict,
-    extra_columns = c("externalDataReference", "startDate", "endDate"),
-    exclude_findings = c("none", "validation"),
-    ...,
-    quiet = TRUE) {
+  dict,
+  extra_columns = c("externalDataReference", "startDate", "endDate"),
+  exclude_findings = c("none", "validation"),
+  ...,
+  quiet = TRUE
+) {
   checkarg_isqualtdict(dict)
   extra_columns_user_supplied <- !missing(extra_columns)
   checkarg_ischaracter(extra_columns, null_okay = TRUE)
@@ -82,7 +84,8 @@ fetch_labelled_survey_data <- function(
     survey
   )
 
-  dat_recoded <- survey_recode(filtered_dict,
+  dat_recoded <- survey_recode(
+    filtered_dict,
     dat = survey,
     extra_columns = extra_columns,
     extra_columns_user_supplied = extra_columns_user_supplied,

@@ -46,6 +46,8 @@ fetch_dictionary_metadata <- function(surveyID) {
   new_raw_qualtrics_metadata(surveyID, mt, mt_d, response_column_map)
 }
 
+#' Fetch Qualtrics data for Response Column Map Classification
+#' @noRd
 fetch_response_column_map <- function(surveyID) {
   response_schema <- fetch_survey2(
     surveyID = surveyID,

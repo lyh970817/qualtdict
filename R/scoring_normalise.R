@@ -1,3 +1,5 @@
+#' Build normalised Scoring Variable records
+#' @noRd
 new_normalised_scoring_variables <- function(variables = list()) {
   structure(
     variables,
@@ -5,6 +7,8 @@ new_normalised_scoring_variables <- function(variables = list()) {
   )
 }
 
+#' Build one normalised Scoring Variable record
+#' @noRd
 new_normalised_scoring_variable <- function(
   output_name,
   response_column_id,
@@ -20,6 +24,8 @@ new_normalised_scoring_variable <- function(
   )
 }
 
+#' Normalise Scoring Variables from Qualtrics metadata
+#' @noRd
 normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
   categories <- scoring_categories(mt_d$scoring)
   if (length(categories) == 0) {
@@ -37,6 +43,8 @@ normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
   new_normalised_scoring_variables(variables)
 }
 
+#' Return Qualtrics scoring categories
+#' @noRd
 scoring_categories <- function(scoring) {
   if (is.null(scoring) || !is.list(scoring)) {
     return(list())
@@ -50,10 +58,14 @@ scoring_categories <- function(scoring) {
   categories
 }
 
+#' Empty normalised Scoring Variable records
+#' @noRd
 empty_normalised_scoring_variables <- function() {
   new_normalised_scoring_variables()
 }
 
+#' Keep Scoring Variables represented by exported Response Column IDs
+#' @noRd
 filter_exported_scoring_variables <- function(variables, response_column_map) {
   response_column_ids <- response_column_map_ids(response_column_map)
   if (length(response_column_ids) == 0) {
@@ -66,6 +78,8 @@ filter_exported_scoring_variables <- function(variables, response_column_map) {
   variables[keep]
 }
 
+#' Normalise one Qualtrics scoring category
+#' @noRd
 normalise_scoring_variable <- function(category) {
   output_name <- scoring_category_name(category)
   response_column_id <- scoring_category_response_column_id(category)
@@ -84,6 +98,8 @@ normalise_scoring_variable <- function(category) {
   )
 }
 
+#' Resolve a Scoring Variable name
+#' @noRd
 scoring_category_name <- function(category) {
   if (is.null(category) || !is.list(category)) {
     return(NA_character_)
@@ -92,6 +108,8 @@ scoring_category_name <- function(category) {
   scalar_character(category$Name)
 }
 
+#' Resolve a Scoring Variable Response Column ID
+#' @noRd
 scoring_category_response_column_id <- function(category) {
   if (is.null(category) || !is.list(category)) {
     return(NA_character_)
