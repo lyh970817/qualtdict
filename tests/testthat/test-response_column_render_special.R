@@ -58,6 +58,39 @@ test_that("FileUpload fixed columns preserve current response column IDs", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
+test_that("Draw signature uses file-upload fixed response column IDs", {
+  question <- normalise_question_fact(
+    qid = "QID1",
+    question = list(
+      questionName = "Signature",
+      questionType = list(
+        type = "Draw",
+        selector = "Signature",
+        subSelector = NULL
+      ),
+      questionText = "Sign here",
+      choices = list(),
+      subQuestions = list(),
+      columns = list()
+    ),
+    block = list(description = "Main Block"),
+    content_type = NULL
+  )
+
+  rendered <- render_response_columns(question, "QID1")
+
+  expect_identical(
+    rendered$response_column_id,
+    c(
+      "QID1_FILE_ID",
+      "QID1_FILE_NAME",
+      "QID1_FILE_SIZE",
+      "QID1_FILE_TYPE"
+    )
+  )
+  expect_snapshot(compact_response_column_render(rendered))
+})
+
 test_that(
   paste(
     "render_response_columns warns and falls back",
@@ -89,6 +122,38 @@ test_that("unsupported shapes warn and fall back to Base Response Column ID", {
   expect_warning(
     rendered <- render_response_columns(question, "x1_QID1"),
     "falling back to the Base Response Column ID.",
+    fixed = TRUE
+  )
+  expect_identical(rendered$response_column_id, "x1_QID1")
+  expect_snapshot(compact_response_column_render(rendered))
+})
+
+test_that("PGR drag-and-drop no-columns warns and falls back", {
+  question <- normalise_question_fact(
+    qid = "QID1",
+    question = list(
+      questionName = "DragDrop",
+      questionType = list(
+        type = "PGR",
+        selector = "DragAndDrop",
+        subSelector = "NoColumns"
+      ),
+      questionText = "Drag items",
+      choices = list(),
+      subQuestions = list(),
+      columns = list()
+    ),
+    block = list(description = "Main Block"),
+    content_type = NULL
+  )
+
+  expect_warning(
+    rendered <- render_response_columns(question, "x1_QID1"),
+    paste0(
+      "x1_QID1 uses a question type without a ",
+      "specific response-column renderer; ",
+      "falling back to the Base Response Column ID."
+    ),
     fixed = TRUE
   )
   expect_identical(rendered$response_column_id, "x1_QID1")
