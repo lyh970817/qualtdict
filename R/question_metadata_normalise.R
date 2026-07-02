@@ -87,6 +87,9 @@ question_metadata <- function(mt) {
       "blocks",
       "columns",
       "choices",
+      "choiceOrder",
+      "carryForward",
+      "randomization",
       "subQuestions"
     )
   )

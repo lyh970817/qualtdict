@@ -19,6 +19,9 @@ normalise_question_fact <- function(qid, question, block, content_type) {
   response_choices <- normalise_response_choices(question$choices)
   response_items <- normalise_response_items(question$subQuestions)
   column_facts <- normalise_column_facts(question$columns)
+  choice_order <- as.character(question$choiceOrder %||% character())
+  carry_forward <- question$carryForward
+  randomization <- question$randomization
   looping_prefix <- block$looping_prefix
   looping_qid <- block$looping_qid
   looping_static <- block$looping_static
@@ -35,6 +38,9 @@ normalise_question_fact <- function(qid, question, block, content_type) {
       response_choices = response_choices,
       response_items = response_items,
       column_facts = column_facts,
+      choice_order = choice_order,
+      carry_forward = carry_forward,
+      randomization = randomization,
       looping_prefix = looping_prefix,
       looping_qid = looping_qid,
       looping_static = looping_static,
@@ -185,6 +191,24 @@ question_fact_response_items <- function(question) {
 #' @noRd
 question_fact_column_facts <- function(question) {
   question_fact_value(question, "column_facts", "columns")
+}
+
+#' Return package-owned display-order choice facts
+#' @noRd
+question_fact_choice_order <- function(question) {
+  question_fact_value(question, "choice_order", "choiceOrder")
+}
+
+#' Return package-owned carry-forward facts
+#' @noRd
+question_fact_carry_forward <- function(question) {
+  question_fact_value(question, "carry_forward", "carryForward")
+}
+
+#' Return package-owned randomization facts
+#' @noRd
+question_fact_randomization <- function(question) {
+  question_fact_value(question, "randomization")
 }
 
 #' Return package-owned Loop and Merge prefix facts
