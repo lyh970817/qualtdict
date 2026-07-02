@@ -54,6 +54,9 @@ finalization phase when local smoke artifacts are available. Read
 workflow. Missing artifacts are not a failure of the feature work;
 report that the smoke check could not be run.
 
+For any task, agents may inspect local artifacts for reference when they
+are available and relevant.
+
 ## Worktree Location
 
 Create any temporary Git worktrees for agent work under `.worktrees/` at
