@@ -483,7 +483,10 @@ test_that("Variable Dictionary assembly covers empty branches", {
 
   normalised_metadata$questions <- list(QID1 = no_row_question)
   local_mocked_bindings(
-    variable_dictionary_question_rows = function(question_meta) {
+    variable_dictionary_question_rows = function(
+      question_meta,
+      rendered_question_columns = NULL
+    ) {
       list()
     }
   )
