@@ -347,7 +347,7 @@ loop_choice_source <- function(looping_prefixes, choices, static_prefixes) {
   }
 
   if (has_looping_prefixes(looping_prefixes)) {
-    return(loop_choice_source_from_prefixes(choices, static_prefixes))
+    return(choice_source_from_static_prefixes(choices, static_prefixes))
   }
 
   loop_choice_source_from_direct_ids(choices, static_prefixes)
@@ -377,39 +377,21 @@ has_looping_prefixes <- function(looping_prefixes) {
 
 #' Resolve Loop Option choices from static prefixes
 #' @noRd
-loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
+choice_source_from_static_prefixes <- function(choices, static_prefixes) {
   static_prefixes <- reconcile_choice_source_omitted_ids(
     choices,
     static_prefixes
   )
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
-  if (!any(resolved)) {
-    return(new_loop_choice_source("missing"))
-  }
-
-  source_choices <- resolved_choices[resolved]
-  resolved_prefixes <- static_prefixes[resolved]
-  unresolved_within_source <- static_prefixes[
-    !resolved & seq_along(static_prefixes) <= length(names(choices))
-  ]
-  unresolved_after_supported_reconciliation <- unresolved_within_source[
-    !unresolved_within_source %in% names(choices)
-  ]
-  unresolved_beyond_source <- static_prefixes[
-    !resolved & seq_along(static_prefixes) > length(names(choices))
-  ]
-  if (
-    length(unresolved_after_supported_reconciliation) > 0 ||
-      length(unresolved_beyond_source) > 1
-  ) {
+  if (!any(resolved) || !all(resolved)) {
     return(new_loop_choice_source("missing"))
   }
 
   new_loop_choice_source(
     "resolved",
-    setNames(source_choices, resolved_prefixes),
-    static_prefixes = resolved_prefixes
+    setNames(resolved_choices, static_prefixes),
+    static_prefixes = static_prefixes
   )
 }
 
