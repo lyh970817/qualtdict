@@ -1,15 +1,26 @@
 #' Expand Loop and Merge Normalised Question Facts
 #' @noRd
 expand_loop_question_facts <- function(survey_question_facts) {
-  imap(survey_question_facts, function(question_fact, bare_qid) {
+  outcomes <- imap(survey_question_facts, function(question_fact, bare_qid) {
     context <- new_loop_expansion_context(
       question_fact = question_fact,
       survey_question_facts = survey_question_facts
     )
 
     expand_loop_question_fact(context)
-  }) |>
-    unlist(recursive = FALSE)
+  })
+
+  question_facts <- unlist(
+    map(outcomes, loop_expansion_outcome_question_facts),
+    recursive = FALSE
+  )
+  diagnostics <- unlist(
+    map(outcomes, loop_expansion_outcome_diagnostics),
+    recursive = FALSE
+  )
+
+  attr(question_facts, "unsupported_loop_diagnostics") <- diagnostics
+  question_facts
 }
 
 #' Build Loop and Merge expansion context for one Normalised Question Fact
@@ -34,6 +45,72 @@ new_loop_expansion_context <- function(question_fact, survey_question_facts) {
   )
 }
 
+#' Build one Loop and Merge expansion outcome
+#' @noRd
+new_loop_expansion_outcome <- function(
+  type,
+  question_facts = list(),
+  diagnostics = list()
+) {
+  list(
+    type = type,
+    question_facts = question_facts,
+    diagnostics = diagnostics
+  )
+}
+
+#' Build a non-looping expansion outcome
+#' @noRd
+loop_expansion_outcome_not_looping <- function(question_fact) {
+  new_loop_expansion_outcome(
+    type = "not_looping",
+    question_facts = list(mark_question_fact_not_looping(question_fact))
+  )
+}
+
+#' Build an expanded Loop and Merge outcome
+#' @noRd
+loop_expansion_outcome_expanded <- function(question_facts) {
+  new_loop_expansion_outcome(
+    type = "expanded_loop",
+    question_facts = question_facts
+  )
+}
+
+#' Build an unsupported Loop and Merge expansion outcome
+#' @noRd
+loop_expansion_outcome_unsupported <- function(context, reason) {
+  new_loop_expansion_outcome(
+    type = "unsupported_loop",
+    diagnostics = list(new_unsupported_loop_diagnostic(context, reason))
+  )
+}
+
+#' Return question facts from one Loop and Merge expansion outcome
+#' @noRd
+loop_expansion_outcome_question_facts <- function(outcome) {
+  outcome$question_facts %||% list()
+}
+
+#' Return diagnostics from one Loop and Merge expansion outcome
+#' @noRd
+loop_expansion_outcome_diagnostics <- function(outcome) {
+  outcome$diagnostics %||% list()
+}
+
+#' Build one internal unsupported Loop and Merge diagnostic
+#' @noRd
+new_unsupported_loop_diagnostic <- function(context, reason) {
+  list(
+    qid = scalar_character(context$question_fact$qid),
+    question_name = scalar_character(
+      question_fact_question_name(context$question_fact)
+    ),
+    looping_qid = scalar_character(context$looping_qid),
+    reason = reason
+  )
+}
+
 #' Return whether one Normalised Question Fact should be loop-expanded
 #' @noRd
 loop_question_fact_should_expand <- function(context) {
@@ -54,19 +131,35 @@ loop_question_fact_should_expand <- function(context) {
   TRUE
 }
 
+#' Resolve an internal unsupported Loop and Merge reason
+#' @noRd
+unsupported_loop_reason <- function(context) {
+  if (
+    !is.na(context$looping_qid) &&
+      is.null(context$looping_source_fact)
+  ) {
+    return("source QID is absent from Normalised Question Facts")
+  }
+
+  "static prefixes cannot be resolved against source choices"
+}
+
 #' Expand one Normalised Question Fact or mark it as not looping
 #' @noRd
 expand_loop_question_fact <- function(context) {
   if (!loop_question_fact_should_expand(context)) {
-    return(list(mark_question_fact_not_looping(context$question_fact)))
+    return(loop_expansion_outcome_not_looping(context$question_fact))
   }
 
   loop_rows <- loop_rows_for_context(context)
   if (is.null(loop_rows) || length(loop_rows) == 0) {
-    return(list(context$question_fact))
+    reason <- unsupported_loop_reason(context)
+    return(loop_expansion_outcome_unsupported(context, reason))
   }
 
-  map(loop_rows, loop_expanded_question_fact, context = context)
+  loop_expansion_outcome_expanded(
+    map(loop_rows, loop_expanded_question_fact, context = context)
+  )
 }
 
 #' Mark a Normalised Question Fact as not loop-expanded
@@ -137,11 +230,15 @@ loop_options_for_context <- function(context) {
     return(loop_options)
   }
 
-  if (is.null(looping_source_fact)) {
+  if (is.null(looping_source_fact) && is.na(context$looping_qid)) {
     return(loop_options_from_static_fields(
       context$looping_static,
       static_prefixes
     ))
+  }
+
+  if (is.null(looping_source_fact)) {
+    return(NULL)
   }
 
   loop_options_from_static_choices(
@@ -271,7 +368,10 @@ loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   )
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
-  if (!any(resolved) || mean(resolved) < 0.5) {
+  if (!any(resolved)) {
+    return(new_loop_choice_source("missing"))
+  }
+  if (mean(resolved) < 0.5) {
     return(new_loop_choice_source(
       "fallback",
       fallback_static_choices(static_prefixes),
@@ -325,30 +425,69 @@ reconcile_loop_static_choice_prefixes <- function(choices, static_prefixes) {
   reconciled <- character()
 
   for (pos in seq_along(static_prefixes)) {
-    prefix <- static_prefixes[[pos]]
-    if (pos > length(source_ids)) {
-      reconciled <- c(reconciled, prefix)
-      next
-    }
-    source_id <- source_ids[[pos]]
-
-    if (unresolved[[pos]]) {
-      reconciled <- c(reconciled, source_id)
-      next
-    }
-
-    stale_x_prefixed_static <- grepl("^x[0-9]+$", prefix) &&
-      grepl("^x[0-9]+$", source_id) &&
-      !identical(prefix, source_id) &&
-      !source_id %in% static_prefixes
-    if (stale_x_prefixed_static) {
-      reconciled <- c(reconciled, source_id)
-    }
-
-    reconciled <- c(reconciled, prefix)
+    reconciled <- c(
+      reconciled,
+      reconcile_loop_static_choice_prefix(
+        pos = pos,
+        static_prefixes = static_prefixes,
+        source_ids = source_ids,
+        unresolved = unresolved
+      )
+    )
   }
 
   reconciled
+}
+
+#' Reconcile one static choice prefix against one source choice position
+#' @noRd
+reconcile_loop_static_choice_prefix <- function(
+  pos,
+  static_prefixes,
+  source_ids,
+  unresolved
+) {
+  prefix <- static_prefixes[[pos]]
+  if (pos > length(source_ids)) {
+    return(prefix)
+  }
+
+  source_id <- source_ids[[pos]]
+  if (unresolved[[pos]]) {
+    return(resolve_unresolved_static_choice_prefix(prefix, source_id))
+  }
+
+  if (is_stale_x_prefixed_static(prefix, source_id, static_prefixes)) {
+    return(c(source_id, prefix))
+  }
+
+  prefix
+}
+
+#' Resolve one unresolved static choice prefix
+#' @noRd
+resolve_unresolved_static_choice_prefix <- function(prefix, source_id) {
+  if (is_supported_unresolved_static(prefix, source_id)) {
+    return(source_id)
+  }
+
+  prefix
+}
+
+#' Return whether one unresolved static prefix is supported
+#' @noRd
+is_supported_unresolved_static <- function(prefix, source_id) {
+  grepl("^x[0-9]+$", prefix) &&
+    grepl("^x[0-9]+$", source_id)
+}
+
+#' Return whether one static prefix is stale against the source choice ID
+#' @noRd
+is_stale_x_prefixed_static <- function(prefix, source_id, static_prefixes) {
+  grepl("^x[0-9]+$", prefix) &&
+    grepl("^x[0-9]+$", source_id) &&
+    !identical(prefix, source_id) &&
+    !source_id %in% static_prefixes
 }
 
 #' Resolve Loop Option choices from direct choice IDs
