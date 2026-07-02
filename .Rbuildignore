@@ -30,6 +30,8 @@
 ^\.sandcastle/
 ^\.superpowers$
 ^\.superpowers/
+^\.workflow$
+^\.workflow/
 ^\.worktrees$
 ^\.worktrees/
 ^_pkgdown\.yml$
