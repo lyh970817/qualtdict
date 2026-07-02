@@ -253,11 +253,13 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
     static_prefixes = character()
   )
 
-  expect_false(loop_question_fact_should_expand(context))
-  expect_false(
-    loop_expansion_outcome_question_facts(
-      expand_loop_question_fact(context)
-    )[[1]]$looping
+  expect_true(loop_question_fact_should_expand(context))
+  expect_identical(
+    expand_loop_question_fact(context),
+    loop_expansion_outcome_unsupported(
+      context,
+      "source QID is absent from Normalised Question Facts"
+    )
   )
 
   no_rows_context <- context
@@ -296,6 +298,22 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
   expect_identical(
     substitute_loop_fields(NA_character_, list(`1` = "A")),
     NA_character_
+  )
+  expect_null(
+    loop_options_from_matrix_source(list(
+      looping_source_fact = list(response_items = NULL),
+      static_prefixes = character()
+    ))
+  )
+  expect_null(
+    loop_options_from_matrix_source(list(
+      looping_source_fact = list(
+        response_items = list(
+          x1 = list(item_id = "x1", item_text = NA_character_)
+        )
+      ),
+      static_prefixes = character()
+    ))
   )
 })
 

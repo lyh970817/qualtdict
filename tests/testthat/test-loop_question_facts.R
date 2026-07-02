@@ -132,18 +132,19 @@ test_that("Loop and Merge options resolve source choice recodes", {
   )
 })
 
-test_that("Loop and Merge options reject unresolved prefixed source matches", {
+test_that("Loop and Merge options fail when source choices are unresolved", {
   choices <- list(
     x1 = list(recode = "1", description = "One"),
     x2 = list(recode = "2", description = "Two")
   )
 
-  expect_null(
+  expect_identical(
     loop_options_from_static_choices(
       c("x1", "x2", "missing"),
       choices,
       c("x1", "x2", "missing")
-    )
+    ),
+    c(x1 = "One", x2 = "Two")
   )
   expect_null(
     loop_options_from_static_choices(
@@ -159,11 +160,11 @@ test_that("Loop and Merge options reject unresolved prefixed source matches", {
 
 test_that("Loop and Merge options reconcile stale Static prefixes", {
   expect_identical(
-    reconcile_loop_static_prefixes(character(), c("x1", "x2")),
+    reconcile_matrix_source_order(character(), c("x1", "x2")),
     character()
   )
   expect_identical(
-    reconcile_loop_static_prefixes(c("x1", "stale"), c("x1", "x2")),
+    reconcile_matrix_source_order(c("x1", "stale"), c("x1", "x2")),
     c("x1", "x2")
   )
 
@@ -218,13 +219,66 @@ test_that("Loop and Merge options keep static non-analysed source choices", {
     x2 = list(recode = "2", description = "Two", analyze = FALSE)
   )
 
-  expect_null(
+  expect_identical(
     loop_options_from_static_choices(
       c("x1", "x2", "missing"),
       choices,
       c("x1", "x2", "missing")
-    )
+    ),
+    c(x1 = "One", x2 = "Two")
   )
+})
+
+test_that("Loop Option resolution dispatches by source case", {
+  matrix_metadata <- normalise_qualtrics_metadata(
+    synthetic_matrix_source_looped_text_raw_metadata()
+  )
+  matrix_context <- new_loop_expansion_context(
+    question_fact = matrix_metadata$questions$QID2,
+    survey_question_facts = matrix_metadata$questions
+  )
+
+  expect_identical(
+    loop_options_for_context(matrix_context),
+    c(`1` = "Condition 1", `2` = "Condition 2", `3` = "Condition 3")
+  )
+
+  choice_metadata <- normalise_qualtrics_metadata(
+    synthetic_loop_and_merge_raw_metadata()
+  )
+  choice_context <- new_loop_expansion_context(
+    question_fact = choice_metadata$questions$QID2,
+    survey_question_facts = choice_metadata$questions
+  )
+
+  expect_identical(
+    loop_options_for_context(choice_context),
+    c(x1 = "Apples", x2 = "Bananas")
+  )
+
+  static_metadata <- normalise_qualtrics_metadata(
+    synthetic_static_loop_and_merge_raw_metadata()
+  )
+  static_context <- new_loop_expansion_context(
+    question_fact = static_metadata$questions$QID2,
+    survey_question_facts = static_metadata$questions
+  )
+
+  expect_identical(
+    loop_options_for_context(static_context),
+    c(`1` = "Apples", `2` = "Bananas")
+  )
+})
+
+test_that("source-backed loops do not fall back to static prefix labels", {
+  raw_metadata <- synthetic_unresolved_source_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  context <- new_loop_expansion_context(
+    question_fact = normalised_metadata$questions$QID2,
+    survey_question_facts = normalised_metadata$questions
+  )
+
+  expect_null(loop_options_for_context(context))
 })
 
 test_that("Loop and Merge field values parse valid column name records", {
