@@ -138,13 +138,12 @@ test_that("Loop and Merge options fail when source choices are unresolved", {
     x2 = list(recode = "2", description = "Two")
   )
 
-  expect_identical(
+  expect_null(
     loop_options_from_static_choices(
       c("x1", "x2", "missing"),
       choices,
       c("x1", "x2", "missing")
-    ),
-    c(x1 = "One", x2 = "Two")
+    )
   )
   expect_null(
     loop_options_from_static_choices(
@@ -219,13 +218,12 @@ test_that("Loop and Merge options keep static non-analysed source choices", {
     x2 = list(recode = "2", description = "Two", analyze = FALSE)
   )
 
-  expect_identical(
+  expect_null(
     loop_options_from_static_choices(
       c("x1", "x2", "missing"),
       choices,
       c("x1", "x2", "missing")
-    ),
-    c(x1 = "One", x2 = "Two")
+    )
   )
 })
 
