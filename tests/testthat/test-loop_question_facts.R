@@ -132,27 +132,25 @@ test_that("Loop and Merge options resolve source choice recodes", {
   )
 })
 
-test_that("Loop and Merge options handle partial prefixed source matches", {
+test_that("Loop and Merge options reject unresolved prefixed source matches", {
   choices <- list(
     x1 = list(recode = "1", description = "One"),
     x2 = list(recode = "2", description = "Two")
   )
 
-  expect_identical(
+  expect_null(
     loop_options_from_static_choices(
       c("x1", "x2", "missing"),
       choices,
       c("x1", "x2", "missing")
-    ),
-    c(x1 = "One", x2 = "Two")
+    )
   )
-  expect_identical(
+  expect_null(
     loop_options_from_static_choices(
       c("x1", "missing", "other"),
       choices["x1"],
       c("x1", "missing", "other")
-    ),
-    c(x1 = "x1", missing = "missing", other = "other")
+    )
   )
   expect_null(
     loop_options_from_static_choices(NULL, choices, c("x1", "missing"))
@@ -220,13 +218,12 @@ test_that("Loop and Merge options keep static non-analysed source choices", {
     x2 = list(recode = "2", description = "Two", analyze = FALSE)
   )
 
-  expect_identical(
+  expect_null(
     loop_options_from_static_choices(
       c("x1", "x2", "missing"),
       choices,
       c("x1", "x2", "missing")
-    ),
-    c(x1 = "One", x2 = "Two")
+    )
   )
 })
 
@@ -451,29 +448,20 @@ test_that("normalised metadata renders static Loop and Merge rows", {
 })
 
 
-test_that("static numeric loop prefixes do not fall back to source QIDs", {
+test_that("static numeric source-backed loop prefixes are skipped", {
   raw_metadata <- synthetic_static_numeric_looped_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-  dict <- variable_dictionary_from_normalised_metadata(
-    normalised_metadata,
-    use_semantic_name = FALSE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = NULL
-  )
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  diagnostics <- attr(expanded, "unsupported_loop_diagnostics")
 
-  target_rows <- dict[grepl("QID3", dict$response_column_id, fixed = TRUE), ]
-
+  expect_false("QID3" %in% names(expanded))
+  expect_length(diagnostics, 1)
+  expect_identical(diagnostics[[1]]$qid, "QID3")
   expect_identical(
-    target_rows$response_column_id,
-    paste0(1:12, "_QID3_TEXT")
+    diagnostics[[1]]$reason,
+    "static prefixes cannot be resolved against source choices"
   )
-  expect_false(any(grepl(
-    "^QID[0-9]+_QID3_TEXT$",
-    target_rows$response_column_id
-  )))
-  expect_identical(target_rows$loop_option, as.character(1:12))
 })
 
 

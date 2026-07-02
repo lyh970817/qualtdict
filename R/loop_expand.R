@@ -368,34 +368,14 @@ loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   )
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
-  if (!any(resolved)) {
+  if (!all(resolved)) {
     return(new_loop_choice_source("missing"))
   }
-  if (mean(resolved) < 0.5) {
-    return(new_loop_choice_source(
-      "fallback",
-      fallback_static_choices(static_prefixes),
-      static_prefixes = static_prefixes
-    ))
-  }
 
-  source_choices <- map2(
-    resolved_choices,
-    static_prefixes,
-    function(choice, prefix) {
-      if (is.null(choice)) {
-        return(NULL)
-      }
-
-      choice
-    }
-  )
-
-  keep <- map_lgl(source_choices, Negate(is.null))
   new_loop_choice_source(
     "resolved",
-    setNames(source_choices[keep], static_prefixes[keep]),
-    static_prefixes = static_prefixes[keep]
+    setNames(resolved_choices, static_prefixes),
+    static_prefixes = static_prefixes
   )
 }
 
@@ -515,21 +495,6 @@ static_choices_by_id_or_recode <- function(choices, static_prefixes) {
     }
     NULL
   })
-}
-
-#' Build fallback choices from static prefixes
-#' @noRd
-fallback_static_choices <- function(static_prefixes) {
-  setNames(
-    lapply(static_prefixes, fallback_static_choice),
-    static_prefixes
-  )
-}
-
-#' Build one fallback static choice
-#' @noRd
-fallback_static_choice <- function(prefix) {
-  list(description = prefix, choiceText = prefix)
 }
 
 #' Resolve Loop Options from a choice source
