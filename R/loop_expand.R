@@ -120,13 +120,6 @@ loop_question_fact_should_expand <- function(context) {
   if (is.na(context$looping_qid) && !has_static_loop) {
     return(FALSE)
   }
-  if (
-    !is.na(context$looping_qid) &&
-      is.null(context$looping_source_fact) &&
-      !has_static_loop
-  ) {
-    return(FALSE)
-  }
 
   TRUE
 }
@@ -199,52 +192,75 @@ loop_rows_for_context <- function(context) {
 #' Build Loop and Merge options for one Normalised Question Fact
 #' @noRd
 loop_options_for_context <- function(context) {
-  static_prefixes <- context$static_prefixes
   looping_source_fact <- context$looping_source_fact
 
-  source_type <- if (!is.null(looping_source_fact)) {
-    scalar_character(question_fact_question_type(looping_source_fact)$type)
-  } else {
-    NA_character_
-  }
-
-  if (!is.null(looping_source_fact) && source_type == "Matrix") {
-    loop_items <- question_fact_response_items(looping_source_fact)
-    loop_options <- setNames(
-      map_chr(loop_items, "item_text"),
-      map_chr(loop_items, "item_id")
-    )
-    if (length(static_prefixes) > 0) {
-      static_prefixes <- reconcile_loop_static_prefixes(
-        static_prefixes,
-        names(loop_options)
-      )
-      ordered_prefixes <- static_prefixes[
-        static_prefixes %in% names(loop_options)
-      ]
-      if (length(ordered_prefixes) > 0) {
-        loop_options <- loop_options[ordered_prefixes]
-      }
-    }
-    loop_options <- loop_options[!is.na(loop_options)]
-    return(loop_options)
-  }
-
-  if (is.null(looping_source_fact) && is.na(context$looping_qid)) {
-    return(loop_options_from_static_fields(
-      context$looping_static,
-      static_prefixes
-    ))
-  }
-
   if (is.null(looping_source_fact)) {
+    if (is.na(context$looping_qid)) {
+      return(loop_options_from_static_only_source(context))
+    }
+
     return(NULL)
   }
 
+  source_type <- scalar_character(
+    question_fact_question_type(looping_source_fact)$type
+  )
+
+  if (identical(source_type, "Matrix")) {
+    return(loop_options_from_matrix_source(context))
+  }
+
+  loop_options_from_choice_source_context(context)
+}
+
+#' Resolve Loop Options from a Matrix source
+#' @noRd
+loop_options_from_matrix_source <- function(context) {
+  loop_items <- question_fact_response_items(context$looping_source_fact)
+  if (is.null(loop_items) || length(loop_items) == 0) {
+    return(NULL)
+  }
+
+  loop_options <- setNames(
+    map_chr(loop_items, "item_text"),
+    map_chr(loop_items, "item_id")
+  )
+  loop_options <- loop_options[!is.na(loop_options)]
+  if (length(loop_options) == 0) {
+    return(NULL)
+  }
+
+  static_prefixes <- context$static_prefixes
+  if (length(static_prefixes) > 0) {
+    ordered_prefixes <- reconcile_matrix_source_order(
+      static_prefixes,
+      names(loop_options)
+    )
+    ordered_prefixes <- ordered_prefixes[
+      ordered_prefixes %in% names(loop_options)
+    ]
+    loop_options <- loop_options[ordered_prefixes]
+  }
+
+  loop_options
+}
+
+#' Resolve Loop Options from a choice source
+#' @noRd
+loop_options_from_choice_source_context <- function(context) {
   loop_options_from_static_choices(
     question_fact_looping_prefix(context$question_fact),
-    question_fact_response_choices(looping_source_fact),
-    static_prefixes
+    question_fact_response_choices(context$looping_source_fact),
+    context$static_prefixes
+  )
+}
+
+#' Resolve Loop Options from static-only Loop and Merge rows
+#' @noRd
+loop_options_from_static_only_source <- function(context) {
+  loop_options_from_static_fields(
+    context$looping_static,
+    context$static_prefixes
   )
 }
 
@@ -362,26 +378,44 @@ has_looping_prefixes <- function(looping_prefixes) {
 #' Resolve Loop Option choices from static prefixes
 #' @noRd
 loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
-  static_prefixes <- reconcile_loop_static_choice_prefixes(
+  static_prefixes <- reconcile_choice_source_omitted_ids(
     choices,
     static_prefixes
   )
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
-  if (!all(resolved)) {
+  if (!any(resolved)) {
+    return(new_loop_choice_source("missing"))
+  }
+
+  source_choices <- resolved_choices[resolved]
+  resolved_prefixes <- static_prefixes[resolved]
+  unresolved_within_source <- static_prefixes[
+    !resolved & seq_along(static_prefixes) <= length(names(choices))
+  ]
+  unresolved_after_supported_reconciliation <- unresolved_within_source[
+    !unresolved_within_source %in% names(choices)
+  ]
+  unresolved_beyond_source <- static_prefixes[
+    !resolved & seq_along(static_prefixes) > length(names(choices))
+  ]
+  if (
+    length(unresolved_after_supported_reconciliation) > 0 ||
+      length(unresolved_beyond_source) > 1
+  ) {
     return(new_loop_choice_source("missing"))
   }
 
   new_loop_choice_source(
     "resolved",
-    setNames(resolved_choices, static_prefixes),
-    static_prefixes = static_prefixes
+    setNames(source_choices, resolved_prefixes),
+    static_prefixes = resolved_prefixes
   )
 }
 
-#' Reconcile stale Static prefixes with source response IDs
+#' Reconcile Matrix source order against static Loop and Merge prefixes
 #' @noRd
-reconcile_loop_static_prefixes <- function(static_prefixes, source_ids) {
+reconcile_matrix_source_order <- function(static_prefixes, source_ids) {
   if (length(static_prefixes) == 0 || length(source_ids) == 0) {
     return(static_prefixes)
   }
@@ -396,32 +430,27 @@ reconcile_loop_static_prefixes <- function(static_prefixes, source_ids) {
   static_prefixes
 }
 
-#' Reconcile unresolved Static choice prefixes with source choice IDs
+#' Insert omitted source choice IDs into static Loop and Merge prefixes
 #' @noRd
-reconcile_loop_static_choice_prefixes <- function(choices, static_prefixes) {
+reconcile_choice_source_omitted_ids <- function(choices, static_prefixes) {
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   unresolved <- map_lgl(resolved_choices, is.null)
   source_ids <- names(choices)
-  reconciled <- character()
-
-  for (pos in seq_along(static_prefixes)) {
-    reconciled <- c(
-      reconciled,
-      reconcile_loop_static_choice_prefix(
-        pos = pos,
-        static_prefixes = static_prefixes,
-        source_ids = source_ids,
-        unresolved = unresolved
-      )
-    )
-  }
-
-  reconciled
+  unlist(
+    map(
+      seq_along(static_prefixes),
+      reconcile_choice_source_position,
+      static_prefixes = static_prefixes,
+      source_ids = source_ids,
+      unresolved = unresolved
+    ),
+    use.names = FALSE
+  )
 }
 
 #' Reconcile one static choice prefix against one source choice position
 #' @noRd
-reconcile_loop_static_choice_prefix <- function(
+reconcile_choice_source_position <- function(
   pos,
   static_prefixes,
   source_ids,
@@ -433,37 +462,30 @@ reconcile_loop_static_choice_prefix <- function(
   }
 
   source_id <- source_ids[[pos]]
-  if (unresolved[[pos]]) {
-    return(resolve_unresolved_static_choice_prefix(prefix, source_id))
+  if (
+    unresolved[[pos]] &&
+      is_supported_choice_source_prefix(prefix, source_id)
+  ) {
+    return(source_id)
   }
 
-  if (is_stale_x_prefixed_static(prefix, source_id, static_prefixes)) {
+  if (is_stale_choice_source_prefix(prefix, source_id, static_prefixes)) {
     return(c(source_id, prefix))
   }
 
   prefix
 }
 
-#' Resolve one unresolved static choice prefix
+#' Return whether one unresolved static prefix is supported for source insertion
 #' @noRd
-resolve_unresolved_static_choice_prefix <- function(prefix, source_id) {
-  if (is_supported_unresolved_static(prefix, source_id)) {
-    return(source_id)
-  }
-
-  prefix
-}
-
-#' Return whether one unresolved static prefix is supported
-#' @noRd
-is_supported_unresolved_static <- function(prefix, source_id) {
+is_supported_choice_source_prefix <- function(prefix, source_id) {
   grepl("^x[0-9]+$", prefix) &&
     grepl("^x[0-9]+$", source_id)
 }
 
 #' Return whether one static prefix is stale against the source choice ID
 #' @noRd
-is_stale_x_prefixed_static <- function(prefix, source_id, static_prefixes) {
+is_stale_choice_source_prefix <- function(prefix, source_id, static_prefixes) {
   grepl("^x[0-9]+$", prefix) &&
     grepl("^x[0-9]+$", source_id) &&
     !identical(prefix, source_id) &&
