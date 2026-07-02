@@ -641,19 +641,30 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
   )
 })
 
-test_that("unsupported source-backed Loop and Merge does not render bare QID", {
-  raw_metadata <- synthetic_unresolved_source_loop_and_merge_raw_metadata()
-  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+test_that(
+  paste(
+    "source-backed Loop and Merge with absent source facts",
+    "renders prefixed response columns without bare QID fallback"
+  ),
+  {
+    raw_metadata <- synthetic_absent_source_static_loop_and_merge_raw_metadata()
+    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-  dict <- variable_dictionary_from_normalised_metadata(
-    normalised_metadata,
-    use_semantic_name = FALSE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = NULL
-  )
+    dict <- variable_dictionary_from_normalised_metadata(
+      normalised_metadata,
+      use_semantic_name = FALSE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    )
+    expected_ids <- c("1_QID2_TEXT", "2_QID2_TEXT")
+    target_rows <- dict[match(expected_ids, dict$response_column_id), ]
 
-  expect_false("QID2_TEXT" %in% dict$response_column_id)
-  expect_false("QID2" %in% dict$qid)
-  expect_false(any(grepl("QID2", dict$response_column_id, fixed = TRUE)))
-})
+    expect_false("QID2_TEXT" %in% dict$response_column_id)
+    expect_identical(
+      target_rows$response_column_id,
+      expected_ids
+    )
+    expect_identical(target_rows$qid, c("QID2", "QID2"))
+  }
+)
