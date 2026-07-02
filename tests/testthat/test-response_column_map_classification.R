@@ -110,3 +110,31 @@ test_that("response-column map classifier reports edge-case unknown reasons", {
   )
   expect_identical(classified$row_source, rep("unknown", 3))
 })
+
+test_that("Response Column Map Classification uses expanded question IDs", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  raw_metadata$response_column_map <- tibble::tibble(
+    ImportId = c("x1_QID2_TEXT", "x2_QID2_TEXT", "QID2_TEXT"),
+    qname = c("x1_QID2_TEXT", "x2_QID2_TEXT", "QID2_TEXT"),
+    description = c("Apple loop", "Banana loop", "Bare fallback"),
+    main = c("Apple loop", "Banana loop", "Bare fallback"),
+    sub = c("", "", "")
+  )
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  classified <- classify_response_column_map(
+    raw_metadata$response_column_map,
+    questions = normalised_metadata$questions,
+    embedded_data = normalised_metadata$embedded_data,
+    scoring = normalised_metadata$scoring
+  )
+
+  expect_identical(
+    classified$row_source,
+    c("question", "question", "question_auxiliary")
+  )
+  expect_identical(
+    classified$reason,
+    c("rendered_question", "rendered_question", "ordinary_qid_shape")
+  )
+})

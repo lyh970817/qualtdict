@@ -290,14 +290,8 @@ ordinary_question_response_column_ids <- function(questions) {
     return(character())
   }
 
-  question_facts <- expand_loop_question_facts(questions)
-  ids <- imap(question_facts, function(question_fact, qid) {
-    base_response_column_id <- question_fact$base_response_column_id %||% qid
-    render_response_columns(
-      question_fact,
-      base_response_column_id
-    )$response_column_id
-  })
+  rendered <- expand_then_render_question_response_columns(questions)
+  ids <- map(rendered, "response_column_id")
   unique(unname(unlist(ids, use.names = FALSE)))
 }
 

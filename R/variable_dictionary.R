@@ -48,12 +48,15 @@ variable_dictionary_from_normalised_metadata <- function(
   quiet = TRUE
 ) {
   question_meta <- normalised_metadata$questions
-  if (length(question_meta) > 0) {
-    question_meta <- expand_loop_question_facts(question_meta)
-  }
+  rendered_question_columns <- expand_then_render_question_response_columns(
+    question_meta
+  )
 
   json <- c(
-    variable_dictionary_question_rows(question_meta),
+    call_variable_dictionary_question_rows(
+      question_meta,
+      rendered_question_columns
+    ),
     variable_dictionary_embedded_data_rows(
       normalised_metadata$embedded_data,
       embedded_data_block_assignment = embedded_data_block_assignment,
@@ -89,21 +92,61 @@ variable_dictionary_from_normalised_metadata <- function(
   )
 }
 
+#' Dispatch question-backed Variable Dictionary row assembly
+#' @noRd
+call_variable_dictionary_question_rows <- function(
+  question_meta,
+  rendered_question_columns
+) {
+  fn <- variable_dictionary_question_rows
+  args <- list(question_meta = question_meta)
+
+  if ("rendered_question_columns" %in% names(formals(fn))) {
+    args$rendered_question_columns <- rendered_question_columns
+  }
+
+  do.call(fn, args)
+}
+
 #' Build question-backed Variable Dictionary rows
 #' @noRd
-variable_dictionary_question_rows <- function(question_meta) {
-  imap(question_meta, variable_dictionary_question_row) |>
+variable_dictionary_question_rows <- function(
+  question_meta,
+  rendered_question_columns = NULL
+) {
+  if (is.null(rendered_question_columns)) {
+    rendered_question_columns <- expand_then_render_question_response_columns(
+      question_meta
+    )
+  }
+
+  imap(
+    rendered_question_columns,
+    function(rendered_question_column, qid) {
+      variable_dictionary_question_row(
+        rendered_question_column$question_fact %||% question_meta[[qid]],
+        qid,
+        response_columns = rendered_question_column$response_columns
+      )
+    }
+  ) |>
     discard(is.null)
 }
 
 #' Build Variable Dictionary rows for one Normalised Question Fact
 #' @noRd
-variable_dictionary_question_row <- function(qjson, qid) {
+variable_dictionary_question_row <- function(
+  qjson,
+  qid,
+  response_columns = NULL
+) {
   question_type <- question_fact_question_type(qjson)
   question_name <- question_fact_question_name(qjson)
-  base_response_column_id <- question_fact_base_response_column_id(qjson) %||%
-    qid
-  response_columns <- render_response_columns(qjson, base_response_column_id)
+  if (is.null(response_columns)) {
+    base_response_column_id <-
+      question_fact_base_response_column_id(qjson) %||% qid
+    response_columns <- render_response_columns(qjson, base_response_column_id)
+  }
   if (nrow(response_columns) == 0) {
     return(NULL)
   }
