@@ -1,12 +1,65 @@
 # Loop-expanded Question Facts have compact contract summary
 
-    Code
-      compact_loop_question_facts(expanded)
-    Output
-      # A tibble: 2 x 8
-        qid   looping_qid looping_option looping_prefix looping_question question_text
-        <chr> <chr>       <chr>          <chr>          <chr>            <chr>        
-      1 QID2  QID1        Apples         x1             Compare Apples ~ Compare {} w~
-      2 QID2  QID1        Bananas        x2             Compare Bananas~ Compare {} w~
-      # i 2 more variables: base_response_column_id <chr>, looping <lgl>
+    {
+      "type": "list",
+      "attributes": {
+        "row.names": {
+          "type": "integer",
+          "attributes": {},
+          "value": [1, 2]
+        },
+        "names": {
+          "type": "character",
+          "attributes": {},
+          "value": ["qid", "looping_qid", "looping_option", "looping_prefix", "looping_question", "question_text", "base_response_column_id", "looping"]
+        },
+        "class": {
+          "type": "character",
+          "attributes": {},
+          "value": ["tbl_df", "tbl", "data.frame"]
+        }
+      },
+      "value": [
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["QID2", "QID2"]
+        },
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["QID1", "QID1"]
+        },
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["Apples", "Bananas"]
+        },
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["x1", "x2"]
+        },
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["Compare Apples with Red fruit", "Compare Bananas with Yellow fruit"]
+        },
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["Compare {} with {}", "Compare {} with {}"]
+        },
+        {
+          "type": "character",
+          "attributes": {},
+          "value": ["x1_QID2", "x2_QID2"]
+        },
+        {
+          "type": "logical",
+          "attributes": {},
+          "value": [true, true]
+        }
+      ]
+    }
 

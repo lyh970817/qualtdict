@@ -488,5 +488,8 @@ test_that("Loop-expanded Question Facts have compact contract summary", {
 
   expanded <- expand_loop_question_facts(normalised_metadata$questions)
 
-  expect_snapshot(compact_loop_question_facts(expanded))
+  expect_snapshot_value(
+    compact_loop_question_facts(expanded),
+    style = "json2"
+  )
 })
