@@ -223,7 +223,7 @@ loop_options_for_context <- function(context) {
       return(loop_options_from_static_only_source(context))
     }
 
-    return(NULL)
+    return(loop_options_from_absent_source_static_prefixes(context))
   }
 
   source_type <- scalar_character(
@@ -282,6 +282,15 @@ loop_options_from_choice_source_context <- function(context) {
 #' Resolve Loop Options from static-only Loop and Merge rows
 #' @noRd
 loop_options_from_static_only_source <- function(context) {
+  loop_options_from_static_fields(
+    context$looping_static,
+    context$static_prefixes
+  )
+}
+
+#' Resolve Loop Options when the source QID is absent but static rows remain
+#' @noRd
+loop_options_from_absent_source_static_prefixes <- function(context) {
   loop_options_from_static_fields(
     context$looping_static,
     context$static_prefixes
