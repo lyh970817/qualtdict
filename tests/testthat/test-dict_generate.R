@@ -640,3 +640,20 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
     c("unsafe", "unsafe;duplicate", "unsafe;duplicate", "unsafe;duplicate")
   )
 })
+
+test_that("unsupported source-backed Loop and Merge does not render bare QID", {
+  raw_metadata <- synthetic_unresolved_source_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_false("QID2_TEXT" %in% dict$response_column_id)
+  expect_false("QID2" %in% dict$qid)
+  expect_false(any(grepl("QID2", dict$response_column_id, fixed = TRUE)))
+})

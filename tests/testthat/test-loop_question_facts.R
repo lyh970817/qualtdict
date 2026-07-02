@@ -481,3 +481,12 @@ test_that("matrix source Loop and Merge prefixes use source response rows", {
     c("Condition 1", "Condition 2", "Condition 3")
   )
 })
+
+test_that("Loop-expanded Question Facts have compact contract summary", {
+  raw_metadata <- synthetic_multi_field_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+
+  expect_snapshot(compact_loop_question_facts(expanded))
+})
