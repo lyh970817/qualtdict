@@ -83,7 +83,10 @@ render_response_columns <- function(
     render_response_column_ids(context)
   )
 
-  response_column_rows(context, response_column_id)
+  dplyr::bind_rows(
+    response_column_rows(context, response_column_id),
+    display_order_response_column_rows(context)
+  )
 }
 
 #' Build row-aligned Response Column ID facts
@@ -124,6 +127,101 @@ empty_response_columns <- function() {
     level = character(),
     label = character()
   )
+}
+
+#' Render display-order helper Response Column ID rows
+#' @noRd
+display_order_response_column_rows <- function(context) {
+  if (!question_renders_display_order(context$question_fact)) {
+    return(empty_response_columns())
+  }
+
+  choice_order <- question_fact_choice_order(context$question_fact)
+  choice_levels <- display_order_choice_levels(
+    context$question_fact,
+    choice_order
+  )
+  choice_labels <- display_order_choice_labels(
+    context$question_fact,
+    choice_order
+  )
+
+  tibble(
+    response_column_id = paste(
+      context$base_response_column_id,
+      "DO",
+      choice_levels,
+      sep = "_"
+    ),
+    question = question_fact_question_text(context$question_fact),
+    item = rep("Display order", length(choice_order)),
+    level = choice_levels,
+    label = choice_labels
+  )
+}
+
+#' Return whether a question exports display-order helpers
+#' @noRd
+question_renders_display_order <- function(question_fact) {
+  question_type <- question_fact_question_type(question_fact)
+  choice_order <- question_fact_choice_order(question_fact)
+
+  question_type_is_mavr_text(question_type) &&
+    length(choice_order) > 0 &&
+    question_has_randomization(question_fact)
+}
+
+#' Return whether question type facts describe MAVR text
+#' @noRd
+question_type_is_mavr_text <- function(question_type) {
+  identical(question_type$type, "MC") &&
+    identical(question_type$selector, "MAVR") &&
+    identical(question_type$sub_selector, "TX")
+}
+
+#' Return whether a question fact has randomization metadata
+#' @noRd
+question_has_randomization <- function(question_fact) {
+  randomization <- question_fact_randomization(question_fact)
+  !is.null(randomization) && length(randomization) > 0
+}
+
+#' Resolve display-order helper levels from ordered choices
+#' @noRd
+display_order_choice_levels <- function(question_fact, choice_order) {
+  response_choices <- question_fact_response_choices(question_fact)
+  levels <- vapply(
+    choice_order,
+    function(choice_id) {
+      choice <- response_choices[[choice_id]]
+      if (is.null(choice)) {
+        return(choice_id)
+      }
+      scalar_character(choice$level %||% choice$recode %||% choice_id)
+    },
+    character(1)
+  )
+
+  unname(levels)
+}
+
+#' Resolve display-order helper labels from ordered choices
+#' @noRd
+display_order_choice_labels <- function(question_fact, choice_order) {
+  response_choices <- question_fact_response_choices(question_fact)
+  labels <- vapply(
+    choice_order,
+    function(choice_id) {
+      choice <- response_choices[[choice_id]]
+      if (is.null(choice)) {
+        return(choice_id)
+      }
+      scalar_character(choice$label %||% choice$description %||% choice_id)
+    },
+    character(1)
+  )
+
+  unname(labels)
 }
 
 #' Insert text-entry IDs after text-capable choices or items
@@ -326,6 +424,9 @@ remove_non_exported_choice_columns <- function(question) {
   if (!question_choices_render_independent_columns(question)) {
     return(question)
   }
+  if (question_keeps_non_analysed_choice_columns(question)) {
+    return(question)
+  }
 
   response_choices <- question_fact_response_choices(question)
   if (length(response_choices) == 0) {
@@ -338,6 +439,18 @@ remove_non_exported_choice_columns <- function(question) {
   question$response_choices <- response_choices[exported]
   question$choices <- question$response_choices
   question
+}
+
+#' Return whether non-analysed choices still export response columns
+#' @noRd
+question_keeps_non_analysed_choice_columns <- function(question) {
+  question_type <- question_fact_question_type(question)
+  randomization <- question_fact_randomization(question)
+  carry_forward <- question_fact_carry_forward(question)
+
+  question_type_is_mavr_text(question_type) &&
+    ((!is.null(randomization) && length(randomization) > 0) ||
+      (!is.null(carry_forward) && length(carry_forward) > 0))
 }
 
 #' Return whether each choice produces a distinct Response Column ID
