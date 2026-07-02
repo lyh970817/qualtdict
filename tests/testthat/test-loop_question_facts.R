@@ -141,7 +141,62 @@ test_that("Loop and Merge options handle partial prefixed source matches", {
   )
 })
 
-test_that("Loop and Merge options skip non-exported source choices", {
+test_that("Loop and Merge options reconcile stale Static prefixes", {
+  expect_identical(
+    reconcile_loop_static_prefixes(character(), c("x1", "x2")),
+    character()
+  )
+  expect_identical(
+    reconcile_loop_static_prefixes(c("x1", "stale"), c("x1", "x2")),
+    c("x1", "x2")
+  )
+
+  choices <- list(
+    x1 = list(recode = "1", description = "One"),
+    x2 = list(recode = "2", description = "Two"),
+    x27 = list(recode = "27", description = "Twenty-seven"),
+    x26 = list(recode = "0", description = "Zero")
+  )
+
+  expect_identical(
+    loop_options_from_static_choices(
+      c("x1", "x2", "x11", "x26"),
+      choices,
+      c("x1", "x2", "x11", "x26")
+    ),
+    c(
+      x1 = "One",
+      x2 = "Two",
+      x27 = "Twenty-seven",
+      x26 = "Zero"
+    )
+  )
+})
+
+test_that("Loop and Merge options insert omitted source choice IDs", {
+  choices <- list(
+    x1 = list(recode = "1", description = "One"),
+    x2 = list(recode = "2", description = "Two"),
+    x16 = list(recode = "16", description = "Sixteen"),
+    x15 = list(recode = "0", description = "Zero")
+  )
+
+  expect_identical(
+    loop_options_from_static_choices(
+      c("x1", "x2", "x15"),
+      choices,
+      c("x1", "x2", "x15")
+    ),
+    c(
+      x1 = "One",
+      x2 = "Two",
+      x16 = "Sixteen",
+      x15 = "Zero"
+    )
+  )
+})
+
+test_that("Loop and Merge options keep static non-analysed source choices", {
   choices <- list(
     x1 = list(recode = "1", description = "One", analyze = TRUE),
     x2 = list(recode = "2", description = "Two", analyze = FALSE)
@@ -153,7 +208,7 @@ test_that("Loop and Merge options skip non-exported source choices", {
       choices,
       c("x1", "x2", "missing")
     ),
-    c(x1 = "One")
+    c(x1 = "One", x2 = "Two")
   )
 })
 
@@ -257,6 +312,49 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
   expect_identical(attr(dict, "survey_name"), "Loop Survey")
   expect_identical(attr(dict, "surveyID"), "SV_LOOP")
 })
+
+test_that(
+  paste(
+    "static Loop and Merge prefixes render when source choices",
+    "are non-analysed"
+  ),
+  {
+    raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+
+    raw_metadata$metadata$questions$QID1$questionType$selector <- "MACOL"
+    raw_metadata$metadata$questions$QID1$choices$x1$analyze <- FALSE
+    raw_metadata$metadata$questions$QID1$choices$x2$analyze <- FALSE
+    raw_metadata$metadata$questions$QID1$choices$x3 <- list(
+      recode = "3",
+      description = "Cherries",
+      analyze = TRUE
+    )
+
+    dict <- variable_dictionary_from_normalised_metadata(
+      normalise_qualtrics_metadata(raw_metadata),
+      use_semantic_name = FALSE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    )
+
+    expect_false("QID1_1" %in% dict$response_column_id)
+    expect_false("QID1_2" %in% dict$response_column_id)
+    expect_true("QID1_3" %in% dict$response_column_id)
+
+    target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
+
+    expect_identical(
+      target_rows$response_column_id,
+      c("x1_QID2_TEXT", "x2_QID2_TEXT")
+    )
+    expect_identical(
+      target_rows$question,
+      c("Why did you choose Apples?", "Why did you choose Bananas?")
+    )
+    expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  }
+)
 
 
 test_that("normalised metadata renders supported extra Loop and Merge fields", {

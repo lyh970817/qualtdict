@@ -122,6 +122,10 @@ loop_options_for_context <- function(context) {
       map_chr(loop_items, "item_id")
     )
     if (length(static_prefixes) > 0) {
+      static_prefixes <- reconcile_loop_static_prefixes(
+        static_prefixes,
+        names(loop_options)
+      )
       ordered_prefixes <- static_prefixes[
         static_prefixes %in% names(loop_options)
       ]
@@ -216,7 +220,10 @@ loop_options_from_static_choices <- function(
     return(NULL)
   }
 
-  loop_options_from_choice_source(source, static_prefixes)
+  loop_options_from_choice_source(
+    source,
+    source$static_prefixes %||% static_prefixes
+  )
 }
 
 #' Resolve the source of Loop Option choices
@@ -235,8 +242,12 @@ loop_choice_source <- function(looping_prefixes, choices, static_prefixes) {
 
 #' Build a Loop Option choice source
 #' @noRd
-new_loop_choice_source <- function(type, choices = NULL) {
-  list(type = type, choices = choices)
+new_loop_choice_source <- function(
+  type,
+  choices = NULL,
+  static_prefixes = NULL
+) {
+  list(type = type, choices = choices, static_prefixes = static_prefixes)
 }
 
 #' Return whether a Loop Option choice source is missing
@@ -254,16 +265,17 @@ has_looping_prefixes <- function(looping_prefixes) {
 #' Resolve Loop Option choices from static prefixes
 #' @noRd
 loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
+  static_prefixes <- reconcile_loop_static_choice_prefixes(
+    choices,
+    static_prefixes
+  )
   resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
   if (!any(resolved) || mean(resolved) < 0.5) {
-    non_exported_choices <- map_lgl(resolved_choices, function(choice) {
-      !is.null(choice) && isFALSE(choice$analyze)
-    })
-    static_prefixes <- static_prefixes[!non_exported_choices]
     return(new_loop_choice_source(
       "fallback",
-      fallback_static_choices(static_prefixes)
+      fallback_static_choices(static_prefixes),
+      static_prefixes = static_prefixes
     ))
   }
 
@@ -274,9 +286,6 @@ loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
       if (is.null(choice)) {
         return(NULL)
       }
-      if (isFALSE(choice$analyze)) {
-        return(NULL)
-      }
 
       choice
     }
@@ -285,8 +294,61 @@ loop_choice_source_from_prefixes <- function(choices, static_prefixes) {
   keep <- map_lgl(source_choices, Negate(is.null))
   new_loop_choice_source(
     "resolved",
-    setNames(source_choices[keep], static_prefixes[keep])
+    setNames(source_choices[keep], static_prefixes[keep]),
+    static_prefixes = static_prefixes[keep]
   )
+}
+
+#' Reconcile stale Static prefixes with source response IDs
+#' @noRd
+reconcile_loop_static_prefixes <- function(static_prefixes, source_ids) {
+  if (length(static_prefixes) == 0 || length(source_ids) == 0) {
+    return(static_prefixes)
+  }
+
+  replace_count <- min(length(static_prefixes), length(source_ids))
+  for (pos in seq_len(replace_count)) {
+    if (!static_prefixes[[pos]] %in% source_ids) {
+      static_prefixes[[pos]] <- source_ids[[pos]]
+    }
+  }
+
+  static_prefixes
+}
+
+#' Reconcile unresolved Static choice prefixes with source choice IDs
+#' @noRd
+reconcile_loop_static_choice_prefixes <- function(choices, static_prefixes) {
+  resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
+  unresolved <- map_lgl(resolved_choices, is.null)
+  source_ids <- names(choices)
+  reconciled <- character()
+
+  for (pos in seq_along(static_prefixes)) {
+    prefix <- static_prefixes[[pos]]
+    if (pos > length(source_ids)) {
+      reconciled <- c(reconciled, prefix)
+      next
+    }
+    source_id <- source_ids[[pos]]
+
+    if (unresolved[[pos]]) {
+      reconciled <- c(reconciled, source_id)
+      next
+    }
+
+    stale_x_prefixed_static <- grepl("^x[0-9]+$", prefix) &&
+      grepl("^x[0-9]+$", source_id) &&
+      !identical(prefix, source_id) &&
+      !source_id %in% static_prefixes
+    if (stale_x_prefixed_static) {
+      reconciled <- c(reconciled, source_id)
+    }
+
+    reconciled <- c(reconciled, prefix)
+  }
+
+  reconciled
 }
 
 #' Resolve Loop Option choices from direct choice IDs
@@ -296,7 +358,7 @@ loop_choice_source_from_direct_ids <- function(choices, static_prefixes) {
     return(new_loop_choice_source("missing"))
   }
 
-  new_loop_choice_source("direct", choices)
+  new_loop_choice_source("direct", choices, static_prefixes = static_prefixes)
 }
 
 #' Resolve static choices by ID or recode
