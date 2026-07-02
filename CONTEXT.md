@@ -119,6 +119,20 @@ derives words from naming text, it preserves their source order.
 has matched a Response Column ID, renamed it to its Dictionary Variable
 Name, and attached variable metadata. *Avoid*: Dictionary row, QID
 
+**Rendered Response-column Coverage**: The package capability of
+representing non-system exported response columns in a Variable
+Dictionary from Qualtrics metadata and Response Column ID Rendering,
+with response-schema metadata used only for export filtering or
+discovery where ordinary survey metadata does not carry the needed fact.
+*Avoid*: Raw-header coverage, schema fallback, extra-column mode
+
+**Response-schema Filter**: The use of Qualtrics response-schema
+metadata to decide whether a metadata-defined export variable is present
+in the export schema. In current scope, this applies to Embedded Data
+Fields, Scoring Variables, and Text-analysis Sidecars, not to ordinary
+question-backed Response Column ID Rendering. *Avoid*: Response-column
+source of truth, raw-header filter
+
 **Embedded Data Field**: A Qualtrics embedded data field defined by
 survey metadata or survey flow and represented as a Metadata-defined
 Export Variable in the Variable Dictionary. Embedded Data Fields are not
