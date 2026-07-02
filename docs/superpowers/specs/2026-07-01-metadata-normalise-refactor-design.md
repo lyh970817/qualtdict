@@ -416,16 +416,9 @@ decisions.
 
 ### Phase 3: Loop and Merge Support
 
-Treat `R/loop_expand.R` as a separate refactor after Response Column ID
-Rendering. Preserve the existing domain seam:
+Phase 3 now has its own design spec:
 
-- Loop and Merge Support expands Normalised Question Facts into Loop-expanded
-  Question Facts.
-- Response Column ID Rendering consumes Normalised Question Facts or
-  Loop-expanded Question Facts.
-- Response Column ID Rendering may receive an already-prefixed Base Response
-  Column ID, but it does not choose Loop Options or substitute Loop and Merge
-  text.
+- `docs/superpowers/specs/2026-07-02-loop-and-merge-support-refactor-design.md`
 
-Phase 3 should focus on Loop and Merge expansion clarity and tests, not on
-Response Column ID Rendering internals.
+Treat that file as canonical for Loop and Merge Support implementation
+decisions.

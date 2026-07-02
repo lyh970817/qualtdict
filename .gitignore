@@ -4,6 +4,9 @@ inst/doc
 tmp/
 node_modules/
 .local/finalize-smoke/
+.codegraph/
+.understand-anything/
+.workflow/
 docs/superpowers/no-mistakes-and-superpowers-summary.md
 docs/superpowers/plans/
 docs/pr-0010-merge-review.md
