@@ -254,7 +254,11 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
   )
 
   expect_false(loop_question_fact_should_expand(context))
-  expect_false(expand_loop_question_fact(context)[[1]]$looping)
+  expect_false(
+    loop_expansion_outcome_question_facts(
+      expand_loop_question_fact(context)
+    )[[1]]$looping
+  )
 
   no_rows_context <- context
   no_rows_context$looping_source_fact <- list(
@@ -263,12 +267,20 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
   )
   expect_identical(
     expand_loop_question_fact(no_rows_context),
-    list(
-      no_rows_context$question_fact
+    loop_expansion_outcome_unsupported(
+      no_rows_context,
+      "static prefixes cannot be resolved against source choices"
     )
   )
 
   expect_null(loop_options_from_static_fields(NULL, character()))
+  expect_identical(
+    loop_options_from_static_fields(
+      list(x1 = list(`1` = "")),
+      "x1"
+    ),
+    c(x1 = "x1")
+  )
   expect_identical(
     loop_choice_source(NULL, list(), "x1")$type,
     "missing"

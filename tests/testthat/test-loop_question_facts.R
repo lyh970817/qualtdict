@@ -90,6 +90,24 @@ test_that("Loop and Merge adapter expands static rows without source", {
   )
 })
 
+test_that("unsupported source-backed Loop and Merge is skipped", {
+  raw_metadata <- synthetic_unresolved_source_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  expanded <- expand_loop_question_facts(normalised_metadata$questions)
+  diagnostics <- attr(expanded, "unsupported_loop_diagnostics")
+
+  expect_false("QID2" %in% names(expanded))
+  expect_length(diagnostics, 1)
+  expect_identical(diagnostics[[1]]$qid, "QID2")
+  expect_identical(diagnostics[[1]]$question_name, "Q2")
+  expect_identical(diagnostics[[1]]$looping_qid, "QID1")
+  expect_identical(
+    diagnostics[[1]]$reason,
+    "static prefixes cannot be resolved against source choices"
+  )
+})
+
 test_that("Loop and Merge options resolve direct source choice IDs", {
   choices <- list(
     a = list(recode = "3", description = "Alpha"),
@@ -383,26 +401,28 @@ test_that("normalised metadata renders supported extra Loop and Merge fields", {
 })
 
 
-test_that("static Loop and Merge rows render when source QID is absent", {
-  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
-  raw_metadata$metadata$questions$QID1 <- NULL
+test_that(
+  paste(
+    "source-backed Loop and Merge is skipped",
+    "when source fact is absent"
+  ),
+  {
+    raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+    raw_metadata$metadata$questions$QID1 <- NULL
 
-  dict <- variable_dictionary_from_normalised_metadata(
-    normalise_qualtrics_metadata(raw_metadata),
-    use_semantic_name = FALSE,
-    block_pattern = NULL,
-    block_sep = ".",
-    semantic_name_preprocess = NULL
-  )
+    expanded <- expand_loop_question_facts(
+      normalise_qualtrics_metadata(raw_metadata)$questions
+    )
+    diagnostics <- attr(expanded, "unsupported_loop_diagnostics")
 
-  target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
-
-  expect_identical(
-    target_rows$response_column_id,
-    c("x1_QID2_TEXT", "x2_QID2_TEXT")
-  )
-  expect_identical(target_rows$loop_option, c("x1", "x2"))
-})
+    expect_false("QID2" %in% names(expanded))
+    expect_length(diagnostics, 1)
+    expect_identical(
+      diagnostics[[1]]$reason,
+      "source QID is absent from Normalised Question Facts"
+    )
+  }
+)
 
 
 test_that("normalised metadata renders static Loop and Merge rows", {
