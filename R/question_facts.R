@@ -234,3 +234,33 @@ question_fact_looping_static <- function(question) {
 question_fact_looping_column_names <- function(question) {
   question_fact_value(question, "looping_column_names")
 }
+
+#' Return package-owned Base Response Column ID facts
+#' @noRd
+question_fact_base_response_column_id <- function(question) {
+  question_fact_value(question, "base_response_column_id")
+}
+
+#' Return substituted Loop and Merge question text
+#' @noRd
+question_fact_looping_question <- function(question) {
+  question_fact_value(question, "looping_question")
+}
+
+#' Return the resolved Loop Option
+#' @noRd
+question_fact_looping_option <- function(question) {
+  question_fact_value(question, "looping_option")
+}
+
+#' Return whether a question fact is Loop-expanded
+#' @noRd
+question_fact_looping_status <- function(question) {
+  isTRUE(question_fact_value(question, "looping"))
+}
+
+#' Return the resolved Loop and Merge prefix for a Loop-expanded Question Fact
+#' @noRd
+question_fact_looping_prefix_value <- function(question) {
+  question_fact_value(question, "looping_prefix")
+}

@@ -553,3 +553,58 @@ test_that("Loop-expanded Question Facts have compact contract summary", {
     style = "json2"
   )
 })
+
+test_that("Loop-expanded Question Fact construction has explicit contract", {
+  normalised_metadata <- normalise_qualtrics_metadata(
+    synthetic_multi_field_loop_and_merge_raw_metadata()
+  )
+  context <- new_loop_expansion_context(
+    question_fact = normalised_metadata$questions$QID2,
+    survey_question_facts = normalised_metadata$questions
+  )
+  loop_rows <- loop_rows_for_context(context)
+
+  looped <- new_loop_expanded_question_fact(
+    question_fact = context$question_fact,
+    loop_row = loop_rows[[1]],
+    context = context
+  )
+
+  expect_identical(looped$qid, "QID2")
+  expect_identical(looped$looping_question, "Compare Apples with Red fruit")
+  expect_identical(looped$question_text, "Compare {} with {}")
+  expect_identical(looped$looping_option, "Apples")
+  expect_identical(looped$looping_prefix, "x1")
+  expect_identical(looped$looping_qid, "QID1")
+  expect_identical(looped$base_response_column_id, "x1_QID2")
+  expect_true(looped$looping)
+})
+
+test_that("Loop and Merge field merge precedence is named and stable", {
+  normalised_metadata <- normalise_qualtrics_metadata(
+    synthetic_multi_field_loop_and_merge_raw_metadata()
+  )
+  prefixes <- c("x1", "x2")
+
+  expect_identical(
+    loop_field_values_static_overrides_column_names(
+      normalised_metadata$questions$QID2,
+      prefixes
+    ),
+    list(
+      x1 = c(`2` = "Red fruit"),
+      x2 = c(`2` = "Yellow fruit")
+    )
+  )
+})
+
+test_that("Loop Base Response Column ID normalisation preserves text entries", {
+  expect_identical(
+    normalise_loop_base_response_column_id("x1_QID2_2_TEXT_TEXT"),
+    "x1_QID2_TEXT"
+  )
+  expect_identical(
+    normalise_loop_base_response_column_id("x1_QID2"),
+    "x1_QID2"
+  )
+})

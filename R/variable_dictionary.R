@@ -101,7 +101,8 @@ variable_dictionary_question_rows <- function(question_meta) {
 variable_dictionary_question_row <- function(qjson, qid) {
   question_type <- question_fact_question_type(qjson)
   question_name <- question_fact_question_name(qjson)
-  base_response_column_id <- qjson$base_response_column_id %||% qid
+  base_response_column_id <- question_fact_base_response_column_id(qjson) %||%
+    qid
   response_columns <- render_response_columns(qjson, base_response_column_id)
   if (nrow(response_columns) == 0) {
     return(NULL)
@@ -119,7 +120,7 @@ variable_dictionary_question_row <- function(qjson, qid) {
     question_name = null_na(question_name),
     block = question_fact_survey_block(qjson),
     question = response_columns$question,
-    looping_question = qjson$looping_question %||% NA_character_,
+    looping_question = question_fact_looping_question(qjson) %||% NA_character_,
     item = response_columns$item,
     level = response_columns$level,
     label = response_columns$label,
@@ -127,8 +128,8 @@ variable_dictionary_question_row <- function(qjson, qid) {
     selector = question_type$selector,
     content_type = qjson$content_type,
     sub_selector = null_na(question_type$sub_selector),
-    looping_option = qjson$looping_option %||% NA_character_,
-    looping = isTRUE(qjson$looping)
+    looping_option = question_fact_looping_option(qjson) %||% NA_character_,
+    looping = question_fact_looping_status(qjson)
   )
 }
 
