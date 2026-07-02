@@ -52,18 +52,12 @@ variable_dictionary_from_normalised_metadata <- function(
     question_meta
   )
 
-  json <- c(
-    call_variable_dictionary_question_rows(
-      question_meta,
-      rendered_question_columns
-    ),
-    variable_dictionary_embedded_data_rows(
-      normalised_metadata$embedded_data,
-      embedded_data_block_assignment = embedded_data_block_assignment,
-      quiet = quiet
-    ),
-    variable_dictionary_scoring_rows(normalised_metadata$scoring),
-    variable_dictionary_text_analysis_rows(normalised_metadata$text_analysis)
+  json <- variable_dictionary_rows_from_normalised_metadata(
+    normalised_metadata,
+    question_meta,
+    rendered_question_columns,
+    embedded_data_block_assignment,
+    quiet
   )
   if (length(json) == 0) {
     return(empty_variable_dictionary_from_normalised_metadata(
@@ -92,20 +86,28 @@ variable_dictionary_from_normalised_metadata <- function(
   )
 }
 
-#' Dispatch question-backed Variable Dictionary row assembly
+#' Assemble raw Variable Dictionary rows from normalised metadata
 #' @noRd
-call_variable_dictionary_question_rows <- function(
+variable_dictionary_rows_from_normalised_metadata <- function(
+  normalised_metadata,
   question_meta,
-  rendered_question_columns
+  rendered_question_columns,
+  embedded_data_block_assignment,
+  quiet
 ) {
-  fn <- variable_dictionary_question_rows
-  args <- list(question_meta = question_meta)
-
-  if ("rendered_question_columns" %in% names(formals(fn))) {
-    args$rendered_question_columns <- rendered_question_columns
-  }
-
-  do.call(fn, args)
+  c(
+    variable_dictionary_question_rows(
+      question_meta,
+      rendered_question_columns
+    ),
+    variable_dictionary_embedded_data_rows(
+      normalised_metadata$embedded_data,
+      embedded_data_block_assignment = embedded_data_block_assignment,
+      quiet = quiet
+    ),
+    variable_dictionary_scoring_rows(normalised_metadata$scoring),
+    variable_dictionary_text_analysis_rows(normalised_metadata$text_analysis)
+  )
 }
 
 #' Build question-backed Variable Dictionary rows
