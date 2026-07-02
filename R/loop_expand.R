@@ -23,6 +23,30 @@ expand_loop_question_facts <- function(survey_question_facts) {
   question_facts
 }
 
+#' Expand Loop and Merge question facts and render ordinary response columns
+#' @noRd
+expand_then_render_question_response_columns <- function(question_facts) {
+  expanded_question_facts <- expand_loop_question_facts(question_facts)
+
+  rendered <- imap(expanded_question_facts, function(question_fact, qid) {
+    base_response_column_id <-
+      question_fact_base_response_column_id(question_fact) %||% qid
+    response_columns <- render_response_columns(
+      question_fact,
+      base_response_column_id
+    )
+    list(
+      question_fact = question_fact,
+      response_column_id = unique(response_columns$response_column_id),
+      response_columns = response_columns
+    )
+  })
+  attr(rendered, "unsupported_loop_diagnostics") <-
+    attr(expanded_question_facts, "unsupported_loop_diagnostics")
+
+  rendered
+}
+
 #' Build Loop and Merge expansion context for one Normalised Question Fact
 #' @noRd
 new_loop_expansion_context <- function(question_fact, survey_question_facts) {

@@ -108,6 +108,56 @@ test_that("unsupported source-backed Loop and Merge is skipped", {
   )
 })
 
+test_that("expand-then-render adapter preserves Loop and Merge boundary", {
+  normalised_metadata <- normalise_qualtrics_metadata(
+    synthetic_loop_and_merge_raw_metadata()
+  )
+
+  rendered <- expand_then_render_question_response_columns(
+    normalised_metadata$questions
+  )
+
+  expect_identical(
+    unname(unlist(
+      purrr::map(rendered, "response_column_id"),
+      use.names = FALSE
+    )),
+    c("QID1", "x1_QID2_TEXT", "x2_QID2_TEXT")
+  )
+})
+
+test_that("question row assembly defaults to shared adapter", {
+  normalised_metadata <- normalise_qualtrics_metadata(
+    synthetic_loop_and_merge_raw_metadata()
+  )
+  question_meta <- normalised_metadata$questions["QID1"]
+
+  local_mocked_bindings(
+    expand_then_render_question_response_columns = function(question_facts) {
+      expect_named(question_facts, "QID1")
+      list(
+        QID1 = list(
+          question_fact = question_facts$QID1,
+          response_column_id = "QID1",
+          response_columns = tibble::tibble(
+            response_column_id = "QID1",
+            question = "Which options did you consider?",
+            item = NA_character_,
+            level = "1",
+            label = "Apples"
+          )
+        )
+      )
+    }
+  )
+
+  rows <- variable_dictionary_question_rows(question_meta)
+
+  expect_length(rows, 1)
+  expect_identical(rows[[1]]$response_column_id, "QID1")
+  expect_identical(rows[[1]]$qid, "QID1")
+})
+
 test_that("Loop and Merge options resolve direct source choice IDs", {
   choices <- list(
     a = list(recode = "3", description = "Alpha"),
