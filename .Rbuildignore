@@ -9,6 +9,7 @@
 ^\.Renviron$
 ^\.Rhistory$
 ^\.Rproj\.user$
+^.*\.Rproj$
 ^\.agents$
 ^\.codex$
 ^\.direnv$

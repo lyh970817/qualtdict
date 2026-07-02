@@ -26,3 +26,4 @@ tools/raw-response-column-parity.R
 .direnv/
 .lavish/
 pkgdown/
+.Rproj.user/
