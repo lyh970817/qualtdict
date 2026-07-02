@@ -32,8 +32,16 @@ prepare_fetch_survey_args <- function(args, dict) {
     ))
   }
 
+  surveyID <- attr(dict, "surveyID", exact = TRUE)
+  if (is.null(surveyID)) {
+    rlang::abort(c(
+      "`dict` is missing its `surveyID` attribute.",
+      i = "Regenerate it with `dict_generate()`."
+    ))
+  }
+
   args$force_request <- TRUE
-  args$surveyID <- attr(dict, "surveyID")
+  args$surveyID <- surveyID
   args$import_id <- TRUE
   args$convert <- FALSE
   args$label <- FALSE

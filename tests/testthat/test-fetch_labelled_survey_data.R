@@ -474,6 +474,17 @@ test_that("users cannot override qualtdict-owned fetch settings", {
   )
 })
 
+test_that("fetch_labelled_survey_data requires a surveyID attribute", {
+  dict <- minimal_export_dict()
+  attr(dict, "surveyID") <- NULL
+
+  expect_error(
+    fetch_labelled_survey_data(dict),
+    "missing its `surveyID` attribute",
+    fixed = TRUE
+  )
+})
+
 test_that("dict_split_blocks returns block-specific Variable Dictionaries", {
   dict <- minimal_export_dict()
   attr(dict, "variable_name_findings") <- tibble::tibble(
