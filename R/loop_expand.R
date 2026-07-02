@@ -267,7 +267,20 @@ loop_options_from_static_only_source <- function(context) {
 #' Build one Loop-expanded Question Fact
 #' @noRd
 loop_expanded_question_fact <- function(loop_row, context) {
-  question_fact <- context$question_fact
+  new_loop_expanded_question_fact(
+    question_fact = context$question_fact,
+    loop_row = loop_row,
+    context = context
+  )
+}
+
+#' Build one Loop-expanded Question Fact from resolved Loop and Merge fields
+#' @noRd
+new_loop_expanded_question_fact <- function(
+  question_fact,
+  loop_row,
+  context
+) {
   looped_question_fact <- question_fact
   looped_question_fact[["looping_question"]] <-
     substitute_loop_fields(
@@ -281,8 +294,12 @@ loop_expanded_question_fact <- function(loop_row, context) {
   looped_question_fact[["looping_qid"]] <- context$looping_qid
   looped_question_fact[["qid"]] <- question_fact[["qid"]]
   looped_question_fact[["base_response_column_id"]] <-
-    loop_response_column_id(
-      paste(loop_row$prefix, question_fact[["qid"]], sep = "_")
+    normalise_loop_base_response_column_id(
+      paste(
+        question_fact_looping_prefix_value(looped_question_fact),
+        question_fact[["qid"]],
+        sep = "_"
+      )
     )
   looped_question_fact[["looping"]] <- TRUE
   looped_question_fact
@@ -311,9 +328,9 @@ loop_options_from_static_fields <- function(looping_static, static_prefixes) {
   loop_options
 }
 
-#' Return a Loop and Merge-specific Response Column ID
+#' Normalise a Loop and Merge Base Response Column ID
 #' @noRd
-loop_response_column_id <- function(response_column_id) {
+normalise_loop_base_response_column_id <- function(response_column_id) {
   str_replace(
     response_column_id,
     "^([^_]+_QID[0-9]+)_[^_]+_TEXT_TEXT$",
@@ -527,9 +544,12 @@ loop_option_label <- function(choice) {
   as.character(option)
 }
 
-#' Resolve Loop and Merge field values beyond the primary option
+#' Resolve Loop and Merge field values with static fields taking precedence
 #' @noRd
-loop_field_values_for_question <- function(question_fact, prefixes) {
+loop_field_values_static_overrides_column_names <- function(
+  question_fact,
+  prefixes
+) {
   field_values <- loop_field_values_from_static(
     question_fact_looping_static(question_fact),
     prefixes
@@ -541,6 +561,12 @@ loop_field_values_for_question <- function(question_fact, prefixes) {
   )
 
   utils::modifyList(column_field_values, field_values)
+}
+
+#' Resolve Loop and Merge field values beyond the primary option
+#' @noRd
+loop_field_values_for_question <- function(question_fact, prefixes) {
+  loop_field_values_static_overrides_column_names(question_fact, prefixes)
 }
 
 #' Resolve Loop and Merge fields from block Static rows
