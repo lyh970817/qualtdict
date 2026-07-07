@@ -55,6 +55,42 @@ test_that("slider items render as one response column per item", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
+test_that("multi-statement sliders render one column per statement item", {
+  rendered <- render_response_column_fixture(
+    synthetic_multi_statement_slider_raw_metadata(),
+    "QID1"
+  )
+
+  # One column per statement, keyed by the Qualtrics statement ID (1 and 4),
+  # not by the seven slider choice levels.
+  expect_identical(rendered$response_column_id, c("QID1_1", "QID1_4"))
+  expect_identical(
+    unname(rendered$item),
+    c("Statement A", "Statement B")
+  )
+  expect_identical(unname(rendered$level), c(NA_character_, NA_character_))
+  expect_identical(unname(rendered$label), c(NA_character_, NA_character_))
+  expect_true(all(lengths(rendered) == nrow(rendered)))
+})
+
+test_that("multi-statement slider dictionary rows are row-aligned", {
+  raw_metadata <- synthetic_multi_statement_slider_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  expect_identical(dict$response_column_id, c("QID1_1", "QID1_4"))
+  expect_identical(dict$qid, rep("QID1", 2))
+  expect_identical(unname(dict$item), c("Statement A", "Statement B"))
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
 test_that("matrix response columns use Qualtrics subquestion IDs", {
   raw_metadata <- synthetic_matrix_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)

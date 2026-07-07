@@ -471,11 +471,29 @@ question_choices_render_independent_columns <- function(question) {
   FALSE
 }
 
+#' Return whether a context renders exactly one column per item
+#'
+#' Carried-forward side-by-side questions (SBS with no columns) and
+#' multi-statement sliders both export one column per statement item with no
+#' choice-level or choice-label facts.
+#' @noRd
+context_renders_one_column_per_item <- function(context) {
+  facts <- context$render_facts
+  if (length(facts$item) == 0) {
+    return(FALSE)
+  }
+
+  is_carried_forward_sbs <- context$type == "SBS" && facts$col_len == 0
+  is_multi_statement_slider <- context$type == "Slider"
+
+  is_carried_forward_sbs || is_multi_statement_slider
+}
+
 #' Render row-aligned item facts
 #' @noRd
 render_response_column_items <- function(context) {
   facts <- context$render_facts
-  if (context$type == "SBS" && facts$col_len == 0 && length(facts$item) > 0) {
+  if (context_renders_one_column_per_item(context)) {
     return(facts$item)
   }
 
@@ -486,7 +504,7 @@ render_response_column_items <- function(context) {
 #' @noRd
 render_response_column_levels <- function(context, response_column_id) {
   facts <- context$render_facts
-  if (context$type == "SBS" && facts$col_len == 0 && length(facts$item) > 0) {
+  if (context_renders_one_column_per_item(context)) {
     return(rep(NA_character_, length(response_column_id)))
   }
 
@@ -502,7 +520,7 @@ render_response_column_levels <- function(context, response_column_id) {
 #' @noRd
 render_response_column_labels <- function(context, response_column_id) {
   facts <- context$render_facts
-  if (context$type == "SBS" && facts$col_len == 0 && length(facts$item) > 0) {
+  if (context_renders_one_column_per_item(context)) {
     return(rep(NA_character_, length(response_column_id)))
   }
 

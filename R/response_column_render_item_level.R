@@ -41,10 +41,25 @@ response_column_likert_renderer_table <- function() {
 #' @noRd
 response_column_slider_renderer_table <- function() {
   list(
-    HSLIDER = render_response_column_id_with_level_suffix,
-    HBAR = render_response_column_id_with_level_suffix,
-    STAR = render_response_column_id_with_level_suffix
+    HSLIDER = render_slider_response_column_ids,
+    HBAR = render_slider_response_column_ids,
+    STAR = render_slider_response_column_ids
   )
+}
+
+#' Render slider Response Column IDs
+#'
+#' Multi-statement sliders (with subquestion items) export one column per
+#' statement, keyed by the Qualtrics statement ID rather than by choice level.
+#' Single-statement sliders (with no items) keep the choice-level rendering.
+#' @noRd
+render_slider_response_column_ids <- function(context) {
+  item <- context$render_facts$item
+  if (is.null(item) || length(item) == 0) {
+    return(render_response_column_id_with_level_suffix(context))
+  }
+
+  paste_narm(context$base_response_column_id, names(item), sep = "_")
 }
 
 #' Constant sum Response Column ID renderers
