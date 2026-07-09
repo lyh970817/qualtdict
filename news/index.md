@@ -3,6 +3,16 @@
 ## qualtdict 0.0.0.9000
 
 - [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  now resolves response-column-id parity with Qualtrics exports for
+  embedded, Captcha, Text-entry/FORM, and carry-forward multiple-choice
+  questions: colliding embedded fields honour the Qualtrics QSED
+  export-rename, Captcha and `analyze == FALSE` text-entry fields are
+  suppressed (no export column), and carry-forward multiple-choice
+  export choiceIds are derived from survey-definition
+  `RecodeValues`/`DynamicChoices` rather than sequential `/surveys`
+  recodes.
+
+- [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   now preserves question context while representing Embedded Data Fields
   when Qualtrics description metadata uses the `blocks`/`questions`
   structure returned by

@@ -35,7 +35,8 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.0.0.9000" id="qualtdict-0009000">qualtdict 0.0.0.9000<a class="anchor" aria-label="anchor" href="#qualtdict-0009000"></a></h2>
-<ul><li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now preserves question context while representing Embedded Data Fields when Qualtrics description metadata uses the <code>blocks</code>/<code>questions</code> structure returned by <code><a href="https://docs.ropensci.org/qualtRics/reference/fetch_description.html" class="external-link">qualtRics::fetch_description()</a></code>.</p></li>
+<ul><li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now resolves response-column-id parity with Qualtrics exports for embedded, Captcha, Text-entry/FORM, and carry-forward multiple-choice questions: colliding embedded fields honour the Qualtrics QSED export-rename, Captcha and <code>analyze == FALSE</code> text-entry fields are suppressed (no export column), and carry-forward multiple-choice export choiceIds are derived from survey-definition <code>RecodeValues</code>/<code>DynamicChoices</code> rather than sequential <code>/surveys</code> recodes.</p></li>
+<li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now preserves question context while representing Embedded Data Fields when Qualtrics description metadata uses the <code>blocks</code>/<code>questions</code> structure returned by <code><a href="https://docs.ropensci.org/qualtRics/reference/fetch_description.html" class="external-link">qualtRics::fetch_description()</a></code>.</p></li>
 <li><p>Local finalization smoke artifact refresh now captures Qualtrics <code>embedded_data</code>, scoring metadata, and response column-map metadata for Metadata-defined Export Variable inspection.</p></li>
 <li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now represents Scoring Variables from Qualtrics survey description metadata as Metadata-defined Export Variable rows with <code>row_source = "scoring"</code>.</p></li>
 <li><p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> now represents Text-analysis Sidecars from Qualtrics metadata as Metadata-defined Export Variable rows with <code>row_source = "text_analysis"</code> and parent question context when a clear parent QID is available.</p></li>
@@ -52,7 +53,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
