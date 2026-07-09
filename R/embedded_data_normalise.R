@@ -133,12 +133,40 @@ filter_exported_embedded_data_fields <- function(
     return(fields)
   }
 
+  fields <- map(fields, function(field) {
+    field$response_column_id <- resolve_exported_response_column_id(
+      field$response_column_id,
+      response_column_ids
+    )
+    field
+  })
   keep <- map_lgl(fields, function(field) {
     field$response_column_id %in% response_column_ids
   })
   fields <- fields[keep]
 
   new_normalised_embedded_data_fields(fields)
+}
+
+#' Resolve an Embedded Data field's exported Response Column ID
+#'
+#' Qualtrics renames Embedded Data fields whose name collides with a
+#' reserved export column (e.g. `ResponseID`) by prepending a `QSED`
+#' prefix on export. Prefer the declared name; otherwise fall back to
+#' the `QSED`-prefixed exported column when that is what was exported.
+#' @noRd
+resolve_exported_response_column_id <- function(
+  response_column_id,
+  response_column_ids
+) {
+  if (response_column_id %in% response_column_ids) {
+    return(response_column_id)
+  }
+  prefixed <- paste0("QSED", response_column_id)
+  if (prefixed %in% response_column_ids) {
+    return(prefixed)
+  }
+  response_column_id
 }
 
 #' Flatten Survey Flow items relevant to metadata normalisation
