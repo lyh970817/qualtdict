@@ -467,6 +467,11 @@ question_choices_render_independent_columns <- function(question) {
   if (identical(type, "Matrix")) {
     return(identical(sub_selector, "MultipleAnswer"))
   }
+  if (identical(type, "TE")) {
+    # Text-entry FORM questions emit one export column per choice, and
+    # Qualtrics omits the column for any choice whose `analyze` flag is FALSE.
+    return(identical(selector, "FORM"))
+  }
 
   FALSE
 }
@@ -581,6 +586,7 @@ response_column_renderer_table <- function() {
     Draw = list(Signature = render_file_upload_response_column_ids),
     HL = list(Text = render_response_column_id_with_level_and_item_suffixes),
     Meta = list(Browser = render_unsupported_response_column_ids),
+    Captcha = list(V2 = render_no_response_column_ids),
     DB = response_column_display_renderer_table()
   )
 }
@@ -624,9 +630,15 @@ render_response_column_id_with_level_suffix <- function(context) {
 #' @noRd
 render_response_column_id_with_named_label_suffix <- function(context) {
   # Add recode values to the end of the Base Response Column ID.
+  choice_ids <- names(context$render_facts$level)
+  if (length(choice_ids) == 0) {
+    # Every choice was suppressed (e.g. all `analyze == FALSE`), so the
+    # question exports no columns.
+    return(character(0))
+  }
   paste(
     context$base_response_column_id,
-    names(context$render_facts$level),
+    choice_ids,
     sep = "_"
   )
 }

@@ -31,6 +31,26 @@
     {
       "alias": "ramp",
       "survey_id": "SV_0DrSSOISyMOqN5r"
+    },
+    {
+      "alias": "coping_glad",
+      "survey_id": "SV_2l4GhidotLEBzYp"
+    },
+    {
+      "alias": "coping_edgi",
+      "survey_id": "SV_5gXHZjBhmhorErP"
+    },
+    {
+      "alias": "coping_nbr",
+      "survey_id": "SV_4PyAHbAxpdbyacl"
+    },
+    {
+      "alias": "coping_fupb_ongoing",
+      "survey_id": "SV_0NFXuNfs4US1Iod"
+    },
+    {
+      "alias": "ramp_fupb",
+      "survey_id": "SV_0UFM1iul4AJhVfn"
     }
   ]
 }
