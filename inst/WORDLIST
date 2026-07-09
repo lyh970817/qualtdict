@@ -2,9 +2,11 @@ al
 api
 aut
 BugReports
+Captcha
 CMD
 Codecov
 codecov
+choiceIds
 codemeta
 codeRepository
 ComputerLanguage
@@ -25,6 +27,7 @@ fileSize
 gh
 github
 givenName
+honour
 https
 io
 issueTracker
@@ -49,6 +52,7 @@ programmingLanguage
 propsed
 purrr
 QID
+QSED
 qids
 qualtdict
 qualtRics
