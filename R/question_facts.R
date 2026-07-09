@@ -11,12 +11,25 @@ scalar_character <- function(x) {
 #' Build one package-owned Normalised Question Fact
 #' @importFrom rlang %||%
 #' @noRd
-normalise_question_fact <- function(qid, question, block, content_type) {
+normalise_question_fact <- function(
+  qid,
+  question,
+  block,
+  content_type,
+  description = NULL
+) {
   question_name <- scalar_character(question$questionName)
   question_text <- scalar_character(question$questionText)
   question_type <- question_fact_question_type(question)
   survey_block <- scalar_character(block$description)
-  response_choices <- normalise_response_choices(question$choices)
+  recode_override <- resolve_dynamic_choice_recode_override(
+    question,
+    description
+  )
+  response_choices <- normalise_response_choices(
+    question$choices,
+    recode_override
+  )
   response_items <- normalise_response_items(question$subQuestions)
   column_facts <- normalise_column_facts(question$columns)
   choice_order <- as.character(question$choiceOrder %||% character())
@@ -50,9 +63,60 @@ normalise_question_fact <- function(qid, question, block, content_type) {
   )
 }
 
+#' Resolve export choice IDs for dynamic / carry-forward multiple choice
+#'
+#' Qualtrics renumbers the choices of carry-forward (dynamic-choice) questions
+#' sequentially in the question metadata (`mt`), but the real export column
+#' suffixes are the original Qualtrics choice IDs. These true IDs are only
+#' recoverable from the survey *description* metadata (`mt_d`): either verbatim
+#' from `RecodeValues`, or, when that is absent, by offsetting each
+#' carried-forward choice's source ID (`x<N>` key) by the maximum of the
+#' question's own static choice IDs. Non-dynamic questions are left untouched.
+#' @noRd
+resolve_dynamic_choice_recode_override <- function(question, description) {
+  if (is.null(description)) {
+    return(NULL)
+  }
+  dynamic <- description$DynamicChoices
+  if (is.null(dynamic) || is.null(dynamic$Locator)) {
+    return(NULL)
+  }
+
+  choice_ids <- names(question$choices)
+  if (is.null(choice_ids) || length(choice_ids) == 0) {
+    return(NULL)
+  }
+
+  # Tier 1: RecodeValues carries the export choice IDs verbatim.
+  recode_values <- description$RecodeValues
+  if (!is.null(recode_values) && length(recode_values) > 0) {
+    return(vapply(recode_values, scalar_character, character(1)))
+  }
+
+  # Tier 2: derive the export choice ID for each carried-forward choice.
+  own_keys <- suppressWarnings(as.integer(names(description$Choices)))
+  own_keys <- own_keys[!is.na(own_keys)]
+  offset <- if (length(own_keys) > 0) max(own_keys) else 0L
+
+  carried <- regmatches(choice_ids, regexec("^x([0-9]+)$", choice_ids))
+  override <- vapply(
+    seq_along(choice_ids),
+    function(i) {
+      match <- carried[[i]]
+      if (length(match) == 2L) {
+        as.character(offset + as.integer(match[[2]]))
+      } else {
+        choice_ids[[i]]
+      }
+    },
+    character(1)
+  )
+  setNames(override, choice_ids)
+}
+
 #' Build package-owned response choice facts
 #' @noRd
-normalise_response_choices <- function(choices) {
+normalise_response_choices <- function(choices, recode_override = NULL) {
   imap(choices, function(choice, choice_id) {
     label <- scalar_character(choice$label %||% choice$description)
     text_entry <- "text_entry" %in%
@@ -63,12 +127,21 @@ normalise_response_choices <- function(choices) {
       analyze <- TRUE
     }
 
+    recode <- choice$level %||% choice$recode
+    if (
+      !is.null(recode_override) &&
+        choice_id %in% names(recode_override) &&
+        !is.na(recode_override[[choice_id]])
+    ) {
+      recode <- recode_override[[choice_id]]
+    }
+
     list(
       choice_id = choice_id,
-      level = scalar_character(choice$level %||% choice$recode),
+      level = scalar_character(recode),
       label = label,
       text_entry = text_entry,
-      recode = scalar_character(choice$level %||% choice$recode),
+      recode = scalar_character(recode),
       description = label,
       analyze = isTRUE(analyze),
       textEntry = if (text_entry) TRUE else NULL

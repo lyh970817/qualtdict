@@ -759,7 +759,7 @@ test_that("local finalize smoke rejects legacy survey selection flags", {
   )
 })
 
-test_that("local finalize smoke config keeps the seven-survey surface", {
+test_that("local finalize smoke config keeps the thirteen-survey surface", {
   config_path <- testthat::test_path(
     "..",
     "..",
@@ -778,7 +778,7 @@ test_that("local finalize smoke config keeps the seven-survey surface", {
     grep('"alias":', config_lines, value = TRUE, fixed = TRUE)
   )
 
-  expect_length(aliases, 7L)
+  expect_length(aliases, 13L)
   expect_identical(
     aliases,
     c(
@@ -788,7 +788,13 @@ test_that("local finalize smoke config keeps the seven-survey surface", {
       "edgi_optional_all",
       "glad_sa6_signup",
       "edgi_medications",
-      "glad_medications"
+      "glad_medications",
+      "ramp",
+      "coping_glad",
+      "coping_edgi",
+      "coping_nbr",
+      "coping_fupb_ongoing",
+      "ramp_fupb"
     )
   )
 })

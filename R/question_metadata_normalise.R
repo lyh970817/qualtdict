@@ -15,7 +15,8 @@ normalise_qualtrics_questions <- function(mt, mt_d) {
       qid = qid,
       question = question,
       block = block_meta[[qid]] %||% default_question_block_metadata(),
-      content_type = content_type_meta[[qid]]
+      content_type = content_type_meta[[qid]],
+      description = mt_d[["questions"]][[qid]]
     )
   })
 
