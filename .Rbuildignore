@@ -1,4 +1,5 @@
 ^.*\.Rds$
+^.*\.Rproj$
 ^AGENTS\.md$
 ^CONTEXT\.md$
 ^LICENSE\.md$
@@ -9,8 +10,9 @@
 ^\.Renviron$
 ^\.Rhistory$
 ^\.Rproj\.user$
-^.*\.Rproj$
 ^\.agents$
+^\.codegraph$
+^\.codegraph/
 ^\.codex$
 ^\.direnv$
 ^\.direnv/
@@ -31,6 +33,8 @@
 ^\.sandcastle/
 ^\.superpowers$
 ^\.superpowers/
+^\.understand-anything$
+^\.understand-anything/
 ^\.workflow$
 ^\.workflow/
 ^\.worktrees$

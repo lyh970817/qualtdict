@@ -94,7 +94,16 @@ resolve_dynamic_choice_recode_override <- function(question, description) {
   }
 
   # Tier 2: derive the export choice ID for each carried-forward choice.
-  own_keys <- suppressWarnings(as.integer(names(description$Choices)))
+  derive_carryforward_choice_ids(choice_ids, description$Choices)
+}
+
+#' Derive export choice IDs for carried-forward choices
+#'
+#' Offsets each carried-forward choice's source ID (`x<N>` key) by the maximum
+#' of the question's own static choice IDs; own static choices keep their key.
+#' @noRd
+derive_carryforward_choice_ids <- function(choice_ids, own_choices) {
+  own_keys <- suppressWarnings(as.integer(names(own_choices)))
   own_keys <- own_keys[!is.na(own_keys)]
   offset <- if (length(own_keys) > 0) max(own_keys) else 0L
 
