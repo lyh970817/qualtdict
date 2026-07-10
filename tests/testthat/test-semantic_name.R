@@ -437,3 +437,59 @@ test_that("semantic-name dictionaries use final variable_name repair", {
     c("unsafe", "unsafe", "unsafe;duplicate", "unsafe;duplicate")
   )
 })
+
+test_that("semantic name cache dir resolves option, env, then tempdir", {
+  opt_dir <- file.path(tempdir(), "qualtdict-opt-cache")
+  env_dir <- file.path(tempdir(), "qualtdict-env-cache")
+  on.exit(
+    {
+      options(qualtdict.semantic_name_cache_dir = NULL)
+      Sys.unsetenv("QUALTDICT_SEMANTIC_CACHE_DIR")
+      unlink(c(opt_dir, env_dir), recursive = TRUE)
+    },
+    add = TRUE
+  )
+
+  # The option wins over the env var, and the directory is created.
+  options(qualtdict.semantic_name_cache_dir = opt_dir)
+  Sys.setenv(QUALTDICT_SEMANTIC_CACHE_DIR = env_dir)
+  expect_identical(
+    normalizePath(semantic_name_cache_dir(), mustWork = FALSE),
+    normalizePath(opt_dir, mustWork = FALSE)
+  )
+  expect_true(dir.exists(opt_dir))
+
+  # The env var is used when the option is unset.
+  options(qualtdict.semantic_name_cache_dir = NULL)
+  expect_identical(
+    normalizePath(semantic_name_cache_dir(), mustWork = FALSE),
+    normalizePath(env_dir, mustWork = FALSE)
+  )
+  expect_true(dir.exists(env_dir))
+
+  # Falls back to tempdir() when neither is set.
+  Sys.unsetenv("QUALTDICT_SEMANTIC_CACHE_DIR")
+  expect_identical(
+    normalizePath(semantic_name_cache_dir(), mustWork = FALSE),
+    normalizePath(tempdir(), mustWork = FALSE)
+  )
+})
+
+test_that("semantic name cache path lives under the resolved cache dir", {
+  cache_dir <- file.path(tempdir(), "qualtdict-cache-path")
+  on.exit(
+    {
+      options(qualtdict.semantic_name_cache_dir = NULL)
+      unlink(cache_dir, recursive = TRUE)
+    },
+    add = TRUE
+  )
+  options(qualtdict.semantic_name_cache_dir = cache_dir)
+
+  path <- semantic_name_cache_path(c("apple", "banana"), "apple banana")
+  expect_identical(
+    normalizePath(dirname(path), mustWork = FALSE),
+    normalizePath(cache_dir, mustWork = FALSE)
+  )
+  expect_match(basename(path), "\\.rds$")
+})

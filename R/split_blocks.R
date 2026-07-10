@@ -49,8 +49,8 @@ dict_split_blocks <- function(dict) {
 #' @inheritParams dict_validate
 #' @param extra_columns A character vector of raw Labelled Survey Data columns
 #' to retain in each block data set. Defaults to
-#' \code{c("externalDataReference", "startDate", "endDate")}. Missing
-#' user-specified columns error; missing default columns warn and are skipped.
+#' \code{c("externalDataReference", "startDate", "endDate")}. Columns absent
+#' from the data warn (naming the missing columns) and are skipped.
 #' Use \code{NULL} to retain no extra columns.
 #' @details
 #' When \code{dict} is not supplied, \code{survey_split_blocks()} uses the

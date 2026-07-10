@@ -457,10 +457,144 @@ test_that("extra_columns distinguish user-specified columns from defaults", {
   )
   expect_named(dat, "q1")
 
-  expect_error(
-    fetch_labelled_survey_data(dict, extra_columns = "IPAddress"),
+  # Absent user-specified columns warn and are skipped rather than aborting.
+  expect_warning(
+    dat_user <- fetch_labelled_survey_data(dict, extra_columns = "IPAddress"),
     "Missing user-specified `extra_columns`"
   )
+  expect_named(dat_user, "q1")
+})
+
+test_that("extra_columns keeps present candidates when others are absent", {
+  dict <- minimal_export_dict(
+    response_column_id = "QID1",
+    variable_name = "q1",
+    block = "Block A",
+    label = "Yes",
+    level = "1"
+  )
+
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        QID1 = "1"
+      )
+    }
+  )
+
+  # Ordered id-column fallback: only `externalDataReference` is present, so the
+  # missing `subjectid` warns but the fetch succeeds with the present column.
+  expect_warning(
+    dat <- fetch_labelled_survey_data(
+      dict,
+      extra_columns = c("externalDataReference", "subjectid")
+    ),
+    "`subjectid`"
+  )
+  expect_named(dat, c("externalDataReference", "q1"))
+  expect_identical(dat$externalDataReference, "R_1")
+})
+
+test_that("Labelled Survey Data carries normalised response metadata", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01T00:00:00Z",
+        endDate = "2026-06-01T00:10:00Z",
+        recordedDate = "2026-06-01T00:10:05Z",
+        progress = "100",
+        `_recordId` = "R_abc123",
+        QID1 = "1",
+        QID2 = "2"
+      )
+    }
+  )
+
+  dat <- fetch_labelled_survey_data(minimal_export_dict())
+
+  expect_named(
+    dat,
+    c(
+      "externalDataReference",
+      "startDate",
+      "endDate",
+      "q1",
+      "q2",
+      "recordedDate",
+      "ResponseId",
+      "Progress"
+    )
+  )
+  expect_identical(dat$recordedDate, "2026-06-01T00:10:05Z")
+  expect_identical(dat$ResponseId, "R_abc123")
+  expect_identical(dat$Progress, "100")
+})
+
+test_that("response metadata normalises PascalCase export casing", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        RecordedDate = "2026-06-02",
+        Progress = "50",
+        ResponseId = "R_xyz",
+        QID1 = "1",
+        QID2 = "2"
+      )
+    }
+  )
+
+  dat <- fetch_labelled_survey_data(minimal_export_dict())
+
+  expect_true(all(c("recordedDate", "ResponseId", "Progress") %in% names(dat)))
+  expect_identical(dat$recordedDate, "2026-06-02")
+  expect_identical(dat$ResponseId, "R_xyz")
+  expect_identical(dat$Progress, "50")
+})
+
+test_that("response metadata degrades gracefully when columns are absent", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        recordedDate = "2026-06-02",
+        QID1 = "1",
+        QID2 = "2"
+      )
+    }
+  )
+
+  expect_no_warning(dat <- fetch_labelled_survey_data(minimal_export_dict()))
+
+  expect_true("recordedDate" %in% names(dat))
+  expect_false(any(c("ResponseId", "Progress") %in% names(dat)))
+})
+
+test_that("extra_columns = NULL suppresses response metadata", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        recordedDate = "2026-06-02",
+        progress = "100",
+        `_recordId` = "R_abc123",
+        QID1 = "1",
+        QID2 = "2"
+      )
+    }
+  )
+
+  dat <- fetch_labelled_survey_data(minimal_export_dict(), extra_columns = NULL)
+
+  expect_named(dat, c("q1", "q2"))
 })
 
 test_that("users cannot override qualtdict-owned fetch settings", {

@@ -10,9 +10,12 @@
 #' @param extra_columns A character vector of downloaded survey data columns to
 #' retain in the Labelled Survey Data in addition to Export Variables. Defaults
 #' to
-#' \code{c("externalDataReference", "startDate", "endDate")}. Missing
-#' user-specified columns error; missing default columns warn and are skipped.
-#' Use \code{NULL} to retain no extra columns.
+#' \code{c("externalDataReference", "startDate", "endDate")}. Columns absent
+#' from the downloaded data warn (naming the missing columns) and are skipped,
+#' so several candidate names can be supplied when only one is expected to be
+#' present (for example ordered id-column fallbacks).
+#' Use \code{NULL} to retain no extra columns (this also suppresses the response
+#' metadata columns described below).
 #' @param exclude_findings Which findings to exclude after survey download.
 #' \code{"none"} keeps all downloaded variables represented in the Variable
 #' Dictionary. \code{"validation"} excludes rows with Validation Findings.
@@ -35,6 +38,16 @@
 #' Use \code{exclude_findings} when you want to explicitly remove them after
 #' download.
 #' Because \code{quiet} follows \code{...}, supply it by name.
+#'
+#' Unless \code{extra_columns = NULL}, Labelled Survey Data additionally carries
+#' the per-response metadata columns \code{startDate}, \code{endDate},
+#' \code{recordedDate}, \code{ResponseId}, and \code{Progress}. These are
+#' emitted under exactly those names regardless of the source export casing:
+#' \code{import_id = TRUE} downloads them as \code{startDate}, \code{endDate},
+#' \code{recordedDate}, \code{_recordId}, and \code{progress}, and each is
+#' normalised to its canonical name. Inclusion is best effort: any metadata
+#' column absent from the download (for example in sanitized offline fixtures)
+#' is omitted without warning rather than erroring.
 #'
 #' @return
 #' Labelled Survey Data: a data frame whose Export Variables are renamed to

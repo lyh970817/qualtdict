@@ -55,7 +55,11 @@ Block, or \code{"next"} to assign them to the nearest next Survey Block.}
 progress bars. Defaults to \code{TRUE}.}
 }
 \value{
-A Variable Dictionary: a \code{qualtdict} data frame.
+A Variable Dictionary: a \code{qualtdict} data frame. The as-downloaded
+survey definition (the parsed \code{fetch_description()} payload used for
+generation) is attached as the \code{survey_definition_raw} attribute for
+callers that persist it; it is \code{NULL} when the survey definition is
+unavailable (for example on synthetic or offline fixture paths).
 }
 \description{
 Generate a Variable Dictionary from Qualtrics survey metadata retrieved via

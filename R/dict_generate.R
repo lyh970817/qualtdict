@@ -63,7 +63,11 @@
 #' selected words in the order they appear in the naming text.
 #'
 #' @return
-#' A Variable Dictionary: a \code{qualtdict} data frame.
+#' A Variable Dictionary: a \code{qualtdict} data frame. The as-downloaded
+#' survey definition (the parsed \code{fetch_description()} payload used for
+#' generation) is attached as the \code{survey_definition_raw} attribute for
+#' callers that persist it; it is \code{NULL} when the survey definition is
+#' unavailable (for example on synthetic or offline fixture paths).
 #'
 #' @export
 #' @examples
@@ -127,7 +131,11 @@ dict_generate <- function(
     quiet = quiet
   )
 
-  finalise_generated_dictionary(dict, use_semantic_name)
+  finalise_generated_dictionary(
+    dict,
+    use_semantic_name,
+    survey_metadata$description
+  )
 }
 
 #' Check arguments for Variable Dictionary generation
@@ -220,8 +228,16 @@ generated_dictionary_columns <- function(dict, use_semantic_name) {
 }
 
 #' Finalise generated Variable Dictionary rows
+#'
+#' \code{survey_definition_raw} is the as-downloaded survey definition (the
+#' parsed \code{fetch_description()} payload) attached for callers that persist
+#' it; \code{NULL} leaves the attribute unset.
 #' @noRd
-finalise_generated_dictionary <- function(dict, use_semantic_name) {
+finalise_generated_dictionary <- function(
+  dict,
+  use_semantic_name,
+  survey_definition_raw = NULL
+) {
   dict_columns <- generated_dictionary_columns(dict, use_semantic_name)
   variable_name_findings <- attr(dict, "variable_name_findings", exact = TRUE)
   if (is.null(variable_name_findings)) {
@@ -232,6 +248,7 @@ finalise_generated_dictionary <- function(dict, use_semantic_name) {
   attr(dict, "variable_name_findings") <- variable_name_findings
 
   attr(dict, "class") <- c("qualtdict", class(dict))
+  attr(dict, "survey_definition_raw") <- survey_definition_raw
 
   dict
 }
