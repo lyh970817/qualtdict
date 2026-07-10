@@ -39,6 +39,47 @@ test_that("dict_generate", {
   expect_false(all(is.na(x$loop_option)))
 })
 
+test_that("dict_generate attaches the as-downloaded survey definition", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      raw_metadata
+    }
+  )
+
+  suppressWarnings(
+    x <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
+  )
+
+  expect_identical(
+    attr(x, "survey_definition_raw", exact = TRUE),
+    raw_metadata$description
+  )
+  # Existing attribute consumers are preserved.
+  expect_identical(attr(x, "surveyID", exact = TRUE), "SV_SYNTHETIC")
+  expect_identical(attr(x, "survey_name", exact = TRUE), "Synthetic Survey")
+  expect_s3_class(
+    attr(x, "variable_name_findings", exact = TRUE),
+    "data.frame"
+  )
+})
+
+test_that("fixture-path dictionaries expose a NULL survey definition", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  # Dictionaries built off the offline fixture path (not via dict_generate)
+  # simply carry no survey definition; reading the attribute is NULL, not error.
+  expect_null(attr(dict, "survey_definition_raw", exact = TRUE))
+})
+
 test_that("dict_generate accepts variable_name question_name", {
   local_mocked_bindings(
     fetch_dictionary_metadata = function(surveyID) {

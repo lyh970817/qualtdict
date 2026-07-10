@@ -4,6 +4,65 @@ default_extra_columns <- function() {
   c("externalDataReference", "startDate", "endDate")
 }
 
+#' Response metadata columns retained in Labelled Survey Data
+#'
+#' Maps each canonical response-metadata column name emitted in Labelled Survey
+#' Data to the Qualtrics export column spellings it can arrive as. The first
+#' candidate present in the downloaded data wins. \code{import_id = TRUE} (the
+#' owned fetch setting) yields camelCase import ids such as \code{progress} and
+#' \code{_recordId}; the label-based export uses PascalCase such as
+#' \code{Progress} and \code{ResponseId}. Both are normalised to the canonical
+#' name.
+#' @noRd
+response_meta_columns <- function() {
+  list(
+    startDate = c("startDate", "StartDate"),
+    endDate = c("endDate", "EndDate"),
+    recordedDate = c("recordedDate", "RecordedDate"),
+    ResponseId = c("_recordId", "ResponseId", "ResponseID", "responseId"),
+    Progress = c("progress", "Progress")
+  )
+}
+
+#' Resolve present response metadata columns, normalised to canonical names
+#'
+#' Returns a named list of columns pulled from downloaded survey data, one entry
+#' per canonical response-metadata name that is present. Best effort: canonical
+#' names already among \code{exclude} (already emitted) and names with no
+#' present candidate are skipped silently, so fixtures lacking response
+#' metadata degrade gracefully rather than erroring.
+#' @noRd
+resolve_response_meta_columns <- function(dat, exclude = character()) {
+  spec <- response_meta_columns()
+  resolved <- list()
+  for (canonical in names(spec)) {
+    if (canonical %in% exclude) {
+      next
+    }
+    present <- intersect(spec[[canonical]], colnames(dat))
+    if (length(present) > 0) {
+      resolved[[canonical]] <- dat[[present[[1]]]]
+    }
+  }
+
+  resolved
+}
+
+#' Append normalised response metadata columns to Labelled Survey Data
+#' @noRd
+add_response_meta_columns <- function(out, dat, include = TRUE) {
+  if (!include) {
+    return(out)
+  }
+
+  resolved <- resolve_response_meta_columns(dat, exclude = colnames(out))
+  if (length(resolved) == 0) {
+    return(out)
+  }
+
+  bind_cols(out, as_tibble(resolved))
+}
+
 #' Arguments owned by qualtdict when fetching survey data
 #' @noRd
 owned_fetch_survey_args <- function() {
@@ -192,16 +251,21 @@ resolve_extra_columns <- function(
       "`",
       collapse = ", "
     )
-    if (extra_columns_user_supplied) {
-      rlang::abort(c(
-        "Missing user-specified `extra_columns` in downloaded survey data.",
-        i = paste0("Missing: ", missing_message)
-      ))
+    source_label <- if (extra_columns_user_supplied) {
+      "user-specified"
+    } else {
+      "default"
     }
 
+    # Absent columns are omitted rather than fatal, so callers can pass several
+    # candidate names (for example ordered id-column fallbacks) where only one
+    # is present in a given export.
     warning(
-      "Missing default `extra_columns` in downloaded survey data: ",
+      "Missing ",
+      source_label,
+      " `extra_columns` in downloaded survey data: ",
       missing_message,
+      ". Absent columns are omitted.",
       call. = FALSE
     )
   }
@@ -219,6 +283,10 @@ survey_recode <- function(
   unanswer_recode,
   unanswer_recode_multi
 ) {
+  # Response metadata is included best-effort unless the caller opts out of all
+  # extra columns with `extra_columns = NULL`.
+  include_response_meta <- !is.null(extra_columns)
+
   response_column_id <- dict_response_column_id(dict)
   in_dat <- response_column_id %in% colnames(dat)
   dict <- dict[in_dat, ]
@@ -235,11 +303,11 @@ survey_recode <- function(
   dat_cols <- unique(c(extra_columns, unique_response_column_ids))
 
   if (length(unique_response_column_ids) == 0) {
-    return(dat[dat_cols])
+    return(add_response_meta_columns(dat[dat_cols], dat, include_response_meta))
   }
 
   varnames <- setNames(unique_response_column_ids, unique_varnames)
-  dat <- rename(dat[dat_cols], !!!varnames)
+  renamed <- rename(dat[dat_cols], !!!varnames)
 
   # level = unique to preserve ordering
   split_dict <- split(
@@ -247,7 +315,7 @@ survey_recode <- function(
     factor(response_column_id, levels = unique_response_column_ids)
   )
   dat_vars <- map2_df(
-    dat[unique_varnames],
+    renamed[unique_varnames],
     split_dict,
     ~ survey_var_recode(
       .x,
@@ -257,7 +325,8 @@ survey_recode <- function(
     )
   )
 
-  bind_cols(dat[extra_columns], dat_vars)
+  out <- bind_cols(renamed[extra_columns], dat_vars)
+  add_response_meta_columns(out, dat, include_response_meta)
 }
 
 

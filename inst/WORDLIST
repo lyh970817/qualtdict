@@ -3,10 +3,10 @@ api
 aut
 BugReports
 Captcha
+choiceIds
 CMD
 Codecov
 codecov
-choiceIds
 codemeta
 codeRepository
 ComputerLanguage
@@ -21,7 +21,9 @@ Dictioanry
 doi
 downloader
 dplyr
+erroring
 et
+fallbacks
 familyName
 fileSize
 gh
@@ -42,6 +44,7 @@ lyh
 magrittr
 md
 normalisation
+normalised
 openNLP
 ORCID
 orcid
@@ -52,8 +55,8 @@ programmingLanguage
 propsed
 purrr
 QID
-QSED
 qids
+QSED
 qualtdict
 qualtRics
 Qualtrics

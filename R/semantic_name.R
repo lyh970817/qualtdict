@@ -96,18 +96,48 @@ semantic_name_keywords <- function(texts, quiet = TRUE) {
   keywords
 }
 
+#' Resolve the Semantic Name keyword cache directory
+#'
+#' Cached \code{slowraker} keyword RDS files make Semantic Name derivation
+#' reproducible. The cache directory is resolved with the following precedence:
+#' \enumerate{
+#'   \item \code{getOption("qualtdict.semantic_name_cache_dir")};
+#'   \item the \code{QUALTDICT_SEMANTIC_CACHE_DIR} environment variable;
+#'   \item \code{tempdir()} (the per-session default).
+#' }
+#' The resolved directory is created recursively when it does not yet exist.
+#' @noRd
+semantic_name_cache_dir <- function() {
+  dir <- getOption("qualtdict.semantic_name_cache_dir")
+  if (is.character(dir) && length(dir) >= 1 && nzchar(dir[[1]])) {
+    dir <- dir[[1]]
+  } else {
+    dir <- Sys.getenv("QUALTDICT_SEMANTIC_CACHE_DIR", unset = "")
+    if (!nzchar(dir)) {
+      dir <- tempdir()
+    }
+  }
+
+  if (!dir.exists(dir)) {
+    dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  dir
+}
+
 #' Build the cache path for Semantic Name keywords
 #' @noRd
 semantic_name_cache_path <- function(cleaned_unique_texts, all_words) {
-  paste0(
-    tempdir(),
-    "/",
-    hash(list(
-      algorithm = "semantic-name-source-order-v1",
-      unique_texts = cleaned_unique_texts,
-      all_words = all_words
-    )),
-    ".rds"
+  file.path(
+    semantic_name_cache_dir(),
+    paste0(
+      hash(list(
+        algorithm = "semantic-name-source-order-v1",
+        unique_texts = cleaned_unique_texts,
+        all_words = all_words
+      )),
+      ".rds"
+    )
   )
 }
 
