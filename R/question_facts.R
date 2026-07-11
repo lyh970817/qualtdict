@@ -31,7 +31,7 @@ normalise_question_fact <- function(
     recode_override
   )
   response_items <- normalise_response_items(question$subQuestions)
-  column_facts <- normalise_column_facts(question$columns)
+  column_facts <- normalise_column_facts(question$columns, question$columnOrder)
   choice_order <- as.character(question$choiceOrder %||% character())
   carry_forward <- question$carryForward
   randomization <- question$randomization
@@ -180,13 +180,21 @@ normalise_response_items <- function(items) {
 }
 
 #' Build package-owned SBS column facts
+#'
+#' `column_position` records the 1-based place of each column in `columnOrder`
+#' (falling back to list order when `columnOrder` is absent). Response Column
+#' ID Rendering uses it to walk left through the grid columns when qualifying
+#' duplicated column question text and to render honest ordinal fallbacks.
 #' @noRd
-normalise_column_facts <- function(columns) {
+normalise_column_facts <- function(columns, column_order = NULL) {
+  ordered_ids <- normalise_column_order(columns, column_order)
+
   imap(columns, function(column, column_id) {
     question_type <- question_fact_question_type(column)
 
     list(
       column_id = column_id,
+      column_position = match(column_id, ordered_ids),
       question_text = scalar_character(
         column$question_text %||%
           column$questionText
@@ -195,6 +203,19 @@ normalise_column_facts <- function(columns) {
       response_choices = normalise_response_choices(column$choices)
     )
   })
+}
+
+#' Resolve the SBS column order used to place each column
+#' @noRd
+normalise_column_order <- function(columns, column_order) {
+  ids <- names(columns)
+  if (is.null(column_order) || length(column_order) == 0) {
+    return(ids)
+  }
+  ordered <- as.character(unlist(column_order))
+  ordered <- ordered[ordered %in% ids]
+
+  c(ordered, setdiff(ids, ordered))
 }
 
 #' Return a Normalised Question Fact field with optional legacy fallback

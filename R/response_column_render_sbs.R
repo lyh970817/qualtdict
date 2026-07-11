@@ -52,7 +52,46 @@ response_column_sbs_column_shape <- function(question) {
 response_column_sbs_item_shape <- function(question, has_text_sub) {
   response_items <- question_fact_response_items(question)
   item <- unlist(map(response_items, "item_label"))
+  item <- sbs_fill_blank_item_labels(item, response_items)
   unlist(add_text(item, has_text_sub))
+}
+
+#' Fall back to the subQuestion recode/key when a row label is blank
+#'
+#' Grid (side-by-side) rows can carry blank `choiceText`/`item_label`
+#' (`""` or a `&nbsp;`-only string). Left blank, every row of one grid column
+#' renders byte-identical `item`, so distinct rows collapse to one identity.
+#' The subQuestion recode (its `x<N>` key) is the only distinguishing raw fact,
+#' so use it as the row identity when the label is blank.
+#' @noRd
+sbs_fill_blank_item_labels <- function(item, response_items) {
+  if (is.null(item) || length(item) == 0) {
+    return(item)
+  }
+  blank <- vapply(item, is_blank_sbs_item_label, logical(1))
+  if (!any(blank)) {
+    return(item)
+  }
+  fallback <- vapply(
+    response_items,
+    function(response_item) {
+      scalar_character(response_item$recode %||% response_item$item_id)
+    },
+    character(1)
+  )
+  item[blank] <- fallback[blank]
+  item
+}
+
+#' Return whether a side-by-side row label carries no distinguishing text
+#' @noRd
+is_blank_sbs_item_label <- function(label) {
+  if (is.null(label) || length(label) == 0 || is.na(label)) {
+    return(TRUE)
+  }
+  cleaned <- gsub("&nbsp;", "", label, fixed = TRUE)
+  cleaned <- gsub("\u00a0", "", cleaned, fixed = TRUE)
+  trimws(cleaned) == ""
 }
 
 #' Build SBS row-aligned question text facts
@@ -64,7 +103,7 @@ response_column_sbs_questions <- function(
   level_len
 ) {
   top_question <- question_fact_question_text(question)
-  question_text <- map(column_facts, "question_text") |>
+  question_text <- sbs_column_qualified_texts(column_facts) |>
     map2(length(item), rep) |>
     map2(level_len, function(question_text, level_len) {
       repeated_items <- rep_item(question_text, item, level_len)
@@ -73,6 +112,201 @@ response_column_sbs_questions <- function(
     unlist()
 
   paste(top_question, question_text, sep = " ")
+}
+
+#' Qualify duplicated side-by-side column question text
+#'
+#' Two grid columns can share byte-identical `questionText` (e.g. an
+#' "Age at diagnosis" text-entry column that sits beside each of several disease
+#' Likert columns). Left unqualified, such columns render identical question
+#' text and collapse to one content identity even though they mean different
+#' things. Qualification prepends an adjacent anchor column's text, but only
+#' when the pairing is unambiguous; otherwise it falls back to an honest ordinal
+#' ("... (column N)"). Ordinals hash consistently across surveys, so
+#' cross-survey Exact Matches survive; a guessed pairing would not. Blank
+#' columns are left untouched (their choice labels distinguish them, and the
+#' engine's same-QID guard is the backstop).
+#'
+#' A partner is adopted only when a single grid direction is unambiguous: every
+#' duplicated column must have an eligible anchor as its immediate neighbour on
+#' the SAME side (all to the left, or all to the right), and only one side may
+#' satisfy this. An eligible anchor is a column whose text is non-blank, is not
+#' itself duplicated among the siblings, and whose selector differs (a Likert vs
+#' TE sanity check). No anchor may be shared between two duplicated columns.
+#' This resolves reversed-order grids (age-before-disease) correctly and, where
+#' direction cannot be established -- reversed with a trailing anchor,
+#' duplicated anchor columns, a shared value column, or a longer repeating
+#' unit -- prefers the ordinal over a confident wrong meaning.
+#' @noRd
+sbs_column_qualified_texts <- function(column_facts) {
+  texts <- map_chr(column_facts, ~ scalar_character(.x$question_text))
+  selectors <- map_chr(
+    column_facts,
+    ~ scalar_character(.x$question_type$selector)
+  )
+  positions <- vapply(
+    seq_along(column_facts),
+    function(index) {
+      position <- column_facts[[index]]$column_position
+      if (is.null(position) || is.na(position)) index else as.integer(position)
+    },
+    integer(1)
+  )
+  duplicated_text <- sbs_duplicated_column_texts(texts)
+  partner <- sbs_column_partner_indices(
+    duplicated_text,
+    sbs_eligible_anchor_columns(texts),
+    selectors,
+    positions
+  )
+
+  qualified <- vapply(
+    seq_along(column_facts),
+    function(index) {
+      own <- texts[[index]]
+      if (!duplicated_text[[index]]) {
+        return(own)
+      }
+      if (!is.na(partner[[index]])) {
+        return(paste(texts[[partner[[index]]]], own, sep = " \u2014 "))
+      }
+      paste0(own, " (column ", positions[[index]], ")")
+    },
+    character(1)
+  )
+
+  as.list(unname(qualified))
+}
+
+#' Return whether each side-by-side column text is duplicated among siblings
+#'
+#' Only non-blank text can trigger qualification; blank columns are excluded so
+#' the heuristic stays targeted at genuinely ambiguous meaningful columns.
+#' @noRd
+sbs_duplicated_column_texts <- function(texts) {
+  normalised <- vapply(texts, sbs_normalise_column_text, character(1))
+  blank <- normalised == ""
+  counts <- table(normalised[!blank])
+
+  vapply(
+    seq_along(normalised),
+    function(index) {
+      !blank[[index]] && counts[[normalised[[index]]]] >= 2L
+    },
+    logical(1)
+  )
+}
+
+#' Return whether each column is an eligible anchor: non-blank AND unique text
+#'
+#' A duplicated column can never anchor another (a duplicated anchor cannot
+#' distinguish the columns it would qualify), so eligible anchors carry text
+#' that appears exactly once among the siblings.
+#' @noRd
+sbs_eligible_anchor_columns <- function(texts) {
+  normalised <- vapply(texts, sbs_normalise_column_text, character(1))
+  blank <- normalised == ""
+  counts <- table(normalised[!blank])
+
+  vapply(
+    seq_along(normalised),
+    function(index) {
+      !blank[[index]] && counts[[normalised[[index]]]] == 1L
+    },
+    logical(1)
+  )
+}
+
+#' Resolve an unambiguous adjacent anchor for each duplicated column
+#'
+#' Returns, per column, the index of its qualifying partner, or NA when the
+#' pairing is ambiguous (so the caller uses the ordinal fallback). A partner is
+#' resolved only when exactly one grid direction (all-left or all-right) yields
+#' a distinct eligible anchor as the immediate neighbour of every duplicated
+#' column.
+#' @noRd
+sbs_column_partner_indices <- function(
+  duplicated_text,
+  eligible_anchor,
+  selectors,
+  positions
+) {
+  partner <- rep(NA_integer_, length(duplicated_text))
+  duplicated_columns <- which(duplicated_text)
+  if (length(duplicated_columns) == 0) {
+    return(partner)
+  }
+
+  left <- vapply(
+    duplicated_columns,
+    sbs_adjacent_anchor,
+    integer(1),
+    direction = -1L,
+    eligible_anchor = eligible_anchor,
+    selectors = selectors,
+    positions = positions
+  )
+  right <- vapply(
+    duplicated_columns,
+    sbs_adjacent_anchor,
+    integer(1),
+    direction = 1L,
+    eligible_anchor = eligible_anchor,
+    selectors = selectors,
+    positions = positions
+  )
+
+  left_ok <- sbs_direction_is_unambiguous(left)
+  right_ok <- sbs_direction_is_unambiguous(right)
+
+  if (left_ok && !right_ok) {
+    partner[duplicated_columns] <- left
+  } else if (right_ok && !left_ok) {
+    partner[duplicated_columns] <- right
+  }
+
+  partner
+}
+
+#' Return the immediate neighbour on one side when it is an eligible anchor
+#' @noRd
+sbs_adjacent_anchor <- function(
+  index,
+  direction,
+  eligible_anchor,
+  selectors,
+  positions
+) {
+  neighbour <- which(positions == positions[[index]] + direction)
+  if (length(neighbour) != 1) {
+    return(NA_integer_)
+  }
+  if (!eligible_anchor[[neighbour]]) {
+    return(NA_integer_)
+  }
+  if (identical(selectors[[neighbour]], selectors[[index]])) {
+    return(NA_integer_)
+  }
+
+  neighbour
+}
+
+#' Return whether a per-column partner side pairs every column distinctly
+#' @noRd
+sbs_direction_is_unambiguous <- function(partner) {
+  !anyNA(partner) && anyDuplicated(partner) == 0L
+}
+
+#' Normalise side-by-side column text for duplicate and distinctness checks
+#' @noRd
+sbs_normalise_column_text <- function(text) {
+  if (is.null(text) || length(text) == 0 || is.na(text)) {
+    return("")
+  }
+  cleaned <- gsub("&nbsp;", "", text, fixed = TRUE)
+  cleaned <- gsub("\u00a0", " ", cleaned, fixed = TRUE)
+
+  trimws(cleaned)
 }
 
 #' Build SBS level and label facts used by Response Column ID Rendering
