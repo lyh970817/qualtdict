@@ -36,3 +36,19 @@ test_that("question metadata uses default block metadata", {
   )
   expect_null(survey_question_facts$QID1$looping_static)
 })
+
+test_that("normalise_column_order applies columnOrder, appends unlisted", {
+  columns <- list(`1` = list(), `2` = list(), `3` = list())
+
+  expect_identical(normalise_column_order(columns, NULL), c("1", "2", "3"))
+  expect_identical(
+    normalise_column_order(columns, list()),
+    c("1", "2", "3")
+  )
+  # Provided order reorders; ids absent from columnOrder are dropped from the
+  # order list and appended, unknown ids are filtered out.
+  expect_identical(
+    normalise_column_order(columns, list("3", "1", "99")),
+    c("3", "1", "2")
+  )
+})
