@@ -67,8 +67,8 @@ return type of <code><a href="fetch_labelled_survey_data.html">fetch_labelled_su
 <dt id="arg-extra-columns">extra_columns<a class="anchor" aria-label="anchor" href="#arg-extra-columns"></a></dt>
 <dd><p>A character vector of raw Labelled Survey Data columns
 to retain in each block data set. Defaults to
-<code>c("externalDataReference", "startDate", "endDate")</code>. Missing
-user-specified columns error; missing default columns warn and are skipped.
+<code>c("externalDataReference", "startDate", "endDate")</code>. Columns absent
+from the data warn (naming the missing columns) and are skipped.
 Use <code>NULL</code> to retain no extra columns.</p></dd>
 
 </dl></div>

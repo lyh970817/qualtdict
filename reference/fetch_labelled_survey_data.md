@@ -30,9 +30,12 @@ fetch_labelled_survey_data(
 
   A character vector of downloaded survey data columns to retain in the
   Labelled Survey Data in addition to Export Variables. Defaults to
-  `c("externalDataReference", "startDate", "endDate")`. Missing
-  user-specified columns error; missing default columns warn and are
-  skipped. Use `NULL` to retain no extra columns.
+  `c("externalDataReference", "startDate", "endDate")`. Columns absent
+  from the downloaded data warn (naming the missing columns) and are
+  skipped, so several candidate names can be supplied when only one is
+  expected to be present (for example ordered id-column fallbacks). Use
+  `NULL` to retain no extra columns (this also suppresses the response
+  metadata columns described below).
 
 - exclude_findings:
 
@@ -72,6 +75,16 @@ User-supplied passthrough arguments cannot override those settings.
 By default, Labelled Survey Data includes variables with Validation
 Findings. Use `exclude_findings` when you want to explicitly remove them
 after download. Because `quiet` follows `...`, supply it by name.
+
+Unless `extra_columns = NULL`, Labelled Survey Data additionally carries
+the per-response metadata columns `startDate`, `endDate`,
+`recordedDate`, `ResponseId`, and `Progress`. These are emitted under
+exactly those names regardless of the source export casing:
+`import_id = TRUE` downloads them as `startDate`, `endDate`,
+`recordedDate`, `_recordId`, and `progress`, and each is normalised to
+its canonical name. Inclusion is best effort: any metadata column absent
+from the download (for example in sanitized offline fixtures) is omitted
+without warning rather than erroring.
 
 ## Examples
 

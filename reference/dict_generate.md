@@ -76,7 +76,11 @@ dict_generate(
 
 ## Value
 
-A Variable Dictionary: a `qualtdict` data frame.
+A Variable Dictionary: a `qualtdict` data frame. The as-downloaded
+survey definition (the parsed `fetch_description()` payload used for
+generation) is attached as the `survey_definition_raw` attribute for
+callers that persist it; it is `NULL` when the survey definition is
+unavailable (for example on synthetic or offline fixture paths).
 
 ## Details
 

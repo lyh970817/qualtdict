@@ -74,9 +74,12 @@ metadata using <code>sjlabelled</code>.</p>
 <dd><p>A character vector of downloaded survey data columns to
 retain in the Labelled Survey Data in addition to Export Variables. Defaults
 to
-<code>c("externalDataReference", "startDate", "endDate")</code>. Missing
-user-specified columns error; missing default columns warn and are skipped.
-Use <code>NULL</code> to retain no extra columns.</p></dd>
+<code>c("externalDataReference", "startDate", "endDate")</code>. Columns absent
+from the downloaded data warn (naming the missing columns) and are skipped,
+so several candidate names can be supplied when only one is expected to be
+present (for example ordered id-column fallbacks).
+Use <code>NULL</code> to retain no extra columns (this also suppresses the response
+metadata columns described below).</p></dd>
 
 
 <dt id="arg-exclude-findings">exclude_findings<a class="anchor" aria-label="anchor" href="#arg-exclude-findings"></a></dt>
@@ -117,6 +120,15 @@ override those settings.</p>
 Use <code>exclude_findings</code> when you want to explicitly remove them after
 download.
 Because <code>quiet</code> follows <code>...</code>, supply it by name.</p>
+<p>Unless <code>extra_columns = NULL</code>, Labelled Survey Data additionally carries
+the per-response metadata columns <code>startDate</code>, <code>endDate</code>,
+<code>recordedDate</code>, <code>ResponseId</code>, and <code>Progress</code>. These are
+emitted under exactly those names regardless of the source export casing:
+<code>import_id = TRUE</code> downloads them as <code>startDate</code>, <code>endDate</code>,
+<code>recordedDate</code>, <code>_recordId</code>, and <code>progress</code>, and each is
+normalised to its canonical name. Inclusion is best effort: any metadata
+column absent from the download (for example in sanitized offline fixtures)
+is omitted without warning rather than erroring.</p>
     </div>
 
     <div class="section level2">
