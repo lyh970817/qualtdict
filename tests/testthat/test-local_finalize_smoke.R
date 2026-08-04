@@ -335,7 +335,7 @@ test_that("parse_smoke_variable_names rejects disabled and unknown routes", {
 test_that("smoke_summary_names maps functions to summary object names", {
   expect_identical(
     smoke_summary_names(c("dict_generate", "fetch_labelled_survey_data")),
-    c("dict", "labelled", "labelled_excluding_validation")
+    c("dict", "level_universe", "labelled", "labelled_excluding_validation")
   )
   expect_identical(
     smoke_summary_names(c("dict_split_blocks", "survey_split_blocks")),
@@ -420,6 +420,7 @@ test_that("project_smoke_record keeps full-run order", {
       labelled_export_findings = list(
         object_hash = "export-findings-hash"
       ),
+      level_universe = list(object_hash = "level-universe-hash"),
       dict_blocks = list(object_hash = "dict-blocks-hash"),
       survey_blocks = list(object_hash = "survey-blocks-hash")
     ),
@@ -429,6 +430,7 @@ test_that("project_smoke_record keeps full-run order", {
       labelled = "labelled-hash",
       labelled_excluding_validation = "labelled-ex-hash",
       labelled_export_findings = "export-findings-hash",
+      level_universe = "level-universe-hash",
       dict_blocks = "dict-blocks-hash",
       survey_blocks = "survey-blocks-hash"
     ),
@@ -441,6 +443,7 @@ test_that("project_smoke_record keeps full-run order", {
     projected$summaries,
     c(
       "dict",
+      "level_universe",
       "validation",
       "labelled",
       "labelled_export_findings",
@@ -453,6 +456,7 @@ test_that("project_smoke_record keeps full-run order", {
     projected$object_hashes,
     list(
       dict = "dict-hash",
+      level_universe = "level-universe-hash",
       validation = "validation-hash",
       labelled = "labelled-hash",
       labelled_export_findings = "export-findings-hash",
@@ -898,4 +902,311 @@ test_that("smoke_mismatch_lines reports selective outputs", {
       "  outputs: dict_blocks"
     )
   )
+})
+
+test_that("level_universe_code_safe keeps only short numeric code sets", {
+  expect_true(level_universe_code_safe(c("0", "1")))
+  expect_true(level_universe_code_safe(c("-77", "1", "0")))
+  expect_false(level_universe_code_safe(as.character(1:13)))
+  expect_false(level_universe_code_safe("TEXT_000001"))
+  expect_false(level_universe_code_safe("1234567"))
+  expect_false(level_universe_code_safe(character()))
+})
+
+test_that("per-choice columns are classified from the question type", {
+  dict <- tibble::tibble(
+    response_column_id = c(
+      "QID1215196547_0",
+      "QID1215196512",
+      "QID1_x1_1",
+      "QID2_1"
+    ),
+    level = c("1", "1", "1", "1"),
+    type = c("MC", "MC", "Matrix", "Matrix"),
+    selector = c("MAVR", "SAVR", "Likert", "Likert"),
+    sub_selector = c("TX", "TX", "MultipleAnswer", "SingleAnswer")
+  )
+
+  per_choice_columns <- level_universe_per_choice_columns(dict)
+
+  expect_setequal(per_choice_columns, c("QID1215196547_0", "QID1_x1_1"))
+  expect_identical(
+    level_universe_shape("QID1215196547_0", per_choice_columns),
+    "one_column_per_choice"
+  )
+  expect_identical(
+    level_universe_shape("QID1215196512", per_choice_columns),
+    "ordinary"
+  )
+})
+
+test_that("level_universe_compare reports per-choice data violations", {
+  # The worked example: `QID1215196547_0` declared the choice recode `0`, but
+  # the raw export stores the tick marker `1` for the persons who ticked it.
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID1215196547_0",
+      declared_levels = list("0"),
+      codes = list("1"),
+      counts = list(34L),
+      redacted = FALSE,
+      n_non_missing = 34L,
+      n_out_of_universe_at_fetch = 34L
+    ),
+    current_levels = "0",
+    per_choice_columns = "QID1215196547_0"
+  )
+
+  expect_identical(comparison$status, "data_violation")
+  expect_identical(comparison$out_codes, "1")
+  expect_identical(comparison$shape, "one_column_per_choice")
+  expect_identical(comparison$values_out_of_universe, 34L)
+})
+
+test_that("level_universe_compare accepts the tick Level universe", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID1215196547_0",
+      declared_levels = list("1"),
+      codes = list("1"),
+      counts = list(34L),
+      redacted = FALSE,
+      n_non_missing = 34L,
+      n_out_of_universe_at_fetch = 0L
+    ),
+    current_levels = "1"
+  )
+
+  expect_identical(comparison$status, "clean")
+  expect_identical(comparison$out_codes, character())
+  expect_identical(comparison$values_out_of_universe, 0L)
+})
+
+test_that("level_universe_compare separates drift from data violations", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "11_QID1212948321_12",
+      declared_levels = list(),
+      codes = list("1"),
+      counts = list(3L),
+      redacted = FALSE,
+      n_non_missing = 3L,
+      n_out_of_universe_at_fetch = 0L
+    ),
+    current_levels = "12"
+  )
+
+  expect_identical(comparison$status, "declared_universe_drift")
+})
+
+test_that("level_universe_compare treats text markers as free text", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID1215196531_2_TEXT",
+      declared_levels = list("2_TEXT"),
+      codes = list("0", "3"),
+      counts = list(4L, 11L),
+      redacted = FALSE,
+      n_non_missing = 15L,
+      n_out_of_universe_at_fetch = 15L
+    ),
+    current_levels = "2_TEXT"
+  )
+
+  expect_identical(comparison$status, "text_column")
+  expect_identical(comparison$out_codes, character())
+  expect_identical(comparison$values_out_of_universe, 0L)
+})
+
+test_that("level_universe_compare carries redacted columns forward", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID508_TEXT",
+      declared_levels = list("1"),
+      redacted = TRUE,
+      n_non_missing = 12L,
+      n_out_of_universe_at_fetch = 12L
+    ),
+    current_levels = "1"
+  )
+
+  expect_identical(comparison$status, "redacted_carry_forward")
+  expect_identical(comparison$values_out_of_universe, 12L)
+  expect_identical(comparison$out_codes, character())
+})
+
+test_that("level_universe_observation records raw codes before sanitization", {
+  responses <- tibble::tibble(
+    QID1_0 = c("1", NA, "1"),
+    QID1_1 = c(NA, "1", NA),
+    QID508_TEXT = c("a free text answer", NA, NA),
+    Cohort = c("x", "y", "z")
+  )
+
+  observation <- level_universe_observation(
+    responses,
+    allowed_levels = list(
+      QID1_0 = "0",
+      QID1_1 = "1",
+      QID508_TEXT = "1"
+    ),
+    per_choice_columns = c("QID1_0", "QID1_1")
+  )
+
+  expect_identical(observation$schema, level_universe_schema_version())
+  expect_identical(observation$response_rows, 3L)
+  expect_identical(observation$totals$columns_with_universe, 3L)
+  expect_identical(observation$totals$columns_observed, 3L)
+  expect_identical(observation$totals$values_out_of_universe, 3L)
+  expect_identical(observation$totals$redacted_columns, 1L)
+
+  observed <- stats::setNames(
+    observation$observed,
+    vapply(observation$observed, `[[`, character(1), "response_column_id")
+  )
+  expect_identical(observed$QID1_0$codes, list("1"))
+  expect_identical(observed$QID1_0$shape, "one_column_per_choice")
+  expect_false(observed$QID1_0$redacted)
+  expect_true(observed$QID508_TEXT$redacted)
+  expect_null(observed$QID508_TEXT$codes)
+})
+
+test_that("summarise_level_universe counts violations and fingerprints them", {
+  result <- list(
+    available = TRUE,
+    schema = 1L,
+    response_rows = 400L,
+    columns_with_universe = 3L,
+    values_observed = 70L,
+    comparisons = list(
+      level_universe_compare(
+        list(
+          response_column_id = "QID1_0",
+          declared_levels = list("0"),
+          codes = list("1"),
+          counts = list(34L),
+          redacted = FALSE,
+          n_non_missing = 34L,
+          n_out_of_universe_at_fetch = 34L
+        ),
+        current_levels = "0",
+        per_choice_columns = c("QID1_0", "QID1_1")
+      ),
+      level_universe_compare(
+        list(
+          response_column_id = "QID1_1",
+          declared_levels = list("1"),
+          codes = list("1"),
+          counts = list(36L),
+          redacted = FALSE,
+          n_non_missing = 36L,
+          n_out_of_universe_at_fetch = 0L
+        ),
+        current_levels = "1",
+        per_choice_columns = c("QID1_0", "QID1_1")
+      )
+    )
+  )
+
+  summary <- summarise_level_universe(result)
+
+  expect_true(summary$available)
+  expect_identical(summary$columns_observed, 2L)
+  expect_identical(summary$violating_columns, 1L)
+  expect_identical(summary$values_out_of_universe, 34L)
+  expect_identical(summary$one_column_per_choice_violations, 1L)
+  expect_identical(summary$violation_fingerprint, list("QID1_0:0->1"))
+  expect_match(summary$object_hash, "^[0-9a-f]{32}$")
+})
+
+test_that("local smoke artifact refresh records the Level universe", {
+  fetch_script <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "fetch-local-finalize-smoke.R"
+  )
+  fetch_lines <- readLines(fetch_script, warn = FALSE)
+  fetch_text <- paste(fetch_lines, collapse = "\n")
+
+  expect_match(fetch_text, "level_universe = level_universe", fixed = TRUE)
+  expect_match(fetch_text, "--allow-small-sample", fixed = TRUE)
+
+  observation_line <- grep(
+    "level_universe <- level_universe_observation(",
+    fetch_lines,
+    fixed = TRUE
+  )
+  sanitize_line <- grep(
+    "sanitized <- sanitize_responses(",
+    fetch_lines,
+    fixed = TRUE
+  )
+  remove_line <- grep("^  rm\\(responses\\)$", fetch_lines)
+
+  expect_length(observation_line, 1L)
+  expect_length(sanitize_line, 1L)
+  expect_length(remove_line, 1L)
+  # Observing after sanitization would pass vacuously: sanitization rewrites
+  # every non-missing value with values cycled from the declared universe.
+  expect_lt(observation_line, sanitize_line)
+  expect_lt(observation_line, remove_line)
+})
+
+test_that("local smoke check gates missing and vacuous Level observations", {
+  smoke_script <- testthat::test_path(
+    "..",
+    "..",
+    "tools",
+    "local-finalize-smoke.R"
+  )
+  smoke_text <- paste(readLines(smoke_script, warn = FALSE), collapse = "\n")
+
+  expect_match(smoke_text, "assert_level_universe", fixed = TRUE)
+  expect_match(smoke_text, "level_universe_artifact_error", fixed = TRUE)
+  expect_match(smoke_text, "level_universe_error", fixed = TRUE)
+  expect_match(
+    smoke_text,
+    "level_universe_minimum_response_rows()",
+    fixed = TRUE
+  )
+})
+
+test_that("level universe artifacts are checked when they exist", {
+  manifest_path <- testthat::test_path(
+    "..",
+    "..",
+    ".local",
+    "finalize-smoke",
+    "source",
+    "glad_sa8_signup",
+    "manifest.json"
+  )
+  skip_if_not(
+    file.exists(manifest_path),
+    "local smoke artifacts are not available"
+  )
+  manifest <- read_smoke_manifest(manifest_path)
+  skip_if_not(
+    !is.null(manifest$level_universe),
+    "artifacts predate the Level universe observation; refetch"
+  )
+
+  observation <- manifest$level_universe
+  expect_identical(
+    as.integer(observation$schema),
+    level_universe_schema_version()
+  )
+  expect_gte(
+    as.integer(observation$response_rows),
+    level_universe_minimum_response_rows()
+  )
+  expect_gt(as.integer(observation$totals$values_observed), 0L)
+  expect_false(any(vapply(
+    observation$observed,
+    function(record) {
+      isTRUE(record$redacted) && !is.null(record$codes)
+    },
+    logical(1)
+  )))
 })

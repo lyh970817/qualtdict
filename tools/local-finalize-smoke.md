@@ -13,8 +13,9 @@ that the smoke check could not be run.
 
 `tools/local-finalize-smoke.R check` replays local Qualtrics smoke artifacts,
 runs smoke-covered exported functions, verifies Response Column ID parity
-against the stored raw response-column shape, and compares hashable summaries
-against local baselines.
+against the stored raw response-column shape, compares the declared Level
+universe against the raw value universe recorded in the artifact manifest, and
+compares hashable summaries against local baselines.
 
 The smoke check supports only the `question_name` Dictionary Variable Name
 route. The Semantic Name route is disabled because it is too expensive for this
@@ -115,6 +116,41 @@ is diagnostic only; it does not filter the raw-side parity obligation.
 
 Parity mismatches are hard failures for both `check` and `bless`; they cannot
 be accepted by updating baselines.
+
+## Level Universe
+
+`check` and `bless` also compare each Variable Dictionary `level` universe with
+the raw value universe the fetch script recorded in `manifest.json` (see
+`tools/fetch-local-finalize-smoke.md`). The dictionary side is recomputed from
+the current dictionary; the response side is the pinned observation, because the
+sanitized responses are in-universe by construction and cannot express the
+property.
+
+Two gates are hard failures that cannot be blessed:
+
+- a missing or wrong-schema `level_universe` observation (exit `2`) - the
+  artifacts predate the check and must be refetched, otherwise stale artifacts
+  would silently disable it.
+- a vacuous observation: fewer than 100 response rows, or no observed values
+  (exit `1`).
+
+Everything else rides the blessed `level_universe` summary, hashed like every
+other output summary. Each column is classified as:
+
+- `data_violation` - stored values outside the current declared universe.
+- `declared_universe_drift` - the dictionary changed since the fetch.
+- `redacted_carry_forward` - the column's values were not safe to persist, so
+  the fetch-time counts are carried forward.
+- `text_column` - the declared universe is only a `_TEXT` marker, so the column
+  holds free text and has no universe to violate.
+- `clean`.
+
+The saved `<survey-alias>-level-universe.json` artifact records every
+comparison, so a violation can be traced to the Response Column ID, its declared
+universe, and the out-of-universe codes. A real fix (violations falling) and a
+regression (violations rising) both surface as a summary hash mismatch and are
+blessed the normal way. Asserting zero violations is not possible today: text
+and constant-sum columns still declare choice recodes they cannot store.
 
 ## Bless Intended Changes
 

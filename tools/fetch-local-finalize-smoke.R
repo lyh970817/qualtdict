@@ -14,10 +14,18 @@ usage <- function() {
       "                   Optional .Renviron file to read before fetching.",
       "  --response-limit N",
       "                   Optional maximum number of response rows to fetch.",
+      "                   Values below 100 need --allow-small-sample: the",
+      "                   Level universe observation is vacuous on tiny",
+      "                   samples.",
+      "  --allow-small-sample",
+      "                   Permit a --response-limit below 100.",
       "",
       "This trusted-human script downloads fixed Qualtrics surveys and writes",
       "unsanitized metadata/description plus sanitized response data. It never",
-      "persists raw response data.",
+      "persists raw response data. It does record a privacy-filtered Level",
+      "universe observation (aggregate value histograms for short numeric",
+      "codes only) taken from the raw responses before sanitization, because",
+      "sanitization makes the stored responses in-universe by construction.",
       sep = "\n"
     ),
     "\n"
@@ -77,6 +85,7 @@ if (!file.exists(file.path(project_root, "DESCRIPTION"))) {
 }
 setwd(project_root)
 devtools::load_all(".", quiet = TRUE)
+source(file.path(project_root, "tools", "local-finalize-smoke-lib.R"))
 
 config_path <- arg_value(
   "--config",
@@ -90,11 +99,26 @@ survey_filter <- arg_value("--survey")
 credentials <- arg_value("--credentials")
 response_limit <- arg_value("--response-limit")
 
+allow_small_sample <- "--allow-small-sample" %in% args
+
 if (!is.null(response_limit)) {
   response_limit <- suppressWarnings(as.integer(response_limit))
   if (is.na(response_limit) || response_limit < 1) {
     stop(
       "`--response-limit` must be an integer greater than zero.",
+      call. = FALSE
+    )
+  }
+  if (
+    response_limit < level_universe_minimum_response_rows() &&
+      !allow_small_sample
+  ) {
+    stop(
+      "`--response-limit` below ",
+      level_universe_minimum_response_rows(),
+      " makes the Level universe observation vacuous. Pass ",
+      "`--allow-small-sample` to fetch anyway; the smoke check will then ",
+      "refuse the artifacts.",
       call. = FALSE
     )
   }
@@ -359,7 +383,7 @@ sanitize_responses <- function(responses, allowed_levels) {
   }
 }
 
-build_allowed_levels <- function(survey_id, metadata, description) {
+build_dictionary_facts <- function(survey_id, metadata, description) {
   raw_metadata <- getFromNamespace(
     "new_raw_qualtrics_metadata",
     "qualtdict"
@@ -385,7 +409,12 @@ build_allowed_levels <- function(survey_id, metadata, description) {
   )
 
   levels <- split(dict$level, dict$response_column_id)
-  lapply(levels, function(x) unique(as.character(x[!is.na(x)])))
+  list(
+    allowed_levels = lapply(levels, function(x) {
+      unique(as.character(x[!is.na(x)]))
+    }),
+    per_choice_columns = level_universe_per_choice_columns(dict)
+  )
 }
 
 artifact_md5 <- function(path) {
@@ -420,10 +449,19 @@ write_artifacts <- function(survey) {
     label = FALSE,
     breakout_sets = TRUE
   )
-  allowed_levels <- build_allowed_levels(
+  dictionary_facts <- build_dictionary_facts(
     survey_id = survey$survey_id,
     metadata = metadata,
     description = description
+  )
+  allowed_levels <- dictionary_facts$allowed_levels
+  # Observe the RAW value universe before sanitization. `sanitize_responses()`
+  # rewrites every non-missing value with values cycled from `allowed_levels`,
+  # so anything observed after it is in-universe by construction.
+  level_universe <- level_universe_observation(
+    responses,
+    allowed_levels,
+    per_choice_columns = dictionary_facts$per_choice_columns
   )
   response_column_map <- attr(responses, "column_map", exact = TRUE)
   sanitized <- sanitize_responses(responses, allowed_levels)
@@ -467,7 +505,8 @@ write_artifacts <- function(survey) {
         column_names = names(sanitized$data)
       )
     ),
-    sanitization = list(columns = sanitized$report)
+    sanitization = list(columns = sanitized$report),
+    level_universe = level_universe
   )
 
   jsonlite::write_json(
