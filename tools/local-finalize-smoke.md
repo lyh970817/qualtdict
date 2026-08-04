@@ -137,8 +137,14 @@ Two gates are hard failures that cannot be blessed:
 Everything else rides the blessed `level_universe` summary, hashed like every
 other output summary. Each column is classified as:
 
-- `data_violation` - stored values outside the current declared universe.
-- `declared_universe_drift` - the dictionary changed since the fetch.
+- `data_violation` - stored values outside the current declared universe. This
+  outranks every other non-text status: raw values do not change when a
+  dictionary does, so a code outside the current universe is a real violation
+  even when the declaration also drifted. `drifted` is reported alongside.
+- `declared_universe_drift` - the dictionary changed since the fetch, and the
+  stored values are still inside the current universe. A "refetch your
+  artifacts" signal, never a reason to zero `violating_columns`; the count of
+  drifted columns is reported separately as `drifted_columns`.
 - `redacted_carry_forward` - the column's values were not safe to persist, so
   the fetch-time counts are carried forward.
 - `text_column` - the declared universe is only a `_TEXT` marker, so the column

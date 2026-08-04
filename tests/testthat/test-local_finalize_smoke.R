@@ -982,7 +982,13 @@ test_that("level_universe_compare accepts the tick Level universe", {
   expect_identical(comparison$values_out_of_universe, 0L)
 })
 
-test_that("level_universe_compare separates drift from data violations", {
+test_that("drift annotates a violation instead of masking it", {
+  # The real `11_QID1212948321_12` case: no universe was declared at fetch
+  # time, the dictionary now declares {12}, and the raw data holds "1". The
+  # declaration drifted AND "1" is outside the CURRENT universe. Raw codes do
+  # not change when a dictionary does, so this is a genuine violation and must
+  # be reported as one -- ranking drift first would report zero violations for
+  # precisely the regression this check exists to catch.
   comparison <- level_universe_compare(
     list(
       response_column_id = "11_QID1212948321_12",
@@ -996,7 +1002,47 @@ test_that("level_universe_compare separates drift from data violations", {
     current_levels = "12"
   )
 
+  expect_identical(comparison$status, "data_violation")
+  expect_true(comparison$drifted)
+  expect_identical(comparison$out_codes, "1")
+  expect_identical(comparison$values_out_of_universe, 3L)
+})
+
+test_that("drift alone, with no violation, still reports as drift", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID1215196547_0",
+      declared_levels = list("1"),
+      codes = list("1"),
+      counts = list(8L),
+      redacted = FALSE,
+      n_non_missing = 8L,
+      n_out_of_universe_at_fetch = 0L
+    ),
+    current_levels = c("1", "2")
+  )
+
   expect_identical(comparison$status, "declared_universe_drift")
+  expect_true(comparison$drifted)
+  expect_identical(comparison$out_codes, character())
+})
+
+test_that("a clean column is not marked as drifted", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID1215196547_0",
+      declared_levels = list("1"),
+      codes = list("1"),
+      counts = list(8L),
+      redacted = FALSE,
+      n_non_missing = 8L,
+      n_out_of_universe_at_fetch = 0L
+    ),
+    current_levels = "1"
+  )
+
+  expect_identical(comparison$status, "clean")
+  expect_false(comparison$drifted)
 })
 
 test_that("level_universe_compare treats text markers as free text", {

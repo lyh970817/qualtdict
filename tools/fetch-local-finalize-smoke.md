@@ -84,3 +84,11 @@ participant value is persisted.
 `declared_levels` is recorded at fetch time so the check can tell a dictionary
 that changed since the fetch (`declared_universe_drift`) from a column whose
 stored values were never inside its declared universe (`data_violation`).
+
+Drift is an annotation, not an excuse: when a column both drifted and holds
+values outside the CURRENT universe it is reported as `data_violation` with
+`drifted = true`. The recorded codes are raw values, which a dictionary change
+cannot alter, so the violation is real either way. Ranking drift first would
+have reported `violating_columns: 0` for the one regression this check exists
+to catch - a revert of the per-choice tick Levels drifts the declaration and
+violates the data at the same time.
