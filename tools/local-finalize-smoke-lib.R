@@ -231,7 +231,29 @@ level_universe_per_choice_columns <- function(dict) {
     logical(1)
   )
 
-  unique(as.character(dict[["response_column_id"]])[per_choice])
+  # `_DO_` display-order columns ride a multiple-answer question's TYPE but are
+  # not per-choice tick columns: each stores which choice was displayed in that
+  # position, so its universe is the choice-index set, not {tick}. The renderer
+  # already leaves their Levels alone, and classifying them here as per-choice
+  # makes every one of them read as a per-choice violation -- inflating the one
+  # headline this check exists to report (measured: 26 spurious violations in
+  # `edgi_optional_all`). They stay in the comparison as `ordinary` columns, so
+  # a genuine violation is still reported, just not miscounted.
+  # A loop-prefixed id carries a `<n>_` prefix the package predicate does not
+  # expect, so strip it before testing.
+  display_order <- getFromNamespace(
+    "is_display_order_response_column",
+    "qualtdict"
+  )
+  ids <- as.character(dict[["response_column_id"]])
+  is_display_order <- vapply(
+    sub("^[0-9]+_", "", ids),
+    function(id) isTRUE(display_order(id)),
+    logical(1),
+    USE.NAMES = FALSE
+  )
+
+  unique(ids[per_choice & !is_display_order])
 }
 
 #' Classify a Response Column ID by its export shape
@@ -278,14 +300,24 @@ level_universe_compare <- function(
     values_out_of_universe <- 0L
   }
 
+  # Drift ANNOTATES a column; it must never mask a violation. `out_codes` is
+  # computed against the CURRENT universe, and the recorded codes are raw
+  # values that a dictionary change cannot alter -- so a code outside the
+  # current universe is a real violation whether or not the declaration also
+  # drifted. Ranking drift first would report `violating_columns: 0` for
+  # exactly the regression this check exists to catch: reverting the
+  # per-choice tick Levels makes the dictionary drift AND the data violate,
+  # and the drift would have hidden the violation.
+  drifted <- !is_text_universe && !setequal(recorded_levels, current_levels)
+
   status <- if (is_text_universe) {
     "text_column"
-  } else if (!setequal(recorded_levels, current_levels)) {
+  } else if (length(out_codes) > 0) {
+    "data_violation"
+  } else if (drifted) {
     "declared_universe_drift"
   } else if (redacted) {
     "redacted_carry_forward"
-  } else if (length(out_codes) > 0) {
-    "data_violation"
   } else {
     "clean"
   }
@@ -298,6 +330,7 @@ level_universe_compare <- function(
     ),
     status = status,
     redacted = redacted,
+    drifted = drifted,
     declared_levels_at_fetch = recorded_levels,
     declared_levels = current_levels,
     out_codes = out_codes,
@@ -327,6 +360,14 @@ summarise_level_universe <- function(result) {
     columns_by_status = as.list(table_counts(statuses)),
     columns_by_shape = as.list(table_counts(shapes)),
     violating_columns = as.integer(sum(violating)),
+    # Reported alongside, never instead of, `violating_columns`: a drifted
+    # declaration is a "your artifacts are stale, refetch" signal, not an
+    # excuse to zero the violation headline.
+    drifted_columns = as.integer(sum(vapply(
+      result$comparisons,
+      function(comparison) isTRUE(comparison$drifted),
+      logical(1)
+    ))),
     values_observed = as.integer(result$values_observed %||% 0L),
     values_out_of_universe = as.integer(sum(out_of_universe)),
     one_column_per_choice_violations = as.integer(
