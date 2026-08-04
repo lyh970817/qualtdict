@@ -20,8 +20,8 @@
         response_column_id question              item  level label   
         <chr>              <chr>                 <chr> <chr> <chr>   
       1 QID126879611_1     Select all that apply <NA>  1     Choice 1
-      2 QID126879611_2     Select all that apply <NA>  2     Choice 2
-      3 QID126879611_3     Select all that apply <NA>  3     Choice 3
-      4 QID126879611_4     Select all that apply <NA>  4     Choice 4
-      5 QID126879611_6     Select all that apply <NA>  6     Choice 6
+      2 QID126879611_2     Select all that apply <NA>  1     Choice 2
+      3 QID126879611_3     Select all that apply <NA>  1     Choice 3
+      4 QID126879611_4     Select all that apply <NA>  1     Choice 4
+      5 QID126879611_6     Select all that apply <NA>  1     Choice 6
 

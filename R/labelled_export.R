@@ -386,8 +386,26 @@ survey_var_recode_context <- function(var_dict) {
     is_metadata_defined_row = dict_metadata_defined_rows(var_dict)[[1]],
     is_text_var = isTRUE(type == "TE") ||
       any(grepl("_TEXT", levels, fixed = TRUE), na.rm = TRUE),
+    is_choice_tick_column = dict_choice_tick_column(var_dict),
     has_value_labels = !all(is.na(levels))
   )
+}
+
+#' Return whether Variable Dictionary rows describe a per-choice tick column
+#' @noRd
+dict_choice_tick_column <- function(var_dict) {
+  first_or_na <- function(x) {
+    if (is.null(x) || length(x) == 0) {
+      return(NA_character_)
+    }
+    as.character(x)[[1]]
+  }
+
+  question_type_renders_choice_tick_columns(list(
+    type = first_or_na(var_dict[["type"]]),
+    selector = first_or_na(var_dict[["selector"]]),
+    sub_selector = first_or_na(var_dict[["sub_selector"]])
+  ))
 }
 
 #' Return whether one Export Variable should be coerced to numeric
@@ -414,6 +432,18 @@ survey_var_label_facts <- function(
       (context$is_metadata_defined_row && !context$has_value_labels)
   ) {
     levels <- NA_character_
+  } else if (context$is_choice_tick_column) {
+    # One export column per choice. The choice RecodeValue names the column;
+    # the cell holds a membership indicator, so the Level universe is the tick
+    # domain plus whatever the export recodes unticked and unseen cells to.
+    if (!is.null(unanswer_recode_multi)) {
+      levels <- c(levels, unanswer_recode_multi)
+      labels <- c(labels, paste("Not", labels))
+    }
+    if (!is.null(unanswer_recode)) {
+      levels <- c(levels, unanswer_recode)
+      labels <- c(labels, "Seen but not answered")
+    }
   } else if (nrow(var_dict) == 1) {
     # Single row means allowing for multiple answer
     if (!is.null(unanswer_recode_multi)) {

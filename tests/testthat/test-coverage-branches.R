@@ -641,3 +641,26 @@ test_that("survey_split_blocks requires Labelled Survey Data", {
     "Labelled Survey Data"
   )
 })
+
+test_that("choice tick Levels tolerate empty and text-entry facts", {
+  expect_identical(apply_choice_tick_levels(list()), character())
+  expect_identical(
+    apply_choice_tick_levels(c("2", NA, "0_TEXT")),
+    c("1", NA, "0_TEXT")
+  )
+})
+
+test_that("per-choice detection tolerates rows without a selector", {
+  expect_false(
+    dict_choice_tick_column(tibble::tibble(type = "MC"))
+  )
+  expect_true(
+    dict_choice_tick_column(
+      tibble::tibble(
+        type = "MC",
+        selector = "MACOL",
+        sub_selector = "TX"
+      )
+    )
+  )
+})

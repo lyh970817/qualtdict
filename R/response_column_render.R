@@ -476,6 +476,66 @@ question_choices_render_independent_columns <- function(question) {
   FALSE
 }
 
+#' Return whether each choice column stores a selection tick marker
+#'
+#' Multiple-answer questions export one column per choice. The Qualtrics
+#' response schema types those questions as `array` (a selected set) rather
+#' than `number` (a recode), and the flat export flattens the set to one column
+#' per member named `<schema entry>_<choice RecodeValue>`. The RecodeValue
+#' therefore identifies the *column*; the cell holds a membership indicator.
+#' Natively that indicator is `1` when the box is ticked and blank otherwise,
+#' with `unanswer_recode_multi` / `unanswer_recode` filling the unticked and
+#' unseen cases at export time.
+#' @noRd
+question_type_renders_choice_tick_columns <- function(question_type) {
+  type <- question_type$type
+  selector <- question_type$selector
+  sub_selector <- question_type$sub_selector
+
+  if (identical(type, "MC")) {
+    return(
+      !is.null(selector) &&
+        length(selector) == 1 &&
+        selector %in% c("MACOL", "MAVR", "MAHR", "MSB")
+    )
+  }
+  if (identical(type, "Matrix")) {
+    return(identical(sub_selector, "MultipleAnswer"))
+  }
+
+  FALSE
+}
+
+#' Return whether a Rendering context renders per-choice tick columns
+#' @noRd
+context_renders_choice_tick_columns <- function(context) {
+  question_type_renders_choice_tick_columns(
+    context[c("type", "selector", "sub_selector")]
+  )
+}
+
+#' Return the Level a ticked per-choice column stores
+#' @noRd
+choice_tick_level <- function() {
+  "1"
+}
+
+#' Replace per-choice recodes with the tick marker they actually store
+#'
+#' Text-entry Levels are preserved verbatim: those columns hold free text, and
+#' `survey_var_recode_context()` keys `is_text_var` off the `_TEXT` marker.
+#' @noRd
+apply_choice_tick_levels <- function(level) {
+  level <- unlist(level, use.names = TRUE)
+  if (length(level) == 0) {
+    return(character())
+  }
+
+  keep <- is.na(level) | grepl("TEXT", level, fixed = TRUE)
+  level[!keep] <- choice_tick_level()
+  level
+}
+
 #' Return whether a context renders exactly one column per item
 #'
 #' Carried-forward side-by-side questions (SBS with no columns) and
@@ -518,7 +578,12 @@ render_response_column_levels <- function(context, response_column_id) {
     level <- list(level)
   }
 
-  rep_level(level, facts$item) |> null_na()
+  rendered <- rep_level(level, facts$item) |> null_na()
+  if (context_renders_choice_tick_columns(context)) {
+    rendered <- apply_choice_tick_levels(rendered)
+  }
+
+  rendered
 }
 
 #' Render row-aligned label facts
