@@ -54,11 +54,12 @@ test_that(
 
     rendered <- render_response_columns(question, "QID126879611")
 
+    # The recode identifies the column; the column stores a tick marker.
     expect_identical(
       rendered$response_column_id,
       paste0("QID126879611_", c("1", "2", "3", "4", "6"))
     )
-    expect_identical(unname(rendered$level), c("1", "2", "3", "4", "6"))
+    expect_identical(unname(rendered$level), rep("1", 5))
     expect_identical(
       unname(rendered$label),
       paste("Choice", c("1", "2", "3", "4", "6"))
@@ -66,7 +67,7 @@ test_that(
   }
 )
 
-test_that("multiple-answer columns use numeric choice recodes", {
+test_that("multiple-answer Response Column IDs use numeric choice recodes", {
   raw_metadata <- synthetic_mc_recode_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
@@ -89,14 +90,16 @@ test_that("multiple-answer columns use numeric choice recodes", {
       "QID1_9_TEXT"
     )
   )
+  # Each column stores a tick marker, so the Level universe is the tick
+  # domain. Text-entry columns keep their `_TEXT` Level.
   expect_identical(
     unname(dict$level),
-    c("1", "2", "-88", "-99", "0", "0_TEXT")
+    c("1", "1", "1", "1", "1", "0_TEXT")
   )
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
-test_that("MC renderer preserves recodes and text-entry choice IDs", {
+test_that("MC renderer keeps recodes in IDs and ticks in Levels", {
   rendered <- render_response_column_fixture(
     synthetic_mc_recode_raw_metadata(),
     "QID1"
@@ -115,11 +118,15 @@ test_that("MC renderer preserves recodes and text-entry choice IDs", {
   )
   expect_identical(
     unname(rendered$level),
-    c("1", "2", "-88", "-99", "0", "0_TEXT")
+    c("1", "1", "1", "1", "1", "0_TEXT")
+  )
+  expect_identical(
+    unname(rendered$label),
+    c("One", "Two", "Prefer not", "Unknown", "Other", "Other_TEXT")
   )
 })
 
-test_that("multiple-answer response columns use recodes for x choice IDs", {
+test_that("multiple-answer Response Column IDs use recodes for x choice IDs", {
   raw_metadata <- synthetic_mc_x_choice_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
@@ -135,7 +142,7 @@ test_that("multiple-answer response columns use recodes for x choice IDs", {
     dict$response_column_id,
     paste0("QID126879611_", c("1", "2", "3", "4", "6"))
   )
-  expect_identical(unname(dict$level), c("1", "2", "3", "4", "6"))
+  expect_identical(unname(dict$level), rep("1", 5))
   expect_identical(
     unname(dict$label),
     paste("Choice", c("1", "2", "3", "4", "6"))
@@ -154,8 +161,9 @@ test_that("non-analysed multiple-answer choices are not response columns", {
     semantic_name_preprocess = NULL
   )
 
+  # The recode lives in the Response Column ID, never in `level`, so the
+  # suppressed choice has to be asserted on the ID.
   expect_false("QID1_-99" %in% dict$response_column_id)
-  expect_false("-99" %in% dict$level)
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
@@ -175,7 +183,6 @@ test_that("non-analysed MAVR text choices remain response columns", {
   )
 
   expect_true("QID1_-99" %in% dict$response_column_id)
-  expect_true("-99" %in% dict$level)
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
@@ -192,7 +199,6 @@ test_that("plain non-analysed MAVR text choices are not response columns", {
   )
 
   expect_false("QID1_-99" %in% dict$response_column_id)
-  expect_false("-99" %in% dict$level)
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
@@ -296,4 +302,53 @@ test_that("looped MC text columns keep loop prefix before QID", {
     rep(c("Apples", "Bananas"), each = 3)
   )
   expect_identical(unname(target_rows$level), rep(c("1", "2", "2_TEXT"), 2))
+})
+
+test_that("every multiple-answer selector declares the tick Level", {
+  for (selector in c("MACOL", "MAVR", "MAHR", "MSB")) {
+    raw_metadata <- synthetic_mc_recode_raw_metadata(
+      selector = selector,
+      sub_selector = if (identical(selector, "MSB")) NULL else "TX"
+    )
+
+    dict <- variable_dictionary_from_normalised_metadata(
+      normalise_qualtrics_metadata(raw_metadata),
+      use_semantic_name = FALSE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    )
+
+    # The text-entry column ID differs by selector (MAHR/MSB append the
+    # Qualtrics choice index a second time), so pin the choice columns only.
+    expect_identical(
+      dict$response_column_id[1:5],
+      c("QID1_1", "QID1_2", "QID1_-88", "QID1_-99", "QID1_0"),
+      info = selector
+    )
+    expect_identical(
+      unname(dict$level),
+      c("1", "1", "1", "1", "1", "0_TEXT"),
+      info = selector
+    )
+  }
+})
+
+test_that("single-answer MC choices keep their recodes as Levels", {
+  raw_metadata <- synthetic_mc_recode_raw_metadata(selector = "SAVR")
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalise_qualtrics_metadata(raw_metadata),
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+
+  # One column holding a recode: the recodes ARE this column's value domain.
+  expect_identical(unique(dict$response_column_id), c("QID1", "QID1_9_TEXT"))
+  expect_identical(
+    unname(dict$level),
+    c("1", "2", "-88", "-99", "0", "0_TEXT")
+  )
 })

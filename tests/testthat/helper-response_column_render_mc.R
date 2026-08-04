@@ -51,7 +51,10 @@ synthetic_mc_x_choice_raw_metadata <- function() {
   )
 }
 
-synthetic_mc_recode_raw_metadata <- function(selector = "MACOL") {
+synthetic_mc_recode_raw_metadata <- function(
+  selector = "MACOL",
+  sub_selector = "TX"
+) {
   new_raw_qualtrics_metadata(
     surveyID = "SV_MC_RECODE",
     metadata = list(
@@ -62,7 +65,7 @@ synthetic_mc_recode_raw_metadata <- function(selector = "MACOL") {
           questionType = list(
             type = "MC",
             selector = selector,
-            subSelector = "TX"
+            subSelector = sub_selector
           ),
           questionText = "Select all that apply",
           blocks = list(),

@@ -930,3 +930,80 @@ test_that("Labelled Survey Data names by response column", {
     "Choose one"
   )
 })
+
+test_that("per-choice tick columns label the tick and the unanswer recodes", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        QID1_1 = "1",
+        QID1_0 = "0"
+      )
+    }
+  )
+
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1_1", "QID1_0"),
+    variable_name = c("q1_yes", "q1_no"),
+    qid = c("QID1", "QID1"),
+    label = c("Yes", "No"),
+    level = c("1", "1"),
+    selector = "MACOL"
+  )
+
+  dat <- fetch_labelled_survey_data(
+    dict,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  expect_identical(
+    attr(dat$q1_yes, "labels", exact = TRUE),
+    stats::setNames(
+      c("1", "0", "-77"),
+      c("Yes", "Not Yes", "Seen but not answered")
+    )
+  )
+  expect_identical(
+    attr(dat$q1_no, "labels", exact = TRUE),
+    stats::setNames(
+      c("1", "0", "-77"),
+      c("No", "Not No", "Seen but not answered")
+    )
+  )
+})
+
+test_that("single-row single-answer columns keep the legacy label facts", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        QID1 = "1"
+      )
+    }
+  )
+
+  dict <- minimal_export_dict(
+    response_column_id = "QID1",
+    variable_name = "q1",
+    block = "Block A",
+    question = "Question q1",
+    label = "Yes",
+    level = "1"
+  )
+
+  dat <- fetch_labelled_survey_data(
+    dict,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  expect_identical(
+    attr(dat$q1, "labels", exact = TRUE),
+    stats::setNames(c("1", "0"), c("Yes", "Not Yes"))
+  )
+})

@@ -153,3 +153,38 @@ test_that("numeric loop-prefixed text columns match raw export IDs", {
   )
   expect_identical(target_rows$loop_option, paste("Loop", 1:12))
 })
+
+test_that("matrix multiple-answer columns declare the tick Level", {
+  raw_metadata <- synthetic_matrix_multiple_answer_raw_metadata()
+  question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
+
+  rendered <- render_response_columns(question, "QID1")
+
+  # One export column per (statement, choice); the choice recode names the
+  # column and the cell holds a tick marker.
+  expect_identical(
+    rendered$response_column_id,
+    c(
+      "QID1_x1_1",
+      "QID1_x1_2",
+      "QID1_x1_-99",
+      "QID1_x2_1",
+      "QID1_x2_2",
+      "QID1_x2_-99"
+    )
+  )
+  expect_identical(unname(rendered$level), rep("1", 6))
+  expect_identical(
+    unname(rendered$label),
+    rep(c("Morning", "Evening", "Prefer not"), 2)
+  )
+})
+
+test_that("matrix single-answer columns keep their recodes as Levels", {
+  raw_metadata <- synthetic_matrix_raw_metadata()
+  question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID1
+
+  rendered <- render_response_columns(question, "QID1")
+
+  expect_identical(unname(rendered$level), c("1", "2", "1", "2"))
+})

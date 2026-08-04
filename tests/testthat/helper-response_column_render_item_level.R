@@ -161,3 +161,57 @@ synthetic_slider_raw_metadata <- function() {
     )
   )
 }
+
+synthetic_matrix_multiple_answer_raw_metadata <- function() {
+  new_raw_qualtrics_metadata(
+    surveyID = "SV_MATRIX_MA",
+    metadata = list(
+      metadata = list(name = "Matrix Multiple Answer Survey"),
+      questions = list(
+        QID1 = list(
+          questionName = "Q1",
+          questionType = list(
+            type = "Matrix",
+            selector = "Likert",
+            subSelector = "MultipleAnswer"
+          ),
+          questionText = "Tick every option that applies",
+          blocks = list(),
+          columns = list(),
+          choices = list(
+            `1` = list(recode = "1", description = "Morning"),
+            `2` = list(recode = "2", description = "Evening"),
+            `3` = list(recode = "-99", description = "Prefer not")
+          ),
+          subQuestions = list(
+            x1 = list(recode = "1", choiceText = "Apples"),
+            x2 = list(recode = "2", choiceText = "Bananas")
+          )
+        )
+      )
+    ),
+    description = list(
+      blocks = list(
+        BL_1 = list(
+          Description = "Main Block",
+          BlockElements = list(
+            list(QuestionID = "QID1")
+          ),
+          Options = list(
+            LoopingOptions = list(
+              Static = NULL,
+              QID = NULL
+            )
+          )
+        )
+      ),
+      questions = list(
+        QID1 = list(
+          Validation = list(
+            Settings = list(ContentType = NULL)
+          )
+        )
+      )
+    )
+  )
+}
