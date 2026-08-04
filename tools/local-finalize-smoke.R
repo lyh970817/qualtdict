@@ -25,7 +25,10 @@ usage <- function() {
       "",
       "`check` compares current exported-function output hashes with local",
       "baselines. It also verifies Response Column ID parity against local",
-      "raw fetched response columns. Full `bless` replaces local baselines",
+      "raw fetched response columns, and compares the declared Level universe",
+      "with the raw value universe recorded in the artifact manifest. A",
+      "missing or vacuous Level universe observation is a hard failure that",
+      "cannot be blessed. Full `bless` replaces local baselines",
       "with current output hashes. `bless --functions` updates selected",
       "output summaries inside existing baselines. Parity mismatches remain",
       "hard failures.",
@@ -244,11 +247,12 @@ load_artifacts <- function(survey) {
       call. = FALSE
     )
   }
-  validate_manifest(survey, paths)
+  manifest <- validate_manifest(survey, paths)
   list(
     metadata = readRDS(paths[["metadata"]]),
     description = readRDS(paths[["description"]]),
-    responses = readRDS(paths[["responses"]])
+    responses = readRDS(paths[["responses"]]),
+    manifest = manifest
   )
 }
 
@@ -870,11 +874,155 @@ assert_response_column_id_parity <- function(
   invisible(parity)
 }
 
+#' Compare the current declared Level universe with the recorded observation
+#'
+#' The dictionary side is recomputed now; the response side is the
+#' privacy-filtered observation the fetch script took from the RAW responses.
+level_universe_parity <- function(dict, manifest) {
+  observation <- manifest$level_universe
+  if (is.null(observation)) {
+    return(list(available = FALSE, comparisons = list()))
+  }
+
+  declared <- split(
+    as.character(dict[["level"]]),
+    as.character(dict[["response_column_id"]])
+  )
+  declared <- lapply(declared, function(levels) {
+    unique(levels[!is.na(levels)])
+  })
+
+  per_choice_columns <- level_universe_per_choice_columns(dict)
+  comparisons <- lapply(observation$observed, function(observed) {
+    level_universe_compare(
+      observed,
+      declared[[observed$response_column_id]],
+      per_choice_columns = per_choice_columns
+    )
+  })
+
+  list(
+    available = TRUE,
+    schema = observation$schema,
+    response_rows = observation$response_rows,
+    columns_with_universe = observation$totals$columns_with_universe,
+    values_observed = observation$totals$values_observed,
+    values_out_of_universe_at_fetch = observation$totals$values_out_of_universe,
+    redacted_columns = observation$totals$redacted_columns,
+    comparisons = comparisons
+  )
+}
+
+level_universe_record <- function(survey, level_universe) {
+  c(
+    list(
+      alias = survey$alias,
+      survey_id = survey$survey_id,
+      generated_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+    ),
+    level_universe
+  )
+}
+
+write_level_universe <- function(survey, level_universe, run_dir) {
+  write_json(
+    level_universe_record(survey, level_universe),
+    file.path(run_dir, paste0(survey$alias, "-level-universe.json"))
+  )
+}
+
+stop_level_universe <- function(message, class) {
+  stop(structure(
+    list(message = message, call = NULL),
+    class = c(class, "error", "condition")
+  ))
+}
+
+#' Assert the hard, non-blessable Level universe gates
+#'
+#' Neither gate may be blessed away. A missing observation means the artifacts
+#' predate the check, and skipping would silently disable it; a vacuous
+#' observation means the artifacts cannot express the property at all.
+assert_level_universe <- function(survey, level_universe, run_dir) {
+  if (!isTRUE(level_universe$available)) {
+    stop_level_universe(
+      paste0(
+        "Level universe observation missing for `",
+        survey$alias,
+        "`: these artifacts predate the Level universe observation. Re-run ",
+        "`Rscript tools/fetch-local-finalize-smoke.R`."
+      ),
+      "level_universe_artifact_error"
+    )
+  }
+  write_level_universe(survey, level_universe, run_dir)
+
+  schema <- as.integer(level_universe$schema %||% NA_integer_)
+  if (!identical(schema, level_universe_schema_version())) {
+    stop_level_universe(
+      paste0(
+        "Level universe observation for `",
+        survey$alias,
+        "` uses schema ",
+        level_universe$schema,
+        "; this check expects schema ",
+        level_universe_schema_version(),
+        ". Re-run `Rscript tools/fetch-local-finalize-smoke.R`."
+      ),
+      "level_universe_artifact_error"
+    )
+  }
+
+  response_rows <- as.integer(level_universe$response_rows %||% 0L)
+  values_observed <- as.integer(level_universe$values_observed %||% 0L)
+  if (
+    values_observed == 0L ||
+      response_rows < level_universe_minimum_response_rows()
+  ) {
+    stop_level_universe(
+      paste0(
+        "Level universe observation for `",
+        survey$alias,
+        "` is vacuous: response_rows=",
+        response_rows,
+        " values_observed=",
+        values_observed,
+        ". Re-fetch without `--response-limit` (minimum ",
+        level_universe_minimum_response_rows(),
+        " rows)."
+      ),
+      "level_universe_error"
+    )
+  }
+
+  summary <- summarise_level_universe(level_universe)
+  cat(
+    survey$alias,
+    ": Level universe observed",
+    " columns=",
+    summary$columns_observed,
+    "/",
+    summary$columns_with_universe,
+    " values=",
+    summary$values_observed,
+    " violating_columns=",
+    summary$violating_columns,
+    " out_of_universe=",
+    summary$values_out_of_universe,
+    " per_choice_violations=",
+    summary$one_column_per_choice_violations,
+    "\n",
+    sep = ""
+  )
+  invisible(summary)
+}
+
 run_scenario <- function(
   survey,
   variable_name,
   selected_functions,
-  dict = NULL
+  dict = NULL,
+  manifest = NULL
 ) {
   scenario_label <- paste(survey$alias, variable_name, sep = " / ")
   requirements <- smoke_scenario_requirements(selected_functions)
@@ -892,6 +1040,10 @@ run_scenario <- function(
     )
   }
   objects$dict <- dict
+  objects$level_universe <- run_step(
+    paste(scenario_label, "level_universe_parity"),
+    level_universe_parity(dict, manifest)
+  )
 
   if (requirements$needs_validation) {
     validation <- run_step(
@@ -950,6 +1102,9 @@ run_scenario <- function(
 
   if ("dict_generate" %in% selected_functions) {
     summaries$dict <- data_frame_summary(objects$dict)
+    summaries$level_universe <- summarise_level_universe(
+      objects$level_universe
+    )
   }
   if ("dict_validate" %in% selected_functions) {
     summaries$validation <- validation_summary(objects$validation)
@@ -1039,7 +1194,8 @@ run_survey <- function(
         run_scenario(
           survey,
           variable_name,
-          selected_functions = selected_functions
+          selected_functions = selected_functions,
+          manifest = artifacts$manifest
         )
       }
     )
@@ -1054,6 +1210,14 @@ run_survey <- function(
         run_dir = run_dir,
         metadata = artifacts$metadata,
         description = artifacts$description
+      )
+    )
+    run_step(
+      paste(survey$alias, "Level universe"),
+      assert_level_universe(
+        survey = survey,
+        level_universe = results[[1]]$objects$level_universe,
+        run_dir = run_dir
       )
     )
     lapply(results, function(result) {
@@ -1100,6 +1264,16 @@ results <- tryCatch(
     cat(conditionMessage(error), "\n", sep = "")
     cat("Wrote current run artifacts to ", run_dir, "\n", sep = "")
     quit(status = 1)
+  },
+  level_universe_error = function(error) {
+    cat(conditionMessage(error), "\n", sep = "")
+    cat("Wrote current run artifacts to ", run_dir, "\n", sep = "")
+    quit(status = 1)
+  },
+  level_universe_artifact_error = function(error) {
+    cat(conditionMessage(error), "\n", sep = "")
+    cat("Wrote current run artifacts to ", run_dir, "\n", sep = "")
+    quit(status = 2)
   }
 )
 
