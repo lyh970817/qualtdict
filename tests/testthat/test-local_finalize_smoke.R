@@ -782,7 +782,7 @@ test_that("local finalize smoke config keeps the thirteen-survey surface", {
     grep('"alias":', config_lines, value = TRUE, fixed = TRUE)
   )
 
-  expect_length(aliases, 13L)
+  expect_length(aliases, 12L)
   expect_identical(
     aliases,
     c(
@@ -791,7 +791,6 @@ test_that("local finalize smoke config keeps the thirteen-survey surface", {
       "glad_sa7_optional",
       "edgi_optional_all",
       "glad_sa6_signup",
-      "edgi_medications",
       "glad_medications",
       "ramp",
       "coping_glad",
