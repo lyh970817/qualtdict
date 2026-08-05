@@ -11,6 +11,8 @@
 ^\.Rhistory$
 ^\.Rproj\.user$
 ^\.agents$
+^\.claude$
+^\.claude/
 ^\.codegraph$
 ^\.codegraph/
 ^\.codex$
