@@ -1,5 +1,12 @@
 # qualtdict 0.0.0.9000
 
+- `dict_generate()` no longer declares a choice recode as the Level universe
+  of a `_DO_` display-order column. Qualtrics exports one such column per
+  choice: the recode names the column and the cell holds the position at which
+  that choice was displayed. These columns now declare no Level universe,
+  carry the choice in `item`, and take a variable label but no value labels in
+  `fetch_labelled_survey_data()`.
+
 - `dict_generate()` now resolves response-column-id parity with Qualtrics
   exports for embedded, Captcha, Text-entry/FORM, and carry-forward
   multiple-choice questions: colliding embedded fields honour the Qualtrics

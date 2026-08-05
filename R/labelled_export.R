@@ -387,25 +387,54 @@ survey_var_recode_context <- function(var_dict) {
     is_text_var = isTRUE(type == "TE") ||
       any(grepl("_TEXT", levels, fixed = TRUE), na.rm = TRUE),
     is_choice_tick_column = dict_choice_tick_column(var_dict),
+    is_display_order_column = dict_display_order_column(var_dict),
     has_value_labels = !all(is.na(levels))
   )
 }
 
 #' Return whether Variable Dictionary rows describe a per-choice tick column
+#'
+#' Display-order columns ride a multiple-answer question's type/selector but
+#' are not tick columns: the cell holds the position at which one choice was
+#' displayed, not whether it was selected. They are excluded here so the
+#' unticked/unseen recodes are never declared against them.
 #' @noRd
 dict_choice_tick_column <- function(var_dict) {
-  first_or_na <- function(x) {
-    if (is.null(x) || length(x) == 0) {
-      return(NA_character_)
-    }
-    as.character(x)[[1]]
+  if (dict_display_order_column(var_dict)) {
+    return(FALSE)
   }
 
   question_type_renders_choice_tick_columns(list(
-    type = first_or_na(var_dict[["type"]]),
-    selector = first_or_na(var_dict[["selector"]]),
-    sub_selector = first_or_na(var_dict[["sub_selector"]])
+    type = dict_first_or_na(var_dict[["type"]]),
+    selector = dict_first_or_na(var_dict[["selector"]]),
+    sub_selector = dict_first_or_na(var_dict[["sub_selector"]])
   ))
+}
+
+#' Return whether Variable Dictionary rows describe a display-order column
+#'
+#' A Loop and Merge expansion prefixes the Response Column ID with its loop
+#' option, which the package predicate does not expect, so the prefix is
+#' stripped before testing.
+#' @noRd
+dict_display_order_column <- function(var_dict) {
+  response_column_id <- dict_first_or_na(dict_response_column_id(var_dict))
+  if (is.na(response_column_id)) {
+    return(FALSE)
+  }
+
+  is_display_order_response_column(
+    sub("^[^_]+_(QID[0-9]+_)", "\\1", response_column_id)
+  )
+}
+
+#' Return the first value of a Variable Dictionary column, or NA
+#' @noRd
+dict_first_or_na <- function(x) {
+  if (is.null(x) || length(x) == 0) {
+    return(NA_character_)
+  }
+  as.character(x)[[1]]
 }
 
 #' Return whether one Export Variable should be coerced to numeric
@@ -427,12 +456,11 @@ survey_var_label_facts <- function(
   levels <- context$levels
   labels <- context$labels
 
-  if (
-    context$is_text_var ||
-      (context$is_metadata_defined_row && !context$has_value_labels)
-  ) {
-    levels <- NA_character_
-  } else if (context$is_choice_tick_column) {
+  if (survey_var_carries_no_value_labels(context)) {
+    return(list(levels = NA_character_, labels = labels))
+  }
+
+  if (context$is_choice_tick_column) {
     # One export column per choice. The choice RecodeValue names the column;
     # the cell holds a membership indicator, so the Level universe is the tick
     # domain plus whatever the export recodes unticked and unseen cells to.
@@ -461,4 +489,17 @@ survey_var_label_facts <- function(
   }
 
   list(levels = levels, labels = labels)
+}
+
+#' Return whether an Export Variable carries no value labels
+#'
+#' Free text has no value universe. Neither does a display-order column: it
+#' stores the position at which one choice was displayed, and the
+#' unticked/unseen recodes describe a tick it never holds. A Metadata-defined
+#' row with no declared Level has none either.
+#' @noRd
+survey_var_carries_no_value_labels <- function(context) {
+  context$is_text_var ||
+    context$is_display_order_column ||
+    (context$is_metadata_defined_row && !context$has_value_labels)
 }

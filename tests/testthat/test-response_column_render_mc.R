@@ -272,6 +272,51 @@ test_that("randomized MAVR text questions render display order helpers", {
   expect_true(all(lengths(dict) == nrow(dict)))
 })
 
+test_that("display-order helpers declare no Level and name their choice", {
+  raw_metadata <- synthetic_mc_text_raw_metadata()
+  raw_metadata$metadata$questions$QID1$questionType$selector <- "MAVR"
+  raw_metadata$metadata$questions$QID1$randomization <- list(
+    type = "advanced",
+    options = list()
+  )
+  raw_metadata$metadata$questions$QID1$choiceOrder <- c("1", "2", "3")
+  raw_metadata$metadata$questions$QID1$choices[["3"]]$recode <- "99"
+
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalise_qualtrics_metadata(raw_metadata),
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  display_order_rows <- dict[
+    grepl("_DO_", dict$response_column_id, fixed = TRUE),
+  ]
+
+  # The choice RecodeValue names the COLUMN; the cell holds the position at
+  # which that choice was displayed, so no Level universe is declared.
+  expect_identical(
+    display_order_rows$response_column_id,
+    c("QID1_DO_1", "QID1_DO_2", "QID1_DO_99")
+  )
+  expect_true(all(is.na(display_order_rows$level)))
+  expect_identical(
+    display_order_rows$item,
+    c(
+      "Display order - Yes",
+      "Display order - No",
+      "Display order - Other"
+    )
+  )
+  # `label` is load-bearing for Semantic Name generation on MA selectors, so
+  # it keeps the choice text verbatim.
+  expect_identical(
+    unname(display_order_rows$label),
+    c("Yes", "No", "Other")
+  )
+  expect_true(all(lengths(dict) == nrow(dict)))
+})
+
 test_that("looped MC text columns keep loop prefix before QID", {
   raw_metadata <- synthetic_looped_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)

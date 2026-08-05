@@ -130,6 +130,26 @@ empty_response_columns <- function() {
 }
 
 #' Render display-order helper Response Column ID rows
+#'
+#' Qualtrics exports one display-order column per CHOICE, named
+#' \code{QID<n>_DO_<choice RecodeValue>}. Every column of the family shares one
+#' \code{ImportId} (\code{QID<n>_DO}) in the exportColumnMap and carries the
+#' sub-description \code{"Display Order - <choice text>"}, so the RecodeValue
+#' names the COLUMN and the cell holds the 1-based POSITION at which that
+#' choice was displayed -- blank when the choice was not displayed at all.
+#'
+#' The choice RecodeValue is therefore not this column's Level universe; the
+#' displayed positions are. Those positions are not declared either. Qualtrics
+#' supplies no labels for them, and for a carry-forward question the displayed
+#' subset varies by respondent, so any static position set would be a superset
+#' rather than the universe. An undeclared Level universe reads as
+#' "unlabelled", which is honest; declaring the RecodeValue asserts a meaning
+#' the cell does not carry.
+#'
+#' Choice identity stays in \code{label}, which Semantic Name generation reads
+#' for multiple-answer selectors, and is additionally carried in \code{item},
+#' which is what keeps the per-choice rows distinguishable once the Level is
+#' gone.
 #' @noRd
 display_order_response_column_rows <- function(context) {
   if (!question_renders_display_order(context$question_fact)) {
@@ -154,10 +174,16 @@ display_order_response_column_rows <- function(context) {
       sep = "_"
     ),
     question = question_fact_question_text(context$question_fact),
-    item = rep("Display order", length(choice_order)),
-    level = choice_levels,
+    item = display_order_items(choice_labels),
+    level = NA_character_,
     label = choice_labels
   )
+}
+
+#' Build the item text that names the choice a display-order column reports on
+#' @noRd
+display_order_items <- function(choice_labels) {
+  paste("Display order", choice_labels, sep = " - ")
 }
 
 #' Return whether a question exports display-order helpers

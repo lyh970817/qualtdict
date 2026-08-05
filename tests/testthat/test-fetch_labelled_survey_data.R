@@ -6,6 +6,7 @@ minimal_export_dict <- function(
   question_name = variable_name,
   block = c("Block A", "Block B"),
   question = paste("Question", variable_name),
+  item = NA_character_,
   label = c("Yes", "No"),
   level = c("1", "2"),
   type = "MC",
@@ -21,7 +22,7 @@ minimal_export_dict <- function(
     variable_name = variable_name,
     block = block,
     question = question,
-    item = NA_character_,
+    item = item,
     level = level,
     label = label,
     type = type,
@@ -972,6 +973,53 @@ test_that("per-choice tick columns label the tick and the unanswer recodes", {
       c("1", "0", "-77"),
       c("No", "Not No", "Seen but not answered")
     )
+  )
+})
+
+test_that("display-order columns carry no value labels", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        externalDataReference = "R_1",
+        startDate = "2026-06-01",
+        endDate = "2026-06-01",
+        QID1_1 = "1",
+        QID1_DO_1 = "3"
+      )
+    }
+  )
+
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1_1", "QID1_DO_1"),
+    variable_name = c("q1_yes", "q1_yes_do"),
+    qid = c("QID1", "QID1"),
+    question = c("Question q1", "Question q1"),
+    item = c(NA_character_, "Display order - Yes"),
+    label = c("Yes", "Yes"),
+    level = c("1", NA_character_),
+    selector = "MAVR"
+  )
+
+  dat <- fetch_labelled_survey_data(
+    dict,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  # The tick column keeps its per-choice value labels.
+  expect_identical(
+    attr(dat$q1_yes, "labels", exact = TRUE),
+    stats::setNames(
+      c("1", "0", "-77"),
+      c("Yes", "Not Yes", "Seen but not answered")
+    )
+  )
+  # The display-order column stores a display position, not a tick, so it
+  # takes a variable label and no value labels at all.
+  expect_null(attr(dat$q1_yes_do, "labels", exact = TRUE))
+  expect_identical(
+    attr(dat$q1_yes_do, "label", exact = TRUE),
+    "Question q1 Display order - Yes"
   )
 })
 
