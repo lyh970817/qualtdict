@@ -1063,6 +1063,28 @@ test_that("level_universe_compare treats text markers as free text", {
   expect_identical(comparison$values_out_of_universe, 0L)
 })
 
+test_that("a column that declares no universe cannot violate one", {
+  comparison <- level_universe_compare(
+    list(
+      response_column_id = "QID10_DO_1",
+      declared_levels = list("1"),
+      codes = list("1", "2", "3"),
+      counts = list(4L, 9L, 2L),
+      redacted = FALSE,
+      n_non_missing = 15L,
+      n_out_of_universe_at_fetch = 11L
+    ),
+    current_levels = character()
+  )
+
+  expect_identical(comparison$status, "no_declared_universe")
+  expect_identical(comparison$out_codes, character())
+  expect_identical(comparison$values_out_of_universe, 0L)
+  # The declaration that WAS there is still reported as drift, so deleting a
+  # universe cannot go quiet.
+  expect_true(comparison$drifted)
+})
+
 test_that("level_universe_compare carries redacted columns forward", {
   comparison <- level_universe_compare(
     list(

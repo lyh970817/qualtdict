@@ -232,13 +232,14 @@ level_universe_per_choice_columns <- function(dict) {
   )
 
   # `_DO_` display-order columns ride a multiple-answer question's TYPE but are
-  # not per-choice tick columns: each stores which choice was displayed in that
-  # position, so its universe is the choice-index set, not {tick}. The renderer
-  # already leaves their Levels alone, and classifying them here as per-choice
-  # makes every one of them read as a per-choice violation -- inflating the one
-  # headline this check exists to report (measured: 26 spurious violations in
-  # `edgi_optional_all`). They stay in the comparison as `ordinary` columns, so
-  # a genuine violation is still reported, just not miscounted.
+  # not per-choice tick columns: the choice RecodeValue names the column and
+  # the cell holds the POSITION at which that choice was displayed, so its
+  # universe is neither {tick} nor the choice recode. The renderer declares no
+  # universe for them, and classifying them here as per-choice would put them
+  # under the one headline this check exists to report (measured: 26 spurious
+  # violations in `edgi_optional_all` when they still declared the recode).
+  # They stay in the comparison as `ordinary` columns, so a genuine violation
+  # is still reported, just not miscounted.
   # A loop-prefixed id carries a `<n>_` prefix the package predicate does not
   # expect, so strip it before testing.
   display_order <- getFromNamespace(
@@ -300,6 +301,19 @@ level_universe_compare <- function(
     values_out_of_universe <- 0L
   }
 
+  # Neither has a column that declares NO universe -- a display-order column
+  # stores a display position Qualtrics never labels, so qualtdict declares
+  # nothing for it. Scoring every observed value as "outside" an empty set
+  # would report the honest declaration as the worst violation in the corpus.
+  # This cannot hide a deleted declaration: `drifted` is still computed
+  # against what was declared at fetch time, so the deletion is reported as
+  # drift on exactly these columns.
+  has_declared_universe <- length(current_levels) > 0
+  if (!has_declared_universe) {
+    out_codes <- character()
+    values_out_of_universe <- 0L
+  }
+
   # Drift ANNOTATES a column; it must never mask a violation. `out_codes` is
   # computed against the CURRENT universe, and the recorded codes are raw
   # values that a dictionary change cannot alter -- so a code outside the
@@ -312,6 +326,8 @@ level_universe_compare <- function(
 
   status <- if (is_text_universe) {
     "text_column"
+  } else if (!has_declared_universe) {
+    "no_declared_universe"
   } else if (length(out_codes) > 0) {
     "data_violation"
   } else if (drifted) {

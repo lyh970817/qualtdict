@@ -149,6 +149,12 @@ other output summary. Each column is classified as:
   the fetch-time counts are carried forward.
 - `text_column` - the declared universe is only a `_TEXT` marker, so the column
   holds free text and has no universe to violate.
+- `no_declared_universe` - the column declares no `level` at all, so there is
+  nothing for its stored values to fall outside of. Display-order columns are
+  the deliberate case: the cell holds a display position Qualtrics never
+  labels. Deleting a universe by accident is still visible, because `drifted`
+  is computed against what was declared at fetch time and these columns then
+  count towards `drifted_columns`.
 - `clean`.
 
 The saved `<survey-alias>-level-universe.json` artifact records every
@@ -157,6 +163,58 @@ universe, and the out-of-universe codes. A real fix (violations falling) and a
 regression (violations rising) both surface as a summary hash mismatch and are
 blessed the normal way. Asserting zero violations is not possible today: text
 and constant-sum columns still declare choice recodes they cannot store.
+
+### Known violation classes
+
+The violations the 12-survey set reports are not one defect. Before treating a
+new number as a regression, check it against this breakdown, measured over the
+12 surveys at 400 responses each (13,791 columns observed, 1,300,832 values):
+**115 `data_violation` columns before the display-order fix, 67 after**, and
+13,431 -> 11,464 out-of-universe values.
+
+- **Display-order columns - FIXED.** 48 of the 115. The choice RecodeValue
+  names the column and the cell holds the position at which that choice was
+  displayed, so the recode was never that column's Level universe. They now
+  declare none: 51 columns report `no_declared_universe` (the 48 that
+  violated plus 3 whose observed positions happened to fall inside the
+  declared singleton), and all 51 also report `drifted`, because the
+  artifacts still carry the declaration they were fetched under. See
+  `display_order_response_column_rows()`.
+- **Columns whose `level` carries COLUMN IDENTITY rather than a value
+  universe - NOT FIXED, escalated.** The remaining 62 `data_violation`
+  columns, in five families: `CS`/`HR`/`TX` constant-sum boxes (16),
+  `Matrix`/`TE` text-entry grids (31), `Slider`/`HSLIDER` (8),
+  `Slider`/`STAR` (7). The declared level is a statement id, a box recode or a
+  grid-column recode; the cell holds a slider position, a star count or a
+  validated number, which raw metadata carries elsewhere
+  (`Configuration$StarCount`, `CSSliderMin`/`CSSliderMax`,
+  `validation$type == "ValidNumber"`). The naive fix is unsafe: for these
+  families `item` is empty, so `label` is the only thing that distinguishes
+  the sibling columns of one question, and emptying it fuses them. Fixing them
+  moves exported names and value labels, so it is a scientific-interface
+  decision, not a rendering one; it is filed for the consuming pipeline's team
+  review (ilovedata
+  `docs/review/team/qualtdict-level-universe-identity-carriers.md`) and must
+  not be changed here without that ruling.
+- **`Matrix`/`Likert`/`DL` - the family is right; one question is not.** 5 of
+  the 115, all `ramp` QID124931274. As a family this is the control case: the
+  declaration and the renderer agree, and its apparent violations elsewhere in
+  the corpus are the consuming pipeline's Sentinel Level `-77`, excluded from
+  substantive comparison there. The `ramp` question is a different and sharper
+  defect from the identity-carrier class: the Qualtrics metadata endpoint
+  returned `recode == answer id` for it (declared `{4,21,5,6,7,8,13}` - the
+  answer ids), contradicting the survey definition's `RecodeValues`, and the
+  export stores the definition's recodes (`-99,1,2,3` observed). The values are
+  therefore MISLABELLED, not merely undeclared - a stored `5` currently reads
+  as `"2"`. `resolve_dynamic_choice_recode_override()` consults the definition
+  only for `DynamicChoices` questions; widening it to every question would
+  change exactly this one question across the 38 offline artifact surveys
+  (4,573 of 7,501 questions carry `RecodeValues`; 5 disagree with the metadata
+  recodes, and 4 of those disagree only by an empty or absent metadata entry
+  that already resolves to the same value). Not fixed here: the
+  fix merges these five columns into the Anchors of the identically-worded
+  question in three other surveys, which is a "same measurement?" question. It
+  rides the same team brief.
 
 ## Bless Intended Changes
 
