@@ -1,5 +1,18 @@
 # qualtdict 0.0.0.9000
 
+- `assert_dict_valid()` is a new exported gate that errors when a Variable
+  Dictionary carries Export-blocking Validation Findings: level-label codings
+  where label and level are not one-to-one, one label is carried by several
+  rows, or one level is carried by several rows. The error names every
+  offending Response Column ID, its Dictionary Variable Name, and the colliding
+  labels. A gapped level sequence is not Export-blocking.
+  `fetch_labelled_survey_data()` now applies the gate before downloading
+  responses, so a defective Variable Dictionary no longer aborts a whole survey
+  deep inside labelling after the download is paid for; pass
+  `require_valid_dict = FALSE` to download from a survey known to carry such
+  findings. `dict_validate()` is unchanged and stays total: it reports every
+  Validation Finding and never errors.
+
 - `dict_generate()` no longer declares a choice recode as the Level universe
   of a `_DO_` display-order column. Qualtrics exports one such column per
   choice: the recode names the column and the cell holds the position at which

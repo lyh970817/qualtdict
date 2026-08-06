@@ -183,19 +183,29 @@ level_label_validation_findings <- function(mistake) {
   normalize_validation_findings(mistake)
 }
 
-#' Check one Response Column ID for level-label issues
+#' Run the level-label tests for one Response Column ID
+#'
+#' Returns the four level-label tests as a logical vector, in the order whose
+#' tripped 1-based positions are concatenated into the `mistake` code (so
+#' `"124"` means tests 1, 2 and 4 fired):
+#' 1. label and level are not a one-to-one mapping,
+#' 2. the non-negative levels are not a contiguous step-1 run,
+#' 3. one label is carried by more than one row,
+#' 4. one level is carried by more than one row.
+#'
+#' This is the one predicate behind both `dict_validate()` and
+#' `assert_dict_valid()`, so the reported findings and the Labelled Export gate
+#' cannot drift apart.
+#'
+#' @param cols A data frame whose first column holds labels and whose second
+#' column holds levels.
 #' @noRd
-check_item <- function(dat, response_column_id) {
-  item_name <- dict_variable_name(dat)[
-    dict_response_column_id(dat) == response_column_id
-  ]
-  cols <- dat[c("label", "level")]
-
+level_label_mistake_tests <- function(cols) {
   # Here recode is sometimes "none" and will cause a warning
   col2_numeric <- suppressWarnings(as.numeric(cols[[2]]))
   col2_pos <- subset(col2_numeric, col2_numeric >= 0)
 
-  has_mistake <- c(
+  c(
     # Check correspondence
     !is_onetoone(cols),
     # Check constant step == 1
@@ -204,17 +214,64 @@ check_item <- function(dat, response_column_id) {
     anyDuplicated(cols[[1]]) > 0,
     anyDuplicated(cols[[2]]) > 0
   )
+}
+
+#' Build the level-label mistake rows for one Response Column ID
+#' @noRd
+level_label_mistake_rows <- function(
+  dat,
+  response_column_id,
+  cols,
+  has_mistake
+) {
+  item_name <- dict_variable_name(dat)[
+    dict_response_column_id(dat) == response_column_id
+  ]
+
+  bind_cols(
+    tibble(
+      qid = response_column_id,
+      response_column_id = response_column_id,
+      item_name,
+      mistake = paste(which(has_mistake), collapse = "")
+    ),
+    cols
+  )
+}
+
+#' Check one Response Column ID for level-label issues
+#' @noRd
+check_item <- function(dat, response_column_id) {
+  cols <- dat[c("label", "level")]
+  has_mistake <- level_label_mistake_tests(cols)
 
   if (any(has_mistake)) {
-    bind_cols(
-      tibble(
-        qid = response_column_id,
-        response_column_id = response_column_id,
-        item_name,
-        mistake = paste(which(has_mistake), collapse = "")
-      ),
-      cols
-    )
+    level_label_mistake_rows(dat, response_column_id, cols, has_mistake)
+  }
+}
+
+#' Check one Response Column ID for Export-blocking level-label issues
+#'
+#' Runs the same tests on the same rows as `check_item()` but keeps only the
+#' Response Column IDs whose tripped tests are Export-blocking, and never runs
+#' the level-label pairing summary, so the Labelled Export gate stays cheap.
+#' @noRd
+check_item_export_blocking <- function(dat, response_column_id) {
+  cols <- dat[c("label", "level")]
+
+  # A label-level mapping can only fail to be one-to-one when some label or
+  # some level is repeated, so tests 3 and 4 alone decide whether a Response
+  # Column ID can be Export-blocking. Testing them first is what keeps the gate
+  # off the one-to-one scan for the Response Column IDs that pass, which is
+  # nearly all of them.
+  if (anyDuplicated(cols[[1]]) == 0 && anyDuplicated(cols[[2]]) == 0) {
+    return(NULL)
+  }
+
+  has_mistake <- level_label_mistake_tests(cols)
+
+  if (any(has_mistake[export_blocking_mistake_tests()])) {
+    level_label_mistake_rows(dat, response_column_id, cols, has_mistake)
   }
 }
 

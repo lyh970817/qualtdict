@@ -31,6 +31,12 @@ non-unique or unsafe Dictionary Variable Names, and level-label coding
 issues. The validation result is a consistency screen, not proof that the
 source Qualtrics metadata is correct.
 }
+\details{
+\code{dict_validate()} is total: it reports every Validation Finding and never
+errors, so it can be used to survey the damage in a defective Variable
+Dictionary. Use \code{\link[=assert_dict_valid]{assert_dict_valid()}} when you want the Export-blocking
+subset to error instead.
+}
 \examples{
 dict <- data.frame(
   response_column_id = c("QID1", "QID2"),
