@@ -152,10 +152,25 @@ other output summary. Each column is classified as:
 - `no_declared_universe` - the column declares no `level` at all, so there is
   nothing for its stored values to fall outside of. Display-order columns are
   the deliberate case: the cell holds a display position Qualtrics never
-  labels. Deleting a universe by accident is still visible, because `drifted`
-  is computed against what was declared at fetch time and these columns then
-  count towards `drifted_columns`.
+  labels. A universe deleted by accident shows up as drift only **until the
+  next refetch**: `drifted` is computed against what was declared at fetch
+  time, so these columns count towards `drifted_columns` while the artifacts
+  still carry the old declaration, and stop counting once the artifacts catch
+  up. Past that point declared and recorded are both empty and there are no
+  violations to report, so the standing signal is the blessed
+  `no_declared_universe_columns` count: the columns that legitimately declare
+  no universe are few and deliberate, so one more of them moves the summary
+  hash.
 - `clean`.
+
+The summary therefore carries two counts alongside `violating_columns`:
+`drifted_columns` (your artifacts are stale) and `no_declared_universe_columns`
+(how many columns declare nothing at all).
+
+An earlier wording of this section, and the rationale of commit `fc4f708`,
+claimed the drift signal "cannot hide a deleted declaration" without
+qualification. That is true only before the next refetch; the commit message is
+immutable, so the correction lives here.
 
 The saved `<survey-alias>-level-universe.json` artifact records every
 comparison, so a violation can be traced to the Response Column ID, its declared
@@ -233,5 +248,17 @@ baseline record:
 Rscript tools/local-finalize-smoke.R bless --functions fetch_labelled_survey_data
 Rscript tools/local-finalize-smoke.R bless --variable-name question_name
 ```
+
+**Use a selective bless only to update summaries you have just inspected, and
+never as the way you refresh stale baselines.** A selective bless rewrites the
+selected summaries and leaves the rest of the record untouched at whatever
+state it was last written in, so the baseline silently becomes a mixture of
+eras. That is how the 2026-08-05 refresh was owed: a
+`bless --functions dict_generate` left the six labelled-family summaries
+(`validation`, `labelled`, `labelled_export_findings`, `dict_blocks`,
+`survey_blocks`, `labelled_excluding_validation`) behind at a much older
+fixture, so `check` exited 1 on all 12 surveys for reasons unrelated to any
+change under review, and could not have signalled a real labelled-export
+regression. When in doubt, bless the full function set.
 
 Baselines are local to the fixed surveys and are not committed.

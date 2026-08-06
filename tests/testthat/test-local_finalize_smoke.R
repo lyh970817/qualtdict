@@ -939,6 +939,31 @@ test_that("per-choice columns are classified from the question type", {
   )
 })
 
+test_that("any loop prefix is stripped before the display-order test", {
+  # Loop and Merge prefixes the Response Column ID with its loop option. The
+  # package accepts any prefix free of underscores
+  # (`is_loop_prefixed_qid_response_column()`), and this classifier used to
+  # strip only a numeric one -- so a non-numeric prefix left the id looking
+  # like an ordinary per-choice column. LATENT in the current corpus: no Loop
+  # and Merge survey carries display-order columns today.
+  dict <- tibble::tibble(
+    response_column_id = c(
+      "QID1_1",
+      "QID1_DO_1",
+      "1_QID1_DO_2",
+      "Week1_QID1_DO_3"
+    ),
+    level = c("1", "1", "1", "1"),
+    type = "MC",
+    selector = "MAVR",
+    sub_selector = "TX"
+  )
+
+  # Only the genuine tick column is per-choice; every display-order column is
+  # excluded regardless of how its loop option is spelled.
+  expect_identical(level_universe_per_choice_columns(dict), "QID1_1")
+})
+
 test_that("level_universe_compare reports per-choice data violations", {
   # The worked example: `QID1215196547_0` declared the choice recode `0`, but
   # the raw export stores the tick marker `1` for the persons who ticked it.
@@ -1080,9 +1105,44 @@ test_that("a column that declares no universe cannot violate one", {
   expect_identical(comparison$status, "no_declared_universe")
   expect_identical(comparison$out_codes, character())
   expect_identical(comparison$values_out_of_universe, 0L)
-  # The declaration that WAS there is still reported as drift, so deleting a
-  # universe cannot go quiet.
+  # The declaration that WAS there is still reported as drift. That signal
+  # lasts only until the next refetch, after which the fetch-time declaration
+  # is empty too and `no_declared_universe_columns` is what remains.
   expect_true(comparison$drifted)
+})
+
+test_that("a refetched deleted universe survives only as the status count", {
+  # Same column, after the artifacts caught up: nothing was declared at fetch
+  # time either, so drift is silent and the count is the only signal left.
+  refetched <- level_universe_compare(
+    list(
+      response_column_id = "QID10_DO_1",
+      declared_levels = list(),
+      codes = list("1", "2", "3"),
+      counts = list(4L, 9L, 2L),
+      redacted = FALSE,
+      n_non_missing = 15L,
+      n_out_of_universe_at_fetch = 0L
+    ),
+    current_levels = character()
+  )
+
+  expect_identical(refetched$status, "no_declared_universe")
+  expect_false(refetched$drifted)
+  expect_identical(refetched$values_out_of_universe, 0L)
+
+  summary <- summarise_level_universe(list(
+    available = TRUE,
+    schema = 1L,
+    response_rows = 400L,
+    columns_with_universe = 1L,
+    values_observed = 15L,
+    comparisons = list(refetched)
+  ))
+
+  expect_identical(summary$drifted_columns, 0L)
+  expect_identical(summary$violating_columns, 0L)
+  expect_identical(summary$no_declared_universe_columns, 1L)
 })
 
 test_that("level_universe_compare carries redacted columns forward", {
@@ -1182,6 +1242,7 @@ test_that("summarise_level_universe counts violations and fingerprints them", {
   expect_identical(summary$violating_columns, 1L)
   expect_identical(summary$values_out_of_universe, 34L)
   expect_identical(summary$one_column_per_choice_violations, 1L)
+  expect_identical(summary$no_declared_universe_columns, 0L)
   expect_identical(summary$violation_fingerprint, list("QID1_0:0->1"))
   expect_match(summary$object_hash, "^[0-9a-f]{32}$")
 })

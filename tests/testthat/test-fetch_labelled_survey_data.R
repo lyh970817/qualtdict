@@ -1023,6 +1023,38 @@ test_that("display-order columns carry no value labels", {
   )
 })
 
+test_that("dict_display_order_column strips any loop prefix", {
+  # Pins the loop-prefix branch of `dict_display_order_column()`, which had no
+  # test. Loop and Merge prefixes the Response Column ID with its loop option;
+  # Qualtrics numbers the iterations, but the package's own predicate
+  # `is_loop_prefixed_qid_response_column()` accepts any prefix free of
+  # underscores, and this branch is reconciled with it. LATENT: no Loop and
+  # Merge survey in the offline corpus carries display-order columns today.
+  do_dict <- function(response_column_id) {
+    minimal_export_dict(
+      response_column_id = response_column_id,
+      variable_name = "q1_do",
+      qid = "QID1",
+      block = "Block A",
+      label = "Yes",
+      level = NA_character_,
+      selector = "MAVR"
+    )
+  }
+
+  expect_true(dict_display_order_column(do_dict("QID1_DO_1")))
+  expect_true(dict_display_order_column(do_dict("1_QID1_DO_1")))
+  expect_true(is_loop_prefixed_qid_response_column("Week1_QID1_DO_1"))
+  expect_true(dict_display_order_column(do_dict("Week1_QID1_DO_1")))
+
+  # A tick column of the same question is not display order, prefixed or not,
+  # so it keeps the per-choice branch.
+  expect_false(dict_display_order_column(do_dict("QID1_1")))
+  expect_false(dict_display_order_column(do_dict("1_QID1_1")))
+  expect_true(dict_choice_tick_column(do_dict("QID1_1")))
+  expect_false(dict_choice_tick_column(do_dict("Week1_QID1_DO_1")))
+})
+
 test_that("single-row single-answer columns keep the legacy label facts", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
