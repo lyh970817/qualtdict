@@ -240,15 +240,20 @@ level_universe_per_choice_columns <- function(dict) {
   # violations in `edgi_optional_all` when they still declared the recode).
   # They stay in the comparison as `ordinary` columns, so a genuine violation
   # is still reported, just not miscounted.
-  # A loop-prefixed id carries a `<n>_` prefix the package predicate does not
-  # expect, so strip it before testing.
+  # A loop-prefixed id carries a `<option>_` prefix the package predicate does
+  # not expect, so strip it before testing. The pattern is the package's own:
+  # `is_loop_prefixed_qid_response_column()` accepts any prefix free of
+  # underscores, not just a numeric one, and `dict_display_order_column()`
+  # strips with the same shape. Keep the three in step -- a narrower pattern
+  # here silently reclassifies loop-prefixed display-order columns as
+  # per-choice ones.
   display_order <- getFromNamespace(
     "is_display_order_response_column",
     "qualtdict"
   )
   ids <- as.character(dict[["response_column_id"]])
   is_display_order <- vapply(
-    sub("^[0-9]+_", "", ids),
+    sub("^[^_]+_(QID[0-9]+_)", "\\1", ids),
     function(id) isTRUE(display_order(id)),
     logical(1),
     USE.NAMES = FALSE
@@ -305,9 +310,12 @@ level_universe_compare <- function(
   # stores a display position Qualtrics never labels, so qualtdict declares
   # nothing for it. Scoring every observed value as "outside" an empty set
   # would report the honest declaration as the worst violation in the corpus.
-  # This cannot hide a deleted declaration: `drifted` is still computed
-  # against what was declared at fetch time, so the deletion is reported as
-  # drift on exactly these columns.
+  # A deleted declaration stays visible here only UNTIL THE NEXT REFETCH:
+  # `drifted` is computed against what was declared at fetch time, so the
+  # deletion reports as drift on exactly these columns while the artifacts
+  # still carry the old declaration. Once they are refetched, declared and
+  # recorded are both empty, drift falls silent, and
+  # `no_declared_universe_columns` is the signal that remains.
   has_declared_universe <- length(current_levels) > 0
   if (!has_declared_universe) {
     out_codes <- character()
@@ -384,6 +392,18 @@ summarise_level_universe <- function(result) {
       function(comparison) isTRUE(comparison$drifted),
       logical(1)
     ))),
+    # Reported for the same reason as `drifted_columns`, and needed because
+    # drift is the shorter-lived of the two signals. A Level universe deleted
+    # by accident shows up as drift only UNTIL THE NEXT REFETCH; after it the
+    # dictionary declares nothing, the artifacts record nothing, and the
+    # column reports `drifted = FALSE` with zero violations -- indistinguish-
+    # able from a column that never had a universe. Blessing this count is
+    # what keeps the deletion visible past that point: the set of columns
+    # that legitimately declare no universe is small and deliberate, so one
+    # more of them moves the summary hash.
+    no_declared_universe_columns = as.integer(sum(
+      statuses == "no_declared_universe"
+    )),
     values_observed = as.integer(result$values_observed %||% 0L),
     values_out_of_universe = as.integer(sum(out_of_universe)),
     one_column_per_choice_violations = as.integer(
