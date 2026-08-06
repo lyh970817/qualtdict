@@ -1055,3 +1055,148 @@ test_that("single-row single-answer columns keep the legacy label facts", {
     stats::setNames(c("1", "0"), c("Yes", "Not Yes"))
   )
 })
+
+# Two choices of one multiple-answer question sharing a Qualtrics RecodeValue
+# are exported as ONE column carrying both meanings. This shape is why the
+# Variable Dictionary is gated before the download: it has no valid labelling.
+tick_column_collision_export_dict <- function() {
+  minimal_export_dict(
+    response_column_id = c("1_QID11_7", "1_QID11_7"),
+    variable_name = c("ptsd.sertraline", "ptsd.sertraline"),
+    qid = c("QID11", "QID11"),
+    question_name = c("ptsd.sertraline", "ptsd.sertraline"),
+    block = c("Block A", "Block A"),
+    question = c("Question q11", "Question q11"),
+    label = c(
+      "Posttraumatic stress disorder (PTSD)",
+      "Body dysmorphic disorder"
+    ),
+    level = c("1", "1"),
+    selector = "MACOL"
+  )
+}
+
+test_that("fetch_labelled_survey_data gates the dictionary before fetching", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      stop("responses must not be downloaded for a gated dictionary")
+    }
+  )
+
+  expect_error(
+    fetch_labelled_survey_data(tick_column_collision_export_dict()),
+    class = "qualtdict_export_blocking_findings"
+  )
+})
+
+test_that("require_valid_dict = FALSE downloads from a defective dictionary", {
+  fetched <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      fetched$value <- TRUE
+      tibble::tibble(QID20 = "102")
+    }
+  )
+
+  # A dropdown whose recodes repeat labels without ticking: Labelled Export
+  # completes, but the colliding levels are labelled unreliably.
+  dict <- minimal_export_dict(
+    response_column_id = rep("QID20", 3),
+    variable_name = rep("gp.practice", 3),
+    qid = rep("QID20", 3),
+    question_name = rep("gp.practice", 3),
+    block = rep("Block A", 3),
+    question = rep("Which practice?", 3),
+    label = c("Aberdeen Practice", "Bath Practice", "Cardiff Practice"),
+    level = c("101", "102", "102"),
+    selector = "DL"
+  )
+
+  expect_error(
+    fetch_labelled_survey_data(dict, extra_columns = NULL),
+    class = "qualtdict_export_blocking_findings"
+  )
+
+  dat <- fetch_labelled_survey_data(
+    dict,
+    extra_columns = NULL,
+    require_valid_dict = FALSE
+  )
+
+  expect_true(fetched$value)
+  expect_named(dat, "gp.practice")
+})
+
+test_that("exclude_findings = \"validation\" needs no dictionary gate", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        `1_QID11_7` = "1",
+        QID2 = "2"
+      )
+    }
+  )
+
+  dict <- minimal_export_dict(
+    response_column_id = c("1_QID11_7", "1_QID11_7", "QID2"),
+    variable_name = c("ptsd.sertraline", "ptsd.sertraline", "q2"),
+    qid = c("QID11", "QID11", "QID2"),
+    question_name = c("ptsd.sertraline", "ptsd.sertraline", "q2"),
+    block = c("Block A", "Block A", "Block B"),
+    question = c("Question q11", "Question q11", "Question q2"),
+    label = c(
+      "Posttraumatic stress disorder (PTSD)",
+      "Body dysmorphic disorder",
+      "No"
+    ),
+    level = c("1", "1", "2"),
+    selector = c("MACOL", "MACOL", "SAVR")
+  )
+
+  dat <- fetch_labelled_survey_data(
+    dict,
+    extra_columns = NULL,
+    exclude_findings = "validation"
+  )
+
+  expect_named(dat, "q2")
+})
+
+test_that("require_valid_dict must be a single TRUE or FALSE", {
+  expect_error(
+    fetch_labelled_survey_data(
+      minimal_export_dict(),
+      require_valid_dict = NA
+    ),
+    "single `TRUE` or `FALSE`",
+    fixed = TRUE
+  )
+})
+
+test_that("a tick column with two labels on one level cannot be labelled", {
+  # Regression fixture for the shape that was missing from the suite. The
+  # label/level arithmetic is deliberately NOT repaired: two choices sharing
+  # one Qualtrics RecodeValue is a survey-authoring error, and the Variable
+  # Dictionary reports both rows faithfully. Pin the mismatch that
+  # `assert_dict_valid()` now catches ahead of the download.
+  var_dict <- tick_column_collision_export_dict()
+  context <- survey_var_recode_context(var_dict)
+  label_facts <- survey_var_label_facts(
+    var_dict,
+    context,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  expect_true(context$is_choice_tick_column)
+  expect_length(label_facts$levels, 4)
+  expect_length(label_facts$labels, 5)
+  expect_error(
+    survey_var_recode(
+      "1",
+      var_dict,
+      unanswer_recode = -77,
+      unanswer_recode_multi = 0
+    )
+  )
+})

@@ -19,6 +19,13 @@
 #' @param exclude_findings Which findings to exclude after survey download.
 #' \code{"none"} keeps all downloaded variables represented in the Variable
 #' Dictionary. \code{"validation"} excludes rows with Validation Findings.
+#' @param require_valid_dict Boolean. If \code{TRUE} (the default), the
+#' Variable Dictionary is checked with
+#' \code{\link[qualtdict]{assert_dict_valid}} before any responses are
+#' downloaded, and Export-blocking Validation Findings error. Use
+#' \code{FALSE} to download from a survey known to carry them; the affected
+#' Export Variables then keep unreliable value labels. Because
+#' \code{require_valid_dict} follows \code{...}, supply it by name.
 #' @param ... Other arguments passed to
 #' \code{\link[qualtRics]{fetch_survey}}. Filtering arguments such as
 #' \code{include_questions} may be passed through. qualtdict owns
@@ -38,6 +45,12 @@
 #' Use \code{exclude_findings} when you want to explicitly remove them after
 #' download.
 #' Because \code{quiet} follows \code{...}, supply it by name.
+#'
+#' Export-blocking Validation Findings are checked before the download, so a
+#' defective Variable Dictionary costs no responses. The check is skipped when
+#' \code{exclude_findings = "validation"}, because every Export-blocking
+#' Response Column ID is then dropped from the Variable Dictionary after
+#' download anyway.
 #'
 #' Unless \code{extra_columns = NULL}, Labelled Survey Data additionally carries
 #' the per-response metadata columns \code{startDate}, \code{endDate},
@@ -70,13 +83,23 @@ fetch_labelled_survey_data <- function(
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = c("none", "validation"),
   ...,
+  require_valid_dict = TRUE,
   quiet = TRUE
 ) {
   checkarg_isqualtdict(dict)
   extra_columns_user_supplied <- !missing(extra_columns)
   checkarg_ischaracter(extra_columns, null_okay = TRUE)
   exclude_findings <- match.arg(exclude_findings)
+  checkarg_isboolean(require_valid_dict)
   checkarg_isboolean(quiet)
+
+  # Ahead of the download: an Export-blocking Variable Dictionary otherwise
+  # aborts a whole survey deep inside labelling, after the responses are paid
+  # for. `exclude_findings = "validation"` already drops every Export-blocking
+  # Response Column ID, so it needs no gate.
+  if (require_valid_dict && exclude_findings == "none") {
+    assert_dict_valid(dict)
+  }
 
   args <- list(...)
   args <- prepare_fetch_survey_args(args, dict)
