@@ -170,6 +170,17 @@ levels, or non-one-to-one level-label mappings. A clean validation result is a
 consistency screen, not proof that the survey metadata is correct.
 _Avoid_: Mistake, error, invalid dictionary
 
+**Export-blocking Validation Finding**:
+A Validation Finding whose level-label coding makes Labelled Export wrong or
+impossible: label and level are not one-to-one, one label is carried by several
+rows, or one level is carried by several rows. A level carried by several rows
+is the aborting shape, because Qualtrics keys an export column on the choice
+recode and exports one column for two choices that share it. A gapped level
+sequence is not Export-blocking. Export-blocking Validation Findings are
+reported, never repaired: the Variable Dictionary keeps every row exactly as
+the Qualtrics survey defines it.
+_Avoid_: Fatal finding, invalid dictionary, broken level
+
 **Labelled Export Finding**:
 A finding detected while matching a Variable Dictionary to downloaded survey
 data during Labelled Export, such as a Response Column ID represented by the
