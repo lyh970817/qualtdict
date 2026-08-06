@@ -15,6 +15,7 @@ reference:
   contents:
   - dict_generate
   - dict_validate
+  - assert_dict_valid
 - title: Create labelled survey data
   desc: Apply a Variable Dictionary to downloaded responses and inspect export findings.
   contents:

@@ -6,6 +6,11 @@
 #' issues. The validation result is a consistency screen, not proof that the
 #' source Qualtrics metadata is correct.
 #'
+#' `dict_validate()` is total: it reports every Validation Finding and never
+#' errors, so it can be used to survey the damage in a defective Variable
+#' Dictionary. Use [assert_dict_valid()] when you want the Export-blocking
+#' subset to error instead.
+#'
 #' @param dict A Variable Dictionary returned by
 #' \code{\link[qualtdict]{dict_generate}}.
 #' @param quiet Boolean. If \code{TRUE}, suppress routine validation messages.
@@ -41,11 +46,7 @@ dict_validate <- function(dict, quiet = TRUE) {
     message("Validating dictionary...")
   }
 
-  level_label_dict <- question_level_label_validation_dict(dict)
-  split_dict <- split(
-    level_label_dict,
-    factor(dict_response_column_id(level_label_dict))
-  )
+  split_dict <- level_label_validation_groups(dict)
 
   if (!quiet) {
     message("Checking level-label pairs...")
@@ -88,4 +89,19 @@ dict_validate <- function(dict, quiet = TRUE) {
 #' @noRd
 question_level_label_validation_dict <- function(dict) {
   dict[dict_question_rows(dict), ]
+}
+
+#' Split a Variable Dictionary into level-label validation groups
+#'
+#' The one row set and grouping every level-label check runs on, shared by
+#' `dict_validate()` and `assert_dict_valid()` so the reported findings and the
+#' Labelled Export gate always see the same rows.
+#' @noRd
+level_label_validation_groups <- function(dict) {
+  level_label_dict <- question_level_label_validation_dict(dict)
+
+  split(
+    level_label_dict,
+    factor(dict_response_column_id(level_label_dict))
+  )
 }

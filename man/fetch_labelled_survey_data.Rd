@@ -9,6 +9,7 @@ fetch_labelled_survey_data(
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = c("none", "validation"),
   ...,
+  require_valid_dict = TRUE,
   quiet = TRUE
 )
 }
@@ -37,6 +38,14 @@ Dictionary. \code{"validation"} excludes rows with Validation Findings.}
 \code{breakout_sets}; passing those arguments errors because they are needed
 for reliable Variable Dictionary to Response Column ID matching.}
 
+\item{require_valid_dict}{Boolean. If \code{TRUE} (the default), the
+Variable Dictionary is checked with
+\code{\link[qualtdict]{assert_dict_valid}} before any responses are
+downloaded, and Export-blocking Validation Findings error. Use
+\code{FALSE} to download from a survey known to carry them; the affected
+Export Variables then keep unreliable value labels. Because
+\code{require_valid_dict} follows \code{...}, supply it by name.}
+
 \item{quiet}{Boolean. If \code{TRUE}, suppress routine validation messages.
 Defaults to \code{TRUE}.}
 }
@@ -64,6 +73,12 @@ By default, Labelled Survey Data includes variables with Validation Findings.
 Use \code{exclude_findings} when you want to explicitly remove them after
 download.
 Because \code{quiet} follows \code{...}, supply it by name.
+
+Export-blocking Validation Findings are checked before the download, so a
+defective Variable Dictionary costs no responses. The check is skipped when
+\code{exclude_findings = "validation"}, because every Export-blocking
+Response Column ID is then dropped from the Variable Dictionary after
+download anyway.
 
 Unless \code{extra_columns = NULL}, Labelled Survey Data additionally carries
 the per-response metadata columns \code{startDate}, \code{endDate},
