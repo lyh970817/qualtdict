@@ -7,7 +7,7 @@
 fetch_labelled_survey_data(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
-  exclude_findings = c("none", "validation"),
+  exclude_findings = c("none", "definite", "validation"),
   ...,
   require_valid_dict = TRUE,
   quiet = TRUE
@@ -27,9 +27,17 @@ present (for example ordered id-column fallbacks).
 Use \code{NULL} to retain no extra columns (this also suppresses the response
 metadata columns described below).}
 
-\item{exclude_findings}{Which findings to exclude after survey download.
-\code{"none"} keeps all downloaded variables represented in the Variable
-Dictionary. \code{"validation"} excludes rows with Validation Findings.}
+\item{exclude_findings}{Which Validation Finding classes cost their rows
+after survey download. \code{"none"} keeps all downloaded variables
+represented in the Variable Dictionary. \code{"definite"} excludes only the
+rows whose Validation Findings are Definite Validation Findings
+(\code{severity == "definite"} in \code{\link[qualtdict]{dict_validate}}
+output): the Export-blocking level-label codings, and the variable-name
+findings that make the renamed export's column identity unreliable. Rows
+carrying only Suggestive Validation Findings (a repaired
+\code{variable_name}; a gapped level run) keep their columns and stay
+reported by \code{dict_validate()}. \code{"validation"} excludes every row
+with any Validation Finding, suggestive ones included.}
 
 \item{...}{Other arguments passed to
 \code{\link[qualtRics]{fetch_survey}}. Filtering arguments such as
@@ -76,9 +84,11 @@ Because \code{quiet} follows \code{...}, supply it by name.
 
 Export-blocking Validation Findings are checked before the download, so a
 defective Variable Dictionary costs no responses. The check is skipped when
-\code{exclude_findings = "validation"}, because every Export-blocking
-Response Column ID is then dropped from the Variable Dictionary after
-download anyway.
+\code{exclude_findings} is \code{"definite"} or \code{"validation"},
+because every Export-blocking Response Column ID is then dropped from the
+Variable Dictionary after download anyway (every Export-blocking Validation
+Finding is a Definite Validation Finding). The pre-download check never
+aborts on Suggestive Validation Findings under any setting.
 
 Unless \code{extra_columns = NULL}, Labelled Survey Data additionally carries
 the per-response metadata columns \code{startDate}, \code{endDate},

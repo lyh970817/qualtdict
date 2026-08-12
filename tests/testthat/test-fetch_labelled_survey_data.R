@@ -1194,6 +1194,74 @@ test_that("exclude_findings = \"validation\" needs no dictionary gate", {
   expect_named(dat, "q2")
 })
 
+test_that("exclude_findings = \"definite\" drops only definite rows", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        `1_QID11_7` = "1",
+        QID2 = "2"
+      )
+    }
+  )
+
+  # 1_QID11_7 carries a Definite Validation Finding (two choices share one
+  # level -- Export-blocking). QID2 carries only a Suggestive Validation
+  # Finding: its variable_name was repaired successfully.
+  dict <- minimal_export_dict(
+    response_column_id = c("1_QID11_7", "1_QID11_7", "QID2"),
+    variable_name = c("ptsd.sertraline", "ptsd.sertraline", "q2"),
+    qid = c("QID11", "QID11", "QID2"),
+    question_name = c("ptsd.sertraline", "ptsd.sertraline", "q2"),
+    block = c("Block A", "Block A", "Block B"),
+    question = c("Question q11", "Question q11", "Question q2"),
+    label = c(
+      "Posttraumatic stress disorder (PTSD)",
+      "Body dysmorphic disorder",
+      "No"
+    ),
+    level = c("1", "1", "2"),
+    selector = c("MACOL", "MACOL", "SAVR")
+  )
+  attr(dict, "variable_name_findings") <- tibble::tibble(
+    response_column_id = "QID2",
+    original_candidate = "q2_",
+    variable_name = "q2",
+    reason = "unsafe"
+  )
+
+  dat <- fetch_labelled_survey_data(
+    dict,
+    extra_columns = NULL,
+    exclude_findings = "definite"
+  )
+
+  # The definite column is gone; the suggestive-finding column survives.
+  expect_named(dat, "q2")
+  expect_identical(attr(dat, "dict")$response_column_id, "QID2")
+})
+
+test_that("exclude_findings = \"definite\" needs no dictionary gate", {
+  fetched <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      fetched$value <- TRUE
+      tibble::tibble(`1_QID11_7` = "1")
+    }
+  )
+
+  # The dictionary carries an Export-blocking Validation Finding, but the
+  # definite rows are dropped after download anyway, so the pre-download gate
+  # does not fire and the download proceeds.
+  dat <- fetch_labelled_survey_data(
+    tick_column_collision_export_dict(),
+    extra_columns = NULL,
+    exclude_findings = "definite"
+  )
+
+  expect_true(fetched$value)
+  expect_identical(ncol(dat), 0L)
+})
+
 test_that("require_valid_dict must be a single TRUE or FALSE", {
   expect_error(
     fetch_labelled_survey_data(

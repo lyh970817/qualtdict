@@ -653,6 +653,7 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
     findings,
     c(
       "finding",
+      "severity",
       "response_column_id",
       "variable_name",
       "original_candidate",
@@ -666,6 +667,10 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
   expect_identical(
     findings$finding,
     rep("repaired_variable_name", 4)
+  )
+  expect_identical(
+    findings$severity,
+    rep("suggestive", 4)
   )
   expect_identical(
     findings$response_column_id,

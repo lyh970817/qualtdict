@@ -19,7 +19,14 @@ A \code{qualtdict_validation} object. This is a list with stable components:
 \item \code{validation_findings} - A data frame of Validation Findings for
 Variable Dictionary consistency issues, including repaired variable names,
 non-unique or unsafe final \code{variable_name} values, and level-label coding
-findings.
+findings. Each row carries a \code{severity}: \code{"definite"} when the finding
+makes the affected export column uninterpretable or its identity
+unreliable (the Export-blocking level-label codings, and inconsistent,
+duplicate, or unsafe final \code{variable_name} values), \code{"suggestive"} when
+the finding only reports something worth review while the column's data
+and identity stay sound (a repaired \code{variable_name}; a level-label
+finding, such as a gapped level run, none of whose tripped tests is
+Export-blocking).
 \item \code{level_label_pairs} - A data frame containing the unique level-label
 pairings.
 }
