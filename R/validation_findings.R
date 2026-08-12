@@ -17,6 +17,7 @@ new_qualtdict_validation <- function(validation_findings, level_label_pairs) {
 validation_finding_columns <- function() {
   c(
     "finding",
+    "severity",
     "response_column_id",
     "variable_name",
     "original_candidate",
@@ -33,6 +34,7 @@ validation_finding_columns <- function() {
 empty_validation_findings <- function() {
   tibble(
     finding = character(),
+    severity = character(),
     response_column_id = character(),
     variable_name = character(),
     original_candidate = character(),
@@ -42,6 +44,46 @@ empty_validation_findings <- function() {
     label = character(),
     level = character()
   )
+}
+
+#' Classify Validation Finding severity
+#'
+#' Every Validation Finding is either a Definite Validation Finding
+#' (`"definite"`: the affected export column is uninterpretable or its
+#' identity is unreliable) or a Suggestive Validation Finding
+#' (`"suggestive"`: worth review, but the column's data and identity are
+#' sound). `"suggestive"` covers exactly two shapes:
+#' `repaired_variable_name` (the name was repaired successfully; the data and
+#' labels are untouched) and a `level_label_mistake` none of whose tripped
+#' tests is Export-blocking (a gapped level run is ordinary Qualtrics survey
+#' design). Everything else is `"definite"`: the Export-blocking level-label
+#' codings (`export_blocking_mistake_tests()`), and the variable-name findings
+#' that break the rename identity of Labelled Export
+#' (`inconsistent_variable_name`, `duplicate_variable_name`,
+#' `unsafe_variable_name`). An unrecognised finding class, or a
+#' `level_label_mistake` with no recorded test code, classifies as
+#' `"definite"`, so a new class fails closed until it is classified here.
+#'
+#' Severity is derived from `finding` and `mistake` on every normalisation and
+#' never stored independently, so it cannot drift from the classes it
+#' describes.
+#' @noRd
+validation_finding_severity <- function(finding, mistake) {
+  blocking_pattern <- paste0(
+    "[",
+    paste(export_blocking_mistake_tests(), collapse = ""),
+    "]"
+  )
+  is_class <- function(x, class) {
+    !is.na(x) & x == class
+  }
+  suggestive <- is_class(finding, "repaired_variable_name") |
+    (is_class(finding, "level_label_mistake") &
+      !is.na(mistake) &
+      nzchar(mistake) &
+      !grepl(blocking_pattern, mistake))
+
+  ifelse(suggestive, "suggestive", "definite")
 }
 
 #' Normalise Validation Findings to the package schema
@@ -58,6 +100,10 @@ normalize_validation_findings <- function(findings) {
   }
   findings <- findings[validation_finding_columns()]
   findings[] <- lapply(findings, as.character)
+  findings$severity <- validation_finding_severity(
+    findings$finding,
+    findings$mistake
+  )
   findings
 }
 

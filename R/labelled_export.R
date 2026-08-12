@@ -109,10 +109,15 @@ prepare_fetch_survey_args <- function(args, dict) {
 }
 
 #' Exclude Variable Dictionary rows with selected findings
+#'
+#' `"definite"` excludes only the rows whose Validation Findings carry
+#' `severity == "definite"`; rows carrying only Suggestive Validation Findings
+#' keep their columns. `"validation"` excludes every finding-carrying row,
+#' suggestive ones included.
 #' @noRd
 exclude_dict_findings <- function(
   dict,
-  exclude_findings = c("none", "validation"),
+  exclude_findings = c("none", "definite", "validation"),
   quiet = TRUE
 ) {
   exclude_findings <- match.arg(exclude_findings)
@@ -120,19 +125,19 @@ exclude_dict_findings <- function(
     return(dict)
   }
 
-  excluded_response_column_ids <- character()
+  validation <- dict_validate(dict, quiet = quiet)
+  validation_findings <- validation$validation_findings
 
-  if (exclude_findings == "validation") {
-    validation <- dict_validate(dict, quiet = quiet)
-    validation_findings <- validation$validation_findings
-    excluded_response_column_ids <- c(
-      excluded_response_column_ids,
-      validation_findings$response_column_id
-    )
+  if (exclude_findings == "definite") {
+    validation_findings <- validation_findings[
+      validation_findings$severity == "definite",
+    ]
   }
 
   excluded_response_column_ids <- unique(
-    excluded_response_column_ids[!is.na(excluded_response_column_ids)]
+    validation_findings$response_column_id[
+      !is.na(validation_findings$response_column_id)
+    ]
   )
 
   exclude_rows <- dict_response_column_id(dict) %in%

@@ -37,6 +37,7 @@ test_that("dict_validate always returns a stable validation object", {
     validation$validation_findings,
     c(
       "finding",
+      "severity",
       "response_column_id",
       "variable_name",
       "original_candidate",
@@ -123,6 +124,9 @@ test_that("dict_validate validates final variable_name export consistency", {
   expect_identical(unsafe_findings$response_column_id, "QID1")
   expect_identical(unsafe_findings$variable_name, "bad name")
   expect_identical(unsafe_findings$reason, "unsafe")
+  # Both classes break the rename identity of Labelled Export.
+  expect_identical(unique(duplicate_findings$severity), "definite")
+  expect_identical(unique(unsafe_findings$severity), "definite")
 })
 
 test_that("dict_validate reports repaired names as Validation Findings", {
@@ -146,6 +150,8 @@ test_that("dict_validate reports repaired names as Validation Findings", {
   expect_identical(findings$original_candidate, "bad name")
   expect_identical(findings$variable_name, "bad_name")
   expect_identical(findings$reason, "unsafe")
+  # A successful repair leaves the column's data and identity sound.
+  expect_identical(findings$severity, "suggestive")
 })
 
 test_that("dict_validate preserves level-label mistake findings", {
@@ -165,6 +171,40 @@ test_that("dict_validate preserves level-label mistake findings", {
   expect_identical(unique(mistake_findings$mistake), "234")
   expect_identical(mistake_findings$label, c("A", "A", "B"))
   expect_identical(mistake_findings$level, c("1", "1", "3"))
+  # Tests 3 and 4 are Export-blocking, so the tripped set is definite.
+  expect_identical(unique(mistake_findings$severity), "definite")
+})
+
+test_that("severity separates definite from suggestive Validation Findings", {
+  # A gapped level run trips only test 2 (increment not 1), which is not
+  # Export-blocking: the level-label mapping stays one-to-one and every
+  # response labels correctly. Suggestive.
+  gapped <- minimal_validation_dict(
+    response_column_id = c("QID1", "QID1"),
+    label = c("A", "B"),
+    level = c("1", "3")
+  )
+  gapped_findings <- dict_validate(gapped)$validation_findings
+  expect_identical(unique(gapped_findings$finding), "level_label_mistake")
+  expect_identical(unique(gapped_findings$mistake), "2")
+  expect_identical(unique(gapped_findings$severity), "suggestive")
+
+  # Two choices sharing one level collapse into one uninterpretable export
+  # column (test 4, Export-blocking). Definite.
+  collided <- minimal_validation_dict(
+    response_column_id = c("QID2", "QID2"),
+    variable_name = c("q2", "q2"),
+    label = c("Yes", "No"),
+    level = c("1", "1")
+  )
+  collided_findings <- dict_validate(collided)$validation_findings
+  expect_identical(
+    unique(collided_findings$mistake[
+      collided_findings$finding == "level_label_mistake"
+    ]),
+    "124"
+  )
+  expect_identical(unique(collided_findings$severity), "definite")
 })
 
 test_that("dict_validate skips level-label checks for Embedded Data Fields", {

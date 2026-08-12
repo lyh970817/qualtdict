@@ -1,5 +1,22 @@
 # qualtdict 0.0.0.9000
 
+- `dict_validate()` output now classifies every Validation Finding by
+  `severity`: `"definite"` when the finding makes the affected export column
+  uninterpretable or its identity unreliable (the Export-blocking
+  level-label codings, and inconsistent, duplicate, or unsafe final
+  `variable_name` values), `"suggestive"` when the finding only reports
+  something worth review while the column's data and identity stay sound (a
+  repaired `variable_name`; a gapped level run). Severity is derived from the
+  finding class on every normalisation, so it cannot drift, and an
+  unrecognised class classifies as `"definite"` (fails closed).
+  `fetch_labelled_survey_data()` gains `exclude_findings = "definite"`, which
+  drops only the rows carrying Definite Validation Findings and keeps every
+  row whose findings are merely suggestive; `"validation"` keeps its existing
+  drop-everything meaning. The pre-download `assert_dict_valid()` gate is
+  skipped for both `"definite"` and `"validation"` (every Export-blocking
+  Response Column ID is dropped after download under either), and it never
+  aborts on Suggestive Validation Findings under any setting.
+
 - `assert_dict_valid()` is a new exported gate that errors when a Variable
   Dictionary carries Export-blocking Validation Findings: level-label codings
   where label and level are not one-to-one, one label is carried by several
