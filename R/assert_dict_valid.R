@@ -201,7 +201,7 @@ export_blocking_message <- function(findings) {
       "erroring."
     ),
     paste(
-      "To download anyway, use `exclude_findings = \"validation\"` to drop",
+      "To download anyway, use `exclude_findings = \"definite\"` to drop",
       "the affected Export Variables, or",
       "`require_valid_dict = FALSE` to keep them with unreliable value",
       "labels."
