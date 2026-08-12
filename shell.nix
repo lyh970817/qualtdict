@@ -126,6 +126,16 @@ let
 
 in
 pkgs.mkShell {
+  # rJava honours the ambient JAVA_HOME at load time (its .onLoad puts
+  # $JAVA_HOME's jvm dir on the DLL search path ahead of the rpath). An
+  # ambient JAVA_HOME from a different nixpkgs can point at a libjvm.so
+  # built against a newer glibc than this environment carries, so rJava.so
+  # fails to dyn.load and the Imports check (openNLP -> rJava) aborts every
+  # load. Pin JAVA_HOME to the exact jdk rJava was built against so the
+  # shell is self-consistent regardless of the ambient environment (same
+  # fix as the parent pipeline's shell.nix, 2026-08-11).
+  JAVA_HOME = "${pkgs.jdk}/lib/openjdk";
+
   LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
     pkgs.bzip2
     pkgs.icu
