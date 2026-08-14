@@ -2,6 +2,44 @@
 
 ## qualtdict 0.0.0.9000
 
+- [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
+  output now classifies every Validation Finding by `severity`:
+  `"definite"` when the finding makes the affected export column
+  uninterpretable or its identity unreliable (the Export-blocking
+  level-label codings, and inconsistent, duplicate, or unsafe final
+  `variable_name` values), `"suggestive"` when the finding only reports
+  something worth review while the column’s data and identity stay sound
+  (a repaired `variable_name`; a gapped level run). Severity is derived
+  from the finding class on every normalisation, so it cannot drift, and
+  an unrecognised class classifies as `"definite"` (fails closed).
+  [`fetch_labelled_survey_data()`](https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.md)
+  gains `exclude_findings = "definite"`, which drops only the rows
+  carrying Definite Validation Findings and keeps every row whose
+  findings are merely suggestive; `"validation"` keeps its existing
+  drop-everything meaning. The pre-download
+  [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+  gate is skipped for both `"definite"` and `"validation"` (every
+  Export-blocking Response Column ID is dropped after download under
+  either), and it never aborts on Suggestive Validation Findings under
+  any setting.
+
+- [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+  is a new exported gate that errors when a Variable Dictionary carries
+  Export-blocking Validation Findings: level-label codings where label
+  and level are not one-to-one, one label is carried by several rows, or
+  one level is carried by several rows. The error names every offending
+  Response Column ID, its Dictionary Variable Name, and the colliding
+  labels. A gapped level sequence is not Export-blocking.
+  [`fetch_labelled_survey_data()`](https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.md)
+  now applies the gate before downloading responses, so a defective
+  Variable Dictionary no longer aborts a whole survey deep inside
+  labelling after the download is paid for; pass
+  `require_valid_dict = FALSE` to download from a survey known to carry
+  such findings.
+  [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
+  is unchanged and stays total: it reports every Validation Finding and
+  never errors.
+
 - [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   no longer declares a choice recode as the Level universe of a `_DO_`
   display-order column. Qualtrics exports one such column per choice:

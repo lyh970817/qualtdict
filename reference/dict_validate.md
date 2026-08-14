@@ -31,10 +31,25 @@ A `qualtdict_validation` object. This is a list with stable components:
 - `validation_findings` - A data frame of Validation Findings for
   Variable Dictionary consistency issues, including repaired variable
   names, non-unique or unsafe final `variable_name` values, and
-  level-label coding findings.
+  level-label coding findings. Each row carries a `severity`:
+  `"definite"` when the finding makes the affected export column
+  uninterpretable or its identity unreliable (the Export-blocking
+  level-label codings, and inconsistent, duplicate, or unsafe final
+  `variable_name` values), `"suggestive"` when the finding only reports
+  something worth review while the column's data and identity stay sound
+  (a repaired `variable_name`; a level-label finding, such as a gapped
+  level run, none of whose tripped tests is Export-blocking).
 
 - `level_label_pairs` - A data frame containing the unique level-label
   pairings.
+
+## Details
+
+`dict_validate()` is total: it reports every Validation Finding and
+never errors, so it can be used to survey the damage in a defective
+Variable Dictionary. Use
+[`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+when you want the Export-blocking subset to error instead.
 
 ## Examples
 
