@@ -13,8 +13,9 @@ metadata using `sjlabelled`.
 fetch_labelled_survey_data(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
-  exclude_findings = c("none", "validation"),
+  exclude_findings = c("none", "definite", "validation"),
   ...,
+  require_valid_dict = TRUE,
   quiet = TRUE
 )
 ```
@@ -39,9 +40,20 @@ fetch_labelled_survey_data(
 
 - exclude_findings:
 
-  Which findings to exclude after survey download. `"none"` keeps all
-  downloaded variables represented in the Variable Dictionary.
-  `"validation"` excludes rows with Validation Findings.
+  Which Validation Finding classes cost their rows after survey
+  download. `"none"` keeps all downloaded variables represented in the
+  Variable Dictionary. `"definite"` excludes only the rows whose
+  Validation Findings are Definite Validation Findings
+  (`severity == "definite"` in
+  [`dict_validate`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
+  output): the Export-blocking level-label codings, and the
+  variable-name findings that make the renamed export's column identity
+  unreliable. Rows carrying only Suggestive Validation Findings (a
+  repaired `variable_name`; a gapped level run) keep their columns and
+  stay reported by
+  [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md).
+  `"validation"` excludes every row with any Validation Finding,
+  suggestive ones included.
 
 - ...:
 
@@ -52,6 +64,16 @@ fetch_labelled_survey_data(
   `breakout_sets`; passing those arguments errors because they are
   needed for reliable Variable Dictionary to Response Column ID
   matching.
+
+- require_valid_dict:
+
+  Boolean. If `TRUE` (the default), the Variable Dictionary is checked
+  with
+  [`assert_dict_valid`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+  before any responses are downloaded, and Export-blocking Validation
+  Findings error. Use `FALSE` to download from a survey known to carry
+  them; the affected Export Variables then keep unreliable value labels.
+  Because `require_valid_dict` follows `...`, supply it by name.
 
 - quiet:
 
@@ -75,6 +97,14 @@ User-supplied passthrough arguments cannot override those settings.
 By default, Labelled Survey Data includes variables with Validation
 Findings. Use `exclude_findings` when you want to explicitly remove them
 after download. Because `quiet` follows `...`, supply it by name.
+
+Export-blocking Validation Findings are checked before the download, so
+a defective Variable Dictionary costs no responses. The check is skipped
+when `exclude_findings` is `"definite"` or `"validation"`, because every
+Export-blocking Response Column ID is then dropped from the Variable
+Dictionary after download anyway (every Export-blocking Validation
+Finding is a Definite Validation Finding). The pre-download check never
+aborts on Suggestive Validation Findings under any setting.
 
 Unless `extra_columns = NULL`, Labelled Survey Data additionally carries
 the per-response metadata columns `startDate`, `endDate`,

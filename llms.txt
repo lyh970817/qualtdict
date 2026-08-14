@@ -149,6 +149,8 @@ findings.
   : Generate a Variable Dictionary for a survey
 - [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
   : Return Validation Findings for a Variable Dictionary
+- [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+  : Require a Variable Dictionary that can be exported
 
 ## Create labelled survey data
 

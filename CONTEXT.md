@@ -159,6 +159,40 @@ mappings. A clean validation result is a consistency screen, not proof
 that the survey metadata is correct. *Avoid*: Mistake, error, invalid
 dictionary
 
+**Export-blocking Validation Finding**: A Validation Finding whose
+level-label coding makes Labelled Export wrong or impossible: label and
+level are not one-to-one, one label is carried by several rows, or one
+level is carried by several rows. A level carried by several rows is the
+aborting shape, because Qualtrics keys an export column on the choice
+recode and exports one column for two choices that share it. A gapped
+level sequence is not Export-blocking. Export-blocking Validation
+Findings are reported, never repaired: the Variable Dictionary keeps
+every row exactly as the Qualtrics survey defines it. *Avoid*: Fatal
+finding, invalid dictionary, broken level
+
+**Definite Validation Finding**: A Validation Finding whose row is wrong
+in a way that makes its export column uninterpretable or its identity
+unreliable: the Export-blocking level-label codings, and the
+variable-name findings that break the rename identity of Labelled Export
+(inconsistent, duplicate, or unsafe final `variable_name` values).
+Reported with `severity == "definite"` by
+[`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md);
+the set `exclude_findings = "definite"` drops. Every Export-blocking
+Validation Finding is a Definite Validation Finding. An unrecognised
+finding class classifies as definite until it is classified
+deliberately. *Avoid*: fatal finding, hard finding, error-class finding
+
+**Suggestive Validation Finding**: A Validation Finding that reports
+something worth review while the column’s data and identity stay sound:
+a repaired `variable_name` (the repair succeeded; data and labels are
+untouched), or a level-label finding none of whose tripped tests is
+Export-blocking (a gapped or non-step-1 level run is ordinary Qualtrics
+survey design). Reported with `severity == "suggestive"` by
+[`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md);
+never dropped by `exclude_findings = "definite"` and never aborts the
+pre-download gate. *Avoid*: soft finding, warning-class finding,
+cosmetic finding
+
 **Labelled Export Finding**: A finding detected while matching a
 Variable Dictionary to downloaded survey data during Labelled Export,
 such as a Response Column ID represented by the Variable Dictionary but
