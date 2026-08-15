@@ -145,7 +145,7 @@ Found the following hidden files and directories:
 ```
 
 In hook runs where the active environment had not reloaded TeX Live from
-`shell.nix`, `pkgcheck` still reported:
+the development shell, `pkgcheck` still reported:
 
 ```text
 pdflatex not found! Not building PDF manual.
@@ -154,7 +154,7 @@ R CMD check found 1 warning.
 ```
 
 The project-local environment has since been updated with TeX Live support in
-`shell.nix`. Existing shells may need:
+`flake.nix`. Existing shells may need:
 
 ```sh
 direnv reload
