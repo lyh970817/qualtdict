@@ -20,7 +20,11 @@ If you’ve found a bug, please file an issue that illustrates the bug with a mi
 
 *   Fork the package and clone onto your computer. If you haven't done this before, we recommend using `usethis::create_from_github("lyh970817/qualtdict", fork = TRUE)`.
 
-*   Install all development dependencies with `devtools::install_dev_deps()`, and then make sure the package passes R CMD check by running `devtools::check()`. 
+*   Enter the pinned development environment with `nix develop`. The flake
+    provides the package and development dependencies, so make sure the package
+    passes R CMD check by running `devtools::check()`. Update the pinned
+    environment deliberately with `nix flake update` and commit the resulting
+    `flake.lock` change.
     If R CMD check doesn't pass cleanly, it's a good idea to ask for help before continuing. 
 *   Create a Git branch for your pull request (PR). We recommend using `usethis::pr_init("brief-description-of-change")`.
 

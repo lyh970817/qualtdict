@@ -85,7 +85,7 @@ export behavior are covered with synthetic dictionaries and synthetic metadata.
 `tests/testthat/test-hygiene.R` guards against committed Qualtrics cassette YAML
 files. CI runs R CMD check on macOS, Windows, Ubuntu devel, Ubuntu release, and
 Ubuntu oldrel-1, plus coverage on Ubuntu. Local checks still need to be run
-inside `nix-shell` or another environment with package development dependencies
+inside `nix develop` or another environment with package development dependencies
 installed.
 
 Primary references:
@@ -129,7 +129,7 @@ Primary reference:
 - [ ] Any bundled algorithmic code or copied logic has clear provenance and
   compatible licensing.
 
-2026-06-15 remediation path: run `nix-shell` and then
+2026-06-15 remediation path: run `nix develop` and then
 `Rscript -e 'devtools::document()'`, `Rscript -e 'devtools::test()'`, and
 `Rscript -e 'devtools::check()'`. If checks report documentation/API mismatches,
 resolve them in the documentation and API cleanup issues already planned in
