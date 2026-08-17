@@ -109,19 +109,21 @@ smoke_scenario_requirements <- function(selected_functions) {
 }
 
 smoke_summary_names <- function(functions) {
+  # The labelled scenario is recorded only under
+  # `labelled_excluding_validation`: the smoke never runs the default path of
+  # `fetch_labelled_survey_data()`, whose severity gate (commit fb05802)
+  # aborts on Definite Validation Findings that live metadata can
+  # legitimately carry. See `run_scenario()` in `local-finalize-smoke.R`.
   output_map <- list(
     dict_generate = c("dict", "level_universe"),
     dict_validate = "validation",
-    fetch_labelled_survey_data = "labelled",
+    fetch_labelled_survey_data = "labelled_excluding_validation",
     labelled_export_findings = "labelled_export_findings",
     dict_split_blocks = "dict_blocks",
     survey_split_blocks = "survey_blocks"
   )
 
   summaries <- unlist(unname(output_map[functions]), use.names = FALSE)
-  if ("fetch_labelled_survey_data" %in% functions) {
-    summaries <- c(summaries, "labelled_excluding_validation")
-  }
   unique(summaries)
 }
 
@@ -130,7 +132,6 @@ smoke_full_summary_names <- function() {
     "dict",
     "level_universe",
     "validation",
-    "labelled",
     "labelled_export_findings",
     "dict_blocks",
     "survey_blocks",
@@ -536,7 +537,7 @@ table_counts <- function(x) {
 
 smoke_result_line <- function(result, status) {
   dict_summary <- result$summaries[["dict"]]
-  labelled_summary <- result$summaries[["labelled"]]
+  labelled_summary <- result$summaries[["labelled_excluding_validation"]]
   message <- paste0(
     result$alias,
     " / ",
@@ -569,8 +570,8 @@ smoke_result_line <- function(result, status) {
 smoke_mismatch_lines <- function(current, baseline) {
   current_dict <- current$summaries[["dict"]]
   baseline_dict <- baseline$summaries[["dict"]]
-  current_labelled <- current$summaries[["labelled"]]
-  baseline_labelled <- baseline$summaries[["labelled"]]
+  current_labelled <- current$summaries[["labelled_excluding_validation"]]
+  baseline_labelled <- baseline$summaries[["labelled_excluding_validation"]]
   current_validation <- current$summaries[["validation"]]
   baseline_validation <- baseline$summaries[["validation"]]
 
