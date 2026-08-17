@@ -335,7 +335,7 @@ test_that("parse_smoke_variable_names rejects disabled and unknown routes", {
 test_that("smoke_summary_names maps functions to summary object names", {
   expect_identical(
     smoke_summary_names(c("dict_generate", "fetch_labelled_survey_data")),
-    c("dict", "level_universe", "labelled", "labelled_excluding_validation")
+    c("dict", "level_universe", "labelled_excluding_validation")
   )
   expect_identical(
     smoke_summary_names(c("dict_split_blocks", "survey_split_blocks")),
@@ -373,13 +373,12 @@ test_that("project_smoke_record keeps only selected summaries and hashes", {
 
   expect_named(
     projected$summaries,
-    c("dict_blocks", "labelled", "labelled_excluding_validation")
+    c("dict_blocks", "labelled_excluding_validation")
   )
   expect_identical(
     projected$object_hashes,
     list(
       dict_blocks = "dict-blocks-hash",
-      labelled = "labelled-hash",
       labelled_excluding_validation = "labelled-ex-hash"
     )
   )
@@ -393,15 +392,23 @@ test_that("project_smoke_record omits unavailable optional summaries", {
     survey_id = "SV_123",
     variable_name = "semantic_name",
     generated_at = "2026-06-26T00:00:00Z",
-    summaries = list(labelled = list(object_hash = "labelled-hash")),
-    object_hashes = list(labelled = "labelled-hash"),
+    summaries = list(
+      labelled_excluding_validation = list(object_hash = "labelled-ex-hash")
+    ),
+    object_hashes = list(labelled_excluding_validation = "labelled-ex-hash"),
     scenario_hash = "full-hash"
   )
 
-  projected <- project_smoke_record(record, "fetch_labelled_survey_data")
+  projected <- project_smoke_record(
+    record,
+    c("dict_generate", "fetch_labelled_survey_data")
+  )
 
-  expect_named(projected$summaries, "labelled")
-  expect_identical(projected$object_hashes, list(labelled = "labelled-hash"))
+  expect_named(projected$summaries, "labelled_excluding_validation")
+  expect_identical(
+    projected$object_hashes,
+    list(labelled_excluding_validation = "labelled-ex-hash")
+  )
 })
 
 test_that("project_smoke_record keeps full-run order", {
@@ -413,7 +420,6 @@ test_that("project_smoke_record keeps full-run order", {
     summaries = list(
       dict = list(object_hash = "dict-hash"),
       validation = list(object_hash = "validation-hash"),
-      labelled = list(object_hash = "labelled-hash"),
       labelled_excluding_validation = list(
         object_hash = "labelled-ex-hash"
       ),
@@ -427,7 +433,6 @@ test_that("project_smoke_record keeps full-run order", {
     object_hashes = list(
       dict = "dict-hash",
       validation = "validation-hash",
-      labelled = "labelled-hash",
       labelled_excluding_validation = "labelled-ex-hash",
       labelled_export_findings = "export-findings-hash",
       level_universe = "level-universe-hash",
@@ -445,7 +450,6 @@ test_that("project_smoke_record keeps full-run order", {
       "dict",
       "level_universe",
       "validation",
-      "labelled",
       "labelled_export_findings",
       "dict_blocks",
       "survey_blocks",
@@ -458,7 +462,6 @@ test_that("project_smoke_record keeps full-run order", {
       dict = "dict-hash",
       level_universe = "level-universe-hash",
       validation = "validation-hash",
-      labelled = "labelled-hash",
       labelled_export_findings = "export-findings-hash",
       dict_blocks = "dict-blocks-hash",
       survey_blocks = "survey-blocks-hash",
@@ -533,8 +536,10 @@ test_that("bless_smoke_record merges selected summaries in selective mode", {
     survey_id = "SV_123",
     variable_name = "question_name",
     generated_at = "new-time",
-    summaries = list(labelled = list(object_hash = "new-labelled")),
-    object_hashes = list(labelled = "new-labelled"),
+    summaries = list(
+      labelled_excluding_validation = list(object_hash = "new-labelled")
+    ),
+    object_hashes = list(labelled_excluding_validation = "new-labelled"),
     scenario_hash = "selected-scenario"
   )
 
@@ -542,11 +547,11 @@ test_that("bless_smoke_record merges selected summaries in selective mode", {
 
   expect_named(
     blessed$summaries,
-    c("dict", "validation", "labelled", "survey_blocks")
+    c("dict", "validation", "survey_blocks", "labelled_excluding_validation")
   )
   expect_identical(blessed$summaries$dict, list(object_hash = "old-dict"))
   expect_identical(
-    blessed$summaries$labelled,
+    blessed$summaries$labelled_excluding_validation,
     list(object_hash = "new-labelled")
   )
   expect_identical(
@@ -564,11 +569,11 @@ test_that("merge_smoke_baseline updates only selected summaries and hashes", {
     generated_at = "old-time",
     summaries = list(
       dict = list(object_hash = "old-dict"),
-      labelled = list(object_hash = "old-labelled")
+      labelled_excluding_validation = list(object_hash = "old-labelled")
     ),
     object_hashes = list(
       dict = "old-dict",
-      labelled = "old-labelled"
+      labelled_excluding_validation = "old-labelled"
     ),
     scenario_hash = "old-scenario"
   )
@@ -577,8 +582,10 @@ test_that("merge_smoke_baseline updates only selected summaries and hashes", {
     survey_id = "SV_123",
     variable_name = "question_name",
     generated_at = "new-time",
-    summaries = list(labelled = list(object_hash = "new-labelled")),
-    object_hashes = list(labelled = "new-labelled"),
+    summaries = list(
+      labelled_excluding_validation = list(object_hash = "new-labelled")
+    ),
+    object_hashes = list(labelled_excluding_validation = "new-labelled"),
     scenario_hash = "selected-scenario"
   )
 
@@ -586,14 +593,14 @@ test_that("merge_smoke_baseline updates only selected summaries and hashes", {
 
   expect_identical(merged$summaries$dict, list(object_hash = "old-dict"))
   expect_identical(
-    merged$summaries$labelled,
+    merged$summaries$labelled_excluding_validation,
     list(object_hash = "new-labelled")
   )
   expect_identical(
     merged$object_hashes,
     list(
       dict = "old-dict",
-      labelled = "new-labelled"
+      labelled_excluding_validation = "new-labelled"
     )
   )
   expect_match(merged$scenario_hash, "^[0-9a-f]{32}$")
@@ -622,8 +629,10 @@ test_that("merge_smoke_baseline restores canonical order for known summaries", {
     survey_id = "SV_123",
     variable_name = "question_name",
     generated_at = "new-time",
-    summaries = list(labelled = list(object_hash = "new-labelled")),
-    object_hashes = list(labelled = "new-labelled"),
+    summaries = list(
+      labelled_excluding_validation = list(object_hash = "new-labelled")
+    ),
+    object_hashes = list(labelled_excluding_validation = "new-labelled"),
     scenario_hash = "selected-scenario"
   )
 
@@ -631,14 +640,14 @@ test_that("merge_smoke_baseline restores canonical order for known summaries", {
 
   expect_named(
     merged$summaries,
-    c("dict", "labelled", "survey_blocks")
+    c("dict", "survey_blocks", "labelled_excluding_validation")
   )
   expect_identical(
     merged$object_hashes,
     list(
       dict = "old-dict",
-      labelled = "new-labelled",
-      survey_blocks = "old-survey-blocks"
+      survey_blocks = "old-survey-blocks",
+      labelled_excluding_validation = "new-labelled"
     )
   )
   expect_match(merged$scenario_hash, "^[0-9a-f]{32}$")
@@ -809,7 +818,7 @@ test_that("smoke_result_line includes detailed row counts for full summaries", {
     scenario_hash = "abc123",
     summaries = list(
       dict = list(rows = 12L),
-      labelled = list(rows = 34L, columns = 5L)
+      labelled_excluding_validation = list(rows = 34L, columns = 5L)
     )
   )
 
@@ -849,7 +858,7 @@ test_that("smoke_mismatch_lines includes summary deltas", {
     scenario_hash = "oldhash",
     summaries = list(
       dict = list(rows = 12L),
-      labelled = list(rows = 34L, columns = 5L),
+      labelled_excluding_validation = list(rows = 34L, columns = 5L),
       validation = list(validation_findings_rows = 2L)
     )
   )
@@ -859,7 +868,7 @@ test_that("smoke_mismatch_lines includes summary deltas", {
     scenario_hash = "newhash",
     summaries = list(
       dict = list(rows = 13L),
-      labelled = list(rows = 35L, columns = 6L),
+      labelled_excluding_validation = list(rows = 35L, columns = 6L),
       validation = list(validation_findings_rows = 4L)
     )
   )
@@ -870,7 +879,7 @@ test_that("smoke_mismatch_lines includes summary deltas", {
       "Mismatch: survey_a / question_name",
       "  baseline hash: oldhash",
       "  current hash:  newhash",
-      "  outputs: dict, labelled, validation",
+      "  outputs: dict, labelled_excluding_validation, validation",
       "  dict rows: 12 -> 13",
       "  labelled dims: 34x5 -> 35x6",
       "  validation findings rows: 2 -> 4"
