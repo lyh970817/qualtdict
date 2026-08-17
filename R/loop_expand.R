@@ -219,11 +219,7 @@ loop_options_for_context <- function(context) {
   looping_source_fact <- context$looping_source_fact
 
   if (is.null(looping_source_fact)) {
-    if (is.na(context$looping_qid)) {
-      return(loop_options_from_static_only_source(context))
-    }
-
-    return(loop_options_from_absent_source_static_prefixes(context))
+    return(loop_options_from_static_only_source(context))
   }
 
   source_type <- scalar_character(
@@ -279,18 +275,12 @@ loop_options_from_choice_source_context <- function(context) {
   )
 }
 
-#' Resolve Loop Options from static-only Loop and Merge rows
+#' Resolve Loop Options from static Loop and Merge rows
+#'
+#' Covers both source-less cases: no Loop and Merge source QID at all, and a
+#' source QID whose Question Facts are absent from the survey.
 #' @noRd
 loop_options_from_static_only_source <- function(context) {
-  loop_options_from_static_fields(
-    context$looping_static,
-    context$static_prefixes
-  )
-}
-
-#' Resolve Loop Options when the source QID is absent but static rows remain
-#' @noRd
-loop_options_from_absent_source_static_prefixes <- function(context) {
   loop_options_from_static_fields(
     context$looping_static,
     context$static_prefixes
@@ -329,7 +319,7 @@ new_loop_expanded_question_fact <- function(
   looped_question_fact[["base_response_column_id"]] <-
     normalise_loop_base_response_column_id(
       paste(
-        question_fact_looping_prefix_value(looped_question_fact),
+        question_fact_looping_prefix(looped_question_fact),
         question_fact[["qid"]],
         sep = "_"
       )
@@ -569,9 +559,9 @@ loop_options_from_choice_source <- function(source, static_prefixes) {
 #' Resolve a Loop Option label from a choice
 #' @noRd
 loop_option_label <- function(choice) {
-  option <- choice[["description"]]
+  option <- choice[["label"]]
   if (is.null(option) || is.na(option) || option == "") {
-    option <- choice[["choiceText"]]
+    option <- choice[["choice_id"]]
   }
 
   as.character(option)

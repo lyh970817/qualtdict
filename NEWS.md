@@ -1,5 +1,9 @@
 # qualtdict 0.0.0.9000
 
+- `dict_generate()` no longer fails on a Loop and Merge source choice whose
+  label is blank or missing. Such a Loop Option now takes the source choice
+  ID as its label instead of aborting Loop expansion for the whole survey.
+
 - `dict_validate()` output now classifies every Validation Finding by
   `severity`: `"definite"` when the finding makes the affected export column
   uninterpretable or its identity unreliable (the Export-blocking
