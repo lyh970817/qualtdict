@@ -17,7 +17,7 @@
 #' Defaults to \code{TRUE}.
 #'
 #' @return
-#' A `qualtdict_validation` object. This is a list with stable components:
+#' A list with stable components:
 #' \itemize{
 #'   \item `validation_findings` - A data frame of Validation Findings for
 #'   Variable Dictionary consistency issues, including repaired variable names,

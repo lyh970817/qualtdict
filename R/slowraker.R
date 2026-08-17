@@ -170,7 +170,7 @@ slowrake <- function(
     }
   }
 
-  structure(all_out, class = c(class(all_out), "rakelist"))
+  all_out
 }
 
 #' Build the openNLP annotators used for POS-tag filtering

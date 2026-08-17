@@ -64,7 +64,7 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
 
   raw_metadata <- fetch_dictionary_metadata("SV_FETCH")
 
-  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_type(raw_metadata, "list")
   expect_identical(raw_metadata$survey_name, "Fetched Survey")
   expect_identical(raw_metadata$description, description)
   expect_identical(raw_metadata$response_column_map$ImportId, "QID1")
@@ -90,7 +90,7 @@ test_that("metadata fetching degrades without response column maps", {
     "Failed to fetch the Qualtrics response column map"
   )
 
-  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_type(raw_metadata, "list")
   expect_null(raw_metadata$response_column_map)
 })
 
@@ -537,7 +537,7 @@ test_that("slowrake covers deterministic fallback branches", {
       quiet = FALSE
     )
   )
-  expect_s3_class(keywords, "rakelist")
+  expect_type(keywords, "list")
 })
 
 test_that("slowrake covers the POS-tag filtering branch", {
@@ -546,14 +546,14 @@ test_that("slowrake covers the POS-tag filtering branch", {
   skip_if_not_installed("tidyr")
   skip_if_not_installed("openNLP")
 
-  expect_s3_class(
+  expect_type(
     slowrake(
       "one two three",
       all_words = "one two three",
       stop_pos = "NN",
       stem = FALSE
     ),
-    "rakelist"
+    "list"
   )
 })
 
