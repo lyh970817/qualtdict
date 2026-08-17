@@ -6,7 +6,7 @@ test_that("dict_generate", {
   )
 
   suppressWarnings(
-    x <- dict_generate("SV_SYNTHETIC", variable_name = "semantic_name")
+    x <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
   )
 
   legacy_columns <- c(

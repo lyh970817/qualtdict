@@ -1,5 +1,13 @@
 # qualtdict 0.0.0.9000
 
+- The Semantic Name dependencies `slowraker`, `SnowballC`, `stringi`,
+  `tidyr`, and `openNLP` moved from Imports to Suggests: the package now
+  installs and runs its default `variable_name = "question_name"` path
+  without them. `dict_generate(variable_name = "semantic_name")` fails fast
+  with an actionable error when the optional packages are missing. Java (via
+  `openNLP` and `rJava`) is needed only for POS-tag filtering, which Semantic
+  Name generation does not use.
+
 - The Variable Dictionary returned by `dict_generate()` now names its Loop
   Option column `looping_option` instead of `loop_option`. The two names
   carried the same value and the internal duplicate is removed, so the

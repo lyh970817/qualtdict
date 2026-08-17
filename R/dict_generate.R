@@ -8,10 +8,14 @@
 #' @param variable_name String. Source for the final \code{variable_name}
 #' column in the Variable Dictionary. Use \code{question_name} for the raw
 #' Qualtrics Question Name or \code{semantic_name} for a generated Semantic
-#' Name based on question text and response metadata.
+#' Name based on question text and response metadata. Semantic Name
+#' generation needs the optional packages \pkg{slowraker}, \pkg{SnowballC},
+#' \pkg{stringi}, and \pkg{tidyr}; the default \code{question_name} path
+#' never uses them.
 #' @param block_pattern Function. A function that given the name of a
 #' Survey Block, returns a Block Prefix to prepend to Semantic Names in that
-#' block. Defaults to \code{NULL}.
+#' block. Used only when \code{variable_name = "semantic_name"}. Defaults to
+#' \code{NULL}.
 #' @param semantic_name_preprocess Function. An optional function that receives
 #' the full post-normalisation dictionary and returns a modified dictionary for
 #' Semantic Name generation. It runs only when
@@ -25,7 +29,8 @@
 #' @param quiet Boolean. If \code{TRUE}, suppress routine progress messages and
 #' progress bars. Defaults to \code{TRUE}.
 #' @param block_sep String. Separator between variable names and block
-#' prefixes returned by \code{block_pattern}. Defaults to ".".
+#' prefixes returned by \code{block_pattern}. Used only when
+#' \code{variable_name = "semantic_name"}. Defaults to ".".
 #' @details
 #' The returned Variable Dictionary preserves \code{response_column_id} as the
 #' downloaded Response Column ID, \code{qid} as the bare Qualtrics question
@@ -55,7 +60,10 @@
 #' conveniences generated from survey text and metadata; they are not stable
 #' guarantees across package versions or survey text changes. For long text,
 #' Semantic Names select important words from ranked keywords and preserve those
-#' selected words in the order they appear in the naming text.
+#' selected words in the order they appear in the naming text. Semantic Name
+#' generation needs the optional packages \pkg{slowraker}, \pkg{SnowballC},
+#' \pkg{stringi}, and \pkg{tidyr}. Java (via \pkg{openNLP}) is needed only
+#' for POS-tag filtering, which the Semantic Name path does not use.
 #'
 #' @return
 #' A Variable Dictionary: a \code{qualtdict} data frame. The as-downloaded
@@ -106,6 +114,9 @@ dict_generate <- function(
   variable_name <- match.arg(variable_name, c("question_name", "semantic_name"))
   checkarg_isvariable_name(variable_name)
   use_semantic_name <- variable_name == "semantic_name"
+  if (use_semantic_name) {
+    check_semantic_name_available()
+  }
 
   survey_metadata <- fetch_dictionary_metadata(surveyID)
   normalised_metadata <- normalise_qualtrics_metadata(survey_metadata)

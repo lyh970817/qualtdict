@@ -1,3 +1,56 @@
+skip_if_not_installed("slowraker")
+skip_if_not_installed("stringi")
+skip_if_not_installed("tidyr")
+
+test_that("check_semantic_name_available fails fast on missing packages", {
+  expect_no_error(check_semantic_name_available())
+
+  local_mocked_bindings(
+    semantic_name_package_available = function(pkg) FALSE
+  )
+  expect_error(
+    check_semantic_name_available(),
+    "needs optional packages"
+  )
+  expect_error(
+    dict_generate("SV_SYNTHETIC", variable_name = "semantic_name"),
+    "needs optional packages"
+  )
+})
+
+
+test_that("POS-tag filtering fails fast without openNLP", {
+  local_mocked_bindings(
+    semantic_name_package_available = function(pkg) FALSE
+  )
+  expect_error(
+    slowrake("one two three", all_words = "one two three", stop_pos = "NN"),
+    "openNLP"
+  )
+})
+
+
+test_that("dict_generate generates a semantic-name Variable Dictionary", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_loop_and_merge_raw_metadata()
+    }
+  )
+
+  suppressWarnings(
+    x <- dict_generate("SV_SYNTHETIC", variable_name = "semantic_name")
+  )
+
+  expect_s3_class(x, "data.frame")
+  expect_identical(names(x)[1:2], c("response_column_id", "row_source"))
+  expect_true("semantic_name" %in% names(x))
+  expect_false(all(is.na(x$semantic_name)))
+  expect_true(all(x$row_source == "question"))
+  expect_true("looping_option" %in% names(x))
+  expect_false(all(is.na(x$looping_option)))
+})
+
+
 test_that("Semantic Names are generated only on the semantic naming path", {
   raw_metadata <- synthetic_mc_text_raw_metadata()
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
@@ -68,7 +121,6 @@ test_that("Semantic Names return early when no question rows are present", {
       row_source = "embedded_data",
       variable_name = "Source"
     ),
-    surveyID = "SV_SYNTHETIC",
     block_pattern = NULL,
     block_sep = ".",
     semantic_name_preprocess = NULL
@@ -241,7 +293,6 @@ test_that("Semantic Names fall back from missing multiple-answer labels", {
   expect_no_error(
     dict <- generate_semantic_names(
       dict_rows,
-      surveyID = "SV_TEST",
       block_pattern = NULL,
       block_sep = ".",
       semantic_name_preprocess = NULL
@@ -307,7 +358,6 @@ test_that("Semantic Name keyword cache keys include the scoring corpus", {
 
   generate_semantic_names(
     semantic_json(first_questions),
-    surveyID = "SV_TEST",
     block_pattern = NULL,
     block_sep = ".",
     semantic_name_preprocess = NULL
@@ -317,7 +367,6 @@ test_that("Semantic Name keyword cache keys include the scoring corpus", {
 
   generate_semantic_names(
     semantic_json(second_questions),
-    surveyID = "SV_TEST",
     block_pattern = NULL,
     block_sep = ".",
     semantic_name_preprocess = NULL

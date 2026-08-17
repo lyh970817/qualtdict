@@ -1,5 +1,4 @@
 #' Calculate keyword scores for candidate word groups
-#' @importFrom slowraker smart_words
 #' @noRd
 calc_keyword_scores <- function(cand_words, all_words) {
   # Get a list of unique words in each keyword so we don't double count (e.g.,
@@ -59,7 +58,7 @@ slowrake_atomic <- function(
   }
 
   keyword_df <- slowrake_keyword_df(cand_words, all_words, stem)
-  slowraker2$process_keyword_df(keyword_df)
+  slowraker_internal("process_keyword_df")(keyword_df)
 }
 
 #' Remove stopped parts of speech before keyword extraction
@@ -72,10 +71,14 @@ slowrake_remove_pos_tags <- function(
 ) {
   if (!is.null(stop_pos)) {
     pos_word_df <- tryCatch(
-      slowraker2$get_pos_tags(txt, word_token_annotator, pos_annotator),
-      error = slowraker2$handle_pos_error
+      slowraker_internal("get_pos_tags")(
+        txt,
+        word_token_annotator,
+        pos_annotator
+      ),
+      error = slowraker_internal("handle_pos_error")
     )
-    txt <- slowraker2$stop_pos_tags(pos_word_df, stop_pos)
+    txt <- slowraker_internal("stop_pos_tags")(pos_word_df, stop_pos)
   }
 
   txt
@@ -85,8 +88,8 @@ slowrake_remove_pos_tags <- function(
 #' @noRd
 slowrake_candidate_words <- function(txt, stop_words, word_min_char) {
   txt <- tolower(txt)
-  cand_words <- slowraker2$get_cand_words(txt, stop_words)
-  slowraker2$filter_words(cand_words, word_min_char)
+  cand_words <- slowraker_internal("get_cand_words")(txt, stop_words)
+  slowraker_internal("filter_words")(cand_words, word_min_char)
 }
 
 #' Build a scored keyword data frame
@@ -118,19 +121,20 @@ slowrake_keyword_df <- function(cand_words, all_words, stem) {
 slowrake <- function(
   txt,
   all_words,
-  stop_words = smart_words,
+  stop_words = NULL,
   stop_pos = c("VB", "VBD", "VBG", "VBN", "VBP", "VBZ"),
   word_min_char = 3,
   stem = TRUE,
   quiet = TRUE
 ) {
+  if (is.null(stop_words)) {
+    stop_words <- slowraker::smart_words
+  }
+
   num_docs <- length(txt)
   one_doc <- num_docs == 1
 
-  if (!is.null(stop_pos)) {
-    pos_annotator <- openNLP::Maxent_POS_Tag_Annotator()
-    word_token_annotator <- openNLP::Maxent_Word_Token_Annotator()
-  }
+  annotators <- slowrake_pos_annotators(stop_pos)
 
   if (!one_doc && !quiet) {
     prog_bar <- utils::txtProgressBar(min = 0, max = num_docs, style = 3)
@@ -140,8 +144,8 @@ slowrake <- function(
   all_out <- vector(mode = "list", length = num_docs)
 
   all_words <- tolower(all_words)
-  all_words <- slowraker2$get_cand_words(all_words, stop_words)
-  all_words <- slowraker2$filter_words(all_words, word_min_char)
+  all_words <- slowraker_internal("get_cand_words")(all_words, stop_words)
+  all_words <- slowraker_internal("filter_words")(all_words, word_min_char)
 
   collapse <- function(x) paste(x, collapse = " ")
   all_words <- vapply(all_words, collapse, character(1))
@@ -158,8 +162,8 @@ slowrake <- function(
       word_min_char = word_min_char,
       stem = stem,
       stop_pos = stop_pos,
-      pos_annotator = pos_annotator,
-      word_token_annotator = word_token_annotator
+      pos_annotator = annotators$pos,
+      word_token_annotator = annotators$word_token
     )
     if (!one_doc && !quiet) {
       utils::setTxtProgressBar(prog_bar, i)
@@ -169,20 +173,36 @@ slowrake <- function(
   structure(all_out, class = c(class(all_out), "rakelist"))
 }
 
-.internals <- c(
-  "get_cand_words",
-  "filter_words",
-  "process_keyword_df",
-  "get_pos_tags",
-  "handle_pos_error",
-  "stop_pos_tags"
-)
-# load from the slowraker namespace
-slowraker2 <- structure(
-  mapply(
-    function(.internals, i) getFromNamespace(i, "slowraker"),
-    .internals,
-    .internals
-  ),
-  class = "internal"
-)
+#' Build the openNLP annotators used for POS-tag filtering
+#'
+#' POS-tag filtering is the only branch that needs \pkg{openNLP} (and so
+#' Java via \pkg{rJava}); \code{stop_pos = NULL} never touches it.
+#' @noRd
+slowrake_pos_annotators <- function(stop_pos) {
+  if (is.null(stop_pos)) {
+    return(NULL)
+  }
+  if (!semantic_name_package_available("openNLP")) {
+    abort(c(
+      "POS-tag filtering (`stop_pos`) needs the optional package openNLP.",
+      x = "Install openNLP (it needs Java via rJava).",
+      i = "Or use `stop_pos = NULL` to skip POS-tag filtering."
+    ))
+  }
+
+  list(
+    pos = openNLP::Maxent_POS_Tag_Annotator(),
+    word_token = openNLP::Maxent_Word_Token_Annotator()
+  )
+}
+
+# resolves on first semantic-name use, memoised for the session
+slowraker_internal <- local({
+  cache <- new.env(parent = emptyenv())
+  function(name) {
+    if (is.null(cache[[name]])) {
+      cache[[name]] <- utils::getFromNamespace(name, "slowraker")
+    }
+    cache[[name]]
+  }
+})

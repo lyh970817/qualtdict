@@ -70,7 +70,6 @@ variable_dictionary_from_normalised_metadata <- function(
   if (use_semantic_name) {
     json <- generate_semantic_names(
       json,
-      normalised_metadata$surveyID,
       block_pattern,
       block_sep,
       semantic_name_preprocess,

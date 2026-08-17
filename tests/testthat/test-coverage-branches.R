@@ -361,6 +361,10 @@ test_that("Response Column ID helpers cover fallback shapes", {
 })
 
 test_that("Variable Dictionary assembly covers empty branches", {
+  skip_if_not_installed("slowraker")
+  skip_if_not_installed("stringi")
+  skip_if_not_installed("tidyr")
+
   normalised_metadata <- structure(
     list(
       surveyID = "SV_EMPTY",
@@ -498,7 +502,11 @@ test_that("normalisation and validation helpers cover fallback records", {
   )
 })
 
-test_that("slowrake and retry cover deterministic fallback branches", {
+test_that("slowrake covers deterministic fallback branches", {
+  skip_if_not_installed("slowraker")
+  skip_if_not_installed("stringi")
+  skip_if_not_installed("tidyr")
+
   expect_true(is.na(slowrake_atomic(
     "123",
     stop_words = character(),
@@ -530,6 +538,14 @@ test_that("slowrake and retry cover deterministic fallback branches", {
     )
   )
   expect_s3_class(keywords, "rakelist")
+})
+
+test_that("slowrake covers the POS-tag filtering branch", {
+  skip_if_not_installed("slowraker")
+  skip_if_not_installed("stringi")
+  skip_if_not_installed("tidyr")
+  skip_if_not_installed("openNLP")
+
   expect_s3_class(
     slowrake(
       "one two three",
@@ -539,7 +555,9 @@ test_that("slowrake and retry cover deterministic fallback branches", {
     ),
     "rakelist"
   )
+})
 
+test_that("retry covers deterministic fallback branches", {
   attempts <- new.env(parent = emptyenv())
   attempts$count <- 0
   succeeds_second_time <- retry(function() {
