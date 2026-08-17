@@ -86,9 +86,10 @@ new_loop_expansion_outcome <- function(
 #' Build a non-looping expansion outcome
 #' @noRd
 loop_expansion_outcome_not_looping <- function(question_fact) {
+  question_fact[["looping"]] <- FALSE
   new_loop_expansion_outcome(
     type = "not_looping",
-    question_facts = list(mark_question_fact_not_looping(question_fact))
+    question_facts = list(question_fact)
   )
 }
 
@@ -179,13 +180,6 @@ expand_loop_question_fact <- function(context) {
   )
 }
 
-#' Mark a Normalised Question Fact as not loop-expanded
-#' @noRd
-mark_question_fact_not_looping <- function(question_fact) {
-  question_fact[["looping"]] <- FALSE
-  question_fact
-}
-
 #' Build Loop and Merge row facts for one Normalised Question Fact
 #' @noRd
 loop_rows_for_context <- function(context) {
@@ -195,7 +189,7 @@ loop_rows_for_context <- function(context) {
     return(NULL)
   }
 
-  field_values <- loop_field_values_for_question(
+  field_values <- loop_field_values_static_overrides_column_names(
     question_fact = context$question_fact,
     prefixes = names(loop_options)
   )
@@ -369,7 +363,7 @@ loop_options_from_static_choices <- function(
   static_prefixes
 ) {
   source <- loop_choice_source(looping_prefixes, choices, static_prefixes)
-  if (loop_choice_source_is_missing(source)) {
+  if (identical(source$type, "missing")) {
     return(NULL)
   }
 
@@ -386,7 +380,7 @@ loop_choice_source <- function(looping_prefixes, choices, static_prefixes) {
     return(new_loop_choice_source("missing"))
   }
 
-  if (has_looping_prefixes(looping_prefixes)) {
+  if (!is.null(looping_prefixes) && length(looping_prefixes) > 0) {
     return(choice_source_from_static_prefixes(choices, static_prefixes))
   }
 
@@ -401,18 +395,6 @@ new_loop_choice_source <- function(
   static_prefixes = NULL
 ) {
   list(type = type, choices = choices, static_prefixes = static_prefixes)
-}
-
-#' Return whether a Loop Option choice source is missing
-#' @noRd
-loop_choice_source_is_missing <- function(source) {
-  identical(source$type, "missing")
-}
-
-#' Return whether looping prefixes are present
-#' @noRd
-has_looping_prefixes <- function(looping_prefixes) {
-  !is.null(looping_prefixes) && length(looping_prefixes) > 0
 }
 
 #' Resolve Loop Option choices from static prefixes
@@ -586,12 +568,6 @@ loop_field_values_static_overrides_column_names <- function(
   utils::modifyList(column_field_values, field_values)
 }
 
-#' Resolve Loop and Merge field values beyond the primary option
-#' @noRd
-loop_field_values_for_question <- function(question_fact, prefixes) {
-  loop_field_values_static_overrides_column_names(question_fact, prefixes)
-}
-
 #' Resolve Loop and Merge fields from block Static rows
 #' @noRd
 loop_field_values_from_static <- function(looping_static, prefixes) {
@@ -637,34 +613,19 @@ empty_loop_field_values <- function(prefixes) {
 #' @noRd
 loop_column_field_records <- function(column_names, prefixes) {
   records <- lapply(names(column_names), function(field_name) {
-    loop_column_field_record(field_name, column_names[[field_name]])
+    list(
+      field_number = str_match(field_name, "^field([0-9]+)$")[, 2],
+      values = unlist(column_names[[field_name]], use.names = FALSE)
+    )
   })
 
   Filter(
-    function(record) valid_loop_column_field_record(record, prefixes),
+    function(record) {
+      !is.na(record$field_number) &&
+        length(record$values) == length(prefixes)
+    },
     records
   )
-}
-
-#' Build one Loop and Merge column field record
-#' @noRd
-loop_column_field_record <- function(field_name, values) {
-  list(
-    field_number = loop_column_field_number(field_name),
-    values = unlist(values, use.names = FALSE)
-  )
-}
-
-#' Resolve the Loop and Merge field number
-#' @noRd
-loop_column_field_number <- function(field_name) {
-  str_match(field_name, "^field([0-9]+)$")[, 2]
-}
-
-#' Return whether one Loop and Merge field record is valid
-#' @noRd
-valid_loop_column_field_record <- function(record, prefixes) {
-  !is.na(record$field_number) && length(record$values) == length(prefixes)
 }
 
 #' Combine Loop and Merge field records by prefix

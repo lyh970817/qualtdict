@@ -79,9 +79,8 @@ render_response_columns <- function(
     question_type = question_type
   )
 
-  response_column_id <- response_column_row_vector(
-    render_response_column_ids(context)
-  )
+  renderer <- response_column_renderer_for_context(context)
+  response_column_id <- response_column_row_vector(renderer(context))
 
   dplyr::bind_rows(
     response_column_rows(context, response_column_id),
@@ -174,27 +173,18 @@ display_order_response_column_rows <- function(context) {
       sep = "_"
     ),
     question = context$question_fact$question_text,
-    item = display_order_items(choice_labels),
+    item = paste("Display order", choice_labels, sep = " - "),
     level = NA_character_,
     label = choice_labels
   )
 }
 
-#' Build the item text that names the choice a display-order column reports on
-#' @noRd
-display_order_items <- function(choice_labels) {
-  paste("Display order", choice_labels, sep = " - ")
-}
-
 #' Return whether a question exports display-order helpers
 #' @noRd
 question_renders_display_order <- function(question_fact) {
-  question_type <- question_fact$question_type
-  choice_order <- question_fact$choice_order
-
-  question_type_is_mavr_text(question_type) &&
-    length(choice_order) > 0 &&
-    question_has_randomization(question_fact)
+  question_type_is_mavr_text(question_fact$question_type) &&
+    length(question_fact$choice_order) > 0 &&
+    length(question_fact$randomization) > 0
 }
 
 #' Return whether question type facts describe MAVR text
@@ -203,13 +193,6 @@ question_type_is_mavr_text <- function(question_type) {
   identical(question_type$type, "MC") &&
     identical(question_type$selector, "MAVR") &&
     identical(question_type$sub_selector, "TX")
-}
-
-#' Return whether a question fact has randomization metadata
-#' @noRd
-question_has_randomization <- function(question_fact) {
-  randomization <- question_fact$randomization
-  !is.null(randomization) && length(randomization) > 0
 }
 
 #' Resolve display-order helper levels from ordered choices
@@ -538,12 +521,6 @@ context_renders_choice_tick_columns <- function(context) {
   )
 }
 
-#' Return the Level a ticked per-choice column stores
-#' @noRd
-choice_tick_level <- function() {
-  "1"
-}
-
 #' Replace per-choice recodes with the tick marker they actually store
 #'
 #' Text-entry Levels are preserved verbatim: those columns hold free text, and
@@ -556,7 +533,7 @@ apply_choice_tick_levels <- function(level) {
   }
 
   keep <- is.na(level) | grepl("TEXT", level, fixed = TRUE)
-  level[!keep] <- choice_tick_level()
+  level[!keep] <- "1"
   level
 }
 
@@ -624,13 +601,6 @@ render_response_column_labels <- function(context, response_column_id) {
   }
 
   rep_level(label, facts$item) |> null_na()
-}
-
-#' Render Response Column IDs for one context
-#' @noRd
-render_response_column_ids <- function(context) {
-  renderer <- response_column_renderer_for_context(context)
-  renderer(context)
 }
 
 #' Resolve Response Column ID renderer for one context
