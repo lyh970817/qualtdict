@@ -75,29 +75,6 @@ checkarg_ischaracter <-
     }
   }
 
-#' Check the deprecated variable name selector argument
-#' @importFrom rlang abort
-#' @importFrom glue glue
-#' @noRd
-checkarg_isname <- function(arg) {
-  test <-
-    length(arg) == 1 &&
-    !is.null(arg) &&
-    arg %in% c("question_name", "semantic_name", "easy_name")
-
-  if (!test) {
-    rlang::abort(
-      c(
-        glue::glue("Error in argument '{deparse(substitute(arg))}':"),
-        paste0(
-          "Argument must be one of ",
-          "`c(\"question_name\", \"semantic_name\")`."
-        )
-      )
-    )
-  }
-}
-
 #' Check the variable name selector argument
 #' @importFrom rlang abort
 #' @importFrom glue glue

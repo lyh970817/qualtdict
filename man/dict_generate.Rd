@@ -7,11 +7,9 @@
 dict_generate(
   surveyID,
   variable_name = c("question_name", "semantic_name"),
-  name = NULL,
   block_pattern = NULL,
   block_sep = ".",
   semantic_name_preprocess = NULL,
-  preprocess = NULL,
   embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 )
@@ -25,10 +23,6 @@ column in the Variable Dictionary. Use \code{question_name} for the raw
 Qualtrics Question Name or \code{semantic_name} for a generated Semantic
 Name based on question text and response metadata.}
 
-\item{name}{Deprecated compatibility alias for \code{variable_name}. The
-legacy \code{easy_name} value is accepted as \code{semantic_name} with a
-warning.}
-
 \item{block_pattern}{Function. A function that given the name of a
 Survey Block, returns a Block Prefix to prepend to Semantic Names in that
 block. Defaults to \code{NULL}.}
@@ -41,9 +35,6 @@ the full post-normalisation dictionary and returns a modified dictionary for
 Semantic Name generation. It runs only when
 \code{variable_name = "semantic_name"}. Temporary helper columns added by
 this function are not included in the returned Variable Dictionary.}
-
-\item{preprocess}{Deprecated compatibility alias for
-\code{semantic_name_preprocess}.}
 
 \item{embedded_data_block_assignment}{String. Survey Flow adjacency policy
 for assigning Embedded Data Fields to Survey Blocks. Use \code{"none"} to
