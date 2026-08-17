@@ -150,10 +150,7 @@ normalise_response_choices <- function(choices, recode_override = NULL) {
       level = scalar_character(recode),
       label = label,
       text_entry = text_entry,
-      recode = scalar_character(recode),
-      description = label,
-      analyze = isTRUE(analyze),
-      textEntry = if (text_entry) TRUE else NULL
+      analyze = isTRUE(analyze)
     )
   })
 }
@@ -171,10 +168,7 @@ normalise_response_items <- function(items) {
       item_text = item_text,
       item_label = item_label,
       text_entry = text_entry,
-      recode = scalar_character(item$level %||% item$recode),
-      choiceText = item_text,
-      description = item_label,
-      textEntry = if (text_entry) TRUE else NULL
+      level = scalar_character(item$level %||% item$recode)
     )
   })
 }

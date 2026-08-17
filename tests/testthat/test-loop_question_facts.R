@@ -160,8 +160,8 @@ test_that("question row assembly defaults to shared adapter", {
 
 test_that("Loop and Merge options resolve direct source choice IDs", {
   choices <- list(
-    a = list(choice_id = "a", recode = "3", label = "Alpha"),
-    b = list(choice_id = "b", recode = "4", label = "Bravo")
+    a = list(choice_id = "a", level = "3", label = "Alpha"),
+    b = list(choice_id = "b", level = "4", label = "Bravo")
   )
 
   expect_identical(
@@ -170,10 +170,10 @@ test_that("Loop and Merge options resolve direct source choice IDs", {
   )
 })
 
-test_that("Loop and Merge options resolve source choice recodes", {
+test_that("Loop and Merge options resolve source choice Levels", {
   choices <- list(
-    a = list(choice_id = "a", recode = "3", label = "Three"),
-    b = list(choice_id = "b", recode = "4", label = "Four")
+    a = list(choice_id = "a", level = "3", label = "Three"),
+    b = list(choice_id = "b", level = "4", label = "Four")
   )
 
   expect_identical(
@@ -184,8 +184,8 @@ test_that("Loop and Merge options resolve source choice recodes", {
 
 test_that("Loop and Merge options fail when source choices are unresolved", {
   choices <- list(
-    x1 = list(choice_id = "x1", recode = "1", label = "One"),
-    x2 = list(choice_id = "x2", recode = "2", label = "Two")
+    x1 = list(choice_id = "x1", level = "1", label = "One"),
+    x2 = list(choice_id = "x2", level = "2", label = "Two")
   )
 
   expect_null(
@@ -218,10 +218,10 @@ test_that("Loop and Merge options reconcile stale Static prefixes", {
   )
 
   choices <- list(
-    x1 = list(choice_id = "x1", recode = "1", label = "One"),
-    x2 = list(choice_id = "x2", recode = "2", label = "Two"),
-    x27 = list(choice_id = "x27", recode = "27", label = "Twenty-seven"),
-    x26 = list(choice_id = "x26", recode = "0", label = "Zero")
+    x1 = list(choice_id = "x1", level = "1", label = "One"),
+    x2 = list(choice_id = "x2", level = "2", label = "Two"),
+    x27 = list(choice_id = "x27", level = "27", label = "Twenty-seven"),
+    x26 = list(choice_id = "x26", level = "0", label = "Zero")
   )
 
   expect_identical(
@@ -241,10 +241,10 @@ test_that("Loop and Merge options reconcile stale Static prefixes", {
 
 test_that("Loop and Merge options insert omitted source choice IDs", {
   choices <- list(
-    x1 = list(choice_id = "x1", recode = "1", label = "One"),
-    x2 = list(choice_id = "x2", recode = "2", label = "Two"),
-    x16 = list(choice_id = "x16", recode = "16", label = "Sixteen"),
-    x15 = list(choice_id = "x15", recode = "0", label = "Zero")
+    x1 = list(choice_id = "x1", level = "1", label = "One"),
+    x2 = list(choice_id = "x2", level = "2", label = "Two"),
+    x16 = list(choice_id = "x16", level = "16", label = "Sixteen"),
+    x15 = list(choice_id = "x15", level = "0", label = "Zero")
   )
 
   expect_identical(
@@ -264,8 +264,8 @@ test_that("Loop and Merge options insert omitted source choice IDs", {
 
 test_that("Loop and Merge options keep static non-analysed source choices", {
   choices <- list(
-    x1 = list(choice_id = "x1", recode = "1", label = "One", analyze = TRUE),
-    x2 = list(choice_id = "x2", recode = "2", label = "Two", analyze = FALSE)
+    x1 = list(choice_id = "x1", level = "1", label = "One", analyze = TRUE),
+    x2 = list(choice_id = "x2", level = "2", label = "Two", analyze = FALSE)
   )
 
   expect_null(

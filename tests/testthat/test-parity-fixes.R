@@ -91,9 +91,8 @@ test_that("normalise_response_choices applies a recode override", {
     stats::setNames(c("3", "4"), c("x1", "x2"))
   )
 
-  expect_identical(choices$x1$recode, "3")
   expect_identical(choices$x1$level, "3")
-  expect_identical(choices$x2$recode, "4")
+  expect_identical(choices$x2$level, "4")
 })
 
 test_that("FORM questions with all choices suppressed export no columns", {

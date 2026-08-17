@@ -422,7 +422,7 @@ choice_source_from_static_prefixes <- function(choices, static_prefixes) {
     choices,
     static_prefixes
   )
-  resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
+  resolved_choices <- static_choices_by_id_or_level(choices, static_prefixes)
   resolved <- map_lgl(resolved_choices, Negate(is.null))
   if (!any(resolved) || !all(resolved)) {
     return(new_loop_choice_source("missing"))
@@ -455,7 +455,7 @@ reconcile_matrix_source_order <- function(static_prefixes, source_ids) {
 #' Insert omitted source choice IDs into static Loop and Merge prefixes
 #' @noRd
 reconcile_choice_source_omitted_ids <- function(choices, static_prefixes) {
-  resolved_choices <- static_choices_by_id_or_recode(choices, static_prefixes)
+  resolved_choices <- static_choices_by_id_or_level(choices, static_prefixes)
   unresolved <- map_lgl(resolved_choices, is.null)
   source_ids <- names(choices)
   unlist(
@@ -524,18 +524,18 @@ loop_choice_source_from_direct_ids <- function(choices, static_prefixes) {
   new_loop_choice_source("direct", choices, static_prefixes = static_prefixes)
 }
 
-#' Resolve static choices by ID or recode
+#' Resolve static choices by ID or Level
 #' @noRd
-static_choices_by_id_or_recode <- function(choices, static_prefixes) {
-  choice_recodes <- map_chr(choices, ~ scalar_character(.x$recode))
-  choice_by_recode <- setNames(choices, choice_recodes)
+static_choices_by_id_or_level <- function(choices, static_prefixes) {
+  choice_levels <- map_chr(choices, ~ scalar_character(.x$level))
+  choice_by_level <- setNames(choices, choice_levels)
 
   map(static_prefixes, function(prefix) {
     if (prefix %in% names(choices)) {
       return(choices[[prefix]])
     }
-    if (prefix %in% names(choice_by_recode)) {
-      return(choice_by_recode[[prefix]])
+    if (prefix %in% names(choice_by_level)) {
+      return(choice_by_level[[prefix]])
     }
     NULL
   })

@@ -236,7 +236,7 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
   )
   expect_identical(
     choice_source_from_static_prefixes(
-      list(x1 = list(recode = "1", description = "One")),
+      list(x1 = list(choice_id = "x1", level = "1", label = "One")),
       c("x1", "missing")
     )$type,
     "missing"
