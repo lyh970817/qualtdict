@@ -162,8 +162,8 @@ generated_dictionary_columns <- function(dict, use_semantic_name) {
     "sub_selector",
     "content_type"
   )
-  if ("loop_option" %in% names(dict) && !all(is.na(dict$loop_option))) {
-    dict_columns <- append(dict_columns, "loop_option", after = 7)
+  if ("looping_option" %in% names(dict) && !all(is.na(dict$looping_option))) {
+    dict_columns <- append(dict_columns, "looping_option", after = 7)
   }
   if (use_semantic_name) {
     dict_columns <- append(dict_columns, "semantic_name", after = 4)

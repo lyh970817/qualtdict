@@ -35,8 +35,8 @@ test_that("dict_generate", {
   expect_true(any(x$response_column_id != x$qid))
   expect_true("question_name" %in% names(x))
   expect_true("variable_name" %in% names(x))
-  expect_true("loop_option" %in% names(x))
-  expect_false(all(is.na(x$loop_option)))
+  expect_true("looping_option" %in% names(x))
+  expect_false(all(is.na(x$looping_option)))
 })
 
 test_that("dict_generate attaches the as-downloaded survey definition", {

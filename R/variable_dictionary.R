@@ -21,8 +21,7 @@ variable_dictionary_base_columns <- c(
   "content_type",
   "sub_selector",
   "looping_option",
-  "looping",
-  "loop_option"
+  "looping"
 )
 
 variable_dictionary_semantic_columns <- append(
@@ -377,7 +376,6 @@ clean_variable_dictionary_rows <- function(json, use_semantic_name) {
     json$variable_name[question_rows] <- json$question_name[question_rows]
   }
   json$variable_name <- unname(json$variable_name)
-  json$loop_option <- json$looping_option
 
   json
 }

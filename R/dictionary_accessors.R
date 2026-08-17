@@ -1,21 +1,13 @@
 #' Return Response Column IDs from a Variable Dictionary
 #' @noRd
 dict_response_column_id <- function(dict) {
-  if ("response_column_id" %in% names(dict)) {
-    return(dict[["response_column_id"]])
-  }
-
-  dict[["qid"]]
+  dict[["response_column_id"]]
 }
 
 #' Return Dictionary Variable Names from a Variable Dictionary
 #' @noRd
 dict_variable_name <- function(dict) {
-  if ("variable_name" %in% names(dict)) {
-    return(dict[["variable_name"]])
-  }
-
-  dict[["name"]]
+  dict[["variable_name"]]
 }
 
 #' Return Dictionary Row Sources from a Variable Dictionary

@@ -151,7 +151,7 @@ test_that("numeric loop-prefixed text columns match raw export IDs", {
     target_rows$response_column_id,
     paste0(1:12, "_QID3_TEXT")
   )
-  expect_identical(target_rows$loop_option, paste("Loop", 1:12))
+  expect_identical(target_rows$looping_option, paste("Loop", 1:12))
 })
 
 test_that("matrix multiple-answer columns declare the tick Level", {

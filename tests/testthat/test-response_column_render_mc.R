@@ -343,7 +343,7 @@ test_that("looped MC text columns keep loop prefix before QID", {
     )
   )
   expect_identical(
-    target_rows$loop_option,
+    target_rows$looping_option,
     rep(c("Apples", "Bananas"), each = 3)
   )
   expect_identical(unname(target_rows$level), rep(c("1", "2", "2_TEXT"), 2))

@@ -94,13 +94,6 @@ test_that("metadata fetching degrades without response column maps", {
   expect_null(raw_metadata$response_column_map)
 })
 
-test_that("dictionary accessors support legacy dictionary columns", {
-  dict <- tibble::tibble(qid = "QID1", name = "q1")
-
-  expect_identical(dict_response_column_id(dict), "QID1")
-  expect_identical(dict_variable_name(dict), "q1")
-})
-
 test_that("dict_validate reports non-quiet finding messages", {
   repaired <- coverage_test_dict(variable_name = "q1_repaired")
   attr(repaired, "variable_name_findings") <- tibble::tibble(
@@ -404,8 +397,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
       "content_type",
       "sub_selector",
       "looping_option",
-      "looping",
-      "loop_option"
+      "looping"
     )
   )
   expect_identical(attr(empty_dict, "surveyID", exact = TRUE), "SV_EMPTY")
