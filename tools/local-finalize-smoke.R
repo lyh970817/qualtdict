@@ -659,10 +659,6 @@ smoke_parent_question_type_fields <- function(
     "normalise_qualtrics_questions",
     "qualtdict"
   )
-  question_fact_question_type <- getFromNamespace(
-    "question_fact_question_type",
-    "qualtdict"
-  )
   questions <- normalise_qualtrics_questions(metadata, description)
   for (index in seq_along(parent_qid)) {
     qid <- parent_qid[[index]]
@@ -670,7 +666,7 @@ smoke_parent_question_type_fields <- function(
       next
     }
 
-    question_type <- question_fact_question_type(questions[[qid]])
+    question_type <- questions[[qid]]$question_type
     fields$parent_type[[index]] <- question_type$type %||% NA_character_
     fields$parent_selector[[index]] <- question_type$selector %||%
       NA_character_

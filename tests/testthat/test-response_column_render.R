@@ -72,7 +72,7 @@ test_that("render context separates QID and Base Response Column ID", {
   )$questions$QID2
 
   shape <- response_column_shape(question_fact)
-  question_type <- question_fact_question_type(question_fact)
+  question_type <- question_fact$question_type
 
   context <- new_response_column_render_context(
     question_fact = question_fact,

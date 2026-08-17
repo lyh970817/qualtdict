@@ -70,7 +70,7 @@ render_response_columns <- function(
     base_response_column_id
   )
 
-  question_type <- question_fact_question_type(question_fact)
+  question_type <- question_fact$question_type
   shape <- response_column_shape(question_fact)
   context <- new_response_column_render_context(
     question_fact = question_fact,
@@ -156,7 +156,7 @@ display_order_response_column_rows <- function(context) {
     return(empty_response_columns())
   }
 
-  choice_order <- question_fact_choice_order(context$question_fact)
+  choice_order <- context$question_fact$choice_order
   choice_levels <- display_order_choice_levels(
     context$question_fact,
     choice_order
@@ -173,7 +173,7 @@ display_order_response_column_rows <- function(context) {
       choice_levels,
       sep = "_"
     ),
-    question = question_fact_question_text(context$question_fact),
+    question = context$question_fact$question_text,
     item = display_order_items(choice_labels),
     level = NA_character_,
     label = choice_labels
@@ -189,8 +189,8 @@ display_order_items <- function(choice_labels) {
 #' Return whether a question exports display-order helpers
 #' @noRd
 question_renders_display_order <- function(question_fact) {
-  question_type <- question_fact_question_type(question_fact)
-  choice_order <- question_fact_choice_order(question_fact)
+  question_type <- question_fact$question_type
+  choice_order <- question_fact$choice_order
 
   question_type_is_mavr_text(question_type) &&
     length(choice_order) > 0 &&
@@ -208,14 +208,14 @@ question_type_is_mavr_text <- function(question_type) {
 #' Return whether a question fact has randomization metadata
 #' @noRd
 question_has_randomization <- function(question_fact) {
-  randomization <- question_fact_randomization(question_fact)
+  randomization <- question_fact$randomization
   !is.null(randomization) && length(randomization) > 0
 }
 
 #' Resolve display-order helper levels from ordered choices
 #' @noRd
 display_order_choice_levels <- function(question_fact, choice_order) {
-  response_choices <- question_fact_response_choices(question_fact)
+  response_choices <- question_fact$response_choices
   levels <- vapply(
     choice_order,
     function(choice_id) {
@@ -234,7 +234,7 @@ display_order_choice_levels <- function(question_fact, choice_order) {
 #' Resolve display-order helper labels from ordered choices
 #' @noRd
 display_order_choice_labels <- function(question_fact, choice_order) {
-  response_choices <- question_fact_response_choices(question_fact)
+  response_choices <- question_fact$response_choices
   labels <- vapply(
     choice_order,
     function(choice_id) {
@@ -350,8 +350,8 @@ response_column_shape <- function(question) {
   question <- remove_empty_choice_labels(question)
   question <- remove_non_exported_choice_columns(question)
 
-  type <- question_fact_question_type(question)$type
-  question_text <- question_fact_question_text(question)
+  type <- question$question_type$type
+  question_text <- question$question_text
   choice_shape <- response_column_choice_shape(question)
   item_shape <- response_column_item_shape(question)
 
@@ -376,7 +376,7 @@ response_column_shape <- function(question) {
 #' Build generic choice facts used by Response Column ID Rendering
 #' @noRd
 response_column_choice_shape <- function(question) {
-  response_choices <- question_fact_response_choices(question)
+  response_choices <- question$response_choices
   level_len <- ifelse(length(response_choices) > 0, length(response_choices), 1)
 
   level <- map(response_choices, "level") |>
@@ -398,7 +398,7 @@ response_column_choice_shape <- function(question) {
 #' Build generic item facts used by Response Column ID Rendering
 #' @noRd
 response_column_item_shape <- function(question) {
-  response_items <- question_fact_response_items(question)
+  response_items <- question$response_items
   item <- unlist(map(response_items, "item_text"))
   has_text_sub <- which(map_lgl(response_items, "text_entry"))
 
@@ -434,7 +434,7 @@ new_response_column_shape <- function(
 #' Remove empty Qualtrics choice labels before rendering rows
 #' @noRd
 remove_empty_choice_labels <- function(question) {
-  response_choices <- question_fact_response_choices(question)
+  response_choices <- question$response_choices
   nbsps <- map(response_choices, "label") == "&nbsp;"
   if (length(nbsps) != 1) {
     question$response_choices <- response_choices[!nbsps]
@@ -453,7 +453,7 @@ remove_non_exported_choice_columns <- function(question) {
     return(question)
   }
 
-  response_choices <- question_fact_response_choices(question)
+  response_choices <- question$response_choices
   if (length(response_choices) == 0) {
     return(question)
   }
@@ -468,9 +468,9 @@ remove_non_exported_choice_columns <- function(question) {
 #' Return whether non-analysed choices still export response columns
 #' @noRd
 question_keeps_non_analysed_choice_columns <- function(question) {
-  question_type <- question_fact_question_type(question)
-  randomization <- question_fact_randomization(question)
-  carry_forward <- question_fact_carry_forward(question)
+  question_type <- question$question_type
+  randomization <- question$randomization
+  carry_forward <- question$carry_forward
 
   question_type_is_mavr_text(question_type) &&
     ((!is.null(randomization) && length(randomization) > 0) ||
@@ -480,7 +480,7 @@ question_keeps_non_analysed_choice_columns <- function(question) {
 #' Return whether each choice produces a distinct Response Column ID
 #' @noRd
 question_choices_render_independent_columns <- function(question) {
-  question_type <- question_fact_question_type(question)
+  question_type <- question$question_type
   type <- question_type$type
   selector <- question_type$selector
   sub_selector <- question_type$sub_selector
