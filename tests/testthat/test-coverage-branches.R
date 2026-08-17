@@ -377,11 +377,7 @@ test_that("Response Column ID helpers cover fallback shapes", {
     render_facts = list(level = character())
   )
   expect_identical(
-    render_macol_response_column_id_with_level_suffix(empty_context),
-    "QID1"
-  )
-  expect_identical(
-    render_mavr_response_column_id_with_level_suffix(empty_context),
+    render_ma_response_column_id_with_level_suffix(empty_context),
     "QID1"
   )
   expect_identical(

@@ -361,9 +361,3 @@ question_fact_looping_option <- function(question) {
 question_fact_looping_status <- function(question) {
   isTRUE(question_fact_value(question, "looping"))
 }
-
-#' Return the resolved Loop and Merge prefix for a Loop-expanded Question Fact
-#' @noRd
-question_fact_looping_prefix_value <- function(question) {
-  question_fact_value(question, "looping_prefix")
-}

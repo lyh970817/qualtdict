@@ -2,8 +2,8 @@
 #' @noRd
 response_column_mc_renderer_table <- function() {
   list(
-    MACOL = list(TX = render_macol_response_column_id_with_level_suffix),
-    MAVR = list(TX = render_mavr_response_column_id_with_level_suffix),
+    MACOL = list(TX = render_ma_response_column_id_with_level_suffix),
+    MAVR = list(TX = render_ma_response_column_id_with_level_suffix),
     MAHR = list(TX = render_response_column_id_with_level_suffix),
     MSB = render_response_column_id_with_level_suffix,
     SAVR = list(TX = render_response_column_id_repeated_by_level),
@@ -74,20 +74,9 @@ mc_recode_ids <- function(level) {
   response_choice_ids
 }
 
-#' Render MACOL Response Column IDs with level suffixes
+#' Render multiple answer Response Column IDs with level suffixes
 #' @noRd
-render_macol_response_column_id_with_level_suffix <- function(context) {
-  level <- context$render_facts$level
-  if (length(level) == 0) {
-    return(context$base_response_column_id)
-  }
-
-  paste(context$base_response_column_id, mc_recode_ids(level), sep = "_")
-}
-
-#' Render MAVR Response Column IDs with level suffixes
-#' @noRd
-render_mavr_response_column_id_with_level_suffix <- function(context) {
+render_ma_response_column_id_with_level_suffix <- function(context) {
   level <- context$render_facts$level
   if (length(level) == 0) {
     return(context$base_response_column_id)
