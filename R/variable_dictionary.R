@@ -40,6 +40,8 @@ variable_dictionary_from_normalised_metadata <- function(
   embedded_data_block_assignment = "none",
   quiet = TRUE
 ) {
+  checkarg_isnormalised_metadata(normalised_metadata)
+
   question_meta <- normalised_metadata$questions
   rendered_question_columns <- expand_then_render_question_response_columns(
     question_meta

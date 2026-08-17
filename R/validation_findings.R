@@ -1,14 +1,11 @@
 #' Build a qualtdict validation result
 #' @noRd
 new_qualtdict_validation <- function(validation_findings, level_label_pairs) {
-  structure(
-    list(
-      validation_findings = normalize_validation_findings(
-        validation_findings
-      ),
-      level_label_pairs = level_label_pairs
+  list(
+    validation_findings = normalize_validation_findings(
+      validation_findings
     ),
-    class = c("qualtdict_validation", "list")
+    level_label_pairs = level_label_pairs
   )
 }
 

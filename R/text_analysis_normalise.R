@@ -1,12 +1,3 @@
-#' Build normalised Text-analysis Sidecar records
-#' @noRd
-new_normalised_text_analysis_sidecars <- function(sidecars = list()) {
-  structure(
-    sidecars,
-    class = c("qualtdict_normalised_text_analysis_sidecars", "list")
-  )
-}
-
 #' Build one normalised Text-analysis Sidecar record
 #' @noRd
 new_normalised_text_analysis_sidecar <- function(
@@ -14,16 +5,13 @@ new_normalised_text_analysis_sidecar <- function(
   response_column_id,
   parent_context
 ) {
-  structure(
-    list(
-      sidecar_name = sidecar_name,
-      response_column_id = response_column_id,
-      question_text = paste("Text Analysis:", sidecar_name),
-      parent_qid = parent_context$parent_qid,
-      parent_question_name = parent_context$parent_question_name,
-      parent_block = parent_context$parent_block
-    ),
-    class = c("qualtdict_normalised_text_analysis_sidecar", "list")
+  list(
+    sidecar_name = sidecar_name,
+    response_column_id = response_column_id,
+    question_text = paste("Text Analysis:", sidecar_name),
+    parent_qid = parent_context$parent_qid,
+    parent_question_name = parent_context$parent_question_name,
+    parent_block = parent_context$parent_block
   )
 }
 
@@ -38,7 +26,7 @@ normalise_text_analysis_sidecars <- function(
     response_column_classification
   )
   if (length(sidecar_records) == 0) {
-    return(empty_normalised_text_analysis_sidecars())
+    return(list())
   }
 
   sidecars <- map(
@@ -50,7 +38,7 @@ normalise_text_analysis_sidecars <- function(
 
   names(sidecars) <- map_chr(sidecars, "sidecar_name")
 
-  new_normalised_text_analysis_sidecars(sidecars)
+  sidecars
 }
 
 #' Extract Text-analysis Sidecar facts from Response Column Map Classification
@@ -144,10 +132,4 @@ empty_text_analysis_sidecar_parent_context <- function() {
     parent_question_name = NA_character_,
     parent_block = NA_character_
   )
-}
-
-#' Empty normalised Text-analysis Sidecar records
-#' @noRd
-empty_normalised_text_analysis_sidecars <- function() {
-  new_normalised_text_analysis_sidecars()
 }

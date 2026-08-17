@@ -1,5 +1,14 @@
 # qualtdict 0.0.0.9000
 
+- The validation result returned by `dict_validate()` no longer carries the
+  decorative `"qualtdict_validation"` class: it is a plain list with the same
+  documented `validation_findings` and `level_label_pairs` components, which
+  remain the stable contract. No package code ever dispatched on the class.
+  Other internal-only decorative classes on normalised records were dropped
+  at the same time; the `"qualtdict"` class on generated Variable
+  Dictionaries and the error class `"qualtdict_export_blocking_findings"`
+  raised by `assert_dict_valid()` are unchanged.
+
 - The Semantic Name dependencies `slowraker`, `SnowballC`, `stringi`,
   `tidyr`, and `openNLP` moved from Imports to Suggests: the package now
   installs and runs its default `variable_name = "question_name"` path
