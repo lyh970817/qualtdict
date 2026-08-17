@@ -9,9 +9,6 @@
 #' column in the Variable Dictionary. Use \code{question_name} for the raw
 #' Qualtrics Question Name or \code{semantic_name} for a generated Semantic
 #' Name based on question text and response metadata.
-#' @param name Deprecated compatibility alias for \code{variable_name}. The
-#' legacy \code{easy_name} value is accepted as \code{semantic_name} with a
-#' warning.
 #' @param block_pattern Function. A function that given the name of a
 #' Survey Block, returns a Block Prefix to prepend to Semantic Names in that
 #' block. Defaults to \code{NULL}.
@@ -20,8 +17,6 @@
 #' Semantic Name generation. It runs only when
 #' \code{variable_name = "semantic_name"}. Temporary helper columns added by
 #' this function are not included in the returned Variable Dictionary.
-#' @param preprocess Deprecated compatibility alias for
-#' \code{semantic_name_preprocess}.
 #' @param embedded_data_block_assignment String. Survey Flow adjacency policy
 #' for assigning Embedded Data Fields to Survey Blocks. Use \code{"none"} to
 #' leave Embedded Data Fields unassigned, \code{"previous"} to assign fields
@@ -91,11 +86,9 @@
 dict_generate <- function(
   surveyID,
   variable_name = c("question_name", "semantic_name"),
-  name = NULL,
   block_pattern = NULL,
   block_sep = ".",
   semantic_name_preprocess = NULL,
-  preprocess = NULL,
   embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 ) {
@@ -104,18 +97,14 @@ dict_generate <- function(
     block_pattern = block_pattern,
     block_sep = block_sep,
     semantic_name_preprocess = semantic_name_preprocess,
-    preprocess = preprocess,
     quiet = quiet
   )
   embedded_data_block_assignment <- match.arg(
     embedded_data_block_assignment,
     c("none", "previous", "next")
   )
-  variable_name <- resolve_dict_generate_variable_name(variable_name, name)
-  semantic_name_preprocess <- resolve_semantic_name_preprocess(
-    semantic_name_preprocess,
-    preprocess
-  )
+  variable_name <- match.arg(variable_name, c("question_name", "semantic_name"))
+  checkarg_isvariable_name(variable_name)
   use_semantic_name <- variable_name == "semantic_name"
 
   survey_metadata <- fetch_dictionary_metadata(surveyID)
@@ -145,57 +134,13 @@ check_dict_generate_args <- function(
   block_pattern,
   block_sep,
   semantic_name_preprocess,
-  preprocess,
   quiet
 ) {
   checkarg_isstring(surveyID, null_okay = FALSE)
   checkarg_isfunction(block_pattern)
   checkarg_isstring(block_sep, null_okay = FALSE)
   checkarg_isfunction(semantic_name_preprocess)
-  checkarg_isfunction(preprocess)
   checkarg_isboolean(quiet)
-}
-
-#' Resolve the requested Dictionary Variable Name source
-#' @noRd
-resolve_dict_generate_variable_name <- function(variable_name, name) {
-  if (!is.null(name)) {
-    checkarg_isname(name)
-    warning(
-      "`name` is deprecated; use `variable_name` instead.",
-      call. = FALSE
-    )
-    if (identical(name, "easy_name")) {
-      warning(
-        "`easy_name` is deprecated; use `semantic_name` instead.",
-        call. = FALSE
-      )
-    }
-    return(ifelse(name == "easy_name", "semantic_name", name))
-  }
-
-  variable_name <- match.arg(variable_name, c("question_name", "semantic_name"))
-  checkarg_isvariable_name(variable_name)
-  variable_name
-}
-
-#' Resolve the Semantic Name preprocessing function
-#' @noRd
-resolve_semantic_name_preprocess <- function(
-  semantic_name_preprocess,
-  preprocess
-) {
-  if (!is.null(preprocess)) {
-    warning(
-      "`preprocess` is deprecated; use `semantic_name_preprocess` instead.",
-      call. = FALSE
-    )
-    if (is.null(semantic_name_preprocess)) {
-      semantic_name_preprocess <- preprocess
-    }
-  }
-
-  semantic_name_preprocess
 }
 
 #' Select columns for the generated Variable Dictionary

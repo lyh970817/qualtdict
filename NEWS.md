@@ -1,5 +1,11 @@
 # qualtdict 0.0.0.9000
 
+- `dict_generate()` no longer accepts the pre-release compatibility arguments
+  `name` and `preprocess`, nor the `easy_name` value. Use `variable_name`
+  (with `"question_name"` or `"semantic_name"`) and
+  `semantic_name_preprocess` instead. The aliases warned on every use and are
+  removed before the first release, so the package keeps one name per concept.
+
 - `dict_generate()` no longer fails on a Loop and Merge source choice whose
   label is blank or missing. Such a Loop Option now takes the source choice
   ID as its label instead of aborting Loop expansion for the whole survey.

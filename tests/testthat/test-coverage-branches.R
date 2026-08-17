@@ -25,59 +25,6 @@ coverage_test_dict <- function(
   dict
 }
 
-test_that("dict_generate covers deprecated argument aliases", {
-  local_mocked_bindings(
-    fetch_dictionary_metadata = function(surveyID) {
-      synthetic_mc_text_raw_metadata()
-    }
-  )
-
-  expect_warning(
-    expect_warning(
-      semantic_dict <- dict_generate("SV_SYNTHETIC", name = "easy_name"),
-      "`name` is deprecated"
-    ),
-    "`easy_name` is deprecated"
-  )
-  expect_true("semantic_name" %in% names(semantic_dict))
-
-  expect_warning(
-    question_dict <- dict_generate("SV_SYNTHETIC", name = "question_name"),
-    "`name` is deprecated"
-  )
-  expect_false("semantic_name" %in% names(question_dict))
-
-  semantic_preprocess <- function(dict) {
-    dict$question <- "semantic branch question"
-    dict
-  }
-  alias_preprocess <- function(dict) {
-    dict$question <- "alias branch question"
-    dict
-  }
-
-  expect_warning(
-    dict <- dict_generate(
-      "SV_SYNTHETIC",
-      variable_name = "semantic_name",
-      preprocess = alias_preprocess
-    ),
-    "`preprocess` is deprecated"
-  )
-  expect_true(any(grepl("^alias", dict$semantic_name)))
-
-  expect_warning(
-    dict <- dict_generate(
-      "SV_SYNTHETIC",
-      variable_name = "semantic_name",
-      semantic_name_preprocess = semantic_preprocess,
-      preprocess = alias_preprocess
-    ),
-    "`preprocess` is deprecated"
-  )
-  expect_true(any(grepl("^semantic", dict$semantic_name)))
-})
-
 test_that("generated dictionary finalisation supplies default findings", {
   dict <- coverage_test_dict()
   attr(dict, "variable_name_findings") <- NULL
