@@ -1,0 +1,140 @@
+{
+  "surveys": [
+    {
+      "alias": "glad_sa8_signup",
+      "survey_id": "SV_2noq1YmOTZdDIsC"
+    },
+    {
+      "alias": "edgi_signup_official",
+      "survey_id": "SV_9YPHwpzPl0OXbzT"
+    },
+    {
+      "alias": "glad_sa7_optional",
+      "survey_id": "SV_4TOSVFykWAM3WDA"
+    },
+    {
+      "alias": "edgi_optional_all",
+      "survey_id": "SV_eWeLPcs93J0UUcZ"
+    },
+    {
+      "alias": "glad_sa6_signup",
+      "survey_id": "SV_6DMA4YLjmSiUmbj"
+    },
+    {
+      "alias": "glad_medications",
+      "survey_id": "SV_0i8BQR5bGZKCppP"
+    },
+    {
+      "alias": "ramp",
+      "survey_id": "SV_0DrSSOISyMOqN5r"
+    },
+    {
+      "alias": "coping_glad",
+      "survey_id": "SV_2l4GhidotLEBzYp"
+    },
+    {
+      "alias": "coping_edgi",
+      "survey_id": "SV_5gXHZjBhmhorErP"
+    },
+    {
+      "alias": "coping_nbr",
+      "survey_id": "SV_4PyAHbAxpdbyacl"
+    },
+    {
+      "alias": "coping_fupb_ongoing",
+      "survey_id": "SV_0NFXuNfs4US1Iod"
+    },
+    {
+      "alias": "ramp_fupb",
+      "survey_id": "SV_0UFM1iul4AJhVfn"
+    },
+    {
+      "alias": "glad_dysmorphic",
+      "survey_id": "SV_8IbwjKbLlw6bKKh"
+    },
+    {
+      "alias": "glad_ed",
+      "survey_id": "SV_1zbaYyeEzXas06x"
+    },
+    {
+      "alias": "glad_epds",
+      "survey_id": "SV_bD7QOaVWYM8XgIB"
+    },
+    {
+      "alias": "glad_fear",
+      "survey_id": "SV_cBepCoGbzqz5CW9"
+    },
+    {
+      "alias": "glad_gambling",
+      "survey_id": "SV_a2zV9isaESQOy57"
+    },
+    {
+      "alias": "glad_healthcare",
+      "survey_id": "SV_1ZgNFYzUWHXDs6V"
+    },
+    {
+      "alias": "glad_fh",
+      "survey_id": "SV_6AnIadzF7AXZOux"
+    },
+    {
+      "alias": "glad_life",
+      "survey_id": "SV_didY8mvwGcCp8RD"
+    },
+    {
+      "alias": "glad_migraines",
+      "survey_id": "SV_bd5sA6WlW2X0apf"
+    },
+    {
+      "alias": "glad_ocir",
+      "survey_id": "SV_cHoVcYn5DCAm3eR"
+    },
+    {
+      "alias": "glad_pcl5",
+      "survey_id": "SV_eKdXoYx7sOXlL6Z"
+    },
+    {
+      "alias": "glad_spovi",
+      "survey_id": "SV_efHbvjvmBEnk3LT"
+    },
+    {
+      "alias": "glad_ws",
+      "survey_id": "SV_79QqqsdE6xwjkj3"
+    },
+    {
+      "alias": "glad_trauma",
+      "survey_id": "SV_8wsvckRcrqttgJT"
+    },
+    {
+      "alias": "glad_phto",
+      "survey_id": "SV_3xBGomiddNZXbRH"
+    },
+    {
+      "alias": "coping_glad_opt",
+      "survey_id": "SV_eEiKJfmiT0kpk9L"
+    },
+    {
+      "alias": "coping_edgi_opt",
+      "survey_id": "SV_6mpL620iSh5yHrf"
+    },
+    {
+      "alias": "coping_nbr_opt",
+      "survey_id": "SV_6PbOIZveBs1phn7"
+    },
+    {
+      "alias": "coping_fupa_ongoing",
+      "survey_id": "SV_0uYrPuyNJTTbk2x"
+    },
+    {
+      "alias": "coping_fupa",
+      "survey_id": "SV_b3kHBdxbuiQnZf7"
+    },
+    {
+      "alias": "coping_brief10may",
+      "survey_id": "SV_54IebtyZIGh4Pg9"
+    },
+    {
+      "alias": "ramp_fupa",
+      "survey_id": "SV_4PI7rfwe2c8IlPn"
+    }
+  ]
+}

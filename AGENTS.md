@@ -37,13 +37,13 @@ Smoke runs are tiered by survey config:
 
 - `tools/local-finalize-smoke-surveys.json` (12 surveys) is the script's
   default config and the right scope for routine feature finalization.
-- `tools/local-finalize-smoke-surveys-all32.json` (32 surveys) is the
-  end-of-session final: run it via `--config` only after all of a
-  session's branches and features are completed and merged, never per
-  feature. A full 32-survey bless plus verification check takes on the
-  order of hours. Note the configs are not nested: six default-config
-  surveys are absent from the all-32 config, so the two together cover
-  38 distinct surveys.
+- `tools/local-finalize-smoke-surveys-all.json` (all 34 distinct
+  offline-artifact surveys, a strict superset of the default config,
+  one alias per survey) is the end-of-session final: run it via
+  `--config` only after all of a session's branches and features are
+  completed and merged, never per feature. A full all-surveys Bless
+  plus Check takes on the order of hours, driven by survey size rather
+  than survey count.
 
 This tiering is provisional; see
 https://github.com/lyh970817/qualtdict/issues/27 before restructuring
