@@ -462,7 +462,7 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
     target_rows$question,
     c("Why did you choose Apples?", "Why did you choose Bananas?")
   )
-  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
   expect_true(all(is.na(target_rows$item)))
   expect_identical(target_rows$type, c("TE", "TE"))
   expect_identical(target_rows$selector, c("SL", "SL"))
@@ -509,7 +509,7 @@ test_that(
       target_rows$question,
       c("Why did you choose Apples?", "Why did you choose Bananas?")
     )
-    expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+    expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
   }
 )
 
@@ -536,7 +536,7 @@ test_that("normalised metadata renders supported extra Loop and Merge fields", {
     target_rows$question,
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
-  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
 })
 
 
@@ -626,7 +626,7 @@ test_that(
       target_rows$question,
       c("Why did you choose Apples?", "Why did you choose Bananas?")
     )
-    expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+    expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
   }
 )
 
@@ -653,7 +653,7 @@ test_that("normalised metadata renders static Loop and Merge rows", {
     target_rows$question,
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
-  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
 })
 
 
@@ -694,7 +694,7 @@ test_that("matrix source Loop and Merge prefixes use source response rows", {
   )
   expect_false(any(grepl("^QID1_QID2_TEXT$", target_rows$response_column_id)))
   expect_identical(
-    target_rows$loop_option,
+    target_rows$looping_option,
     c("Condition 1", "Condition 2", "Condition 3")
   )
 })
