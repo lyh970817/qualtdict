@@ -223,7 +223,7 @@ display_order_choice_levels <- function(question_fact, choice_order) {
       if (is.null(choice)) {
         return(choice_id)
       }
-      scalar_character(choice$level %||% choice$recode %||% choice_id)
+      scalar_character(choice$level %||% choice_id)
     },
     character(1)
   )
@@ -242,7 +242,7 @@ display_order_choice_labels <- function(question_fact, choice_order) {
       if (is.null(choice)) {
         return(choice_id)
       }
-      scalar_character(choice$label %||% choice$description %||% choice_id)
+      scalar_character(choice$label %||% choice_id)
     },
     character(1)
   )
@@ -438,7 +438,6 @@ remove_empty_choice_labels <- function(question) {
   nbsps <- map(response_choices, "label") == "&nbsp;"
   if (length(nbsps) != 1) {
     question$response_choices <- response_choices[!nbsps]
-    question$choices <- question$response_choices
   }
 
   question
@@ -463,7 +462,6 @@ remove_non_exported_choice_columns <- function(question) {
     isTRUE(choice$analyze %||% TRUE)
   })
   question$response_choices <- response_choices[exported]
-  question$choices <- question$response_choices
   question
 }
 

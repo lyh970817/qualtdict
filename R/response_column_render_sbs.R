@@ -75,7 +75,7 @@ sbs_fill_blank_item_labels <- function(item, response_items) {
   fallback <- vapply(
     response_items,
     function(response_item) {
-      scalar_character(response_item$recode %||% response_item$item_id)
+      scalar_character(response_item$level %||% response_item$item_id)
     },
     character(1)
   )
