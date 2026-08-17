@@ -3,7 +3,7 @@ scratch.R
 inst/doc
 tmp/
 node_modules/
-.local/finalize-smoke/
+.local/
 .codegraph/
 .understand-anything/
 .workflow/
@@ -17,6 +17,8 @@ tools/raw-response-column-parity.R
 .sandcastle/worktrees/
 .sandcastle-backups/
 .worktrees/
+.claude/worktrees/
+docs/
 .superpowers/
 .sandcastle/.env
 .sandcastle/gitconfig
