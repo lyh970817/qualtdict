@@ -479,7 +479,7 @@ test_that("normalisation and validation helpers cover fallback records", {
     )
   )
   expect_identical(
-    question_fact_question_type(list()),
+    raw_question_type(list()),
     list(type = NULL, selector = NULL, sub_selector = NULL)
   )
   expect_identical(

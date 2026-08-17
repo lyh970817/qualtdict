@@ -30,7 +30,7 @@ expand_then_render_question_response_columns <- function(question_facts) {
 
   rendered <- imap(expanded_question_facts, function(question_fact, qid) {
     base_response_column_id <-
-      question_fact_base_response_column_id(question_fact) %||% qid
+      question_fact$base_response_column_id %||% qid
     response_columns <- render_response_columns(
       question_fact,
       base_response_column_id
@@ -50,8 +50,8 @@ expand_then_render_question_response_columns <- function(question_facts) {
 #' Build Loop and Merge expansion context for one Normalised Question Fact
 #' @noRd
 new_loop_expansion_context <- function(question_fact, survey_question_facts) {
-  looping_qid <- scalar_character(question_fact_looping_qid(question_fact))
-  looping_static <- question_fact_looping_static(question_fact)
+  looping_qid <- scalar_character(question_fact$looping_qid)
+  looping_static <- question_fact$looping_static
 
   list(
     question_fact = question_fact,
@@ -63,7 +63,7 @@ new_loop_expansion_context <- function(question_fact, survey_question_facts) {
     },
     looping_static = looping_static,
     static_prefixes = unlist(
-      question_fact_looping_prefix(question_fact),
+      question_fact$looping_prefix,
       use.names = FALSE
     )
   )
@@ -128,7 +128,7 @@ new_unsupported_loop_diagnostic <- function(context, reason) {
   list(
     qid = scalar_character(context$question_fact$qid),
     question_name = scalar_character(
-      question_fact_question_name(context$question_fact)
+      context$question_fact$question_name
     ),
     looping_qid = scalar_character(context$looping_qid),
     reason = reason
@@ -223,7 +223,7 @@ loop_options_for_context <- function(context) {
   }
 
   source_type <- scalar_character(
-    question_fact_question_type(looping_source_fact)$type
+    looping_source_fact$question_type$type
   )
 
   if (identical(source_type, "Matrix")) {
@@ -236,7 +236,7 @@ loop_options_for_context <- function(context) {
 #' Resolve Loop Options from a Matrix source
 #' @noRd
 loop_options_from_matrix_source <- function(context) {
-  loop_items <- question_fact_response_items(context$looping_source_fact)
+  loop_items <- context$looping_source_fact$response_items
   if (is.null(loop_items) || length(loop_items) == 0) {
     return(NULL)
   }
@@ -269,8 +269,8 @@ loop_options_from_matrix_source <- function(context) {
 #' @noRd
 loop_options_from_choice_source_context <- function(context) {
   loop_options_from_static_choices(
-    question_fact_looping_prefix(context$question_fact),
-    question_fact_response_choices(context$looping_source_fact),
+    context$question_fact$looping_prefix,
+    context$looping_source_fact$response_choices,
     context$static_prefixes
   )
 }
@@ -319,7 +319,7 @@ new_loop_expanded_question_fact <- function(
   looped_question_fact[["base_response_column_id"]] <-
     normalise_loop_base_response_column_id(
       paste(
-        question_fact_looping_prefix(looped_question_fact),
+        looped_question_fact[["looping_prefix"]],
         question_fact[["qid"]],
         sep = "_"
       )
@@ -574,12 +574,12 @@ loop_field_values_static_overrides_column_names <- function(
   prefixes
 ) {
   field_values <- loop_field_values_from_static(
-    question_fact_looping_static(question_fact),
+    question_fact$looping_static,
     prefixes
   )
 
   column_field_values <- loop_field_values_from_column_names(
-    question_fact_looping_column_names(question_fact),
+    question_fact$looping_column_names,
     prefixes
   )
 
