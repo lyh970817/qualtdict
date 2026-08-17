@@ -92,12 +92,6 @@ dict_validate <- function(dict, quiet = TRUE) {
   )
 }
 
-#' Prepare a Variable Dictionary for level-label validation
-#' @noRd
-question_level_label_validation_dict <- function(dict) {
-  dict[dict_question_rows(dict), ]
-}
-
 #' Split a Variable Dictionary into level-label validation groups
 #'
 #' The one row set and grouping every level-label check runs on, shared by
@@ -105,7 +99,7 @@ question_level_label_validation_dict <- function(dict) {
 #' Labelled Export gate always see the same rows.
 #' @noRd
 level_label_validation_groups <- function(dict) {
-  level_label_dict <- question_level_label_validation_dict(dict)
+  level_label_dict <- dict[dict_question_rows(dict), ]
 
   split(
     level_label_dict,

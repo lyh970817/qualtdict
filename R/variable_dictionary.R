@@ -1,9 +1,3 @@
-#' Convert nested Variable Dictionary rows to a data frame
-#' @noRd
-to_dataframe <- function(json) {
-  map_df(json, map_df, unlist)
-}
-
 variable_dictionary_base_columns <- c(
   "qid",
   "response_column_id",
@@ -332,8 +326,7 @@ variable_dictionary_text_analysis_row <- function(sidecar) {
 #' Prepare raw Variable Dictionary rows
 #' @noRd
 prepare_variable_dictionary_rows <- function(json) {
-  json <- json |>
-    to_dataframe() |>
+  json <- map_df(json, map_df, unlist) |>
     convert_html()
 
   json$looping <- as.logical(json$looping)

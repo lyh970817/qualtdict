@@ -81,14 +81,14 @@ filter_exported_scoring_variables <- function(variables, response_column_map) {
 #' Normalise one Qualtrics scoring category
 #' @noRd
 normalise_scoring_variable <- function(category) {
-  output_name <- scoring_category_name(category)
-  response_column_id <- scoring_category_response_column_id(category)
-  if (
-    is.na(output_name) ||
-      !nzchar(output_name) ||
-      is.na(response_column_id) ||
-      !nzchar(response_column_id)
-  ) {
+  if (is.null(category) || !is.list(category)) {
+    return(NULL)
+  }
+
+  output_name <- scalar_character(category$Name)
+  response_column_id <- scalar_character(category$ID)
+  identifiers <- c(output_name, response_column_id)
+  if (anyNA(identifiers) || !all(nzchar(identifiers))) {
     return(NULL)
   }
 
@@ -96,24 +96,4 @@ normalise_scoring_variable <- function(category) {
     output_name = output_name,
     response_column_id = response_column_id
   )
-}
-
-#' Resolve a Scoring Variable name
-#' @noRd
-scoring_category_name <- function(category) {
-  if (is.null(category) || !is.list(category)) {
-    return(NA_character_)
-  }
-
-  scalar_character(category$Name)
-}
-
-#' Resolve a Scoring Variable Response Column ID
-#' @noRd
-scoring_category_response_column_id <- function(category) {
-  if (is.null(category) || !is.list(category)) {
-    return(NA_character_)
-  }
-
-  scalar_character(category$ID)
 }

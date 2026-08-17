@@ -182,8 +182,9 @@ test_that(
       question_type = question_fact$question_type
     )
 
+    renderer <- response_column_renderer_for_context(context)
     expect_warning(
-      rendered <- render_response_column_ids(context),
+      rendered <- renderer(context),
       "QID1 uses a question type without a specific response-column renderer",
       fixed = TRUE
     )
