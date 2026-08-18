@@ -16,9 +16,12 @@ unlink(file.path(site_dir, internal_pages), force = TRUE)
 search_path <- file.path(site_dir, "search.json")
 if (file.exists(search_path)) {
   search <- jsonlite::fromJSON(search_path, simplifyVector = FALSE)
-  search <- Filter(function(entry) {
-    !is_internal_page(entry$path)
-  }, search)
+  search <- Filter(
+    function(entry) {
+      !is_internal_page(entry$path)
+    },
+    search
+  )
   jsonlite::write_json(search, search_path, auto_unbox = TRUE)
 }
 
