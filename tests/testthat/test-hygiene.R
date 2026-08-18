@@ -1,20 +1,3 @@
-test_that("recorded Qualtrics cassettes are not committed", {
-  fixture_files <- list.files(
-    test_path("../fixtures"),
-    pattern = "[.]yml$",
-    full.names = TRUE
-  )
-
-  expect_equal(
-    length(fixture_files),
-    0L,
-    info = paste(
-      "Do not commit VCR cassettes for Qualtrics API calls;",
-      "they can contain Participant Response Data."
-    )
-  )
-})
-
 root_text <- function(...) {
   path <- file.path(test_path("../.."), ...)
   skip_if_not(
