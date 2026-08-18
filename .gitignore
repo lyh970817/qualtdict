@@ -18,7 +18,9 @@ tools/raw-response-column-parity.R
 .sandcastle-backups/
 .worktrees/
 .claude/worktrees/
-docs/
+docs/*
+!docs/adr/
+!docs/design/
 .superpowers/
 .sandcastle/.env
 .sandcastle/gitconfig
