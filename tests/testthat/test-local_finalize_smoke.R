@@ -772,7 +772,7 @@ test_that("local finalize smoke rejects legacy survey selection flags", {
   )
 })
 
-test_that("local finalize smoke config keeps the thirteen-survey surface", {
+test_that("local finalize smoke config keeps the twelve-survey surface", {
   config_path <- testthat::test_path(
     "..",
     "..",

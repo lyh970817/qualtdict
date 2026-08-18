@@ -281,9 +281,8 @@ test_that("Response Column ID helpers cover fallback shapes", {
     response_column_row_vector(c("a", "b"), row_count = 3),
     "not row-aligned"
   )
-  local_mocked_bindings(null_na = function(x) list())
   expect_identical(
-    response_column_row_vector(list("ignored"), row_count = 1),
+    response_column_row_vector(list(list(NULL)), row_count = 1),
     NA_character_
   )
 
