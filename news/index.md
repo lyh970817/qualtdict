@@ -2,6 +2,45 @@
 
 ## qualtdict 0.0.0.9000
 
+- The validation result returned by
+  [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
+  no longer carries the decorative `"qualtdict_validation"` class: it is
+  a plain list with the same documented `validation_findings` and
+  `level_label_pairs` components, which remain the stable contract. No
+  package code ever dispatched on the class. Other internal-only
+  decorative classes on normalised records were dropped at the same
+  time; the `"qualtdict"` class on generated Variable Dictionaries and
+  the error class `"qualtdict_export_blocking_findings"` raised by
+  [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+  are unchanged.
+
+- The Semantic Name dependencies `slowraker`, `SnowballC`, `stringi`,
+  `tidyr`, and `openNLP` moved from Imports to Suggests: the package now
+  installs and runs its default `variable_name = "question_name"` path
+  without them. `dict_generate(variable_name = "semantic_name")` fails
+  fast with an actionable error when the optional packages are missing.
+  Java (via `openNLP` and `rJava`) is needed only for POS-tag filtering,
+  which Semantic Name generation does not use.
+
+- The Variable Dictionary returned by
+  [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  now names its Loop Option column `looping_option` instead of
+  `loop_option`. The two names carried the same value and the internal
+  duplicate is removed, so the dictionary keeps one name per concept
+  (ADR 0010).
+
+- [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  no longer accepts the pre-release compatibility arguments `name` and
+  `preprocess`, nor the `easy_name` value. Use `variable_name` (with
+  `"question_name"` or `"semantic_name"`) and `semantic_name_preprocess`
+  instead. The aliases warned on every use and are removed before the
+  first release, so the package keeps one name per concept.
+
+- [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
+  no longer fails on a Loop and Merge source choice whose label is blank
+  or missing. Such a Loop Option now takes the source choice ID as its
+  label instead of aborting Loop expansion for the whole survey.
+
 - [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
   output now classifies every Validation Finding by `severity`:
   `"definite"` when the finding makes the affected export column

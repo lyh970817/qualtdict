@@ -9,11 +9,9 @@ via `qualtRics`.
 dict_generate(
   surveyID,
   variable_name = c("question_name", "semantic_name"),
-  name = NULL,
   block_pattern = NULL,
   block_sep = ".",
   semantic_name_preprocess = NULL,
-  preprocess = NULL,
   embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 )
@@ -31,23 +29,21 @@ dict_generate(
   String. Source for the final `variable_name` column in the Variable
   Dictionary. Use `question_name` for the raw Qualtrics Question Name or
   `semantic_name` for a generated Semantic Name based on question text
-  and response metadata.
-
-- name:
-
-  Deprecated compatibility alias for `variable_name`. The legacy
-  `easy_name` value is accepted as `semantic_name` with a warning.
+  and response metadata. Semantic Name generation needs the optional
+  packages slowraker, SnowballC, stringi, and tidyr; the default
+  `question_name` path never uses them.
 
 - block_pattern:
 
   Function. A function that given the name of a Survey Block, returns a
-  Block Prefix to prepend to Semantic Names in that block. Defaults to
-  `NULL`.
+  Block Prefix to prepend to Semantic Names in that block. Used only
+  when `variable_name = "semantic_name"`. Defaults to `NULL`.
 
 - block_sep:
 
   String. Separator between variable names and block prefixes returned
-  by `block_pattern`. Defaults to ".".
+  by `block_pattern`. Used only when `variable_name = "semantic_name"`.
+  Defaults to ".".
 
 - semantic_name_preprocess:
 
@@ -56,10 +52,6 @@ dict_generate(
   Semantic Name generation. It runs only when
   `variable_name = "semantic_name"`. Temporary helper columns added by
   this function are not included in the returned Variable Dictionary.
-
-- preprocess:
-
-  Deprecated compatibility alias for `semantic_name_preprocess`.
 
 - embedded_data_block_assignment:
 
@@ -109,7 +101,9 @@ conveniences generated from survey text and metadata; they are not
 stable guarantees across package versions or survey text changes. For
 long text, Semantic Names select important words from ranked keywords
 and preserve those selected words in the order they appear in the naming
-text.
+text. Semantic Name generation needs the optional packages slowraker,
+SnowballC, stringi, and tidyr. Java (via openNLP) is needed only for
+POS-tag filtering, which the Semantic Name path does not use.
 
 ## Examples
 
