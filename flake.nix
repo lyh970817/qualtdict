@@ -53,7 +53,6 @@
           rPackages = with pkgs.rPackages; [
             # Package Imports and Suggests from DESCRIPTION.
             covr
-            crul
             devtools
             dplyr
             glue
