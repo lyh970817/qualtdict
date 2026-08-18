@@ -27,10 +27,6 @@ compact_loop_question_facts <- function(question_facts) {
   )
 }
 
-looped_dictionary_rows <- function(dict, qid) {
-  dict[identical_na(dict$qid, qid), ]
-}
-
 synthetic_unresolved_source_loop_and_merge_raw_metadata <- function() {
   raw_metadata <- synthetic_loop_and_merge_raw_metadata()
   raw_metadata$description$blocks$BL_LOOP$Options$LoopingOptions$Static <- list(
@@ -59,7 +55,3 @@ synthetic_absent_source_unusable_static_loop_and_merge_raw_metadata <-
       NULL
     raw_metadata
   }
-
-identical_na <- function(x, y) {
-  !is.na(x) & x == y
-}
