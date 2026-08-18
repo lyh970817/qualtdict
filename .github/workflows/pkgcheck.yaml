@@ -18,4 +18,14 @@ jobs:
       contents: read
       issues: write
     steps:
+      # The pkgcheck container runs as root, while the checkout it mounts at
+      # /github/workspace is owned by the runner user, so libgit2 refuses to
+      # open the repository ("is not owned by current user"). A container
+      # action sees $HOME as /github/home, mounted from runner.temp, so
+      # writing safe.directory there reaches the container's git config.
+      - name: Let the pkgcheck container open the checkout
+        run: |
+          mkdir -p "${{ runner.temp }}/_github_home"
+          printf '[safe]\n\tdirectory = *\n' \
+            >> "${{ runner.temp }}/_github_home/.gitconfig"
       - uses: ropensci-review-tools/pkgcheck-action@main
