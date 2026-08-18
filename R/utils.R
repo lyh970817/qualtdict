@@ -7,7 +7,6 @@
 #' @importFrom stringr fixed str_extract str_match str_match_all str_remove
 #' @importFrom stringr str_remove_all str_replace str_replace_all str_split
 #' @importFrom tibble tibble as_tibble enframe
-#' @importFrom crul Async
 #' @importFrom utils globalVariables
 
 globalVariables(c(
