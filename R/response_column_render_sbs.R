@@ -34,7 +34,7 @@ response_column_sbs_shape <- function(question, shape, has_text_sub) {
 #' Build SBS column facts used by Response Column ID Rendering
 #' @noRd
 response_column_sbs_column_shape <- function(question) {
-  column_facts <- question_fact_column_facts(question)
+  column_facts <- question$column_facts
   col_type <- map_chr(column_facts, ~ .x$question_type$selector)
   attr(col_type, "sub_selector") <-
     map_chr(column_facts, ~ scalar_character(.x$question_type$sub_selector))
@@ -50,7 +50,7 @@ response_column_sbs_column_shape <- function(question) {
 #' Build SBS row item facts used by Response Column ID Rendering
 #' @noRd
 response_column_sbs_item_shape <- function(question, has_text_sub) {
-  response_items <- question_fact_response_items(question)
+  response_items <- question$response_items
   item <- unlist(map(response_items, "item_label"))
   item <- sbs_fill_blank_item_labels(item, response_items)
   unlist(add_text(item, has_text_sub))
@@ -75,7 +75,7 @@ sbs_fill_blank_item_labels <- function(item, response_items) {
   fallback <- vapply(
     response_items,
     function(response_item) {
-      scalar_character(response_item$recode %||% response_item$item_id)
+      scalar_character(response_item$level %||% response_item$item_id)
     },
     character(1)
   )
@@ -102,7 +102,7 @@ response_column_sbs_questions <- function(
   item,
   level_len
 ) {
-  top_question <- question_fact_question_text(question)
+  top_question <- question$question_text
   question_text <- sbs_column_qualified_texts(column_facts) |>
     map2(length(item), rep) |>
     map2(level_len, function(question_text, level_len) {

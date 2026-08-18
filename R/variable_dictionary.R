@@ -1,9 +1,3 @@
-#' Convert nested Variable Dictionary rows to a data frame
-#' @noRd
-to_dataframe <- function(json) {
-  map_df(json, map_df, unlist)
-}
-
 variable_dictionary_base_columns <- c(
   "qid",
   "response_column_id",
@@ -21,8 +15,7 @@ variable_dictionary_base_columns <- c(
   "content_type",
   "sub_selector",
   "looping_option",
-  "looping",
-  "loop_option"
+  "looping"
 )
 
 variable_dictionary_semantic_columns <- append(
@@ -47,6 +40,8 @@ variable_dictionary_from_normalised_metadata <- function(
   embedded_data_block_assignment = "none",
   quiet = TRUE
 ) {
+  checkarg_isnormalised_metadata(normalised_metadata)
+
   question_meta <- normalised_metadata$questions
   rendered_question_columns <- expand_then_render_question_response_columns(
     question_meta
@@ -71,7 +66,6 @@ variable_dictionary_from_normalised_metadata <- function(
   if (use_semantic_name) {
     json <- generate_semantic_names(
       json,
-      normalised_metadata$surveyID,
       block_pattern,
       block_sep,
       semantic_name_preprocess,
@@ -142,11 +136,11 @@ variable_dictionary_question_row <- function(
   qid,
   response_columns = NULL
 ) {
-  question_type <- question_fact_question_type(qjson)
-  question_name <- question_fact_question_name(qjson)
+  question_type <- qjson$question_type
+  question_name <- qjson$question_name
   if (is.null(response_columns)) {
     base_response_column_id <-
-      question_fact_base_response_column_id(qjson) %||% qid
+      qjson$base_response_column_id %||% qid
     response_columns <- render_response_columns(qjson, base_response_column_id)
   }
   if (nrow(response_columns) == 0) {
@@ -163,9 +157,9 @@ variable_dictionary_question_row <- function(
     response_column_id = response_columns$response_column_id,
     row_source = rep("question", length(response_columns$response_column_id)),
     question_name = null_na(question_name),
-    block = question_fact_survey_block(qjson),
+    block = qjson$survey_block,
     question = response_columns$question,
-    looping_question = question_fact_looping_question(qjson) %||% NA_character_,
+    looping_question = qjson$looping_question %||% NA_character_,
     item = response_columns$item,
     level = response_columns$level,
     label = response_columns$label,
@@ -173,8 +167,8 @@ variable_dictionary_question_row <- function(
     selector = question_type$selector,
     content_type = qjson$content_type,
     sub_selector = null_na(question_type$sub_selector),
-    looping_option = question_fact_looping_option(qjson) %||% NA_character_,
-    looping = question_fact_looping_status(qjson)
+    looping_option = qjson$looping_option %||% NA_character_,
+    looping = isTRUE(qjson$looping)
   )
 }
 
@@ -334,8 +328,7 @@ variable_dictionary_text_analysis_row <- function(sidecar) {
 #' Prepare raw Variable Dictionary rows
 #' @noRd
 prepare_variable_dictionary_rows <- function(json) {
-  json <- json |>
-    to_dataframe() |>
+  json <- map_df(json, map_df, unlist) |>
     convert_html()
 
   json$looping <- as.logical(json$looping)
@@ -377,7 +370,6 @@ clean_variable_dictionary_rows <- function(json, use_semantic_name) {
     json$variable_name[question_rows] <- json$question_name[question_rows]
   }
   json$variable_name <- unname(json$variable_name)
-  json$loop_option <- json$looping_option
 
   json
 }

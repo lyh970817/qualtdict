@@ -46,6 +46,8 @@
 ^codemeta\.json$
 ^docs$
 ^docs/superpowers/plans$
+^flake\.lock$
+^flake\.nix$
 ^helper-pkg\.R$
 ^node_modules$
 ^node_modules/
@@ -55,6 +57,5 @@
 ^qualtdict\.Rcheck$
 ^qualtdict_.*[.]tar[.]gz$
 ^scratch\.R$
-^shell\.nix$
 ^tmp$
 ^tools$

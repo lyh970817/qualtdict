@@ -4,15 +4,9 @@ test_that("flat Embedded Data Fields normalise into package-owned metadata", {
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
   embedded_data <- normalised_metadata$embedded_data
 
-  expect_s3_class(
-    embedded_data,
-    "qualtdict_normalised_embedded_data_fields"
-  )
+  expect_type(embedded_data, "list")
   expect_named(embedded_data, c("Source Channel", "Q1"))
-  expect_s3_class(
-    embedded_data[["Source Channel"]],
-    "qualtdict_normalised_embedded_data_field"
-  )
+  expect_type(embedded_data[["Source Channel"]], "list")
   expect_identical(
     embedded_data[["Source Channel"]]$response_column_id,
     "Source Channel"
@@ -160,7 +154,7 @@ test_that("description Survey Flow helpers cover empty artifact branches", {
     normalise_survey_flow_embedded_data_fields(list(
       flow = list(Type = "EmbeddedData", EmbeddedData = list())
     )),
-    empty_normalised_embedded_data_fields()
+    list()
   )
   expect_length(
     survey_flow_items(list(named = list(Type = "Standard", ID = "BL_1"))),

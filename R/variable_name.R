@@ -1,9 +1,3 @@
-#' Make Variable Dictionary names export-safe and unique
-#' @noRd
-repair_variable_names <- function(candidates) {
-  make.unique(repair_variable_name_base(candidates))
-}
-
 #' Make Variable Dictionary names export-safe without uniqueness repair
 #' @noRd
 repair_variable_name_base <- function(candidates) {
@@ -36,7 +30,9 @@ repair_variable_dictionary_names <- function(dict) {
     },
     character(1)
   )
-  repaired_candidates <- repair_variable_names(original_candidates)
+  repaired_candidates <- make.unique(
+    repair_variable_name_base(original_candidates)
+  )
   reasons <- map2_chr(
     original_candidates,
     repaired_candidates,

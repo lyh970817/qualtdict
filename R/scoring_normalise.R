@@ -1,12 +1,3 @@
-#' Build normalised Scoring Variable records
-#' @noRd
-new_normalised_scoring_variables <- function(variables = list()) {
-  structure(
-    variables,
-    class = c("qualtdict_normalised_scoring_variables", "list")
-  )
-}
-
 #' Build one normalised Scoring Variable record
 #' @noRd
 new_normalised_scoring_variable <- function(
@@ -14,13 +5,10 @@ new_normalised_scoring_variable <- function(
   response_column_id,
   question_text = paste("Scoring Variable:", output_name)
 ) {
-  structure(
-    list(
-      output_name = output_name,
-      response_column_id = response_column_id,
-      question_text = question_text
-    ),
-    class = c("qualtdict_normalised_scoring_variable", "list")
+  list(
+    output_name = output_name,
+    response_column_id = response_column_id,
+    question_text = question_text
   )
 }
 
@@ -29,18 +17,17 @@ new_normalised_scoring_variable <- function(
 normalise_scoring_variables <- function(mt_d, response_column_map = NULL) {
   categories <- scoring_categories(mt_d$scoring)
   if (length(categories) == 0) {
-    return(empty_normalised_scoring_variables())
+    return(list())
   }
 
   variables <- map(categories, normalise_scoring_variable) |>
     discard(is.null)
   names(variables) <- map_chr(variables, "output_name")
-  variables <- filter_exported_scoring_variables(
+
+  filter_exported_scoring_variables(
     variables,
     response_column_map
   )
-
-  new_normalised_scoring_variables(variables)
 }
 
 #' Return Qualtrics scoring categories
@@ -56,12 +43,6 @@ scoring_categories <- function(scoring) {
   }
 
   categories
-}
-
-#' Empty normalised Scoring Variable records
-#' @noRd
-empty_normalised_scoring_variables <- function() {
-  new_normalised_scoring_variables()
 }
 
 #' Keep Scoring Variables represented by exported Response Column IDs
@@ -81,14 +62,14 @@ filter_exported_scoring_variables <- function(variables, response_column_map) {
 #' Normalise one Qualtrics scoring category
 #' @noRd
 normalise_scoring_variable <- function(category) {
-  output_name <- scoring_category_name(category)
-  response_column_id <- scoring_category_response_column_id(category)
-  if (
-    is.na(output_name) ||
-      !nzchar(output_name) ||
-      is.na(response_column_id) ||
-      !nzchar(response_column_id)
-  ) {
+  if (is.null(category) || !is.list(category)) {
+    return(NULL)
+  }
+
+  output_name <- scalar_character(category$Name)
+  response_column_id <- scalar_character(category$ID)
+  identifiers <- c(output_name, response_column_id)
+  if (anyNA(identifiers) || !all(nzchar(identifiers))) {
     return(NULL)
   }
 
@@ -96,24 +77,4 @@ normalise_scoring_variable <- function(category) {
     output_name = output_name,
     response_column_id = response_column_id
   )
-}
-
-#' Resolve a Scoring Variable name
-#' @noRd
-scoring_category_name <- function(category) {
-  if (is.null(category) || !is.list(category)) {
-    return(NA_character_)
-  }
-
-  scalar_character(category$Name)
-}
-
-#' Resolve a Scoring Variable Response Column ID
-#' @noRd
-scoring_category_response_column_id <- function(category) {
-  if (is.null(category) || !is.list(category)) {
-    return(NA_character_)
-  }
-
-  scalar_character(category$ID)
 }

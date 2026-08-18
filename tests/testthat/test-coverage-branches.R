@@ -25,59 +25,6 @@ coverage_test_dict <- function(
   dict
 }
 
-test_that("dict_generate covers deprecated argument aliases", {
-  local_mocked_bindings(
-    fetch_dictionary_metadata = function(surveyID) {
-      synthetic_mc_text_raw_metadata()
-    }
-  )
-
-  expect_warning(
-    expect_warning(
-      semantic_dict <- dict_generate("SV_SYNTHETIC", name = "easy_name"),
-      "`name` is deprecated"
-    ),
-    "`easy_name` is deprecated"
-  )
-  expect_true("semantic_name" %in% names(semantic_dict))
-
-  expect_warning(
-    question_dict <- dict_generate("SV_SYNTHETIC", name = "question_name"),
-    "`name` is deprecated"
-  )
-  expect_false("semantic_name" %in% names(question_dict))
-
-  semantic_preprocess <- function(dict) {
-    dict$question <- "semantic branch question"
-    dict
-  }
-  alias_preprocess <- function(dict) {
-    dict$question <- "alias branch question"
-    dict
-  }
-
-  expect_warning(
-    dict <- dict_generate(
-      "SV_SYNTHETIC",
-      variable_name = "semantic_name",
-      preprocess = alias_preprocess
-    ),
-    "`preprocess` is deprecated"
-  )
-  expect_true(any(grepl("^alias", dict$semantic_name)))
-
-  expect_warning(
-    dict <- dict_generate(
-      "SV_SYNTHETIC",
-      variable_name = "semantic_name",
-      semantic_name_preprocess = semantic_preprocess,
-      preprocess = alias_preprocess
-    ),
-    "`preprocess` is deprecated"
-  )
-  expect_true(any(grepl("^semantic", dict$semantic_name)))
-})
-
 test_that("generated dictionary finalisation supplies default findings", {
   dict <- coverage_test_dict()
   attr(dict, "variable_name_findings") <- NULL
@@ -117,7 +64,7 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
 
   raw_metadata <- fetch_dictionary_metadata("SV_FETCH")
 
-  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_type(raw_metadata, "list")
   expect_identical(raw_metadata$survey_name, "Fetched Survey")
   expect_identical(raw_metadata$description, description)
   expect_identical(raw_metadata$response_column_map$ImportId, "QID1")
@@ -143,15 +90,8 @@ test_that("metadata fetching degrades without response column maps", {
     "Failed to fetch the Qualtrics response column map"
   )
 
-  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_type(raw_metadata, "list")
   expect_null(raw_metadata$response_column_map)
-})
-
-test_that("dictionary accessors support legacy dictionary columns", {
-  dict <- tibble::tibble(qid = "QID1", name = "q1")
-
-  expect_identical(dict_response_column_id(dict), "QID1")
-  expect_identical(dict_variable_name(dict), "q1")
 })
 
 test_that("dict_validate reports non-quiet finding messages", {
@@ -289,7 +229,7 @@ test_that("Loop and Merge helpers cover missing and empty branches", {
   )
   expect_identical(
     choice_source_from_static_prefixes(
-      list(x1 = list(recode = "1", description = "One")),
+      list(x1 = list(choice_id = "x1", level = "1", label = "One")),
       c("x1", "missing")
     )$type,
     "missing"
@@ -377,11 +317,7 @@ test_that("Response Column ID helpers cover fallback shapes", {
     render_facts = list(level = character())
   )
   expect_identical(
-    render_macol_response_column_id_with_level_suffix(empty_context),
-    "QID1"
-  )
-  expect_identical(
-    render_mavr_response_column_id_with_level_suffix(empty_context),
+    render_ma_response_column_id_with_level_suffix(empty_context),
     "QID1"
   )
   expect_identical(
@@ -425,6 +361,10 @@ test_that("Response Column ID helpers cover fallback shapes", {
 })
 
 test_that("Variable Dictionary assembly covers empty branches", {
+  skip_if_not_installed("slowraker")
+  skip_if_not_installed("stringi")
+  skip_if_not_installed("tidyr")
+
   normalised_metadata <- structure(
     list(
       surveyID = "SV_EMPTY",
@@ -461,8 +401,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
       "content_type",
       "sub_selector",
       "looping_option",
-      "looping",
-      "loop_option"
+      "looping"
     )
   )
   expect_identical(attr(empty_dict, "surveyID", exact = TRUE), "SV_EMPTY")
@@ -536,7 +475,7 @@ test_that("normalisation and validation helpers cover fallback records", {
     )
   )
   expect_identical(
-    question_fact_question_type(list()),
+    raw_question_type(list()),
     list(type = NULL, selector = NULL, sub_selector = NULL)
   )
   expect_identical(
@@ -563,7 +502,11 @@ test_that("normalisation and validation helpers cover fallback records", {
   )
 })
 
-test_that("slowrake and retry cover deterministic fallback branches", {
+test_that("slowrake covers deterministic fallback branches", {
+  skip_if_not_installed("slowraker")
+  skip_if_not_installed("stringi")
+  skip_if_not_installed("tidyr")
+
   expect_true(is.na(slowrake_atomic(
     "123",
     stop_words = character(),
@@ -594,17 +537,27 @@ test_that("slowrake and retry cover deterministic fallback branches", {
       quiet = FALSE
     )
   )
-  expect_s3_class(keywords, "rakelist")
-  expect_s3_class(
+  expect_type(keywords, "list")
+})
+
+test_that("slowrake covers the POS-tag filtering branch", {
+  skip_if_not_installed("slowraker")
+  skip_if_not_installed("stringi")
+  skip_if_not_installed("tidyr")
+  skip_if_not_installed("openNLP")
+
+  expect_type(
     slowrake(
       "one two three",
       all_words = "one two three",
       stop_pos = "NN",
       stem = FALSE
     ),
-    "rakelist"
+    "list"
   )
+})
 
+test_that("retry covers deterministic fallback branches", {
   attempts <- new.env(parent = emptyenv())
   attempts$count <- 0
   succeeds_second_time <- retry(function() {

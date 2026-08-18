@@ -7,11 +7,9 @@
 dict_generate(
   surveyID,
   variable_name = c("question_name", "semantic_name"),
-  name = NULL,
   block_pattern = NULL,
   block_sep = ".",
   semantic_name_preprocess = NULL,
-  preprocess = NULL,
   embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 )
@@ -23,27 +21,25 @@ requires Qualtrics credentials configured for \code{qualtRics}.}
 \item{variable_name}{String. Source for the final \code{variable_name}
 column in the Variable Dictionary. Use \code{question_name} for the raw
 Qualtrics Question Name or \code{semantic_name} for a generated Semantic
-Name based on question text and response metadata.}
-
-\item{name}{Deprecated compatibility alias for \code{variable_name}. The
-legacy \code{easy_name} value is accepted as \code{semantic_name} with a
-warning.}
+Name based on question text and response metadata. Semantic Name
+generation needs the optional packages \pkg{slowraker}, \pkg{SnowballC},
+\pkg{stringi}, and \pkg{tidyr}; the default \code{question_name} path
+never uses them.}
 
 \item{block_pattern}{Function. A function that given the name of a
 Survey Block, returns a Block Prefix to prepend to Semantic Names in that
-block. Defaults to \code{NULL}.}
+block. Used only when \code{variable_name = "semantic_name"}. Defaults to
+\code{NULL}.}
 
 \item{block_sep}{String. Separator between variable names and block
-prefixes returned by \code{block_pattern}. Defaults to ".".}
+prefixes returned by \code{block_pattern}. Used only when
+\code{variable_name = "semantic_name"}. Defaults to ".".}
 
 \item{semantic_name_preprocess}{Function. An optional function that receives
 the full post-normalisation dictionary and returns a modified dictionary for
 Semantic Name generation. It runs only when
 \code{variable_name = "semantic_name"}. Temporary helper columns added by
 this function are not included in the returned Variable Dictionary.}
-
-\item{preprocess}{Deprecated compatibility alias for
-\code{semantic_name_preprocess}.}
 
 \item{embedded_data_block_assignment}{String. Survey Flow adjacency policy
 for assigning Embedded Data Fields to Survey Blocks. Use \code{"none"} to
@@ -94,7 +90,10 @@ includes \code{semantic_name}. Semantic Names are readable best-effort
 conveniences generated from survey text and metadata; they are not stable
 guarantees across package versions or survey text changes. For long text,
 Semantic Names select important words from ranked keywords and preserve those
-selected words in the order they appear in the naming text.
+selected words in the order they appear in the naming text. Semantic Name
+generation needs the optional packages \pkg{slowraker}, \pkg{SnowballC},
+\pkg{stringi}, and \pkg{tidyr}. Java (via \pkg{openNLP}) is needed only
+for POS-tag filtering, which the Semantic Name path does not use.
 }
 \examples{
 if (interactive()) {

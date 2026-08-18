@@ -57,6 +57,5 @@ test_that("Scoring Variables require artifact-backed category fields", {
   expect_identical(scoring[["Exported"]]$response_column_id, "SC_1")
   expect_identical(scoring[["Exported"]]$output_name, "Exported")
   expect_identical(scoring_categories(list(ScoringCategories = list())), list())
-  expect_identical(scoring_category_name(NULL), NA_character_)
-  expect_identical(scoring_category_response_column_id(NULL), NA_character_)
+  expect_null(normalise_scoring_variable(NULL))
 })

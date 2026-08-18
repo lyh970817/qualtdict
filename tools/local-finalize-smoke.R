@@ -659,10 +659,6 @@ smoke_parent_question_type_fields <- function(
     "normalise_qualtrics_questions",
     "qualtdict"
   )
-  question_fact_question_type <- getFromNamespace(
-    "question_fact_question_type",
-    "qualtdict"
-  )
   questions <- normalise_qualtrics_questions(metadata, description)
   for (index in seq_along(parent_qid)) {
     qid <- parent_qid[[index]]
@@ -670,7 +666,7 @@ smoke_parent_question_type_fields <- function(
       next
     }
 
-    question_type <- question_fact_question_type(questions[[qid]])
+    question_type <- questions[[qid]]$question_type
     fields$parent_type[[index]] <- question_type$type %||% NA_character_
     fields$parent_selector[[index]] <- question_type$selector %||%
       NA_character_
@@ -1053,18 +1049,29 @@ run_scenario <- function(
     objects$validation <- validation
   }
 
+  # The sole labelled scenario. There is deliberately no default-path
+  # `fetch_labelled_survey_data(dict)` scenario: live survey metadata can
+  # legitimately carry Definite Validation Findings, and the severity gate
+  # (commit fb05802) aborts the default path before download when it does.
+  # The smoke's job is Response Column ID parity and labelled-export shape,
+  # not re-testing the abort gate, which the unit tests cover
+  # (`tests/testthat/test-fetch_labelled_survey_data.R`).
   if (requirements$needs_labelled) {
-    labelled <- run_step(
-      paste(scenario_label, "fetch_labelled_survey_data"),
-      qualtdict::fetch_labelled_survey_data(dict, quiet = FALSE)
+    labelled_excluding_validation <- run_step(
+      paste(scenario_label, "fetch_labelled_survey_data exclude validation"),
+      qualtdict::fetch_labelled_survey_data(
+        dict,
+        exclude_findings = "validation",
+        quiet = FALSE
+      )
     )
-    objects$labelled <- labelled
+    objects$labelled_excluding_validation <- labelled_excluding_validation
   }
 
   if (requirements$needs_export_findings) {
     export_findings <- run_step(
       paste(scenario_label, "labelled_export_findings"),
-      qualtdict::labelled_export_findings(objects$labelled)
+      qualtdict::labelled_export_findings(objects$labelled_excluding_validation)
     )
     objects$labelled_export_findings <- export_findings
   }
@@ -1080,24 +1087,9 @@ run_scenario <- function(
   if (requirements$needs_survey_blocks) {
     survey_blocks <- run_step(
       paste(scenario_label, "survey_split_blocks"),
-      qualtdict::survey_split_blocks(objects$labelled)
+      qualtdict::survey_split_blocks(objects$labelled_excluding_validation)
     )
     objects$survey_blocks <- survey_blocks
-  }
-
-  if (
-    identical(variable_name, "question_name") &&
-      "fetch_labelled_survey_data" %in% selected_functions
-  ) {
-    labelled_excluding_validation <- run_step(
-      paste(scenario_label, "fetch_labelled_survey_data exclude validation"),
-      qualtdict::fetch_labelled_survey_data(
-        dict,
-        exclude_findings = "validation",
-        quiet = FALSE
-      )
-    )
-    objects$labelled_excluding_validation <- labelled_excluding_validation
   }
 
   if ("dict_generate" %in% selected_functions) {
@@ -1110,7 +1102,8 @@ run_scenario <- function(
     summaries$validation <- validation_summary(objects$validation)
   }
   if ("fetch_labelled_survey_data" %in% selected_functions) {
-    summaries$labelled <- data_frame_summary(objects$labelled)
+    summaries$labelled_excluding_validation <-
+      data_frame_summary(objects$labelled_excluding_validation)
   }
   if ("labelled_export_findings" %in% selected_functions) {
     summaries$labelled_export_findings <-
@@ -1121,10 +1114,6 @@ run_scenario <- function(
   }
   if ("survey_split_blocks" %in% selected_functions) {
     summaries$survey_blocks <- block_list_summary(objects$survey_blocks)
-  }
-  if (!is.null(objects$labelled_excluding_validation)) {
-    summaries$labelled_excluding_validation <-
-      data_frame_summary(objects$labelled_excluding_validation)
   }
 
   object_hashes <- lapply(summaries, `[[`, "object_hash")

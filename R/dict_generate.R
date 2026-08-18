@@ -8,20 +8,19 @@
 #' @param variable_name String. Source for the final \code{variable_name}
 #' column in the Variable Dictionary. Use \code{question_name} for the raw
 #' Qualtrics Question Name or \code{semantic_name} for a generated Semantic
-#' Name based on question text and response metadata.
-#' @param name Deprecated compatibility alias for \code{variable_name}. The
-#' legacy \code{easy_name} value is accepted as \code{semantic_name} with a
-#' warning.
+#' Name based on question text and response metadata. Semantic Name
+#' generation needs the optional packages \pkg{slowraker}, \pkg{SnowballC},
+#' \pkg{stringi}, and \pkg{tidyr}; the default \code{question_name} path
+#' never uses them.
 #' @param block_pattern Function. A function that given the name of a
 #' Survey Block, returns a Block Prefix to prepend to Semantic Names in that
-#' block. Defaults to \code{NULL}.
+#' block. Used only when \code{variable_name = "semantic_name"}. Defaults to
+#' \code{NULL}.
 #' @param semantic_name_preprocess Function. An optional function that receives
 #' the full post-normalisation dictionary and returns a modified dictionary for
 #' Semantic Name generation. It runs only when
 #' \code{variable_name = "semantic_name"}. Temporary helper columns added by
 #' this function are not included in the returned Variable Dictionary.
-#' @param preprocess Deprecated compatibility alias for
-#' \code{semantic_name_preprocess}.
 #' @param embedded_data_block_assignment String. Survey Flow adjacency policy
 #' for assigning Embedded Data Fields to Survey Blocks. Use \code{"none"} to
 #' leave Embedded Data Fields unassigned, \code{"previous"} to assign fields
@@ -30,7 +29,8 @@
 #' @param quiet Boolean. If \code{TRUE}, suppress routine progress messages and
 #' progress bars. Defaults to \code{TRUE}.
 #' @param block_sep String. Separator between variable names and block
-#' prefixes returned by \code{block_pattern}. Defaults to ".".
+#' prefixes returned by \code{block_pattern}. Used only when
+#' \code{variable_name = "semantic_name"}. Defaults to ".".
 #' @details
 #' The returned Variable Dictionary preserves \code{response_column_id} as the
 #' downloaded Response Column ID, \code{qid} as the bare Qualtrics question
@@ -60,7 +60,10 @@
 #' conveniences generated from survey text and metadata; they are not stable
 #' guarantees across package versions or survey text changes. For long text,
 #' Semantic Names select important words from ranked keywords and preserve those
-#' selected words in the order they appear in the naming text.
+#' selected words in the order they appear in the naming text. Semantic Name
+#' generation needs the optional packages \pkg{slowraker}, \pkg{SnowballC},
+#' \pkg{stringi}, and \pkg{tidyr}. Java (via \pkg{openNLP}) is needed only
+#' for POS-tag filtering, which the Semantic Name path does not use.
 #'
 #' @return
 #' A Variable Dictionary: a \code{qualtdict} data frame. The as-downloaded
@@ -91,11 +94,9 @@
 dict_generate <- function(
   surveyID,
   variable_name = c("question_name", "semantic_name"),
-  name = NULL,
   block_pattern = NULL,
   block_sep = ".",
   semantic_name_preprocess = NULL,
-  preprocess = NULL,
   embedded_data_block_assignment = c("none", "previous", "next"),
   quiet = TRUE
 ) {
@@ -104,19 +105,18 @@ dict_generate <- function(
     block_pattern = block_pattern,
     block_sep = block_sep,
     semantic_name_preprocess = semantic_name_preprocess,
-    preprocess = preprocess,
     quiet = quiet
   )
   embedded_data_block_assignment <- match.arg(
     embedded_data_block_assignment,
     c("none", "previous", "next")
   )
-  variable_name <- resolve_dict_generate_variable_name(variable_name, name)
-  semantic_name_preprocess <- resolve_semantic_name_preprocess(
-    semantic_name_preprocess,
-    preprocess
-  )
+  variable_name <- match.arg(variable_name, c("question_name", "semantic_name"))
+  checkarg_isvariable_name(variable_name)
   use_semantic_name <- variable_name == "semantic_name"
+  if (use_semantic_name) {
+    check_semantic_name_available()
+  }
 
   survey_metadata <- fetch_dictionary_metadata(surveyID)
   normalised_metadata <- normalise_qualtrics_metadata(survey_metadata)
@@ -145,57 +145,13 @@ check_dict_generate_args <- function(
   block_pattern,
   block_sep,
   semantic_name_preprocess,
-  preprocess,
   quiet
 ) {
   checkarg_isstring(surveyID, null_okay = FALSE)
   checkarg_isfunction(block_pattern)
   checkarg_isstring(block_sep, null_okay = FALSE)
   checkarg_isfunction(semantic_name_preprocess)
-  checkarg_isfunction(preprocess)
   checkarg_isboolean(quiet)
-}
-
-#' Resolve the requested Dictionary Variable Name source
-#' @noRd
-resolve_dict_generate_variable_name <- function(variable_name, name) {
-  if (!is.null(name)) {
-    checkarg_isname(name)
-    warning(
-      "`name` is deprecated; use `variable_name` instead.",
-      call. = FALSE
-    )
-    if (identical(name, "easy_name")) {
-      warning(
-        "`easy_name` is deprecated; use `semantic_name` instead.",
-        call. = FALSE
-      )
-    }
-    return(ifelse(name == "easy_name", "semantic_name", name))
-  }
-
-  variable_name <- match.arg(variable_name, c("question_name", "semantic_name"))
-  checkarg_isvariable_name(variable_name)
-  variable_name
-}
-
-#' Resolve the Semantic Name preprocessing function
-#' @noRd
-resolve_semantic_name_preprocess <- function(
-  semantic_name_preprocess,
-  preprocess
-) {
-  if (!is.null(preprocess)) {
-    warning(
-      "`preprocess` is deprecated; use `semantic_name_preprocess` instead.",
-      call. = FALSE
-    )
-    if (is.null(semantic_name_preprocess)) {
-      semantic_name_preprocess <- preprocess
-    }
-  }
-
-  semantic_name_preprocess
 }
 
 #' Select columns for the generated Variable Dictionary
@@ -217,8 +173,8 @@ generated_dictionary_columns <- function(dict, use_semantic_name) {
     "sub_selector",
     "content_type"
   )
-  if ("loop_option" %in% names(dict) && !all(is.na(dict$loop_option))) {
-    dict_columns <- append(dict_columns, "loop_option", after = 7)
+  if ("looping_option" %in% names(dict) && !all(is.na(dict$looping_option))) {
+    dict_columns <- append(dict_columns, "looping_option", after = 7)
   }
   if (use_semantic_name) {
     dict_columns <- append(dict_columns, "semantic_name", after = 4)

@@ -13,7 +13,8 @@ response_column_map_row_ids <- function(response_column_map) {
   }
 
   ids <- rep(NA_character_, nrow(response_column_map))
-  for (id_column in response_column_map_id_columns()) {
+  # `qname` names the exported column when present; `ImportId` fills the gaps.
+  for (id_column in c("qname", "ImportId")) {
     if (!id_column %in% names(response_column_map)) {
       next
     }
@@ -26,12 +27,6 @@ response_column_map_row_ids <- function(response_column_map) {
   }
 
   ids
-}
-
-#' Fields used by Response Column Map Classification
-#' @noRd
-response_column_map_id_columns <- function() {
-  c("qname", "ImportId")
 }
 
 #' Classify rows by Dictionary Row Source

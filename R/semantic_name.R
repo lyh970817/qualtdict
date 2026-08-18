@@ -1,12 +1,31 @@
+#' Report whether one optional Semantic Name package is installed
+#' @noRd
+semantic_name_package_available <- function(pkg) {
+  requireNamespace(pkg, quietly = TRUE)
+}
+
+#' Check that the optional Semantic Name packages are installed
+#' @noRd
+check_semantic_name_available <- function() {
+  missing <- Filter(
+    function(p) !semantic_name_package_available(p),
+    c("slowraker", "SnowballC", "stringi", "tidyr")
+  )
+  if (length(missing)) {
+    abort(c(
+      '`variable_name = "semantic_name"` needs optional packages.',
+      x = paste0("Install: ", toString(missing)),
+      i = 'Or use `variable_name = "question_name"` to skip Semantic Names.'
+    ))
+  }
+}
+
 #' Generate Semantic Names for question-backed dictionary rows
-#' @importFrom tidyr unite
-#' @importFrom stringi stri_count_words
 #' @importFrom rlang hash
 #' @importFrom utils head
 #' @noRd
 generate_semantic_names <- function(
   json,
-  surveyID,
   block_pattern,
   block_sep,
   semantic_name_preprocess,
@@ -159,7 +178,7 @@ add_semantic_name_components <- function(
     )
 
   json_makename |>
-    unite(
+    tidyr::unite(
       semantic_name,
       semantic_block,
       semantic_question,
@@ -177,7 +196,7 @@ semantic_question_components <- function(texts, keywords) {
   cleaned_unique_texts <- clean_semantic_name_text(unique_texts)
 
   imap_chr(keywords, function(x, i) {
-    if (all(is.na(x)) || stri_count_words(unique_texts[i]) < 8) {
+    if (all(is.na(x)) || stringi::stri_count_words(unique_texts[i]) < 8) {
       nm <- cleaned_unique_texts[i]
     } else {
       nm <- semantic_name_source_order_component(x, cleaned_unique_texts[i])
