@@ -222,10 +222,7 @@ missing_response_column_findings <- function(dict, dat) {
     return(empty_labelled_export_findings())
   }
 
-  qid <- response_column_id
-  if ("qid" %in% names(dict)) {
-    qid <- dict$qid
-  }
+  qid <- dict$qid
 
   tibble(
     finding = "missing_response_column_id",

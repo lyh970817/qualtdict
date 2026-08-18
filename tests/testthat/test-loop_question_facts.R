@@ -160,8 +160,8 @@ test_that("question row assembly defaults to shared adapter", {
 
 test_that("Loop and Merge options resolve direct source choice IDs", {
   choices <- list(
-    a = list(recode = "3", description = "Alpha"),
-    b = list(recode = "4", choiceText = "Bravo")
+    a = list(choice_id = "a", level = "3", label = "Alpha"),
+    b = list(choice_id = "b", level = "4", label = "Bravo")
   )
 
   expect_identical(
@@ -170,10 +170,10 @@ test_that("Loop and Merge options resolve direct source choice IDs", {
   )
 })
 
-test_that("Loop and Merge options resolve source choice recodes", {
+test_that("Loop and Merge options resolve source choice Levels", {
   choices <- list(
-    a = list(recode = "3", description = "Three"),
-    b = list(recode = "4", choiceText = "Four")
+    a = list(choice_id = "a", level = "3", label = "Three"),
+    b = list(choice_id = "b", level = "4", label = "Four")
   )
 
   expect_identical(
@@ -184,8 +184,8 @@ test_that("Loop and Merge options resolve source choice recodes", {
 
 test_that("Loop and Merge options fail when source choices are unresolved", {
   choices <- list(
-    x1 = list(recode = "1", description = "One"),
-    x2 = list(recode = "2", description = "Two")
+    x1 = list(choice_id = "x1", level = "1", label = "One"),
+    x2 = list(choice_id = "x2", level = "2", label = "Two")
   )
 
   expect_null(
@@ -218,10 +218,10 @@ test_that("Loop and Merge options reconcile stale Static prefixes", {
   )
 
   choices <- list(
-    x1 = list(recode = "1", description = "One"),
-    x2 = list(recode = "2", description = "Two"),
-    x27 = list(recode = "27", description = "Twenty-seven"),
-    x26 = list(recode = "0", description = "Zero")
+    x1 = list(choice_id = "x1", level = "1", label = "One"),
+    x2 = list(choice_id = "x2", level = "2", label = "Two"),
+    x27 = list(choice_id = "x27", level = "27", label = "Twenty-seven"),
+    x26 = list(choice_id = "x26", level = "0", label = "Zero")
   )
 
   expect_identical(
@@ -241,10 +241,10 @@ test_that("Loop and Merge options reconcile stale Static prefixes", {
 
 test_that("Loop and Merge options insert omitted source choice IDs", {
   choices <- list(
-    x1 = list(recode = "1", description = "One"),
-    x2 = list(recode = "2", description = "Two"),
-    x16 = list(recode = "16", description = "Sixteen"),
-    x15 = list(recode = "0", description = "Zero")
+    x1 = list(choice_id = "x1", level = "1", label = "One"),
+    x2 = list(choice_id = "x2", level = "2", label = "Two"),
+    x16 = list(choice_id = "x16", level = "16", label = "Sixteen"),
+    x15 = list(choice_id = "x15", level = "0", label = "Zero")
   )
 
   expect_identical(
@@ -264,8 +264,8 @@ test_that("Loop and Merge options insert omitted source choice IDs", {
 
 test_that("Loop and Merge options keep static non-analysed source choices", {
   choices <- list(
-    x1 = list(recode = "1", description = "One", analyze = TRUE),
-    x2 = list(recode = "2", description = "Two", analyze = FALSE)
+    x1 = list(choice_id = "x1", level = "1", label = "One", analyze = TRUE),
+    x2 = list(choice_id = "x2", level = "2", label = "Two", analyze = FALSE)
   )
 
   expect_null(
@@ -315,6 +315,26 @@ test_that("Loop Option resolution dispatches by source case", {
   expect_identical(
     loop_options_for_context(static_context),
     c(`1` = "Apples", `2` = "Bananas")
+  )
+})
+
+test_that("blank source choice labels fall back to the choice ID", {
+  raw_metadata <- synthetic_loop_and_merge_raw_metadata()
+  raw_metadata$metadata$questions$QID1$choices$x2$description <- ""
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+  context <- new_loop_expansion_context(
+    question_fact = normalised_metadata$questions$QID2,
+    survey_question_facts = normalised_metadata$questions
+  )
+
+  expect_identical(
+    loop_options_for_context(context),
+    c(x1 = "Apples", x2 = "x2")
+  )
+
+  expect_identical(
+    loop_option_label(list(choice_id = "x3", label = NA_character_)),
+    "x3"
   )
 })
 
@@ -442,7 +462,7 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
     target_rows$question,
     c("Why did you choose Apples?", "Why did you choose Bananas?")
   )
-  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
   expect_true(all(is.na(target_rows$item)))
   expect_identical(target_rows$type, c("TE", "TE"))
   expect_identical(target_rows$selector, c("SL", "SL"))
@@ -489,7 +509,7 @@ test_that(
       target_rows$question,
       c("Why did you choose Apples?", "Why did you choose Bananas?")
     )
-    expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+    expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
   }
 )
 
@@ -516,7 +536,7 @@ test_that("normalised metadata renders supported extra Loop and Merge fields", {
     target_rows$question,
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
-  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
 })
 
 
@@ -606,7 +626,7 @@ test_that(
       target_rows$question,
       c("Why did you choose Apples?", "Why did you choose Bananas?")
     )
-    expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+    expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
   }
 )
 
@@ -633,7 +653,7 @@ test_that("normalised metadata renders static Loop and Merge rows", {
     target_rows$question,
     c("Compare Apples with Red fruit", "Compare Bananas with Yellow fruit")
   )
-  expect_identical(target_rows$loop_option, c("Apples", "Bananas"))
+  expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
 })
 
 
@@ -674,7 +694,7 @@ test_that("matrix source Loop and Merge prefixes use source response rows", {
   )
   expect_false(any(grepl("^QID1_QID2_TEXT$", target_rows$response_column_id)))
   expect_identical(
-    target_rows$loop_option,
+    target_rows$looping_option,
     c("Condition 1", "Condition 2", "Condition 3")
   )
 })

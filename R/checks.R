@@ -75,29 +75,6 @@ checkarg_ischaracter <-
     }
   }
 
-#' Check the deprecated variable name selector argument
-#' @importFrom rlang abort
-#' @importFrom glue glue
-#' @noRd
-checkarg_isname <- function(arg) {
-  test <-
-    length(arg) == 1 &&
-    !is.null(arg) &&
-    arg %in% c("question_name", "semantic_name", "easy_name")
-
-  if (!test) {
-    rlang::abort(
-      c(
-        glue::glue("Error in argument '{deparse(substitute(arg))}':"),
-        paste0(
-          "Argument must be one of ",
-          "`c(\"question_name\", \"semantic_name\")`."
-        )
-      )
-    )
-  }
-}
-
 #' Check the variable name selector argument
 #' @importFrom rlang abort
 #' @importFrom glue glue
@@ -143,6 +120,27 @@ checkarg_isfunction <- function(arg, null_okay = TRUE) {
   }
 }
 
+
+#' Check that an argument is a normalised metadata bundle
+#'
+#' Enforces the ADR-0001 normalisation boundary: Variable Dictionary
+#' assembly accepts only `qualtdict_normalised_metadata`, never raw
+#' Qualtrics metadata.
+#' @importFrom rlang abort
+#' @importFrom glue glue
+#' @noRd
+checkarg_isnormalised_metadata <- function(arg) {
+  test <- inherits(arg, "qualtdict_normalised_metadata")
+
+  if (!test) {
+    rlang::abort(
+      c(
+        glue::glue("Error in argument '{deparse(substitute(arg))}':"),
+        "Argument must be a `qualtdict_normalised_metadata` object."
+      )
+    )
+  }
+}
 
 #' Check that an argument is a qualtdict object
 #' @importFrom rlang abort

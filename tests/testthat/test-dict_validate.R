@@ -31,7 +31,7 @@ minimal_validation_dict <- function(
 test_that("dict_validate always returns a stable validation object", {
   validation <- dict_validate(minimal_validation_dict())
 
-  expect_s3_class(validation, "qualtdict_validation")
+  expect_type(validation, "list")
   expect_named(validation, c("validation_findings", "level_label_pairs"))
   expect_named(
     validation$validation_findings,

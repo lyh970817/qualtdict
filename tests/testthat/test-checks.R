@@ -28,20 +28,11 @@ test_that("checkarg_ischaracter rejects non-character and missing values", {
   expect_error(checkarg_ischaracter(c("a", NA)), "must not have missing")
 })
 
-test_that("checkarg_isname accepts legacy naming options", {
-  expect_null(checkarg_isname("question_name"))
-  expect_null(checkarg_isname("semantic_name"))
-  expect_null(checkarg_isname("easy_name"))
-
-  expect_error(checkarg_isname("bad_name"), "question_name")
-  expect_error(checkarg_isname(NULL), "question_name")
-})
-
 test_that("checkarg_isvariable_name accepts current naming options", {
   expect_null(checkarg_isvariable_name("question_name"))
   expect_null(checkarg_isvariable_name("semantic_name"))
 
-  expect_error(checkarg_isvariable_name("easy_name"), "question_name")
+  expect_error(checkarg_isvariable_name("other_name"), "question_name")
   expect_error(checkarg_isvariable_name(NULL), "question_name")
 })
 

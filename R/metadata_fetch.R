@@ -74,14 +74,11 @@ new_raw_qualtrics_metadata <- function(
   description,
   response_column_map = NULL
 ) {
-  structure(
-    list(
-      surveyID = surveyID,
-      survey_name = as.character(metadata$metadata$name),
-      metadata = metadata,
-      description = description,
-      response_column_map = response_column_map
-    ),
-    class = c("qualtdict_raw_metadata", "list")
+  list(
+    surveyID = surveyID,
+    survey_name = as.character(metadata$metadata$name),
+    metadata = metadata,
+    description = description,
+    response_column_map = response_column_map
   )
 }

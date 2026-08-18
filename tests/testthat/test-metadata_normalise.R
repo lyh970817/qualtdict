@@ -34,9 +34,9 @@ test_that("normalised metadata constructor preserves current object shape", {
     survey_id = "SV_TEST",
     survey_name = "Constructor Survey",
     survey_question_facts = survey_question_facts,
-    embedded_data_fields = empty_normalised_embedded_data_fields(),
-    scoring_variables = empty_normalised_scoring_variables(),
-    text_analysis_sidecars = empty_normalised_text_analysis_sidecars()
+    embedded_data_fields = list(),
+    scoring_variables = list(),
+    text_analysis_sidecars = list()
   )
 
   expect_s3_class(normalised_metadata, "qualtdict_normalised_metadata")
@@ -63,15 +63,9 @@ test_that("normalised capability constructors preserve current object shapes", {
     previous_block = NA_character_,
     next_block = NA_character_
   )
-  embedded_data_fields <- new_normalised_embedded_data_fields(
-    list("Source Channel" = embedded_data_field)
-  )
   scoring_variable <- new_normalised_scoring_variable(
     "SC_TOTAL",
     "SC_TOTAL"
-  )
-  scoring_variables <- new_normalised_scoring_variables(
-    list(SC_TOTAL = scoring_variable)
   )
   sidecar <- new_normalised_text_analysis_sidecar(
     "Q1 Other - Sentiment",
@@ -82,9 +76,6 @@ test_that("normalised capability constructors preserve current object shapes", {
       parent_block = "Main Block"
     )
   )
-  text_analysis_sidecars <- new_normalised_text_analysis_sidecars(
-    list("Q1 Other - Sentiment" = sidecar)
-  )
   empty_context_sidecar <- new_normalised_text_analysis_sidecar(
     "Q1 Other - Sentiment",
     "QID1_3_TEXT_SENTIMENT",
@@ -92,10 +83,6 @@ test_that("normalised capability constructors preserve current object shapes", {
   )
   classification <- new_response_column_map_classification()
 
-  expect_s3_class(
-    embedded_data_field,
-    "qualtdict_normalised_embedded_data_field"
-  )
   expect_named(
     embedded_data_field,
     c("field_name", "response_column_id", "question_text")
@@ -122,17 +109,6 @@ test_that("normalised capability constructors preserve current object shapes", {
     all(is.na(flow_embedded_data_field[c("previous_block", "next_block")]))
   )
 
-  expect_s3_class(
-    embedded_data_fields,
-    "qualtdict_normalised_embedded_data_fields"
-  )
-  expect_named(embedded_data_fields, "Source Channel")
-  expect_identical(embedded_data_fields[[1]], embedded_data_field)
-
-  expect_s3_class(
-    scoring_variable,
-    "qualtdict_normalised_scoring_variable"
-  )
   expect_named(
     scoring_variable,
     c("output_name", "response_column_id", "question_text")
@@ -140,17 +116,6 @@ test_that("normalised capability constructors preserve current object shapes", {
   expect_identical(scoring_variable$output_name, "SC_TOTAL")
   expect_identical(scoring_variable$question_text, "Scoring Variable: SC_TOTAL")
 
-  expect_s3_class(
-    scoring_variables,
-    "qualtdict_normalised_scoring_variables"
-  )
-  expect_named(scoring_variables, "SC_TOTAL")
-  expect_identical(scoring_variables[[1]], scoring_variable)
-
-  expect_s3_class(
-    sidecar,
-    "qualtdict_normalised_text_analysis_sidecar"
-  )
   expect_named(
     sidecar,
     c(
@@ -176,13 +141,6 @@ test_that("normalised capability constructors preserve current object shapes", {
       )
     )
   )
-
-  expect_s3_class(
-    text_analysis_sidecars,
-    "qualtdict_normalised_text_analysis_sidecars"
-  )
-  expect_named(text_analysis_sidecars, "Q1 Other - Sentiment")
-  expect_identical(text_analysis_sidecars[[1]], sidecar)
 
   expect_s3_class(classification, "tbl_df")
   expect_named(
@@ -220,7 +178,7 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
 
   normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-  expect_s3_class(raw_metadata, "qualtdict_raw_metadata")
+  expect_type(raw_metadata, "list")
   expect_s3_class(normalised_metadata, "qualtdict_normalised_metadata")
   expect_named(
     normalised_metadata,
@@ -240,19 +198,24 @@ test_that("raw Qualtrics metadata normalises into package-owned metadata", {
     "qualtdict_normalised_questions"
   )
   expect_named(normalised_metadata$questions, "QID1")
-  expect_s3_class(
-    normalised_metadata$embedded_data,
-    "qualtdict_normalised_embedded_data_fields"
-  )
+  expect_type(normalised_metadata$embedded_data, "list")
   expect_length(normalised_metadata$embedded_data, 0)
-  expect_s3_class(
-    normalised_metadata$scoring,
-    "qualtdict_normalised_scoring_variables"
-  )
+  expect_type(normalised_metadata$scoring, "list")
   expect_length(normalised_metadata$scoring, 0)
-  expect_s3_class(
-    normalised_metadata$text_analysis,
-    "qualtdict_normalised_text_analysis_sidecars"
-  )
+  expect_type(normalised_metadata$text_analysis, "list")
   expect_length(normalised_metadata$text_analysis, 0)
+})
+
+test_that("Variable Dictionary assembly rejects unclassed metadata", {
+  expect_error(
+    variable_dictionary_from_normalised_metadata(
+      list(questions = list()),
+      use_semantic_name = FALSE,
+      block_pattern = NULL,
+      block_sep = ".",
+      semantic_name_preprocess = NULL
+    ),
+    "must be a `qualtdict_normalised_metadata` object",
+    fixed = TRUE
+  )
 })

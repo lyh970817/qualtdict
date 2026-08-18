@@ -33,6 +33,22 @@ feature work; report that the smoke check could not be run.
 For any task, agents may inspect local artifacts for reference when they are
 available and relevant.
 
+Smoke runs are tiered by survey config:
+
+- `tools/local-finalize-smoke-surveys.json` (12 surveys) is the script's
+  default config and the right scope for routine feature finalization.
+- `tools/local-finalize-smoke-surveys-all.json` (all 34 distinct
+  offline-artifact surveys, a strict superset of the default config,
+  one alias per survey) is the end-of-session final: run it via
+  `--config` only after all of a session's branches and features are
+  completed and merged, never per feature. A full all-surveys Bless
+  plus Check takes on the order of hours, driven by survey size rather
+  than survey count.
+
+This tiering is provisional; see
+https://github.com/lyh970817/qualtdict/issues/27 before restructuring
+it.
+
 ## Worktree Location
 
 Create any temporary Git worktrees for agent work under `.worktrees/` at the
@@ -56,14 +72,6 @@ documentation, and generated artifacts required for the behavior change.
 Do not commit Qualtrics API keys, `.Renviron`, `.Rhistory`, `.RData`, `.Rds`, or downloaded private survey data. Use `qualtRics::qualtrics_api_credentials()` locally for credentials. The pre-commit hooks block common R artifacts, but contributors should still inspect staged files before committing.
 
 ## Agent skills
-
-### Issue tracker
-
-Issues and PRDs are tracked in GitHub Issues for `lyh970817/qualtdict`. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Triage labels use this repo's GitHub labels, with `question` for needs-info and `help wanted` for ready-for-human. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

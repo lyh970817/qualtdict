@@ -1,12 +1,3 @@
-#' Build normalised Embedded Data Field records
-#' @noRd
-new_normalised_embedded_data_fields <- function(fields = list()) {
-  structure(
-    fields,
-    class = c("qualtdict_normalised_embedded_data_fields", "list")
-  )
-}
-
 #' Build one normalised Embedded Data Field record
 #' @noRd
 new_normalised_embedded_data_field <- function(
@@ -28,10 +19,7 @@ new_normalised_embedded_data_field <- function(
     field$next_block <- next_block
   }
 
-  structure(
-    field,
-    class = c("qualtdict_normalised_embedded_data_field", "list")
-  )
+  field
 }
 
 #' Normalise Embedded Data Fields from Qualtrics metadata
@@ -56,7 +44,7 @@ normalise_flat_embedded_data_fields <- function(mt) {
   })
   names(fields) <- field_names
 
-  new_normalised_embedded_data_fields(fields)
+  fields
 }
 
 #' Normalise Survey Flow Embedded Data Fields
@@ -64,7 +52,7 @@ normalise_flat_embedded_data_fields <- function(mt) {
 normalise_survey_flow_embedded_data_fields <- function(mt_d) {
   flow_items <- survey_flow_items(mt_d$flow)
   if (length(flow_items) == 0) {
-    return(empty_normalised_embedded_data_fields())
+    return(list())
   }
 
   block_lookup <- survey_flow_block_lookup(mt_d[["blocks"]])
@@ -83,7 +71,7 @@ normalise_survey_flow_embedded_data_fields <- function(mt_d) {
     do.call(c, args = _)
 
   if (length(field_locations) == 0) {
-    return(empty_normalised_embedded_data_fields())
+    return(list())
   }
 
   location_field_names <- map_chr(field_locations, "field_name")
@@ -95,13 +83,7 @@ normalise_survey_flow_embedded_data_fields <- function(mt_d) {
   })
   names(fields) <- map_chr(fields, "field_name")
 
-  new_normalised_embedded_data_fields(fields)
-}
-
-#' Empty normalised Embedded Data Field records
-#' @noRd
-empty_normalised_embedded_data_fields <- function() {
-  new_normalised_embedded_data_fields()
+  fields
 }
 
 #' Merge flat and Survey Flow Embedded Data Field records
@@ -115,7 +97,7 @@ merge_embedded_data_fields <- function(flat_fields, flow_fields) {
     )
   }
 
-  new_normalised_embedded_data_fields(fields)
+  fields
 }
 
 #' Keep Embedded Data Fields represented by exported Response Column IDs
@@ -143,9 +125,8 @@ filter_exported_embedded_data_fields <- function(
   keep <- map_lgl(fields, function(field) {
     field$response_column_id %in% response_column_ids
   })
-  fields <- fields[keep]
 
-  new_normalised_embedded_data_fields(fields)
+  fields[keep]
 }
 
 #' Resolve an Embedded Data field's exported Response Column ID

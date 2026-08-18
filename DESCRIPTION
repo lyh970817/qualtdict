@@ -19,23 +19,25 @@ Imports:
     dplyr,
     glue,
     haven,
-    openNLP,
     purrr,
     qualtRics,
     rlang,
     sjlabelled,
-    slowraker,
-    SnowballC,
-    stringi,
     stringr,
     tibble,
-    tidyr,
     xml2
 Suggests:
     covr,
     knitr,
+    openNLP,
     rmarkdown,
-    testthat (>= 3.0.0)
+    slowraker,
+    SnowballC,
+    stringi,
+    testthat (>= 3.0.0),
+    tidyr
+SystemRequirements: Java is needed only for POS-tag filtering via the
+    suggested 'openNLP' package.
 VignetteBuilder: 
     knitr
 Config/testthat/edition: 3

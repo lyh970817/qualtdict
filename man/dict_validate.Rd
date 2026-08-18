@@ -14,7 +14,7 @@ dict_validate(dict, quiet = TRUE)
 Defaults to \code{TRUE}.}
 }
 \value{
-A \code{qualtdict_validation} object. This is a list with stable components:
+A list with stable components:
 \itemize{
 \item \code{validation_findings} - A data frame of Validation Findings for
 Variable Dictionary consistency issues, including repaired variable names,

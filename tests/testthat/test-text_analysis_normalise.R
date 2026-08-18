@@ -3,18 +3,12 @@ test_that("Text-analysis Sidecars normalise with parent question context", {
 
   text_analysis <- normalise_qualtrics_metadata(raw_metadata)$text_analysis
 
-  expect_s3_class(
-    text_analysis,
-    "qualtdict_normalised_text_analysis_sidecars"
-  )
+  expect_type(text_analysis, "list")
   expect_named(
     text_analysis,
     c("Q1 Other - Sentiment", "Q1 Other - Parent Topics")
   )
-  expect_s3_class(
-    text_analysis[["Q1 Other - Sentiment"]],
-    "qualtdict_normalised_text_analysis_sidecar"
-  )
+  expect_type(text_analysis[["Q1 Other - Sentiment"]], "list")
   expect_identical(
     text_analysis[["Q1 Other - Sentiment"]]$response_column_id,
     "QID1_3_TEXT_SENTIMENT"
