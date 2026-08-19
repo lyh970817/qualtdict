@@ -13,7 +13,8 @@ reached a terminal state.
 Poll `gh run list --branch <branch>` until every run triggered by the pushed
 head SHA is terminal, then report each workflow and its conclusion.
 
-The check matrix is slow: 10-30 minutes is normal. Keep polling. Do not
+The check matrix is slow: 10-30 minutes is normal, and a single Ubuntu leg
+can take an hour when the archive mirror is slow. Keep polling. Do not
 report the push as done, and do not move on to unrelated work, while a run is
 queued or in progress.
 
@@ -30,6 +31,20 @@ Reproduce failures locally through the Nix flake (`nix develop -c ...`); the
 ambient `Rscript` cannot load the package's dependencies.
 
 A red `pkgdown` run means the published site did not deploy.
+
+## Re-run only for infrastructure
+
+A failure that happened before the runner reached the package is
+infrastructure: a stalled or crawling `apt` step, a silent `setup-r` or
+`setup-pandoc`, a cancelled or lost runner, a network timeout fetching from
+CRAN or the Ubuntu archive. Re-run those with `gh run rerun <id> --failed`.
+
+Everything from the package's own checks onward is real: test failures, R CMD
+check errors or warnings, lintr, goodpractice, spell-check, coverage. Never
+re-run to clear one.
+
+A test that fails once and passes on re-run is a flaky test, not
+infrastructure. Report it as a finding.
 
 ## When not to wait
 
