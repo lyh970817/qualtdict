@@ -53,7 +53,8 @@ it.
 
 Create any temporary Git worktrees for agent work under `.worktrees/` at the
 repository root. The directory is ignored by Git and keeps parallel checkouts
-out of the main source tree.
+out of the main source tree. Once a worktree's branch is merged, remove the
+worktree and delete the merged branch; do not leave them accumulating.
 
 ## Commit & Pull Request Guidelines
 
