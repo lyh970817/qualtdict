@@ -18,9 +18,9 @@ touch its public surface and so does not require an API-breaking
 generation, because there is no version constraint on `slowraker` in
 `DESCRIPTION` that would catch such a change before it reaches this code.
 
-This finding was raised by an internal audit in 2026
-(`docs/ropensci/resubmission-audit-2026-08-15.md`), not by any rOpenSci
-reviewer or editor: issue #572 never had external reviewers assigned, and
+This finding was raised by an internal audit conducted on 2026-08-15, not by
+any rOpenSci reviewer or editor. That audit's write-up is no longer retained
+in the repository. Issue #572 never had external reviewers assigned, and
 `getFromNamespace` appears nowhere in the 2023 editor/`pkgcheck` feedback on
 that issue. It was the maintainer's call to make, not an unresolved editor
 request — this has been misread once already, so it is stated explicitly
