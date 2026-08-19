@@ -28,4 +28,55 @@ jobs:
           mkdir -p "${{ runner.temp }}/_github_home"
           printf '[safe]\n\tdirectory = *\n' \
             >> "${{ runner.temp }}/_github_home/.gitconfig"
+
+      # pkgcheck's "Package fails continuous integration checks" item reads
+      # the OTHER workflow runs for this commit at whatever moment pkgcheck
+      # itself finishes -- it does not wait for them. On a push, R-CMD-check
+      # can run far longer than pkgcheck (it stalls installing rJava/openNLP
+      # on the Ubuntu devel leg), so pkgcheck used to finish -- and query --
+      # while R-CMD-check was still in_progress, and get scored as failing
+      # CI even when every pkgcheck item passed. Block here until the
+      # sibling push-triggered workflows for this SHA have reached a
+      # terminal state, so the CI-status item sees their real conclusions.
+      # Skipped on workflow_dispatch (manual reruns), since those siblings
+      # were not necessarily triggered by this invocation and would just
+      # time out.
+      - name: Wait for sibling workflows to finish
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          repo="${{ github.repository }}"
+          sha="${{ github.sha }}"
+          # Workflow file names (not display names) of the other
+          # push-triggered workflows whose conclusions pkgcheck's
+          # CI-status item consults.
+          siblings="check-standard.yaml pkgdown.yaml test-coverage.yaml"
+          timeout_s=2700   # 45 min: R-CMD-check has taken up to ~26 min.
+          interval_s=30
+          elapsed=0
+          while true; do
+            pending=0
+            for wf in $siblings; do
+              status=$(gh api \
+                "repos/$repo/actions/workflows/$wf/runs?head_sha=$sha&per_page=1" \
+                -q '.workflow_runs[0].status // "not_started"')
+              echo "$wf: $status"
+              if [ "$status" != "completed" ]; then
+                pending=1
+              fi
+            done
+            if [ "$pending" -eq 0 ]; then
+              echo "All sibling workflows have completed."
+              break
+            fi
+            if [ "$elapsed" -ge "$timeout_s" ]; then
+              echo "::error::Timed out after ${timeout_s}s waiting for sibling workflows (check-standard, pkgdown, test-coverage) to finish for $sha."
+              exit 1
+            fi
+            sleep "$interval_s"
+            elapsed=$((elapsed + interval_s))
+          done
+
       - uses: ropensci-review-tools/pkgcheck-action@main
