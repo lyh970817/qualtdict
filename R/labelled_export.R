@@ -336,6 +336,18 @@ survey_recode <- function(
 #' @importFrom sjlabelled set_label set_labels
 #' @importFrom haven read_xpt
 #' @noRd
+# `haven` is a real runtime Import, not dead weight: sjlabelled::set_labels()
+# calls haven::is_tagged_na() in its named-labels branch, and this function
+# exercises that branch (verified in 915cb20, whose message records a test
+# failing with "Package 'haven' required for this function" once haven was
+# removed). The `@importFrom haven read_xpt` tag above is false -- read_xpt()
+# is never called anywhere in the package -- and is kept deliberately: a
+# truthful declaration reintroduces the R CMD check NOTE "Namespace in
+# Imports field not imported from: 'haven'", and the goodpractice pre-commit
+# hook fails the commit on any failed_checks() entry with no note/warning/
+# error distinction, so that NOTE cannot be committed honestly. See
+# docs/adr/0011-keep-the-false-haven-read_xpt-importfrom-tag.md for the full
+# reasoning and the alternatives considered.
 survey_var_recode <- function(
   var,
   var_dict,
