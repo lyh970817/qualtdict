@@ -1,0 +1,20 @@
+citHeader("To cite qualtdict in publications, please use:")
+
+pkg_version <- if (!is.null(meta$Version)) meta$Version else "0.1.0"
+
+bibentry(
+  bibtype = "Manual",
+  title = paste(
+    "qualtdict: Generate Variable Dictionaries and Labelled Survey Data",
+    "for 'Qualtrics' Surveys"
+  ),
+  author = person(
+    given = "Yuhao",
+    family = "Lin",
+    email = "yuhao.lin@kcl.ac.uk",
+    comment = c(ORCID = "0000-0001-6357-5731")
+  ),
+  year = "2026",
+  note = paste("R package version", pkg_version),
+  url = "https://github.com/lyh970817/qualtdict"
+)
