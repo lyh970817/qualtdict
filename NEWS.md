@@ -1,4 +1,7 @@
-# qualtdict 0.0.0.9000
+# qualtdict 0.1.0
+
+First release. It collects everything below, previously carried as unreleased
+development entries.
 
 - The validation result returned by `dict_validate()` no longer carries the
   decorative `"qualtdict_validation"` class: it is a plain list with the same

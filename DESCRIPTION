@@ -1,7 +1,7 @@
 Package: qualtdict
 Title: Generate Variable Dictionaries and Labelled Survey Data for
     'Qualtrics' Surveys
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R:
     person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-6357-5731"))
@@ -30,7 +30,7 @@ Suggests:
     knitr,
     openNLP,
     rmarkdown,
-    slowraker,
+    slowraker (>= 0.1.1),
     SnowballC,
     stringi,
     testthat (>= 3.0.0),

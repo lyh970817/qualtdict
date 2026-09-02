@@ -2,18 +2,19 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "identifier": "qualtdict",
-  "description": "Provides functions that generate variable dictionaries from 'Qualtrics' <https://www.qualtrics.com/about/> surveys and labelled survey data based on the dictionary. This package is built upon the R package 'qualtRics' <https://github.com/ropensci/qualtRics/> which provides access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API <https://api.qualtrics.com/>.",
-  "name": "qualtdict: Generating Variable Dictionaries and Labelled Data Exports of\n    Qualtrics Surveys",
+  "description": "Generates Variable Dictionaries from 'Qualtrics' <https://www.qualtrics.com/about/> survey metadata and applies those dictionaries to create Labelled Survey Data. This package is a metadata and labelled-export companion to 'qualtRics', which provides access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API <https://api.qualtrics.com/>.",
+  "name": "qualtdict: Generate Variable Dictionaries and Labelled Survey Data for\n    'Qualtrics' Surveys",
+  "relatedLink": "https://lyh970817.github.io/qualtdict/",
   "codeRepository": "https://github.com/lyh970817/qualtdict",
   "issueTracker": "https://github.com/lyh970817/qualtdict/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "0.0.0.9000",
+  "version": "0.1.0",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
     "url": "https://r-project.org"
   },
-  "runtimePlatform": "R version 4.2.2 (2022-10-31)",
+  "runtimePlatform": "R version 4.6.1 (2026-06-24)",
   "author": [
     {
       "@type": "Person",
@@ -59,6 +60,18 @@
     },
     {
       "@type": "SoftwareApplication",
+      "identifier": "openNLP",
+      "name": "openNLP",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=openNLP"
+    },
+    {
+      "@type": "SoftwareApplication",
       "identifier": "rmarkdown",
       "name": "rmarkdown",
       "provider": {
@@ -68,6 +81,43 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=rmarkdown"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "slowraker",
+      "name": "slowraker",
+      "version": ">= 0.1.1",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=slowraker"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "SnowballC",
+      "name": "SnowballC",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=SnowballC"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "stringi",
+      "name": "stringi",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=stringi"
     },
     {
       "@type": "SoftwareApplication",
@@ -81,22 +131,22 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=testthat"
-    }
-  ],
-  "softwareRequirements": {
-    "1": {
+    },
+    {
       "@type": "SoftwareApplication",
-      "identifier": "crul",
-      "name": "crul",
+      "identifier": "tidyr",
+      "name": "tidyr",
       "provider": {
         "@id": "https://cran.r-project.org",
         "@type": "Organization",
         "name": "Comprehensive R Archive Network (CRAN)",
         "url": "https://cran.r-project.org"
       },
-      "sameAs": "https://CRAN.R-project.org/package=crul"
-    },
-    "2": {
+      "sameAs": "https://CRAN.R-project.org/package=tidyr"
+    }
+  ],
+  "softwareRequirements": {
+    "1": {
       "@type": "SoftwareApplication",
       "identifier": "dplyr",
       "name": "dplyr",
@@ -108,7 +158,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=dplyr"
     },
-    "3": {
+    "2": {
       "@type": "SoftwareApplication",
       "identifier": "glue",
       "name": "glue",
@@ -120,7 +170,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=glue"
     },
-    "4": {
+    "3": {
       "@type": "SoftwareApplication",
       "identifier": "haven",
       "name": "haven",
@@ -132,31 +182,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=haven"
     },
-    "5": {
-      "@type": "SoftwareApplication",
-      "identifier": "magrittr",
-      "name": "magrittr",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=magrittr"
-    },
-    "6": {
-      "@type": "SoftwareApplication",
-      "identifier": "openNLP",
-      "name": "openNLP",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=openNLP"
-    },
-    "7": {
+    "4": {
       "@type": "SoftwareApplication",
       "identifier": "purrr",
       "name": "purrr",
@@ -168,7 +194,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=purrr"
     },
-    "8": {
+    "5": {
       "@type": "SoftwareApplication",
       "identifier": "qualtRics",
       "name": "qualtRics",
@@ -180,7 +206,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=qualtRics"
     },
-    "9": {
+    "6": {
       "@type": "SoftwareApplication",
       "identifier": "rlang",
       "name": "rlang",
@@ -192,7 +218,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=rlang"
     },
-    "10": {
+    "7": {
       "@type": "SoftwareApplication",
       "identifier": "sjlabelled",
       "name": "sjlabelled",
@@ -204,43 +230,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=sjlabelled"
     },
-    "11": {
-      "@type": "SoftwareApplication",
-      "identifier": "slowraker",
-      "name": "slowraker",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=slowraker"
-    },
-    "12": {
-      "@type": "SoftwareApplication",
-      "identifier": "SnowballC",
-      "name": "SnowballC",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=SnowballC"
-    },
-    "13": {
-      "@type": "SoftwareApplication",
-      "identifier": "stringi",
-      "name": "stringi",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=stringi"
-    },
-    "14": {
+    "8": {
       "@type": "SoftwareApplication",
       "identifier": "stringr",
       "name": "stringr",
@@ -252,7 +242,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=stringr"
     },
-    "15": {
+    "9": {
       "@type": "SoftwareApplication",
       "identifier": "tibble",
       "name": "tibble",
@@ -264,19 +254,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=tibble"
     },
-    "16": {
-      "@type": "SoftwareApplication",
-      "identifier": "tidyr",
-      "name": "tidyr",
-      "provider": {
-        "@id": "https://cran.r-project.org",
-        "@type": "Organization",
-        "name": "Comprehensive R Archive Network (CRAN)",
-        "url": "https://cran.r-project.org"
-      },
-      "sameAs": "https://CRAN.R-project.org/package=tidyr"
-    },
-    "17": {
+    "10": {
       "@type": "SoftwareApplication",
       "identifier": "xml2",
       "name": "xml2",
@@ -288,11 +266,30 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=xml2"
     },
-    "SystemRequirements": null
+    "SystemRequirements": "Java is needed only for POS-tag filtering via the\n    suggested 'openNLP' package."
   },
-  "fileSize": "724.642KB",
-  "readme": "https://github.com/lyh970817/qualtdict/blob/master/README.md",
-  "contIntegration": ["https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml", "https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml", "https://app.codecov.io/gh/lyh970817/qualtdict?branch=master"],
+  "fileSize": "591.951KB",
+  "citation": [
+    {
+      "@type": "SoftwareSourceCode",
+      "datePublished": "2026",
+      "author": [
+        {
+          "@type": "Person",
+          "givenName": "Yuhao",
+          "familyName": "Lin",
+          "email": "yuhao.lin@kcl.ac.uk",
+          "@id": "https://orcid.org/0000-0001-6357-5731"
+        }
+      ],
+      "name": "qualtdict: Generate Variable Dictionaries and Labelled Survey Data for 'Qualtrics' Surveys",
+      "url": "https://github.com/lyh970817/qualtdict",
+      "description": "R package version 0.1.0"
+    }
+  ],
+  "releaseNotes": "https://github.com/lyh970817/qualtdict/blob/main/NEWS.md",
+  "readme": "https://github.com/lyh970817/qualtdict/blob/main/README.md",
+  "contIntegration": ["https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml", "https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml", "https://app.codecov.io/gh/lyh970817/qualtdict?branch=main"],
   "developmentStatus": "https://www.repostatus.org/#active",
   "keywords": ["r", "r-package", "rstats", "qualtrics", "qualtrics-api", "qualtrics-survey"]
 }
