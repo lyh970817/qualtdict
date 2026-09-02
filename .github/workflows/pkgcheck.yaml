@@ -16,7 +16,13 @@ jobs:
     permissions:
       actions: read
       contents: read
-      issues: write
+      # Read, not write: this workflow deliberately posts nothing to the
+      # issue tracker (see the pkgcheck-action step below). The action still
+      # runs a search for a target issue whatever the inputs say, which needs
+      # read; withholding write means that if the no-posting configuration is
+      # ever lost, the run fails loudly instead of quietly reopening the bot
+      # issue habit.
+      issues: read
     steps:
       # The pkgcheck container runs as root, while the checkout it mounts at
       # /github/workspace is owned by the runner user, so libgit2 refuses to
@@ -79,4 +85,68 @@ jobs:
             elapsed=$((elapsed + interval_s))
           done
 
+      # Both inputs are set against the action's defaults, and both must stay
+      # set -- restoring the defaults brings the bot issues back.
+      #
+      # post-to-issue defaults to true, which made every push to main add a
+      # comment to a bot-authored issue titled "pkgcheck results - main"
+      # (25 comments accumulated on #18). Worse, the action locates that
+      # issue with an `is:open` search and falls back to "no issue found",
+      # which it treats as "create one": once #18 was closed, the next push
+      # would have opened a fresh issue, and every push after a close would
+      # do it again. The tracker is a review surface for the rOpenSci
+      # resubmission, so pkgcheck results go to the run instead -- see the
+      # two steps below.
+      #
+      # summary-only defaults to true and only ever chose WHICH file the
+      # issue comment carried: the container writes both summary.md and the
+      # complete full.md on every run regardless. It is false here so the
+      # intent is on the record, but with post-to-issue false it is inert.
       - uses: ropensci-review-tools/pkgcheck-action@main
+        with:
+          post-to-issue: false
+          summary-only: false
+
+      # The action exposes no outputs and writes nothing to the job summary,
+      # so the full report is surfaced here. The container leaves its
+      # markdown in the checkout, both at the workspace root and copied into
+      # .pkgcheck/. always() because the action's last step exits non-zero
+      # when pkgcheck finds problems -- exactly when the report matters most.
+      - name: Publish the full pkgcheck report to the job summary
+        if: always()
+        run: |
+          set -euo pipefail
+          report=.pkgcheck/full.md
+          [ -f "$report" ] || report=full.md
+          if [ ! -f "$report" ]; then
+            echo "::warning::pkgcheck wrote no full.md; see the run log."
+            echo "pkgcheck produced no report file." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # A job summary is capped at 1 MiB per step; the artifact uploaded
+          # by the next step always carries the untruncated file.
+          limit=900000
+          if [ "$(wc -c < "$report")" -gt "$limit" ]; then
+            head -c "$limit" "$report" >> "$GITHUB_STEP_SUMMARY"
+            printf '\n\n_Truncated at %s bytes; the full report is in the\n' \
+              "$limit" >> "$GITHUB_STEP_SUMMARY"
+            printf 'pkgcheck-report artifact._\n' >> "$GITHUB_STEP_SUMMARY"
+          else
+            cat "$report" >> "$GITHUB_STEP_SUMMARY"
+            printf '\n' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # include-hidden-files because .pkgcheck/ is a dotted directory, which
+      # upload-artifact v4 skips by default.
+      - name: Upload the pkgcheck report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgcheck-report
+          include-hidden-files: true
+          if-no-files-found: warn
+          path: |
+            .pkgcheck/full.md
+            .pkgcheck/summary.md
+            full.md
+            summary.md
