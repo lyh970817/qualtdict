@@ -52,6 +52,7 @@
 
           rPackages = with pkgs.rPackages; [
             # Package Imports and Suggests from DESCRIPTION.
+            codemetar
             covr
             devtools
             dplyr
