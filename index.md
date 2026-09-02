@@ -137,3 +137,29 @@ dict <- dict_generate(
   block_sep = "."
 )
 ```
+
+## How To Cite
+
+If `qualtdict` contributes to published work, please cite it. The
+citation for the installed version is returned by
+[`citation()`](https://rdrr.io/r/utils/citation.html).
+
+``` r
+
+citation("qualtdict")
+```
+
+## Learn More
+
+- [Introduction to
+  qualtdict](https://lyh970817.github.io/qualtdict/articles/qualtdict.html)
+  is the package vignette, which works through the same Variable
+  Dictionary to Labelled Survey Data path in more detail.
+- The [reference site](https://lyh970817.github.io/qualtdict/) documents
+  every exported function.
+- The [contributing
+  guide](https://lyh970817.github.io/qualtdict/CONTRIBUTING.md)
+  describes how to propose a change.
+- This project is released with a [Contributor Code of
+  Conduct](https://lyh970817.github.io/qualtdict/CODE_OF_CONDUCT.md). By
+  contributing to this project you agree to abide by its terms.

@@ -4,6 +4,9 @@
     <loc>https://lyh970817.github.io/qualtdict/404.html</loc>
   </url>
   <url>
+    <loc>https://lyh970817.github.io/qualtdict/CODE_OF_CONDUCT.html</loc>
+  </url>
+  <url>
     <loc>https://lyh970817.github.io/qualtdict/CONTRIBUTING.html</loc>
   </url>
   <url>
@@ -47,6 +50,9 @@
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/labelled_export_findings.html</loc>
+  </url>
+  <url>
+    <loc>https://lyh970817.github.io/qualtdict/reference/qualtdict-package.html</loc>
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/reexports.html</loc>

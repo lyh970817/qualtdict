@@ -8,16 +8,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/lyh970817/qualtdict/blob/main/DESCRIPTION)
+[`inst/CITATION`](https://github.com/lyh970817/qualtdict/blob/main/inst/CITATION)
 
 Lin Y (2026). *qualtdict: Generate Variable Dictionaries and Labelled
-Survey Data for 'Qualtrics' Surveys*. R package version 0.0.0.9000,
+Survey Data for 'Qualtrics' Surveys*. R package version 0.1.0,
 <https://github.com/lyh970817/qualtdict>.
 
     @Manual{,
       title = {qualtdict: Generate Variable Dictionaries and Labelled Survey Data for 'Qualtrics' Surveys},
       author = {Yuhao Lin},
       year = {2026},
-      note = {R package version 0.0.0.9000},
+      note = {R package version 0.1.0},
       url = {https://github.com/lyh970817/qualtdict},
     }

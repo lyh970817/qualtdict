@@ -1,6 +1,9 @@
 # Changelog
 
-## qualtdict 0.0.0.9000
+## qualtdict 0.1.0
+
+First release. It collects everything below, previously carried as
+unreleased development entries.
 
 - The validation result returned by
   [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)

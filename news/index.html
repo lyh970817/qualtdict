@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">qualtdict</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,7 +34,8 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.0.0.9000" id="qualtdict-0009000">qualtdict 0.0.0.9000<a class="anchor" aria-label="anchor" href="#qualtdict-0009000"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="qualtdict-010">qualtdict 0.1.0<a class="anchor" aria-label="anchor" href="#qualtdict-010"></a></h2>
+<p>First release. It collects everything below, previously carried as unreleased development entries.</p>
 <ul><li><p>The validation result returned by <code><a href="../reference/dict_validate.html">dict_validate()</a></code> no longer carries the decorative <code>"qualtdict_validation"</code> class: it is a plain list with the same documented <code>validation_findings</code> and <code>level_label_pairs</code> components, which remain the stable contract. No package code ever dispatched on the class. Other internal-only decorative classes on normalised records were dropped at the same time; the <code>"qualtdict"</code> class on generated Variable Dictionaries and the error class <code>"qualtdict_export_blocking_findings"</code> raised by <code><a href="../reference/assert_dict_valid.html">assert_dict_valid()</a></code> are unchanged.</p></li>
 <li><p>The Semantic Name dependencies <code>slowraker</code>, <code>SnowballC</code>, <code>stringi</code>, <code>tidyr</code>, and <code>openNLP</code> moved from Imports to Suggests: the package now installs and runs its default <code>variable_name = "question_name"</code> path without them. <code>dict_generate(variable_name = "semantic_name")</code> fails fast with an actionable error when the optional packages are missing. Java (via <code>openNLP</code> and <code>rJava</code>) is needed only for POS-tag filtering, which Semantic Name generation does not use.</p></li>
 <li><p>The Variable Dictionary returned by <code><a href="../reference/dict_generate.html">dict_generate()</a></code> now names its Loop Option column <code>looping_option</code> instead of <code>loop_option</code>. The two names carried the same value and the internal duplicate is removed, so the dictionary keeps one name per concept (ADR 0010).</p></li>
