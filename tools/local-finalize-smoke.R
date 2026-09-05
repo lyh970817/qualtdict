@@ -17,7 +17,10 @@ usage <- function() {
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
-      "  --root DIR       Local smoke artifact directory.",
+      "  --root DIR       Local smoke artifact directory. Defaults to",
+      "                   $XDG_CACHE_HOME/qualtdict/finalize-smoke. Overrides,",
+      "                   first match wins: --root, the R option",
+      "                   `qualtdict.smoke_root`, $QUALTDICT_SMOKE_ROOT.",
       "  --functions NAMES  Comma-separated smoke-covered exported functions.",
       "  --variable-name NAME  Variable Dictionary route:",
       "                    question_name only. Default question_name.",
@@ -130,10 +133,7 @@ config_path <- arg_value(
   "--config",
   file.path(project_root, "tools", "local-finalize-smoke-surveys.json")
 )
-smoke_root <- arg_value(
-  "--root",
-  file.path(project_root, ".local", "finalize-smoke")
-)
+smoke_root <- resolve_smoke_root(arg_value("--root"), project_root)
 functions_filter <- arg_value("--functions")
 variable_name_filter <- arg_value("--variable-name")
 selected_functions <- parse_smoke_functions(functions_filter)

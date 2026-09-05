@@ -1,3 +1,64 @@
+#' Environment variable that overrides the smoke artifact root.
+smoke_root_env_var <- function() {
+  "QUALTDICT_SMOKE_ROOT"
+}
+
+#' R option that overrides the smoke artifact root.
+smoke_root_option <- function() {
+  "qualtdict.smoke_root"
+}
+
+#' Artifact root used before the store moved out of the package directory.
+#'
+#' `R CMD build` copies the whole package directory to a temporary directory
+#' before it applies `.Rbuildignore`, so an in-tree artifact store is copied
+#' by every build-based tool no matter how it is ignored. The store therefore
+#' lives outside the package directory now; this path is only a read
+#' fallback for checkouts that still hold the old in-tree store.
+legacy_smoke_root <- function(project_root) {
+  file.path(project_root, ".local", "finalize-smoke")
+}
+
+#' Default out-of-tree artifact root, under the XDG cache directory.
+default_smoke_root <- function() {
+  cache_home <- Sys.getenv("XDG_CACHE_HOME", unset = "")
+  if (!nzchar(cache_home)) {
+    cache_home <- file.path(path.expand("~"), ".cache")
+  }
+  file.path(cache_home, "qualtdict", "finalize-smoke")
+}
+
+#' Resolve the local smoke artifact root.
+#'
+#' Resolution order, first match wins:
+#' 1. `explicit` (the `--root` / `--output-dir` command line flag).
+#' 2. `getOption("qualtdict.smoke_root")`.
+#' 3. `Sys.getenv("QUALTDICT_SMOKE_ROOT")`.
+#' 4. `legacy_smoke_root(project_root)`, only when `project_root` is given,
+#'    that directory exists, and the default root does not.
+#' 5. `default_smoke_root()`.
+resolve_smoke_root <- function(explicit = NULL, project_root = NULL) {
+  if (is.character(explicit) && length(explicit) == 1 && nzchar(explicit)) {
+    return(explicit)
+  }
+  option <- getOption(smoke_root_option())
+  if (is.character(option) && length(option) == 1 && nzchar(option)) {
+    return(option)
+  }
+  from_env <- Sys.getenv(smoke_root_env_var(), unset = "")
+  if (nzchar(from_env)) {
+    return(from_env)
+  }
+  default_root <- default_smoke_root()
+  if (!is.null(project_root) && !dir.exists(default_root)) {
+    legacy <- legacy_smoke_root(project_root)
+    if (dir.exists(legacy)) {
+      return(legacy)
+    }
+  }
+  default_root
+}
+
 smoke_functions <- function() {
   c(
     "dict_generate",
