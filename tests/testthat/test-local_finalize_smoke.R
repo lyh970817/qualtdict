@@ -42,6 +42,98 @@ test_that("parse_smoke_functions defaults to all smoke-covered functions", {
   )
 })
 
+test_that("smoke artifact root overrides keep their documented names", {
+  expect_identical(smoke_root_env_var(), "QUALTDICT_SMOKE_ROOT")
+  expect_identical(smoke_root_option(), "qualtdict.smoke_root")
+})
+
+restore_smoke_root_environment <- function() {
+  cache_home <- Sys.getenv("XDG_CACHE_HOME", unset = NA_character_)
+  smoke_root <- Sys.getenv("QUALTDICT_SMOKE_ROOT", unset = NA_character_)
+  smoke_option <- getOption("qualtdict.smoke_root")
+  function() {
+    if (is.na(cache_home)) {
+      Sys.unsetenv("XDG_CACHE_HOME")
+    } else {
+      Sys.setenv(XDG_CACHE_HOME = cache_home)
+    }
+    if (is.na(smoke_root)) {
+      Sys.unsetenv("QUALTDICT_SMOKE_ROOT")
+    } else {
+      Sys.setenv(QUALTDICT_SMOKE_ROOT = smoke_root)
+    }
+    options(qualtdict.smoke_root = smoke_option)
+  }
+}
+
+test_that("the default smoke artifact root is an XDG cache path", {
+  restore <- restore_smoke_root_environment()
+  on.exit(restore(), add = TRUE)
+  cache_home <- tempfile("smoke-cache-")
+  Sys.setenv(XDG_CACHE_HOME = cache_home)
+
+  expect_identical(
+    default_smoke_root(),
+    file.path(cache_home, "qualtdict", "finalize-smoke")
+  )
+})
+
+test_that("smoke artifact root resolution prefers the nearest override", {
+  restore <- restore_smoke_root_environment()
+  on.exit(restore(), add = TRUE)
+  cache_home <- tempfile("smoke-cache-")
+  project_root <- tempfile("smoke-project-")
+  legacy <- file.path(project_root, ".local", "finalize-smoke")
+  default_root <- file.path(cache_home, "qualtdict", "finalize-smoke")
+  dir.create(legacy, recursive = TRUE)
+  on.exit(unlink(c(cache_home, project_root), recursive = TRUE), add = TRUE)
+
+  Sys.setenv(XDG_CACHE_HOME = cache_home)
+  Sys.unsetenv("QUALTDICT_SMOKE_ROOT")
+  options(qualtdict.smoke_root = NULL)
+
+  # Without a project root there is no in-tree fallback at all.
+  expect_identical(resolve_smoke_root(), default_root)
+  # An existing in-tree store is still found while the default is absent.
+  expect_identical(resolve_smoke_root(project_root = project_root), legacy)
+
+  dir.create(default_root, recursive = TRUE)
+  expect_identical(
+    resolve_smoke_root(project_root = project_root),
+    default_root
+  )
+
+  Sys.setenv(QUALTDICT_SMOKE_ROOT = "/env/smoke")
+  expect_identical(
+    resolve_smoke_root(project_root = project_root),
+    "/env/smoke"
+  )
+
+  options(qualtdict.smoke_root = "/option/smoke")
+  expect_identical(
+    resolve_smoke_root(project_root = project_root),
+    "/option/smoke"
+  )
+
+  expect_identical(
+    resolve_smoke_root("/flag/smoke", project_root = project_root),
+    "/flag/smoke"
+  )
+})
+
+test_that("smoke scripts take their artifact root from the resolver", {
+  scripts <- c(
+    testthat::test_path("..", "..", "tools", "local-finalize-smoke.R"),
+    testthat::test_path("..", "..", "tools", "fetch-local-finalize-smoke.R")
+  )
+  for (script in scripts) {
+    script_text <- paste(readLines(script, warn = FALSE), collapse = "\n")
+    expect_match(script_text, "resolve_smoke_root(", fixed = TRUE)
+    # An in-tree default would make every `R CMD build` copy the store.
+    expect_no_match(script_text, '".local"', fixed = TRUE)
+  }
+})
+
 test_that("local smoke tests use a build-safe helper bootstrap", {
   test_file <- testthat::test_path("test-local_finalize_smoke.R")
   test_lines <- readLines(test_file, warn = FALSE)
@@ -1310,11 +1402,11 @@ test_that("local smoke check gates missing and vacuous Level observations", {
 })
 
 test_that("level universe artifacts are checked when they exist", {
-  manifest_path <- testthat::test_path(
-    "..",
-    "..",
-    ".local",
-    "finalize-smoke",
+  smoke_root <- resolve_smoke_root(
+    project_root = testthat::test_path("..", "..")
+  )
+  manifest_path <- file.path(
+    smoke_root,
     "source",
     "glad_sa8_signup",
     "manifest.json"

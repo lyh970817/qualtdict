@@ -40,15 +40,31 @@ excluding-validation Labelled Survey Data.
 
 ## Artifacts
 
-The smoke check expects `.local/finalize-smoke/`, which is ignored by Git.
-Artifacts may exist only in the main checkout. From another worktree, pass the
-main checkout's artifact root:
+The smoke check expects an artifact root that holds `source/` and
+`baselines/`. It defaults to `$XDG_CACHE_HOME/qualtdict/finalize-smoke`
+(`~/.cache/qualtdict/finalize-smoke` when `XDG_CACHE_HOME` is unset). The
+root deliberately sits outside the package directory: `R CMD build` copies
+the whole package directory to a temporary directory *before* it applies
+`.Rbuildignore`, so an in-tree artifact root is copied in full by every
+build-based tool - `devtools::check()`, `goodpractice::gp()`, `pkgcheck`,
+`cyclocomp::cyclocomp_package_dir()` - however thoroughly it is ignored.
+
+Because the root is outside the checkout, every worktree shares one set of
+artifacts and no worktree needs to point at another one.
+
+Resolution order, first match wins:
+
+1. `--root DIR` on the command line.
+2. The R option `qualtdict.smoke_root`.
+3. The environment variable `QUALTDICT_SMOKE_ROOT`.
+4. `<project root>/.local/finalize-smoke`, only when that directory exists
+   and the default root does not. This is a read fallback for checkouts that
+   still hold the old in-tree root; move it out to retire it.
+5. `$XDG_CACHE_HOME/qualtdict/finalize-smoke`.
 
 ```sh
-main_worktree="$(git worktree list --porcelain | awk '/^worktree /{wt=substr($0, 10)} /^branch refs\/heads\/main$/{print wt; exit}')"
-
 Rscript tools/local-finalize-smoke.R check \
-  --root "$main_worktree/.local/finalize-smoke" \
+  --root /path/to/finalize-smoke \
   --functions dict_generate \
   --variable-name question_name
 ```
@@ -56,8 +72,11 @@ Rscript tools/local-finalize-smoke.R check \
 Each run writes summaries and replayed objects under:
 
 ```text
-.local/finalize-smoke/runs/<timestamp>/
+<artifact root>/runs/<timestamp>/
 ```
+
+`runs/` grows without bound; it is the bulk of the root. Prune old timestamp
+directories when the root gets large.
 
 ## Run
 

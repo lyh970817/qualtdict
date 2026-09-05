@@ -9,7 +9,10 @@ usage <- function() {
       "",
       "Options:",
       "  --config PATH    Survey config JSON.",
-      "  --output-dir DIR Local smoke artifact directory.",
+      "  --output-dir DIR Local smoke artifact directory. Defaults to",
+      "                   $XDG_CACHE_HOME/qualtdict/finalize-smoke. Overrides,",
+      "                   first match wins: --output-dir, the R option",
+      "                   `qualtdict.smoke_root`, $QUALTDICT_SMOKE_ROOT.",
       "  --credentials PATH",
       "                   Optional .Renviron file to read before fetching.",
       "  --response-limit N",
@@ -91,10 +94,7 @@ config_path <- arg_value(
   "--config",
   file.path(project_root, "tools", "local-finalize-smoke-surveys.json")
 )
-output_dir <- arg_value(
-  "--output-dir",
-  file.path(project_root, ".local", "finalize-smoke")
-)
+output_dir <- resolve_smoke_root(arg_value("--output-dir"), project_root)
 survey_filter <- arg_value("--survey")
 credentials <- arg_value("--credentials")
 response_limit <- arg_value("--response-limit")

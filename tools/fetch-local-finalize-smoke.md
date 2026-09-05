@@ -12,8 +12,12 @@ must not run in CI or ordinary agent finalization.
 - `tools/fetch-local-finalize-smoke.R` downloads metadata, description, and
   response data. It writes metadata and description as downloaded, sanitizes
   response data in memory, and persists only sanitized responses.
-- `.local/finalize-smoke/` stores downloaded artifacts, run outputs, and
-  baselines. It is ignored by Git.
+- The artifact root stores downloaded artifacts, run outputs, and baselines.
+  It defaults to `$XDG_CACHE_HOME/qualtdict/finalize-smoke`, outside the
+  package directory so that `R CMD build` never copies it. Override it with
+  `--output-dir`, the R option `qualtdict.smoke_root`, or the environment
+  variable `QUALTDICT_SMOKE_ROOT`; `tools/local-finalize-smoke.md` documents
+  the full resolution order.
 
 ## Refresh Artifacts
 
@@ -44,7 +48,7 @@ smoke check refuses (see "Level universe observation" below). Fetch 300-500 rows
 The fetch script writes:
 
 ```text
-.local/finalize-smoke/source/<survey-alias>/
+<artifact root>/source/<survey-alias>/
   metadata.rds
   description.rds
   responses_raw_columns.rds
