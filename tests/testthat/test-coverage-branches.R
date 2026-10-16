@@ -134,8 +134,8 @@ test_that("dict_validate reports non-quiet finding messages", {
 
 test_that("Labelled Export helpers cover empty and recode branches", {
   expect_identical(
-    labelled_export_findings(tibble::tibble(q1 = "1")),
-    empty_labelled_export_findings()
+    survey_export_findings(tibble::tibble(q1 = "1")),
+    empty_survey_export_findings()
   )
 
   dict <- coverage_test_dict(response_column_id = "QID2")

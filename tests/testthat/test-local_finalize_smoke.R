@@ -34,8 +34,8 @@ test_that("parse_smoke_functions defaults to all smoke-covered functions", {
     c(
       "dict_generate",
       "dict_validate",
-      "fetch_labelled_survey_data",
-      "labelled_export_findings",
+      "survey_fetch_labelled",
+      "survey_export_findings",
       "dict_split_blocks",
       "survey_split_blocks"
     )
@@ -373,10 +373,10 @@ test_that("response column parity checks raw questions without column maps", {
 test_that("parse_smoke_functions trims whitespace and removes duplicates", {
   expect_identical(
     parse_smoke_functions(paste0(
-      " fetch_labelled_survey_data, dict_split_blocks,",
-      "fetch_labelled_survey_data "
+      " survey_fetch_labelled, dict_split_blocks,",
+      "survey_fetch_labelled "
     )),
-    c("fetch_labelled_survey_data", "dict_split_blocks")
+    c("survey_fetch_labelled", "dict_split_blocks")
   )
 })
 
@@ -389,7 +389,7 @@ test_that("parse_smoke_functions rejects empty selections", {
 
 test_that("parse_smoke_functions rejects unknown selections", {
   expect_error(
-    parse_smoke_functions("fetch_labelled_survey_data,unknown_function"),
+    parse_smoke_functions("survey_fetch_labelled,unknown_function"),
     "Unknown smoke-covered exported function"
   )
 })
@@ -426,7 +426,7 @@ test_that("parse_smoke_variable_names rejects disabled and unknown routes", {
 
 test_that("smoke_summary_names maps functions to summary object names", {
   expect_identical(
-    smoke_summary_names(c("dict_generate", "fetch_labelled_survey_data")),
+    smoke_summary_names(c("dict_generate", "survey_fetch_labelled")),
     c("dict", "level_universe", "labelled_excluding_validation")
   )
   expect_identical(
@@ -460,7 +460,7 @@ test_that("project_smoke_record keeps only selected summaries and hashes", {
 
   projected <- project_smoke_record(
     record,
-    c("dict_split_blocks", "fetch_labelled_survey_data")
+    c("dict_split_blocks", "survey_fetch_labelled")
   )
 
   expect_named(
@@ -493,7 +493,7 @@ test_that("project_smoke_record omits unavailable optional summaries", {
 
   projected <- project_smoke_record(
     record,
-    c("dict_generate", "fetch_labelled_survey_data")
+    c("dict_generate", "survey_fetch_labelled")
   )
 
   expect_named(projected$summaries, "labelled_excluding_validation")
@@ -515,7 +515,7 @@ test_that("project_smoke_record keeps full-run order", {
       labelled_excluding_validation = list(
         object_hash = "labelled-ex-hash"
       ),
-      labelled_export_findings = list(
+      survey_export_findings = list(
         object_hash = "export-findings-hash"
       ),
       level_universe = list(object_hash = "level-universe-hash"),
@@ -526,7 +526,7 @@ test_that("project_smoke_record keeps full-run order", {
       dict = "dict-hash",
       validation = "validation-hash",
       labelled_excluding_validation = "labelled-ex-hash",
-      labelled_export_findings = "export-findings-hash",
+      survey_export_findings = "export-findings-hash",
       level_universe = "level-universe-hash",
       dict_blocks = "dict-blocks-hash",
       survey_blocks = "survey-blocks-hash"
@@ -542,7 +542,7 @@ test_that("project_smoke_record keeps full-run order", {
       "dict",
       "level_universe",
       "validation",
-      "labelled_export_findings",
+      "survey_export_findings",
       "dict_blocks",
       "survey_blocks",
       "labelled_excluding_validation"
@@ -554,7 +554,7 @@ test_that("project_smoke_record keeps full-run order", {
       dict = "dict-hash",
       level_universe = "level-universe-hash",
       validation = "validation-hash",
-      labelled_export_findings = "export-findings-hash",
+      survey_export_findings = "export-findings-hash",
       dict_blocks = "dict-blocks-hash",
       survey_blocks = "survey-blocks-hash",
       labelled_excluding_validation = "labelled-ex-hash"
@@ -759,7 +759,7 @@ test_that("smoke_scenario_requirements marks needed setup", {
   )
 
   expect_identical(
-    smoke_scenario_requirements("labelled_export_findings"),
+    smoke_scenario_requirements("survey_export_findings"),
     list(
       needs_dict = TRUE,
       needs_validation = FALSE,

@@ -41,7 +41,7 @@ source Qualtrics metadata is correct.
 \details{
 \code{dict_validate()} is total: it reports every Validation Finding and never
 errors, so it can be used to survey the damage in a defective Variable
-Dictionary. Use \code{\link[=assert_dict_valid]{assert_dict_valid()}} when you want the Export-blocking
+Dictionary. Use \code{\link[=dict_assert_valid]{dict_assert_valid()}} when you want the Export-blocking
 subset to error instead.
 }
 \examples{

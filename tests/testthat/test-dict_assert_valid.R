@@ -90,12 +90,12 @@ clean_dict <- function() {
 
 test_that(
   paste(
-    "assert_dict_valid fires on a tick column",
+    "dict_assert_valid fires on a tick column",
     "with two labels on one level"
   ),
   {
     condition <- expect_error(
-      assert_dict_valid(tick_column_collision_dict()),
+      dict_assert_valid(tick_column_collision_dict()),
       class = "qualtdict_export_blocking_findings"
     )
 
@@ -115,9 +115,9 @@ test_that(
   }
 )
 
-test_that("assert_dict_valid fires on a dropdown with duplicated levels", {
+test_that("dict_assert_valid fires on a dropdown with duplicated levels", {
   condition <- expect_error(
-    assert_dict_valid(dropdown_collision_dict()),
+    dict_assert_valid(dropdown_collision_dict()),
     class = "qualtdict_export_blocking_findings"
   )
 
@@ -128,18 +128,18 @@ test_that("assert_dict_valid fires on a dropdown with duplicated levels", {
   expect_identical(unique(condition$findings$response_column_id), "QID20")
 })
 
-test_that("assert_dict_valid does not fire on a gapped level sequence", {
-  expect_no_error(assert_dict_valid(gapped_level_dict()))
+test_that("dict_assert_valid does not fire on a gapped level sequence", {
+  expect_no_error(dict_assert_valid(gapped_level_dict()))
 })
 
-test_that("assert_dict_valid does not fire on a clean Variable Dictionary", {
+test_that("dict_assert_valid does not fire on a clean Variable Dictionary", {
   dict <- clean_dict()
 
-  expect_no_error(assert_dict_valid(dict))
-  expect_identical(assert_dict_valid(dict), dict)
+  expect_no_error(dict_assert_valid(dict))
+  expect_identical(dict_assert_valid(dict), dict)
 })
 
-test_that("assert_dict_valid fires on one label carried by two levels", {
+test_that("dict_assert_valid fires on one label carried by two levels", {
   dict <- gate_dict(
     response_column_id = c("QID40", "QID40"),
     variable_name = "duplicated.label",
@@ -148,7 +148,7 @@ test_that("assert_dict_valid fires on one label carried by two levels", {
   )
 
   condition <- expect_error(
-    assert_dict_valid(dict),
+    dict_assert_valid(dict),
     class = "qualtdict_export_blocking_findings"
   )
   expect_match(
@@ -160,7 +160,7 @@ test_that("assert_dict_valid fires on one label carried by two levels", {
   )
 })
 
-test_that("assert_dict_valid truncates many collisions in one column", {
+test_that("dict_assert_valid truncates many collisions in one column", {
   levels <- c(rep("102", 7), as.character(seq(200, 229)))
   dict <- gate_dict(
     response_column_id = rep("QID50", length(levels)),
@@ -171,7 +171,7 @@ test_that("assert_dict_valid truncates many collisions in one column", {
   )
 
   condition <- expect_error(
-    assert_dict_valid(dict),
+    dict_assert_valid(dict),
     class = "qualtdict_export_blocking_findings"
   )
 
@@ -184,7 +184,7 @@ test_that("assert_dict_valid truncates many collisions in one column", {
   expect_false(grepl("Practice 4\"", message, fixed = TRUE))
 })
 
-test_that("assert_dict_valid truncates the reported Response Column IDs", {
+test_that("dict_assert_valid truncates the reported Response Column IDs", {
   dict <- gate_dict(
     response_column_id = rep(paste0("QID", seq_len(12)), each = 2),
     variable_name = rep(paste0("q", seq_len(12)), each = 2),
@@ -193,7 +193,7 @@ test_that("assert_dict_valid truncates the reported Response Column IDs", {
   )
 
   condition <- expect_error(
-    assert_dict_valid(dict),
+    dict_assert_valid(dict),
     class = "qualtdict_export_blocking_findings"
   )
 
@@ -205,7 +205,7 @@ test_that("assert_dict_valid truncates the reported Response Column IDs", {
   expect_length(unique(condition$findings$response_column_id), 12L)
 })
 
-test_that("assert_dict_valid skips Metadata-defined Export Variable rows", {
+test_that("dict_assert_valid skips Metadata-defined Export Variable rows", {
   dict <- gate_dict(
     response_column_id = c("ED1", "ED1"),
     row_source = "embedded_data",
@@ -214,12 +214,12 @@ test_that("assert_dict_valid skips Metadata-defined Export Variable rows", {
     level = c("1", "1")
   )
 
-  expect_no_error(assert_dict_valid(dict))
+  expect_no_error(dict_assert_valid(dict))
 })
 
-test_that("assert_dict_valid rejects what is not a Variable Dictionary", {
+test_that("dict_assert_valid rejects what is not a Variable Dictionary", {
   expect_error(
-    assert_dict_valid(data.frame(a = 1)),
+    dict_assert_valid(data.frame(a = 1)),
     "must be a `qualtdict`"
   )
 })
@@ -244,7 +244,7 @@ test_that("dict_validate stays total for Export-blocking dictionaries", {
   expect_identical(mistakes$clean, character())
 })
 
-test_that("dict_validate and assert_dict_valid share one predicate", {
+test_that("dict_validate and dict_assert_valid share one predicate", {
   dict <- dropdown_collision_dict()
 
   findings <- dict_validate(dict)$validation_findings
@@ -258,7 +258,7 @@ test_that("dict_validate and assert_dict_valid share one predicate", {
 # identical rows, both level and label `NA`. `anyDuplicated()` counts a
 # repeated `NA` as a repeat, so it is reported like any other repeated level.
 # Seen in `edgi_opt` as `6_QID232_TEXT`.
-test_that("assert_dict_valid reports a repeated NA level as <NA>", {
+test_that("dict_assert_valid reports a repeated NA level as <NA>", {
   dict <- gate_dict(
     response_column_id = c("6_QID232_TEXT", "6_QID232_TEXT"),
     variable_name = "family_diagnosed.txt.pain",
@@ -268,7 +268,7 @@ test_that("assert_dict_valid reports a repeated NA level as <NA>", {
   )
 
   condition <- expect_error(
-    assert_dict_valid(dict),
+    dict_assert_valid(dict),
     class = "qualtdict_export_blocking_findings"
   )
 
@@ -279,7 +279,7 @@ test_that("assert_dict_valid reports a repeated NA level as <NA>", {
   )
 })
 
-test_that("assert_dict_valid counts one further repeated level", {
+test_that("dict_assert_valid counts one further repeated level", {
   dict <- gate_dict(
     response_column_id = rep("QID30", 4),
     variable_name = "gp.practice",
@@ -288,7 +288,7 @@ test_that("assert_dict_valid counts one further repeated level", {
   )
 
   condition <- expect_error(
-    assert_dict_valid(dict),
+    dict_assert_valid(dict),
     class = "qualtdict_export_blocking_findings"
   )
 
@@ -299,7 +299,7 @@ test_that("assert_dict_valid counts one further repeated level", {
   )
 })
 
-test_that("assert_dict_valid counts several further repeated levels", {
+test_that("dict_assert_valid counts several further repeated levels", {
   dict <- gate_dict(
     response_column_id = rep("QID31", 6),
     variable_name = "gp.practice",
@@ -308,7 +308,7 @@ test_that("assert_dict_valid counts several further repeated levels", {
   )
 
   condition <- expect_error(
-    assert_dict_valid(dict),
+    dict_assert_valid(dict),
     class = "qualtdict_export_blocking_findings"
   )
 

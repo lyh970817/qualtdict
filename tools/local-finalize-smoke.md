@@ -25,7 +25,7 @@ ordinary tests and package checks.
 
 ## Labelled Scenario Policy
 
-The smoke's only `fetch_labelled_survey_data` scenario calls it with
+The smoke's only `survey_fetch_labelled` scenario calls it with
 `exclude_findings = "validation"`. Its summary is recorded as
 `labelled_excluding_validation`; there is no default-path scenario and no
 `labelled` summary any more. Live survey metadata can legitimately carry
@@ -34,7 +34,7 @@ the default path before download when it does, so a default-path scenario
 would block the full smoke on a healthy corpus. The smoke's job is Response
 Column ID parity and labelled-export shape, not re-testing the abort gate;
 definite-finding aborts are unit-tested in
-`tests/testthat/test-fetch_labelled_survey_data.R`, not smoke-tested. The
+`tests/testthat/test-survey_fetch_labelled.R`, not smoke-tested. The
 Labelled Export Findings and survey block outputs are derived from this same
 excluding-validation Labelled Survey Data.
 
@@ -85,8 +85,8 @@ Run one self-contained smoke invocation for the relevant finalization surface:
 ```sh
 Rscript tools/local-finalize-smoke.R check
 Rscript tools/local-finalize-smoke.R check --functions dict_generate
-Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data
-Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data,dict_split_blocks
+Rscript tools/local-finalize-smoke.R check --functions survey_fetch_labelled
+Rscript tools/local-finalize-smoke.R check --functions survey_fetch_labelled,dict_split_blocks
 Rscript tools/local-finalize-smoke.R check --variable-name question_name
 Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name
 ```
@@ -94,7 +94,7 @@ Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-
 The script runs prerequisites needed for selected downstream outputs, but
 compares only the selected output summaries. Do not broaden `--functions` only
 because a prerequisite runs internally. For example,
-`--functions fetch_labelled_survey_data` generates a Variable Dictionary as
+`--functions survey_fetch_labelled` generates a Variable Dictionary as
 setup, then compares only the excluding-validation Labelled Survey Data
 summary.
 
@@ -280,7 +280,7 @@ Selective blessing updates only the selected output summaries inside each
 baseline record:
 
 ```sh
-Rscript tools/local-finalize-smoke.R bless --functions fetch_labelled_survey_data
+Rscript tools/local-finalize-smoke.R bless --functions survey_fetch_labelled
 Rscript tools/local-finalize-smoke.R bless --variable-name question_name
 ```
 
@@ -290,7 +290,7 @@ selected summaries and leaves the rest of the record untouched at whatever
 state it was last written in, so the baseline silently becomes a mixture of
 eras. That is how the 2026-08-05 refresh was owed: a
 `bless --functions dict_generate` left the six labelled-family summaries of
-that era (`validation`, `labelled`, `labelled_export_findings`,
+that era (`validation`, `labelled`, `survey_export_findings`,
 `dict_blocks`, `survey_blocks`, `labelled_excluding_validation`; the plain
 `labelled` summary has since been removed by the labelled scenario policy
 above) behind at a much older

@@ -1,3 +1,22 @@
+# qualtdict (development version)
+
+## Breaking changes
+
+- Exported functions now follow one object-verb naming scheme: `dict_` for
+  Variable Dictionary functions and `survey_` for Labelled Survey Data
+  functions, matching `dict_generate()`, `dict_validate()`,
+  `dict_split_blocks()`, and `survey_split_blocks()`. Three functions are
+  renamed without deprecated aliases:
+
+  - `assert_dict_valid()` is now `dict_assert_valid()`.
+  - `fetch_labelled_survey_data()` is now `survey_fetch_labelled()`.
+  - `labelled_export_findings()` is now `survey_export_findings()`.
+
+  The attribute holding Labelled Export Findings on Labelled Survey Data is
+  renamed with its accessor, from `"labelled_export_findings"` to
+  `"survey_export_findings"`. The error class
+  `"qualtdict_export_blocking_findings"` is unchanged.
+
 # qualtdict 0.1.0
 
 First release. It collects everything below, previously carried as unreleased

@@ -49,9 +49,9 @@ remotes::install_github("lyh970817/qualtdict")
 
 ## Credentials And Offline Work
 
-Live calls to `dict_generate()` and `fetch_labelled_survey_data()`
-require Qualtrics API credentials because they retrieve metadata and
-responses through `qualtRics`. Register credentials with
+Live calls to `dict_generate()` and `survey_fetch_labelled()` require
+Qualtrics API credentials because they retrieve metadata and responses
+through `qualtRics`. Register credentials with
 `qualtRics::qualtrics_api_credentials()`, which `qualtdict` also
 re-exports for convenience.
 
@@ -111,7 +111,7 @@ Variables to `variable_name` and attaches labels from the Variable
 Dictionary.
 
 ``` r
-survey_dat <- fetch_labelled_survey_data(
+survey_dat <- survey_fetch_labelled(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = "none",

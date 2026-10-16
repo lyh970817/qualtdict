@@ -15,12 +15,12 @@ reference:
   contents:
   - dict_generate
   - dict_validate
-  - assert_dict_valid
+  - dict_assert_valid
 - title: Create labelled survey data
   desc: Apply a Variable Dictionary to downloaded responses and inspect export findings.
   contents:
-  - fetch_labelled_survey_data
-  - labelled_export_findings
+  - survey_fetch_labelled
+  - survey_export_findings
 - title: Work with survey blocks
   desc: Create block-specific views of dictionaries and labelled survey data.
   contents:

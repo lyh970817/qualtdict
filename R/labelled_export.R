@@ -174,7 +174,7 @@ filter_variable_findings <- function(findings, dict) {
 
 #' Empty Labelled Export Findings table
 #' @noRd
-empty_labelled_export_findings <- function() {
+empty_survey_export_findings <- function() {
   tibble(
     finding = character(),
     response_column_id = character(),
@@ -189,13 +189,13 @@ empty_labelled_export_findings <- function() {
 #' Labelled Export Findings describe issues detected while matching a Variable
 #' Dictionary to downloaded survey data.
 #'
-#' @param x Labelled Survey Data returned by [fetch_labelled_survey_data()].
+#' @param x Labelled Survey Data returned by [survey_fetch_labelled()].
 #'
 #' @return A data frame of Labelled Export Findings.
 #' @export
 #' @examples
 #' dat <- data.frame(q1 = "1")
-#' attr(dat, "labelled_export_findings") <- data.frame(
+#' attr(dat, "survey_export_findings") <- data.frame(
 #'   finding = "missing_response_column_id",
 #'   response_column_id = "QID2",
 #'   qid = "QID2",
@@ -203,11 +203,11 @@ empty_labelled_export_findings <- function() {
 #'   reason = "not_found_in_downloaded_survey_data"
 #' )
 #'
-#' labelled_export_findings(dat)
-labelled_export_findings <- function(x) {
-  findings <- attr(x, "labelled_export_findings", exact = TRUE)
+#' survey_export_findings(dat)
+survey_export_findings <- function(x) {
+  findings <- attr(x, "survey_export_findings", exact = TRUE)
   if (is.null(findings)) {
-    return(empty_labelled_export_findings())
+    return(empty_survey_export_findings())
   }
 
   findings
@@ -219,7 +219,7 @@ missing_response_column_findings <- function(dict, dat) {
   response_column_id <- dict_response_column_id(dict)
   missing <- !response_column_id %in% colnames(dat)
   if (!any(missing)) {
-    return(empty_labelled_export_findings())
+    return(empty_survey_export_findings())
   }
 
   qid <- dict$qid

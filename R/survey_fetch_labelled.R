@@ -29,7 +29,7 @@
 #' with any Validation Finding, suggestive ones included.
 #' @param require_valid_dict Boolean. If \code{TRUE} (the default), the
 #' Variable Dictionary is checked with
-#' \code{\link[qualtdict]{assert_dict_valid}} before any responses are
+#' \code{\link[qualtdict]{dict_assert_valid}} before any responses are
 #' downloaded, and Export-blocking Validation Findings error. Use
 #' \code{FALSE} to download from a survey known to carry them; the affected
 #' Export Variables then keep unreliable value labels. Because
@@ -83,12 +83,12 @@
 #'
 #'   # Generate a dictionary
 #'   mydict <- dict_generate(survey_id, variable_name = "question_name")
-#'   survey_dat <- fetch_labelled_survey_data(mydict,
+#'   survey_dat <- survey_fetch_labelled(mydict,
 #'     unanswer_recode = -77,
 #'     unanswer_recode_multi = 0
 #'   )
 #' }
-fetch_labelled_survey_data <- function(
+survey_fetch_labelled <- function(
   dict,
   extra_columns = c("externalDataReference", "startDate", "endDate"),
   exclude_findings = c("none", "definite", "validation"),
@@ -109,7 +109,7 @@ fetch_labelled_survey_data <- function(
   # Export-blocking Response Column ID (Export-blocking findings are all
   # Definite Validation Findings), so neither needs the gate.
   if (require_valid_dict && exclude_findings == "none") {
-    assert_dict_valid(dict)
+    dict_assert_valid(dict)
   }
 
   args <- list(...)
@@ -126,7 +126,7 @@ fetch_labelled_survey_data <- function(
     exclude_findings = exclude_findings,
     quiet = quiet
   )
-  labelled_export_findings <- missing_response_column_findings(
+  survey_export_findings <- missing_response_column_findings(
     filtered_dict,
     survey
   )
@@ -141,6 +141,6 @@ fetch_labelled_survey_data <- function(
   )
 
   attr(dat_recoded, "dict") <- filtered_dict
-  attr(dat_recoded, "labelled_export_findings") <- labelled_export_findings
+  attr(dat_recoded, "survey_export_findings") <- survey_export_findings
   dat_recoded
 }
