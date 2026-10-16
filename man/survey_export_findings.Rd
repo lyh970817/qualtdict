@@ -17,6 +17,10 @@ Labelled Export Findings describe issues detected while matching a Variable
 Dictionary to downloaded survey data.
 }
 \examples{
+# Every Variable Dictionary column was found in the example download
+survey_export_findings(glad_example$labelled_survey_data)
+
+# A download that lacked a dictionary column would report it like this
 dat <- data.frame(q1 = "1")
 attr(dat, "survey_export_findings") <- data.frame(
   finding = "missing_response_column_id",

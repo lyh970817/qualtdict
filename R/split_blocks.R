@@ -9,14 +9,9 @@
 #'   rows have no Survey Block assignment, the list includes `"..unassigned"`.
 #' @export
 #' @examples
-#' dict <- data.frame(
-#'   response_column_id = c("QID1", "QID2"),
-#'   variable_name = c("q1", "q2"),
-#'   block = c("Block A", "Block B")
-#' )
-#' class(dict) <- c("qualtdict", class(dict))
-#'
-#' dict_split_blocks(dict)
+#' dict_blocks <- dict_split_blocks(glad_example$dictionary)
+#' names(dict_blocks)
+#' dict_blocks$GAD7
 dict_split_blocks <- function(dict) {
   checkarg_isqualtdict(dict)
 
@@ -61,23 +56,9 @@ dict_split_blocks <- function(dict) {
 #'   rows have no Survey Block assignment, the list includes `"..unassigned"`.
 #' @export
 #' @examples
-#' dict <- data.frame(
-#'   response_column_id = c("QID1", "QID2"),
-#'   variable_name = c("q1", "q2"),
-#'   block = c("Block A", "Block B")
-#' )
-#' class(dict) <- c("qualtdict", class(dict))
-#'
-#' dat <- data.frame(
-#'   externalDataReference = "R_1",
-#'   startDate = "2026-06-01",
-#'   endDate = "2026-06-01",
-#'   q1 = "1",
-#'   q2 = "2"
-#' )
-#' attr(dat, "dict") <- dict
-#'
-#' survey_split_blocks(dat)
+#' survey_blocks <- survey_split_blocks(glad_example$labelled_survey_data)
+#' names(survey_blocks)
+#' survey_blocks$GAD7
 survey_split_blocks <- function(
   dat,
   dict = attr(dat, "dict", exact = TRUE),
