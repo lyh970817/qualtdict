@@ -9,6 +9,49 @@ affect exported behavior, usually after ordinary tests and requested review
 work are complete. Missing local artifacts are not a feature failure; report
 that the smoke check could not be run.
 
+## Vocabulary
+
+The terms this guide uses for the smoke check. The package vocabulary is in
+`CONTEXT.md`.
+
+**Finalize Smoke**:
+The local-only workflow that runs qualtdict's exported functions over fixed
+local survey artifacts and compares the results against Smoke Baselines. It is
+a finalization gate run by a human or agent on one machine, never CI.
+_Avoid_: smoke test suite, integration tests
+
+**Smoke Scenario**:
+One exported-function execution against one survey within a Finalize Smoke
+run, such as `dict_generate` on one survey. Bless and Check runs execute the
+same Smoke Scenarios; they differ only in what is done with the results.
+_Avoid_: test case, smoke step
+
+**Scenario Time**:
+The summed execution time spent inside Smoke Scenarios during one Finalize
+Smoke run. It excludes harness overhead such as artifact loading, object
+hashing, and baseline reading and writing, so a run's wall-clock time is a
+multiple of its Scenario Time. It is a property of any run, whether Bless or
+Check.
+_Avoid_: run time, wall time, smoke duration
+
+**Bless**:
+A Finalize Smoke run that records its Smoke Scenario results as the Smoke
+Baseline. Blessing asserts that the current behaviour is the intended
+reference, so it follows verification, never substitutes for it.
+_Avoid_: update baselines, snapshot
+
+**Check**:
+A Finalize Smoke run that executes the Smoke Scenarios and compares their
+results against the Smoke Baseline, failing loudly on any mismatch or missing
+baseline entry.
+_Avoid_: verify run, smoke comparison
+
+**Smoke Baseline**:
+The recorded per-survey Smoke Scenario results that Check compares against,
+keyed by survey and scenario. Smoke Baselines are local to the machine that
+Blessed them and are never committed.
+_Avoid_: snapshot, expected output, golden file
+
 ## Scope
 
 `tools/local-finalize-smoke.R check` replays local Qualtrics smoke artifacts,
