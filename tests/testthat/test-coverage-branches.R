@@ -44,13 +44,13 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
   local_mocked_bindings(
     metadata2 = function(surveyID, elements) {
       expect_identical(surveyID, "SV_FETCH")
-      expect_true("responsecounts" %in% elements)
+      expect_in("responsecounts", elements)
       metadata
     },
     fetch_description2 = function(surveyID, elements) {
       expect_identical(surveyID, "SV_FETCH")
       expect_false("responsecounts" %in% elements)
-      expect_true("scoring" %in% elements)
+      expect_in("scoring", elements)
       description
     },
     fetch_survey2 = function(...) {
@@ -173,7 +173,7 @@ test_that("Labelled Export helpers cover empty and recode branches", {
     unanswer_recode = "-99",
     unanswer_recode_multi = NULL
   )
-  expect_true("Seen but not answered" %in% names(attr(multi, "labels")))
+  expect_in("Seen but not answered", names(attr(multi, "labels")))
 })
 
 test_that("Loop and Merge helpers cover missing and empty branches", {
@@ -459,7 +459,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
     looping = FALSE
   )
   cleaned <- clean_variable_dictionary_rows(rows, use_semantic_name = TRUE)
-  expect_true("semantic_name" %in% names(cleaned))
+  expect_in("semantic_name", names(cleaned))
 })
 
 test_that("normalisation and validation helpers cover fallback records", {

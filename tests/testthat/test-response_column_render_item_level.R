@@ -39,7 +39,7 @@ test_that("render_response_columns renders matrix rows in stable order", {
   )
   expect_identical(unname(rendered$level), c("1", "2", "1", "2"))
   expect_identical(unname(rendered$label), c("Low", "High", "Low", "High"))
-  expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
+  expect_all_equal(vapply(rendered, length, integer(1)), nrow(rendered))
 })
 
 test_that("slider items render as one response column per item", {
@@ -70,7 +70,7 @@ test_that("multi-statement sliders render one column per statement item", {
   )
   expect_identical(unname(rendered$level), c(NA_character_, NA_character_))
   expect_identical(unname(rendered$label), c(NA_character_, NA_character_))
-  expect_true(all(lengths(rendered) == nrow(rendered)))
+  expect_all_equal(lengths(rendered), nrow(rendered))
 })
 
 test_that("multi-statement slider dictionary rows are row-aligned", {
@@ -88,7 +88,7 @@ test_that("multi-statement slider dictionary rows are row-aligned", {
   expect_identical(dict$response_column_id, c("QID1_1", "QID1_4"))
   expect_identical(dict$qid, rep("QID1", 2))
   expect_identical(unname(dict$item), c("Statement A", "Statement B"))
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("matrix response columns use Qualtrics subquestion IDs", {
@@ -130,7 +130,7 @@ test_that("horizontal sliders generate one response column per slider item", {
 
   expect_identical(dict$response_column_id, c("QID1_1", "QID1_2", "QID1_3"))
   expect_identical(unname(dict$level), c("1", "2", "3"))
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("numeric loop-prefixed text columns match raw export IDs", {

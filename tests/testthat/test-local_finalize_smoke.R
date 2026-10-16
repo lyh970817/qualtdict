@@ -285,7 +285,7 @@ test_that("response column parity checks all non-system raw columns", {
   expect_false("StartTime" %in% parity$non_system_raw_response_columns)
   expect_false("EndDate" %in% parity$non_system_raw_response_columns)
   expect_false("Q_URL" %in% parity$non_system_raw_response_columns)
-  expect_true(all(
+  expect_in(
     c(
       "response_column_id",
       "row_source",
@@ -295,9 +295,9 @@ test_that("response column parity checks all non-system raw columns", {
       "parent_sub_selector",
       "present_in_dict",
       "system_excluded"
-    ) %in%
-      names(parity$raw_response_column_classification)
-  ))
+    ),
+    names(parity$raw_response_column_classification)
+  )
   row_source <- stats::setNames(
     parity$raw_response_column_classification$row_source,
     parity$raw_response_column_classification$response_column_id
@@ -1431,11 +1431,11 @@ test_that("level universe artifacts are checked when they exist", {
     level_universe_minimum_response_rows()
   )
   expect_gt(as.integer(observation$totals$values_observed), 0L)
-  expect_false(any(vapply(
+  expect_all_false(vapply(
     observation$observed,
     function(record) {
       isTRUE(record$redacted) && !is.null(record$codes)
     },
     logical(1)
-  )))
+  ))
 })

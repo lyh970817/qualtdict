@@ -80,143 +80,125 @@ test_that("survey_fetch_labelled returns one labelled data frame", {
   expect_true(captured_args$value$breakout_sets)
 })
 
-test_that(
-  paste(
-    "survey_fetch_labelled includes",
-    "Embedded Data Fields by default"
-  ),
-  {
-    dict <- minimal_export_dict(
-      response_column_id = c("QID1", "Source Channel"),
-      row_source = c("question", "embedded_data"),
-      variable_name = c("q1", "Source_Channel"),
-      qid = c("QID1", NA_character_),
-      question_name = c("q1", NA_character_),
-      block = c("Block A", NA_character_),
-      question = c("Question q1", "Embedded Data: Source Channel"),
-      label = c("Yes", NA_character_),
-      level = c("1", NA_character_),
-      type = c("MC", NA_character_),
-      selector = c("SAVR", NA_character_),
-      sub_selector = c("TX", NA_character_)
-    )
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        tibble::tibble(
-          QID1 = "1",
-          `Source Channel` = "newsletter"
-        )
-      }
-    )
+test_that("includes Embedded Data Fields by default", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "Source Channel"),
+    row_source = c("question", "embedded_data"),
+    variable_name = c("q1", "Source_Channel"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
+    block = c("Block A", NA_character_),
+    question = c("Question q1", "Embedded Data: Source Channel"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        QID1 = "1",
+        `Source Channel` = "newsletter"
+      )
+    }
+  )
 
-    dat <- survey_fetch_labelled(
-      dict,
-      extra_columns = NULL,
-      unanswer_recode_multi = 0
-    )
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode_multi = 0
+  )
 
-    expect_named(dat, c("q1", "Source_Channel"))
-    expect_identical(as.character(dat$Source_Channel), "newsletter")
-    expect_identical(
-      sjlabelled::get_label(dat$Source_Channel),
-      "Embedded Data: Source Channel"
-    )
-    expect_null(attr(dat$Source_Channel, "labels", exact = TRUE))
-    expect_identical(nrow(survey_export_findings(dat)), 0L)
-  }
-)
+  expect_named(dat, c("q1", "Source_Channel"))
+  expect_identical(as.character(dat$Source_Channel), "newsletter")
+  expect_identical(
+    sjlabelled::get_label(dat$Source_Channel),
+    "Embedded Data: Source Channel"
+  )
+  expect_null(attr(dat$Source_Channel, "labels", exact = TRUE))
+  expect_identical(nrow(survey_export_findings(dat)), 0L)
+})
 
-test_that(
-  paste(
-    "survey_fetch_labelled includes",
-    "Scoring Variables by default"
-  ),
-  {
-    dict <- minimal_export_dict(
-      response_column_id = c("QID1", "Total Score"),
-      row_source = c("question", "scoring"),
-      variable_name = c("q1", "Total_Score"),
-      qid = c("QID1", NA_character_),
-      question_name = c("q1", NA_character_),
-      block = c("Block A", NA_character_),
-      question = c("Question q1", "Scoring Variable: Total Score"),
-      label = c("Yes", NA_character_),
-      level = c("1", NA_character_),
-      type = c("MC", NA_character_),
-      selector = c("SAVR", NA_character_),
-      sub_selector = c("TX", NA_character_)
-    )
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        tibble::tibble(
-          QID1 = "1",
-          `Total Score` = "7"
-        )
-      }
-    )
+test_that("includes Scoring Variables by default", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "Total Score"),
+    row_source = c("question", "scoring"),
+    variable_name = c("q1", "Total_Score"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
+    block = c("Block A", NA_character_),
+    question = c("Question q1", "Scoring Variable: Total Score"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        QID1 = "1",
+        `Total Score` = "7"
+      )
+    }
+  )
 
-    dat <- survey_fetch_labelled(
-      dict,
-      extra_columns = NULL,
-      unanswer_recode_multi = 0
-    )
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode_multi = 0
+  )
 
-    expect_named(dat, c("q1", "Total_Score"))
-    expect_identical(as.character(dat$Total_Score), "7")
-    expect_identical(
-      sjlabelled::get_label(dat$Total_Score),
-      "Scoring Variable: Total Score"
-    )
-    expect_null(attr(dat$Total_Score, "labels", exact = TRUE))
-    expect_identical(nrow(survey_export_findings(dat)), 0L)
-  }
-)
+  expect_named(dat, c("q1", "Total_Score"))
+  expect_identical(as.character(dat$Total_Score), "7")
+  expect_identical(
+    sjlabelled::get_label(dat$Total_Score),
+    "Scoring Variable: Total Score"
+  )
+  expect_null(attr(dat$Total_Score, "labels", exact = TRUE))
+  expect_identical(nrow(survey_export_findings(dat)), 0L)
+})
 
-test_that(
-  paste(
-    "survey_fetch_labelled includes",
-    "Text-analysis Sidecars by default"
-  ),
-  {
-    dict <- minimal_export_dict(
-      response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
-      row_source = c("question", "text_analysis"),
-      variable_name = c("q1", "Q1_Text_Sentiment"),
-      qid = c("QID1", "QID1"),
-      question_name = c("q1", "q1"),
-      block = c("Block A", "Block A"),
-      question = c("Question q1", "Text Analysis: Q1 Text Sentiment"),
-      label = c("Yes", NA_character_),
-      level = c("1", NA_character_),
-      type = c("MC", NA_character_),
-      selector = c("SAVR", NA_character_),
-      sub_selector = c("TX", NA_character_)
-    )
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        tibble::tibble(
-          QID1 = "1",
-          QID1_TEXT_SENTIMENT = "positive"
-        )
-      }
-    )
+test_that("includes Text-analysis Sidecars by default", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
+    row_source = c("question", "text_analysis"),
+    variable_name = c("q1", "Q1_Text_Sentiment"),
+    qid = c("QID1", "QID1"),
+    question_name = c("q1", "q1"),
+    block = c("Block A", "Block A"),
+    question = c("Question q1", "Text Analysis: Q1 Text Sentiment"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        QID1 = "1",
+        QID1_TEXT_SENTIMENT = "positive"
+      )
+    }
+  )
 
-    dat <- survey_fetch_labelled(
-      dict,
-      extra_columns = NULL,
-      unanswer_recode_multi = 0
-    )
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode_multi = 0
+  )
 
-    expect_named(dat, c("q1", "Q1_Text_Sentiment"))
-    expect_identical(as.character(dat$Q1_Text_Sentiment), "positive")
-    expect_identical(
-      sjlabelled::get_label(dat$Q1_Text_Sentiment),
-      "Text Analysis: Q1 Text Sentiment"
-    )
-    expect_null(attr(dat$Q1_Text_Sentiment, "labels", exact = TRUE))
-    expect_identical(nrow(survey_export_findings(dat)), 0L)
-  }
-)
+  expect_named(dat, c("q1", "Q1_Text_Sentiment"))
+  expect_identical(as.character(dat$Q1_Text_Sentiment), "positive")
+  expect_identical(
+    sjlabelled::get_label(dat$Q1_Text_Sentiment),
+    "Text Analysis: Q1 Text Sentiment"
+  )
+  expect_null(attr(dat$Q1_Text_Sentiment, "labels", exact = TRUE))
+  expect_identical(nrow(survey_export_findings(dat)), 0L)
+})
 
 test_that("survey_fetch_labelled reports missing Response Column IDs", {
   local_mocked_bindings(
@@ -287,7 +269,7 @@ test_that("survey_fetch_labelled reports missing Embedded Data Fields", {
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "Source Channel")
-  expect_true(is.na(findings$qid))
+  expect_identical(findings$qid, NA_character_)
   expect_identical(findings$variable_name, "Source_Channel")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
@@ -319,7 +301,7 @@ test_that("survey_fetch_labelled reports missing Scoring Variables", {
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "Total Score")
-  expect_true(is.na(findings$qid))
+  expect_identical(findings$qid, NA_character_)
   expect_identical(findings$variable_name, "Total_Score")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
@@ -551,7 +533,7 @@ test_that("response metadata normalises PascalCase export casing", {
 
   dat <- survey_fetch_labelled(minimal_export_dict())
 
-  expect_true(all(c("recordedDate", "ResponseId", "Progress") %in% names(dat)))
+  expect_in(c("recordedDate", "ResponseId", "Progress"), names(dat))
   expect_identical(dat$recordedDate, "2026-06-02")
   expect_identical(dat$ResponseId, "R_xyz")
   expect_identical(dat$Progress, "50")
@@ -573,8 +555,8 @@ test_that("response metadata degrades gracefully when columns are absent", {
 
   expect_no_warning(dat <- survey_fetch_labelled(minimal_export_dict()))
 
-  expect_true("recordedDate" %in% names(dat))
-  expect_false(any(c("ResponseId", "Progress") %in% names(dat)))
+  expect_in("recordedDate", names(dat))
+  expect_all_false(c("ResponseId", "Progress") %in% names(dat))
 })
 
 test_that("extra_columns = NULL suppresses response metadata", {
@@ -1297,6 +1279,7 @@ test_that("a tick column with two labels on one level cannot be labelled", {
       var_dict,
       unanswer_recode = -77,
       unanswer_recode_multi = 0
-    )
+    ),
+    class = "qualtdict_level_label_mismatch"
   )
 })
