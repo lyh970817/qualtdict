@@ -39,7 +39,6 @@
 ^\.worktrees/
 ^_pkgdown\.yml$
 ^codecov\.yml$
-^codemeta\.json$
 ^docs$
 ^docs/superpowers/plans$
 ^flake\.lock$
