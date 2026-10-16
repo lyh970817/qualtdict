@@ -12,7 +12,7 @@ survey_split_blocks(
 }
 \arguments{
 \item{dat}{Labelled Survey Data returned by
-\code{\link[qualtdict]{fetch_labelled_survey_data}}.}
+\code{\link[qualtdict]{survey_fetch_labelled}}.}
 
 \item{dict}{A Variable Dictionary returned by
 \code{\link[qualtdict]{dict_generate}}.}
@@ -29,29 +29,15 @@ rows have no Survey Block assignment, the list includes \code{"..unassigned"}.
 }
 \description{
 Create block-specific views of Labelled Survey Data without changing the
-return type of \code{\link[qualtdict]{fetch_labelled_survey_data}}.
+return type of \code{\link[qualtdict]{survey_fetch_labelled}}.
 }
 \details{
 When \code{dict} is not supplied, \code{survey_split_blocks()} uses the
 \code{dict} attribute attached by
-\code{\link[qualtdict]{fetch_labelled_survey_data}}.
+\code{\link[qualtdict]{survey_fetch_labelled}}.
 }
 \examples{
-dict <- data.frame(
-  response_column_id = c("QID1", "QID2"),
-  variable_name = c("q1", "q2"),
-  block = c("Block A", "Block B")
-)
-class(dict) <- c("qualtdict", class(dict))
-
-dat <- data.frame(
-  externalDataReference = "R_1",
-  startDate = "2026-06-01",
-  endDate = "2026-06-01",
-  q1 = "1",
-  q2 = "2"
-)
-attr(dat, "dict") <- dict
-
-survey_split_blocks(dat)
+survey_blocks <- survey_split_blocks(glad_example$labelled_survey_data)
+names(survey_blocks)
+survey_blocks$GAD7
 }

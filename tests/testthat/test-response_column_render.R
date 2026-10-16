@@ -46,25 +46,19 @@ test_that("render_response_columns preserves loop-prefixed base IDs", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
-test_that(
-  paste(
-    "render_response_columns preserves already-prefixed",
-    "Base Response Column IDs"
-  ),
-  {
-    raw_metadata <- synthetic_looped_mc_text_raw_metadata()
-    question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID2
+test_that("preserves already-prefixed Base Response Column IDs", {
+  raw_metadata <- synthetic_looped_mc_text_raw_metadata()
+  question <- normalise_qualtrics_metadata(raw_metadata)$questions$QID2
 
-    rendered <- render_response_columns(question, "x1_QID2")
+  rendered <- render_response_columns(question, "x1_QID2")
 
-    expect_identical(
-      rendered$response_column_id,
-      c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT")
-    )
-    expect_identical(unname(rendered$level), c("1", "2", "2_TEXT"))
-    expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
-  }
-)
+  expect_identical(
+    rendered$response_column_id,
+    c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT")
+  )
+  expect_identical(unname(rendered$level), c("1", "2", "2_TEXT"))
+  expect_all_equal(lengths(rendered), nrow(rendered))
+})
 
 test_that("render context separates QID and Base Response Column ID", {
   question_fact <- normalise_qualtrics_metadata(
@@ -104,30 +98,24 @@ test_that("resolve_base_response_column_id preserves precedence and error", {
   )
 })
 
-test_that(
-  paste(
-    "response column render facts unwrap non-SBS levels",
-    "and labels only"
-  ),
-  {
-    mc_question_fact <- normalise_qualtrics_metadata(
-      synthetic_mc_text_raw_metadata()
-    )$questions$QID1
-    sbs_question_fact <- normalise_qualtrics_metadata(
-      synthetic_sbs_text_subquestion_raw_metadata()
-    )$questions$QID2
+test_that("render facts unwrap non-SBS levels and labels only", {
+  mc_question_fact <- normalise_qualtrics_metadata(
+    synthetic_mc_text_raw_metadata()
+  )$questions$QID1
+  sbs_question_fact <- normalise_qualtrics_metadata(
+    synthetic_sbs_text_subquestion_raw_metadata()
+  )$questions$QID2
 
-    mc_shape <- response_column_shape(mc_question_fact)
-    mc_facts <- response_column_render_facts(mc_shape, "MC")
-    expect_identical(mc_facts$level, mc_shape$level[[1]])
-    expect_identical(mc_facts$label, mc_shape$label[[1]])
+  mc_shape <- response_column_shape(mc_question_fact)
+  mc_facts <- response_column_render_facts(mc_shape, "MC")
+  expect_identical(mc_facts$level, mc_shape$level[[1]])
+  expect_identical(mc_facts$label, mc_shape$label[[1]])
 
-    sbs_shape <- response_column_shape(sbs_question_fact)
-    sbs_facts <- response_column_render_facts(sbs_shape, "SBS")
-    expect_identical(sbs_facts$level, sbs_shape$level)
-    expect_identical(sbs_facts$label, sbs_shape$label)
-  }
-)
+  sbs_shape <- response_column_shape(sbs_question_fact)
+  sbs_facts <- response_column_render_facts(sbs_shape, "SBS")
+  expect_identical(sbs_facts$level, sbs_shape$level)
+  expect_identical(sbs_facts$label, sbs_shape$label)
+})
 
 test_that("response column choice shape carries text-entry levels and labels", {
   question_fact <- normalise_qualtrics_metadata(

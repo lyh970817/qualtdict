@@ -1,6 +1,6 @@
 # Rename Labelled Survey Data Fetch API
 
-Status: accepted
+Status: accepted; superseded on naming by ADR 0013
 
 qualtdict will rename the public `get_survey_data()` API to
 `fetch_labelled_survey_data()` and remove the old exported name. The old name

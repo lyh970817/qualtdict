@@ -174,7 +174,7 @@ filter_variable_findings <- function(findings, dict) {
 
 #' Empty Labelled Export Findings table
 #' @noRd
-empty_labelled_export_findings <- function() {
+empty_survey_export_findings <- function() {
   tibble(
     finding = character(),
     response_column_id = character(),
@@ -189,13 +189,17 @@ empty_labelled_export_findings <- function() {
 #' Labelled Export Findings describe issues detected while matching a Variable
 #' Dictionary to downloaded survey data.
 #'
-#' @param x Labelled Survey Data returned by [fetch_labelled_survey_data()].
+#' @param x Labelled Survey Data returned by [survey_fetch_labelled()].
 #'
 #' @return A data frame of Labelled Export Findings.
 #' @export
 #' @examples
+#' # Every Variable Dictionary column was found in the example download
+#' survey_export_findings(glad_example$labelled_survey_data)
+#'
+#' # A download that lacked a dictionary column would report it like this
 #' dat <- data.frame(q1 = "1")
-#' attr(dat, "labelled_export_findings") <- data.frame(
+#' attr(dat, "survey_export_findings") <- data.frame(
 #'   finding = "missing_response_column_id",
 #'   response_column_id = "QID2",
 #'   qid = "QID2",
@@ -203,11 +207,11 @@ empty_labelled_export_findings <- function() {
 #'   reason = "not_found_in_downloaded_survey_data"
 #' )
 #'
-#' labelled_export_findings(dat)
-labelled_export_findings <- function(x) {
-  findings <- attr(x, "labelled_export_findings", exact = TRUE)
+#' survey_export_findings(dat)
+survey_export_findings <- function(x) {
+  findings <- attr(x, "survey_export_findings", exact = TRUE)
   if (is.null(findings)) {
-    return(empty_labelled_export_findings())
+    return(empty_survey_export_findings())
   }
 
   findings
@@ -219,7 +223,7 @@ missing_response_column_findings <- function(dict, dat) {
   response_column_id <- dict_response_column_id(dict)
   missing <- !response_column_id %in% colnames(dat)
   if (!any(missing)) {
-    return(empty_labelled_export_findings())
+    return(empty_survey_export_findings())
   }
 
   qid <- dict$qid
@@ -376,6 +380,7 @@ survey_var_recode <- function(
     text_label <- unique(paste_narm(var_dict[["question"]], var_dict[["item"]]))
     var <- set_label(var, label = text_label)
   } else {
+    survey_var_check_level_label_counts(var_dict, label_facts)
     var <- set_labels(
       var,
       labels = setNames(label_facts$levels, label_facts$labels)
@@ -383,6 +388,45 @@ survey_var_recode <- function(
   }
 
   return(var)
+}
+
+#' Abort when an Export Variable's Levels and Labels cannot be paired
+#'
+#' Value labels pair each Level with one Label, so the two must have the same
+#' length. A mismatch means the Variable Dictionary rows are inconsistent
+#' (for example two choices sharing one Qualtrics RecodeValue on a tick
+#' column); `dict_assert_valid()` normally reports this before download. This
+#' check raises a classed error rather than letting labelling fail
+#' incidentally downstream.
+#'
+#' Signals a condition of class `qualtdict_level_label_mismatch`.
+#' @noRd
+survey_var_check_level_label_counts <- function(var_dict, label_facts) {
+  n_levels <- length(label_facts$levels)
+  n_labels <- length(label_facts$labels)
+  if (n_levels == n_labels) {
+    return(invisible(NULL))
+  }
+
+  variable_name <- dict_first_or_na(dict_variable_name(var_dict))
+
+  rlang::abort(
+    paste0(
+      "Cannot label Export Variable `",
+      variable_name,
+      "`: ",
+      n_levels,
+      " Levels but ",
+      n_labels,
+      " Labels. ",
+      "Run `dict_assert_valid()` on the Variable Dictionary to locate ",
+      "the inconsistent rows."
+    ),
+    class = "qualtdict_level_label_mismatch",
+    variable_name = variable_name,
+    n_levels = n_levels,
+    n_labels = n_labels
+  )
 }
 
 #' Build labelling context for one Export Variable

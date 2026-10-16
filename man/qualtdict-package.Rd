@@ -4,9 +4,9 @@
 \name{qualtdict-package}
 \alias{qualtdict}
 \alias{qualtdict-package}
-\title{qualtdict: Generate Variable Dictionaries and Labelled Survey Data for 'Qualtrics' Surveys}
+\title{qualtdict: Variable Dictionaries and Labelled Data for 'Qualtrics' Surveys}
 \description{
-Generates Variable Dictionaries from 'Qualtrics' \url{https://www.qualtrics.com/about/} survey metadata and applies those dictionaries to create Labelled Survey Data. This package is a metadata and labelled-export companion to 'qualtRics', which provides access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API \url{https://api.qualtrics.com/}.
+Decodes nested 'Qualtrics' \url{https://www.qualtrics.com/about/} survey metadata into a readable Variable Dictionary, one row per exported response column with question, item, level, label and a generated variable name, and applies it to downloaded responses to produce labelled, analysis-ready survey data. The package is a metadata and labelled-export companion to 'qualtRics', which provides access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API \url{https://api.qualtrics.com/}.
 }
 \seealso{
 Useful links:
@@ -18,11 +18,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Yuhao Lin \email{yuhao.lin@kcl.ac.uk} (\href{https://orcid.org/0000-0001-6357-5731}{ORCID})
+\strong{Maintainer}: Yuhao Lin \email{yuhao.lin@kcl.ac.uk} (\href{https://orcid.org/0000-0001-6357-5731}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
-  \item Yuhao Lin \email{yuhao.lin@kcl.ac.uk} (\href{https://orcid.org/0000-0001-6357-5731}{ORCID})
+  \item Yuhao Lin \email{yuhao.lin@kcl.ac.uk} (\href{https://orcid.org/0000-0001-6357-5731}{ORCID}) [copyright holder]
 }
 
 }

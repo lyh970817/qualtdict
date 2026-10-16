@@ -83,7 +83,7 @@ null_na <- function(x) {
   # A list created with NULL values will have lengths of all 0
   if (
     is.null(x) ||
-      all(map_dbl(x, length) == 0)
+      all(lengths(x) == 0)
   ) {
     NA
   } else {
@@ -163,27 +163,40 @@ order_name <- function(list) {
   list[order(as.numeric(str_extract(names(list), "[0-9]+")))]
 }
 
-#' Wrap a function with up to five retry attempts
-#' @param f A function
+#' Default retry rate for Qualtrics API calls
+#'
+#' Up to five attempts with exponential backoff between them, capped at 30
+#' seconds.
 #' @noRd
-retry <- function(f) {
-  function(...) {
-    r <- NULL
-    attempt <- 1
-    while (is.null(r) && attempt <= 5) {
-      # Don't cummulate count with endless attempts
-      attempt <- attempt + 1
-      try_result <- try(f(...))
-      if (!inherits(try_result, "try-error")) {
-        r <- try_result
-      }
-    }
+qualtrics_retry_rate <- function() {
+  purrr::rate_backoff(pause_base = 1, pause_cap = 30, max_times = 5)
+}
 
-    if (is.null(r)) {
-      f(...)
-    } else {
-      return(r)
+#' Wrap a function so that transient errors are retried
+#'
+#' Errors are retried with backoff according to `rate`. A successful call,
+#' including one that returns `NULL`, is returned immediately. When every
+#' attempt fails, the error from the last attempt is rethrown.
+#' @param f A function
+#' @param rate A purrr rate object, see [purrr::rate_backoff()].
+#' @noRd
+retry <- function(f, rate = qualtrics_retry_rate()) {
+  # `f` stays lazy so the wrappers below can be defined before imports exist.
+  function(...) {
+    state <- new.env(parent = emptyenv())
+    remember_error <- function(...) {
+      withCallingHandlers(
+        f(...),
+        error = function(e) assign("last_error", e, envir = state)
+      )
     }
+    insistent <- purrr::insistently(remember_error, rate = rate, quiet = TRUE)
+    tryCatch(
+      insistent(...),
+      purrr_error_rate_excess = function(e) {
+        stop(if (is.null(state$last_error)) e else state$last_error)
+      }
+    )
   }
 }
 

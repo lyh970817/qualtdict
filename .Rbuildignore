@@ -39,7 +39,7 @@
 ^\.worktrees/
 ^_pkgdown\.yml$
 ^codecov\.yml$
-^codemeta\.json$
+^data-raw$
 ^docs$
 ^docs/superpowers/plans$
 ^flake\.lock$
@@ -55,3 +55,4 @@
 ^scratch\.R$
 ^tmp$
 ^tools$
+^vignettes/articles$
