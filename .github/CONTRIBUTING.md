@@ -1,48 +1,102 @@
 # Contributing to qualtdict
 
-This outlines how to propose a change to qualtdict. 
-For more detailed info about contributing to this, and other tidyverse packages, please see the
-[**development contributing guide**](https://rstd.io/tidy-contrib). 
+This outlines how to propose a change to qualtdict.
 
 ## Fixing typos
 
-You can fix typos, spelling mistakes, or grammatical errors in the documentation directly using the GitHub web interface, as long as the changes are made in the _source_ file. 
-This generally means you'll need to edit [roxygen2 comments](https://roxygen2.r-lib.org/articles/roxygen2.html) in an `.R`, not a `.Rd` file. 
-You can find the `.R` file that generates the `.Rd` by reading the comment in the first line.
+You can fix typos, spelling mistakes, or grammatical errors in the
+documentation directly using the GitHub web interface, as long as the changes
+are made in the _source_ file. This generally means you'll need to edit
+[roxygen2 comments](https://roxygen2.r-lib.org/articles/roxygen2.html) in an
+`.R` file, not a `.Rd` file. You can find the `.R` file that generates the
+`.Rd` by reading the comment in the first line. `README.md` is generated from
+`README.Rmd`, so edit the `.Rmd` file.
+
+The spelling hook checks documentation against `inst/WORDLIST`. If it flags a
+correctly spelled word, such as a package name or a technical term, add the
+word to `inst/WORDLIST`.
 
 ## Bigger changes
 
-If you want to make a bigger change, it's a good idea to first file an issue and make sure someone from the team agrees that it’s needed. 
-If you’ve found a bug, please file an issue that illustrates the bug with a minimal 
-[reprex](https://www.tidyverse.org/help/#reprex) (this will also help you write a unit test, if needed).
+If you want to make a bigger change, first file an issue and make sure the
+maintainer agrees that it is needed. If you have found a bug, file an issue
+that illustrates the bug with a minimal
+[reprex](https://www.tidyverse.org/help/#reprex) (this will also help you
+write a unit test, if needed).
 
 ### Pull request process
 
-*   Fork the package and clone onto your computer. If you haven't done this before, we recommend using `usethis::create_from_github("lyh970817/qualtdict", fork = TRUE)`.
+*   Fork the package and clone it onto your computer, for example with
+    `usethis::create_from_github("lyh970817/qualtdict", fork = TRUE)`.
 
-*   Enter the pinned development environment with `nix develop`. The flake
-    provides the package and development dependencies, so make sure the package
-    passes R CMD check by running `devtools::check()`. Update the pinned
-    environment deliberately with `nix flake update` and commit the resulting
-    `flake.lock` change.
-    If R CMD check doesn't pass cleanly, it's a good idea to ask for help before continuing. 
-*   Create a Git branch for your pull request (PR). We recommend using `usethis::pr_init("brief-description-of-change")`.
+*   Install the development dependencies with
+    `devtools::install_dev_deps()`.
 
-*   Make your changes, commit to git, and then create a PR by running `usethis::pr_push()`, and following the prompts in your browser.
-    The title of your PR should briefly describe the change.
-    The body of your PR should contain `Fixes #issue-number`.
+*   Install the [pre-commit](https://pre-commit.com) hooks with
+    `pre-commit install`. The hooks run formatting, roxygen, lintr, spelling
+    and dependency checks on each commit.
 
-*  For user-facing changes, add a bullet to the top of `NEWS.md` (i.e. just below the first header). Follow the style described in <https://style.tidyverse.org/news.html>.
+*   Make sure the package passes R CMD check by running `devtools::check()`.
+    If it doesn't pass cleanly, ask for help before continuing.
+
+*   Create a Git branch for your pull request (PR), for example with
+    `usethis::pr_init("brief-description-of-change")`.
+
+*   Make your changes, commit them, and create a PR with `usethis::pr_push()`,
+    following the prompts in your browser. The title of your PR should briefly
+    describe the change. The body of your PR should contain
+    `Fixes #issue-number`.
+
+*   For user-facing changes, add a bullet to the top of `NEWS.md` (just below
+    the first header). Follow the style described in
+    <https://style.tidyverse.org/news.html>.
 
 ### Code style
 
-*   New code should follow the tidyverse [style guide](https://style.tidyverse.org). 
-    You can use the [styler](https://CRAN.R-project.org/package=styler) package to apply these styles, but please don't restyle code that has nothing to do with your PR.  
+*   New code follows the tidyverse [style guide](https://style.tidyverse.org).
+    Formatting is done by [Air](https://posit-dev.github.io/air/): run
+    `air format .`, which the pre-commit hooks also run. Don't reformat code
+    unrelated to your change.
 
-*  We use [roxygen2](https://cran.r-project.org/package=roxygen2), with [Markdown syntax](https://cran.r-project.org/web/packages/roxygen2/vignettes/rd-formatting.html), for documentation.  
+*   Source lines are limited to 80 columns (see
+    `docs/adr/0007-use-80-column-source-line-limit.md`).
 
-*  We use [testthat](https://cran.r-project.org/package=testthat) for unit tests. 
-   Contributions with test cases included are easier to accept.  
+*   Documentation uses [roxygen2](https://roxygen2.r-lib.org/) with
+    [Markdown syntax](https://roxygen2.r-lib.org/articles/markdown.html).
+
+*   Unit tests use [testthat](https://testthat.r-lib.org/) edition 3.
+    Contributions with test cases included are easier to accept.
+
+### Testing without credentials
+
+Tests and documentation examples never use private survey data. The fetch of
+Qualtrics metadata is isolated in one internal function, and tests replace it
+with `testthat::local_mocked_bindings()`, feeding it synthetic
+Qualtrics-shaped metadata built by the helpers in
+`tests/testthat/helper-*.R`. The test suite and R CMD check therefore run
+without a Qualtrics account.
+
+Only live metadata or response downloads need credentials. Register them with
+`qualtRics::qualtrics_api_credentials()`.
+
+The maintainer-only smoke check in `tools/` replays saved artifacts from real
+surveys. It is not part of CI.
+
+## Repository layout
+
+`CONTEXT.md` is the vocabulary that code, documentation and tests follow. Each
+term has an "Avoid" line listing wordings not to use. Use its terms in your
+changes.
+
+`docs/adr/` holds dated architecture decision records. A change that reverses
+a recorded decision adds a new ADR rather than editing the old one.
+
+`docs/design/` holds longer design notes.
+
+`tools/` holds maintainer scripts that need Qualtrics credentials, following
+the unofficial convention described at
+<https://r-pkgs.org/misc.html#sec-misc-tools>. See
+`tools/local-finalize-smoke.md` and `tools/fetch-local-finalize-smoke.md`.
 
 ## Code of Conduct
 
