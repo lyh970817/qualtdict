@@ -26,7 +26,7 @@ test_that("render_response_columns renders MC rows with aligned facts", {
     unname(rendered$label),
     c("Yes", "No", "Other", "Other_TEXT")
   )
-  expect_all_equal(vapply(rendered, length, integer(1)), nrow(rendered))
+  expect_all_equal(lengths(rendered), nrow(rendered))
 })
 
 test_that("MC independent columns preserve recode suffix behavior", {

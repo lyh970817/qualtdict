@@ -39,7 +39,7 @@ test_that("render_response_columns renders matrix rows in stable order", {
   )
   expect_identical(unname(rendered$level), c("1", "2", "1", "2"))
   expect_identical(unname(rendered$label), c("Low", "High", "Low", "High"))
-  expect_all_equal(vapply(rendered, length, integer(1)), nrow(rendered))
+  expect_all_equal(lengths(rendered), nrow(rendered))
 })
 
 test_that("slider items render as one response column per item", {

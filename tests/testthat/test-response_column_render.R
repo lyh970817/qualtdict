@@ -57,7 +57,7 @@ test_that("preserves already-prefixed Base Response Column IDs", {
     c("x1_QID2", "x1_QID2", "x1_QID2_2_TEXT")
   )
   expect_identical(unname(rendered$level), c("1", "2", "2_TEXT"))
-  expect_all_equal(vapply(rendered, length, integer(1)), nrow(rendered))
+  expect_all_equal(lengths(rendered), nrow(rendered))
 })
 
 test_that("render context separates QID and Base Response Column ID", {

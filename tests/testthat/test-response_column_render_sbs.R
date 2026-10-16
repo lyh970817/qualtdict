@@ -47,7 +47,7 @@ test_that("render_response_columns renders SBS and sidecar columns", {
     )
   )
   expect_all_equal(
-    vapply(sbs_rendered, length, integer(1)),
+    lengths(sbs_rendered),
     nrow(sbs_rendered)
   )
 
