@@ -30,3 +30,17 @@ reference:
   desc: Configure Qualtrics API credentials through the re-exported qualtRics helper.
   contents:
   - qualtrics_api_credentials
+- title: Example data
+  desc: An offline example survey with its metadata, Variable Dictionary, and Labelled Survey Data.
+  contents:
+  - glad_example
+
+articles:
+- title: Get started
+  navbar: ~
+  contents:
+  - qualtdict
+- title: Concepts
+  navbar: ~
+  contents:
+  - articles/glossary

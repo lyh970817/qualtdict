@@ -86,7 +86,12 @@ surveys. It is not part of CI.
 
 `CONTEXT.md` is the vocabulary that code, documentation and tests follow. Each
 term has an "Avoid" line listing wordings not to use. Use its terms in your
-changes.
+changes. The
+[Glossary](https://lyh970817.github.io/qualtdict/articles/glossary.html) on
+the package website mirrors its user-facing terms, so a change to one of
+those definitions also updates `vignettes/articles/glossary.Rmd`. The
+vocabulary of the maintainer smoke check is in
+`tools/local-finalize-smoke.md`.
 
 `docs/adr/` holds dated architecture decision records. A change that reverses
 a recorded decision adds a new ADR rather than editing the old one.
