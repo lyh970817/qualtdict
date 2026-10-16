@@ -1,11 +1,14 @@
 ADR
 al
+analyse
 api
 aut
 BugReports
+capitalised
 Captcha
 choiceIds
 CMD
+codebook
 Codecov
 codecov
 codeRepository
@@ -52,6 +55,7 @@ openNLP
 ORCID
 orcid
 passthrough
+PHQ
 POS
 pre
 preprocess
@@ -62,13 +66,14 @@ QID
 qids
 QSED
 qualtdict
-qualtRics
 Qualtrics
+qualtRics
 qualtrics
-readme
 README
+readme
 recode
 recodes
+recognise
 repostatus
 reprex
 rlang
@@ -109,5 +114,5 @@ WIP
 wip
 www
 yaml
-yuhao
 Yuhao
+yuhao
