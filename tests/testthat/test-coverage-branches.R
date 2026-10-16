@@ -556,35 +556,74 @@ test_that("slowrake covers the POS-tag filtering branch", {
   )
 })
 
-test_that("retry covers deterministic fallback branches", {
+fast_retry_rate <- function(max_times = 5) {
+  purrr::rate_backoff(
+    pause_base = 0.001,
+    pause_cap = 0.001,
+    pause_min = 0,
+    max_times = max_times
+  )
+}
+
+test_that("retry succeeds after transient failures", {
   attempts <- new.env(parent = emptyenv())
   attempts$count <- 0
-  succeeds_second_time <- retry(function() {
-    attempts$count <- attempts$count + 1
-    if (attempts$count == 1) {
-      stop("first failure")
-    }
-    "ok"
-  })
-  capture.output(
-    messages <- capture.output(
-      result <- succeeds_second_time(),
-      type = "message"
-    )
+  flaky <- retry(
+    function() {
+      attempts$count <- attempts$count + 1
+      if (attempts$count < 3) {
+        stop("transient failure")
+      }
+      "ok"
+    },
+    rate = fast_retry_rate()
   )
-  expect_identical(result, "ok")
-  expect_match(paste(messages, collapse = "\n"), "first failure")
 
-  always_fails <- retry(function() {
-    stop("still failing")
-  })
-  capture.output(
-    messages <- capture.output(
-      expect_error(always_fails(), "still failing"),
-      type = "message"
-    )
+  expect_silent(result <- flaky())
+  expect_identical(result, "ok")
+  expect_identical(attempts$count, 3)
+})
+
+test_that("retry gives up after the limit and rethrows the last error", {
+  attempts <- new.env(parent = emptyenv())
+  attempts$count <- 0
+  always_fails <- retry(
+    function() {
+      attempts$count <- attempts$count + 1
+      stop("still failing ", attempts$count)
+    },
+    rate = fast_retry_rate()
   )
-  expect_match(paste(messages, collapse = "\n"), "still failing")
+
+  expect_error(always_fails(), "still failing 5", fixed = TRUE)
+  expect_identical(attempts$count, 5)
+})
+
+test_that("retry does not retry a NULL return", {
+  attempts <- new.env(parent = emptyenv())
+  attempts$count <- 0
+  returns_null <- retry(
+    function() {
+      attempts$count <- attempts$count + 1
+      NULL
+    },
+    rate = fast_retry_rate()
+  )
+
+  expect_null(returns_null())
+  expect_identical(attempts$count, 1)
+})
+
+test_that("retry passes arguments through", {
+  add <- retry(function(x, y) x + y, rate = fast_retry_rate())
+  expect_identical(add(1, y = 2), 3)
+})
+
+test_that("Qualtrics retry rate allows five attempts with backoff", {
+  rate <- qualtrics_retry_rate()
+  expect_s3_class(rate, "purrr_rate_backoff")
+  expect_identical(rate$max_times, 5)
+  expect_identical(rate$pause_cap, 30)
 })
 
 test_that("survey_split_blocks requires Labelled Survey Data", {
