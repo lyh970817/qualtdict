@@ -42,30 +42,24 @@ test_that("MC independent columns preserve recode suffix behavior", {
   expect_snapshot(compact_response_column_render(rendered))
 })
 
-test_that(
-  paste(
-    "render_response_columns uses recode suffixes",
-    "for x-named MC choices"
-  ),
-  {
-    question <- normalise_qualtrics_metadata(
-      synthetic_mc_x_choice_raw_metadata()
-    )$questions$QID126879611
+test_that("uses recode suffixes for x-named MC choices", {
+  question <- normalise_qualtrics_metadata(
+    synthetic_mc_x_choice_raw_metadata()
+  )$questions$QID126879611
 
-    rendered <- render_response_columns(question, "QID126879611")
+  rendered <- render_response_columns(question, "QID126879611")
 
-    # The recode identifies the column; the column stores a tick marker.
-    expect_identical(
-      rendered$response_column_id,
-      paste0("QID126879611_", c("1", "2", "3", "4", "6"))
-    )
-    expect_identical(unname(rendered$level), rep("1", 5))
-    expect_identical(
-      unname(rendered$label),
-      paste("Choice", c("1", "2", "3", "4", "6"))
-    )
-  }
-)
+  # The recode identifies the column; the column stores a tick marker.
+  expect_identical(
+    rendered$response_column_id,
+    paste0("QID126879611_", c("1", "2", "3", "4", "6"))
+  )
+  expect_identical(unname(rendered$level), rep("1", 5))
+  expect_identical(
+    unname(rendered$label),
+    paste("Choice", c("1", "2", "3", "4", "6"))
+  )
+})
 
 test_that("multiple-answer Response Column IDs use numeric choice recodes", {
   raw_metadata <- synthetic_mc_recode_raw_metadata()

@@ -88,32 +88,26 @@ clean_dict <- function() {
   )
 }
 
-test_that(
-  paste(
-    "dict_assert_valid fires on a tick column",
-    "with two labels on one level"
-  ),
-  {
-    condition <- expect_error(
-      dict_assert_valid(tick_column_collision_dict()),
-      class = "qualtdict_export_blocking_findings"
-    )
+test_that("fires on a tick column with two labels on one level", {
+  condition <- expect_error(
+    dict_assert_valid(tick_column_collision_dict()),
+    class = "qualtdict_export_blocking_findings"
+  )
 
-    expect_match(
-      conditionMessage(condition),
-      paste0(
-        "1_QID11_7 \\(ptsd.sertraline\\): level 1 carries 2 labels ",
-        "\u2014 \"Posttraumatic stress disorder \\(PTSD\\)\", ",
-        "\"Body dysmorphic disorder\""
-      )
+  expect_match(
+    conditionMessage(condition),
+    paste0(
+      "1_QID11_7 \\(ptsd.sertraline\\): level 1 carries 2 labels ",
+      "\u2014 \"Posttraumatic stress disorder \\(PTSD\\)\", ",
+      "\"Body dysmorphic disorder\""
     )
-    expect_identical(
-      unique(condition$findings$response_column_id),
-      "1_QID11_7"
-    )
-    expect_identical(unique(condition$findings$mistake), "124")
-  }
-)
+  )
+  expect_identical(
+    unique(condition$findings$response_column_id),
+    "1_QID11_7"
+  )
+  expect_identical(unique(condition$findings$mistake), "124")
+})
 
 test_that("dict_assert_valid fires on a dropdown with duplicated levels", {
   condition <- expect_error(
