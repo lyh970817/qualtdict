@@ -74,17 +74,28 @@
 #'
 #' @export
 #' @examples
+#' # The Variable Dictionary dict_generate() returns for the bundled example
+#' # survey (see ?glad_example), one row per response column and level
+#' dict <- glad_example$dictionary
+#' dict
+#' dict[, c(
+#'   "response_column_id", "row_source", "variable_name", "level", "label"
+#' )]
+#'
+#' # A live call reads the survey metadata from Qualtrics and needs
+#' # Qualtrics API credentials
 #' if (interactive()) {
 #'   survey_id <- "SV_XXXXXXXXXXXXXXXX"
 #'
-#'   # Create a function for \code{block_pattern}
-#'   # that returns the first three letters of a string
+#'   dict <- dict_generate(survey_id, variable_name = "question_name")
+#'
+#'   # Semantic Names, with the first three letters of each Survey Block as
+#'   # Block Prefix
 #'   block_pattern <- function(x) {
 #'     substring(x, 1, 3)
 #'   }
 #'
-#'
-#'   mydict <- dict_generate(survey_id,
+#'   dict <- dict_generate(survey_id,
 #'     variable_name = "semantic_name",
 #'     block_pattern = block_pattern,
 #'     block_sep = "."

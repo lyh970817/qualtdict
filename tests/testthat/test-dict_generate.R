@@ -30,12 +30,12 @@ test_that("dict_generate", {
 
   expect_s3_class(snapshot_x, "data.frame")
   expect_identical(names(x)[1:2], c("response_column_id", "row_source"))
-  expect_true("response_column_id" %in% names(x))
-  expect_true(all(x$row_source == "question"))
+  expect_in("response_column_id", names(x))
+  expect_all_equal(x$row_source, "question")
   expect_true(any(x$response_column_id != x$qid))
-  expect_true("question_name" %in% names(x))
-  expect_true("variable_name" %in% names(x))
-  expect_true("looping_option" %in% names(x))
+  expect_in("question_name", names(x))
+  expect_in("variable_name", names(x))
+  expect_in("looping_option", names(x))
   expect_false(all(is.na(x$looping_option)))
 })
 
@@ -94,10 +94,10 @@ test_that("dict_generate accepts variable_name question_name", {
     )
   )
 
-  expect_true("question_name" %in% names(x))
-  expect_true("variable_name" %in% names(x))
+  expect_in("question_name", names(x))
+  expect_in("variable_name", names(x))
   expect_identical(names(x)[1:2], c("response_column_id", "row_source"))
-  expect_true(all(x$row_source == "question"))
+  expect_all_equal(x$row_source, "question")
   expect_false(anyNA(x$question_name))
   expect_identical(
     anyDuplicated(unique(x[c("response_column_id", "variable_name")])),
@@ -120,9 +120,9 @@ test_that("dict_generate represents flat Embedded Data Fields", {
     c("Source Channel", "Q1")
   )
   expect_identical(embedded_rows$row_source, rep("embedded_data", 2))
-  expect_true(all(is.na(embedded_rows$qid)))
-  expect_true(all(is.na(embedded_rows$question_name)))
-  expect_true(all(is.na(embedded_rows$block)))
+  expect_all_true(is.na(embedded_rows$qid))
+  expect_all_true(is.na(embedded_rows$question_name))
+  expect_all_true(is.na(embedded_rows$block))
   expect_identical(
     embedded_rows$variable_name,
     c("Source_Channel", "Q1.2")
@@ -131,8 +131,8 @@ test_that("dict_generate represents flat Embedded Data Fields", {
     embedded_rows$question,
     c("Embedded Data: Source Channel", "Embedded Data: Q1")
   )
-  expect_true(all(is.na(embedded_rows$level)))
-  expect_true(all(is.na(embedded_rows$label)))
+  expect_all_true(is.na(embedded_rows$level))
+  expect_all_true(is.na(embedded_rows$label))
 
   findings <- attr(dict, "variable_name_findings", exact = TRUE)
   embedded_findings <- findings[
@@ -195,15 +195,16 @@ test_that("dict_generate represents response column-map sidecars", {
     represented_rows$row_source,
     c("embedded_data", "scoring", "text_analysis")
   )
-  expect_true("Source Channel" %in% represented_rows$response_column_id)
-  expect_true("SC_TOTAL" %in% represented_rows$response_column_id)
+  expect_in("Source Channel", represented_rows$response_column_id)
+  expect_in("SC_TOTAL", represented_rows$response_column_id)
   expect_false("SC_HIDDEN" %in% represented_rows$response_column_id)
-  expect_true(
-    "QID1_3_TEXT_SENTIMENT" %in% represented_rows$response_column_id
+  expect_in(
+    "QID1_3_TEXT_SENTIMENT",
+    represented_rows$response_column_id
   )
-  expect_true(
-    "QID1_3_e476cefa310845248231594eParTopics" %in%
-      represented_rows$response_column_id
+  expect_in(
+    "QID1_3_e476cefa310845248231594eParTopics",
+    represented_rows$response_column_id
   )
 })
 
@@ -223,7 +224,7 @@ test_that("dict_generate uses column-map classification for sidecars", {
 
   expect_setequal(sidecar_rows$response_column_id, expected_sidecars)
   expect_identical(nrow(sidecar_rows), 15L)
-  expect_true(all(sidecar_rows$qid %in% c("QID694", "QID121")))
+  expect_in(sidecar_rows$qid, c("QID694", "QID121"))
   expect_false("QID508_TEXT" %in% sidecar_rows$response_column_id)
   expect_false("QID626_TEXT" %in% sidecar_rows$response_column_id)
   expect_false("QID429_TEXT" %in% sidecar_rows$response_column_id)
@@ -238,13 +239,13 @@ test_that("dict_generate uses column-map classification for sidecars", {
     "QID121_1"
   )
   ordinary_rows <- dict[dict$response_column_id %in% ordinary_ids, ]
-  expect_true(all(ordinary_rows$row_source == "question"))
+  expect_all_equal(ordinary_rows$row_source, "question")
 
   metadata_rows <- dict[
     dict$row_source %in% c("embedded_data", "scoring"),
   ]
-  expect_true("Source Channel" %in% metadata_rows$response_column_id)
-  expect_true("SC_TOTAL" %in% metadata_rows$response_column_id)
+  expect_in("Source Channel", metadata_rows$response_column_id)
+  expect_in("SC_TOTAL", metadata_rows$response_column_id)
   expect_false("Cohort" %in% metadata_rows$response_column_id)
   expect_false("SC_HIDDEN" %in% metadata_rows$response_column_id)
 })
@@ -264,9 +265,9 @@ test_that("dict_generate represents Scoring Variables", {
     c("SC_TOTAL", "SC_Q1")
   )
   expect_identical(scoring_rows$row_source, rep("scoring", 2))
-  expect_true(all(is.na(scoring_rows$qid)))
-  expect_true(all(is.na(scoring_rows$question_name)))
-  expect_true(all(is.na(scoring_rows$block)))
+  expect_all_true(is.na(scoring_rows$qid))
+  expect_all_true(is.na(scoring_rows$question_name))
+  expect_all_true(is.na(scoring_rows$block))
   expect_identical(
     scoring_rows$variable_name,
     c("Total_Score", "Q1.2")
@@ -275,8 +276,8 @@ test_that("dict_generate represents Scoring Variables", {
     scoring_rows$question,
     c("Scoring Variable: Total Score", "Scoring Variable: Q1")
   )
-  expect_true(all(is.na(scoring_rows$level)))
-  expect_true(all(is.na(scoring_rows$label)))
+  expect_all_true(is.na(scoring_rows$level))
+  expect_all_true(is.na(scoring_rows$label))
 
   findings <- dict_validate(dict)$validation_findings
   scoring_findings <- findings[
@@ -310,8 +311,8 @@ test_that("dict_generate represents nested Scoring Categories", {
     scoring_rows$variable_name,
     c("Total_Score", "SC_SCREEN")
   )
-  expect_true(all(is.na(scoring_rows$qid)))
-  expect_true(all(is.na(scoring_rows$block)))
+  expect_all_true(is.na(scoring_rows$qid))
+  expect_all_true(is.na(scoring_rows$block))
 })
 
 test_that("dict_generate represents Text-analysis Sidecars", {
@@ -349,8 +350,8 @@ test_that("dict_generate represents Text-analysis Sidecars", {
       "Text Analysis: Q1 Other - Parent Topics"
     )
   )
-  expect_true(all(is.na(sidecar_rows$level)))
-  expect_true(all(is.na(sidecar_rows$label)))
+  expect_all_true(is.na(sidecar_rows$level))
+  expect_all_true(is.na(sidecar_rows$label))
 
   findings <- attr(dict, "variable_name_findings", exact = TRUE)
   sidecar_findings <- findings[
@@ -417,7 +418,7 @@ test_that("dict_generate defaults flow Embedded Data Fields to no block", {
   dict <- dict_generate("SV_SYNTHETIC", variable_name = "question_name")
   embedded_rows <- dict[dict$row_source == "embedded_data", ]
 
-  expect_true(all(is.na(embedded_rows$block)))
+  expect_all_true(is.na(embedded_rows$block))
 })
 
 test_that("dict_generate assigns Embedded Data Fields to next blocks", {
@@ -474,7 +475,7 @@ test_that("dict_generate leaves flat Embedded Data Fields unassigned", {
   )
   embedded_rows <- dict[dict$row_source == "embedded_data", ]
 
-  expect_true(all(is.na(embedded_rows$block)))
+  expect_all_true(is.na(embedded_rows$block))
 })
 
 test_that("dict_generate warns once for partial Embedded Data assignment", {
@@ -525,7 +526,7 @@ test_that("dict_generate leaves ambiguous Embedded Data Fields unassigned", {
   embedded_rows <- dict[dict$row_source == "embedded_data", ]
 
   expect_identical(embedded_rows$response_column_id, "Duplicated Field")
-  expect_true(is.na(embedded_rows$block))
+  expect_identical(embedded_rows$block, NA_character_)
 })
 
 test_that("dict_validate reports repaired Embedded Data Field names", {
@@ -600,7 +601,7 @@ test_that("normalised metadata renders the current Variable Dictionary rows", {
   )
   expect_identical(dict_subset$block, rep("Main Block", 4))
   expect_identical(dict_subset$question, rep("Choose one", 4))
-  expect_true(all(is.na(dict_subset$item)))
+  expect_all_true(is.na(dict_subset$item))
   expect_identical(unname(dict_subset$level), c("1", "2", "3", "3_TEXT"))
   expect_identical(
     unname(dict_subset$label),
@@ -687,30 +688,24 @@ test_that("question-name Variable Dictionaries repair only variable_name", {
   )
 })
 
-test_that(
-  paste(
-    "source-backed Loop and Merge with absent source facts",
-    "renders prefixed response columns without bare QID fallback"
-  ),
-  {
-    raw_metadata <- synthetic_absent_source_static_loop_and_merge_raw_metadata()
-    normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
+test_that("Loop and Merge without source facts prefixes IDs, not bare QIDs", {
+  raw_metadata <- synthetic_absent_source_static_loop_and_merge_raw_metadata()
+  normalised_metadata <- normalise_qualtrics_metadata(raw_metadata)
 
-    dict <- variable_dictionary_from_normalised_metadata(
-      normalised_metadata,
-      use_semantic_name = FALSE,
-      block_pattern = NULL,
-      block_sep = ".",
-      semantic_name_preprocess = NULL
-    )
-    expected_ids <- c("1_QID2_TEXT", "2_QID2_TEXT")
-    target_rows <- dict[match(expected_ids, dict$response_column_id), ]
+  dict <- variable_dictionary_from_normalised_metadata(
+    normalised_metadata,
+    use_semantic_name = FALSE,
+    block_pattern = NULL,
+    block_sep = ".",
+    semantic_name_preprocess = NULL
+  )
+  expected_ids <- c("1_QID2_TEXT", "2_QID2_TEXT")
+  target_rows <- dict[match(expected_ids, dict$response_column_id), ]
 
-    expect_false("QID2_TEXT" %in% dict$response_column_id)
-    expect_identical(
-      target_rows$response_column_id,
-      expected_ids
-    )
-    expect_identical(target_rows$qid, c("QID2", "QID2"))
-  }
-)
+  expect_false("QID2_TEXT" %in% dict$response_column_id)
+  expect_identical(
+    target_rows$response_column_id,
+    expected_ids
+  )
+  expect_identical(target_rows$qid, c("QID2", "QID2"))
+})

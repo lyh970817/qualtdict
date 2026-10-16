@@ -18,7 +18,6 @@
 ^\.codex$
 ^\.direnv$
 ^\.direnv/
-^\.envrc$
 ^\.git$
 ^\.github$
 ^\.lavish$
@@ -39,11 +38,9 @@
 ^\.worktrees/
 ^_pkgdown\.yml$
 ^codecov\.yml$
-^codemeta\.json$
+^data-raw$
 ^docs$
 ^docs/superpowers/plans$
-^flake\.lock$
-^flake\.nix$
 ^helper-pkg\.R$
 ^node_modules$
 ^node_modules/
@@ -55,3 +52,4 @@
 ^scratch\.R$
 ^tmp$
 ^tools$
+^vignettes/articles$

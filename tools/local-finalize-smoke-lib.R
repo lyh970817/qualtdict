@@ -63,8 +63,8 @@ smoke_functions <- function() {
   c(
     "dict_generate",
     "dict_validate",
-    "fetch_labelled_survey_data",
-    "labelled_export_findings",
+    "survey_fetch_labelled",
+    "survey_export_findings",
     "dict_split_blocks",
     "survey_split_blocks"
   )
@@ -152,8 +152,8 @@ parse_smoke_variable_names <- function(
 smoke_scenario_requirements <- function(selected_functions) {
   needs_labelled <- any(
     c(
-      "fetch_labelled_survey_data",
-      "labelled_export_findings",
+      "survey_fetch_labelled",
+      "survey_export_findings",
       "survey_split_blocks"
     ) %in%
       selected_functions
@@ -163,7 +163,7 @@ smoke_scenario_requirements <- function(selected_functions) {
     needs_dict = length(selected_functions) > 0,
     needs_validation = "dict_validate" %in% selected_functions,
     needs_labelled = needs_labelled,
-    needs_export_findings = "labelled_export_findings" %in% selected_functions,
+    needs_export_findings = "survey_export_findings" %in% selected_functions,
     needs_dict_blocks = "dict_split_blocks" %in% selected_functions,
     needs_survey_blocks = "survey_split_blocks" %in% selected_functions
   )
@@ -172,14 +172,14 @@ smoke_scenario_requirements <- function(selected_functions) {
 smoke_summary_names <- function(functions) {
   # The labelled scenario is recorded only under
   # `labelled_excluding_validation`: the smoke never runs the default path of
-  # `fetch_labelled_survey_data()`, whose severity gate (commit fb05802)
+  # `survey_fetch_labelled()`, whose severity gate (commit fb05802)
   # aborts on Definite Validation Findings that live metadata can
   # legitimately carry. See `run_scenario()` in `local-finalize-smoke.R`.
   output_map <- list(
     dict_generate = c("dict", "level_universe"),
     dict_validate = "validation",
-    fetch_labelled_survey_data = "labelled_excluding_validation",
-    labelled_export_findings = "labelled_export_findings",
+    survey_fetch_labelled = "labelled_excluding_validation",
+    survey_export_findings = "survey_export_findings",
     dict_split_blocks = "dict_blocks",
     survey_split_blocks = "survey_blocks"
   )
@@ -193,7 +193,7 @@ smoke_full_summary_names <- function() {
     "dict",
     "level_universe",
     "validation",
-    "labelled_export_findings",
+    "survey_export_findings",
     "dict_blocks",
     "survey_blocks",
     "labelled_excluding_validation"

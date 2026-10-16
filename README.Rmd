@@ -24,111 +24,226 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/lyh970817/qualtdict/branch/main/graph/badge.svg)](https://app.codecov.io/gh/lyh970817/qualtdict?branch=main)
 <!-- badges: end -->
 
-[Qualtrics](https://www.qualtrics.com/) is an online survey and data
-collection software platform. `qualtdict` is a metadata and labelled-export
-companion to [qualtRics](https://github.com/ropensci/qualtRics) for
-Qualtrics surveys.
+[Qualtrics](https://www.qualtrics.com/) is widely used to collect
+questionnaire and follow-up data, and the analyst's work begins when the
+survey closes. Qualtrics describes a survey in a deeply nested JSON
+structure: questions, choices, matrix items, loops, embedded fields and
+scoring rules are spread across several API objects. The downloaded response
+file refers back to them only through identifiers like `QID12_3_TEXT`, and
+can contain hundreds of such columns covering question choices, matrix
+items, text-entry fields, Loop and Merge iterations, embedded data, scoring
+outputs and text-analysis sidecars. Before any analysis, every column has to
+be matched back to the metadata, renamed, labelled with its response
+options, and documented. Done by hand or in ad hoc scripts, that mapping is
+slow, error-prone, and hard for anyone else to check, especially for surveys
+with matrix, side-by-side or multi-select questions and repeated waves.
 
-`qualtRics` owns API access to Qualtrics. `qualtdict` owns the package
-workflow that turns Qualtrics metadata and import-ID response exports into:
+qualtdict makes that mapping explicit, readable and reproducible. From the
+Qualtrics metadata it builds a Variable Dictionary: a flat table with one row
+per exported response column, showing the question, item, response level and
+label it belongs to, plus a generated variable name. The dictionary is easy
+to inspect and validate, and it doubles as a codebook you can review with
+collaborators or publish alongside the data.
 
-- a **Variable Dictionary** with `response_column_id`, `row_source`, `qid`,
-  `question_name`, `variable_name`, and survey metadata needed for analysis;
-- **Validation Findings** that make dictionary consistency issues visible; and
-- **Labelled Survey Data** whose Export Variables are renamed to
-  `variable_name` and labelled from the Variable Dictionary.
+Applying the dictionary to downloaded responses attaches that structure to
+the data itself. Every column is renamed to its variable name; choice columns
+carry their response options as value labels, and text and numeric columns
+carry the question text as a variable label. You can tell what each column
+is just by looking at it, so the response data are analysis-ready from the
+first `glimpse()`.
 
-`qualtdict` is not a replacement downloader for `qualtRics`, a general survey
-cleaning framework, or a stable Semantic Name generator.
+[qualtRics](https://github.com/ropensci/qualtRics) handles the Qualtrics API;
+qualtdict handles everything between the raw export and your analysis. It is
+not a replacement downloader for qualtRics, and not a general survey-cleaning
+framework.
 
 ## Installation
 
-This package can be installed with the
-[remotes](https://cran.r-project.org/package=remotes) package.
-
-```{r eval=FALSE}
-install.packages("remotes")
-remotes::install_github("lyh970817/qualtdict")
+```r
+# install.packages("pak")
+pak::pak("lyh970817/qualtdict")
 ```
 
-## Credentials And Offline Work
+qualtdict does not need Java. The `SystemRequirements` field of its
+`DESCRIPTION` mentions Java only because the suggested openNLP package needs
+it for POS-tag filtering, which the Semantic Names in qualtdict do not use.
 
-Live calls to `dict_generate()` and `fetch_labelled_survey_data()` require
-Qualtrics API credentials because they retrieve metadata and responses through
-`qualtRics`.
-Register credentials with `qualtRics::qualtrics_api_credentials()`, which
-`qualtdict` also re-exports for convenience.
+## Credentials
 
+`dict_generate()` and `survey_fetch_labelled()` read your survey from
+Qualtrics, so they need Qualtrics API credentials. Your institution must
+allow API access, and it must be enabled for your account; the person who
+manages your Qualtrics account can give you your API token and base URL.
+Store them once with `qualtrics_api_credentials()`, which qualtdict
+re-exports from qualtRics:
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 library(qualtdict)
 
-qualtRics::qualtrics_api_credentials(
+qualtrics_api_credentials(
   api_key = "<YOUR-QUALTRICS_API_KEY>",
   base_url = "<YOUR-QUALTRICS_BASE_URL>",
   install = TRUE
 )
 ```
 
-Package tests and documentation examples avoid private survey data. Validation,
-dictionary schema checks, block splitting, and labelled-export mechanics can be
-tested offline with synthetic dictionaries and synthetic metadata. Only live
-Qualtrics metadata or response downloads require credentials.
+The rest of the functions work on objects you already have and need no
+credentials.
 
-## Variable Dictionary To Labelled Survey Data
+## A Variable Dictionary for your survey
 
-Generate a Variable Dictionary from a survey ID. The dictionary keeps
-`response_column_id` as the downloaded response-column key, `row_source` as
-the Dictionary Row Source, `qid` as the bare Qualtrics question identifier,
-`question_name` as the raw Qualtrics naming reference, and `variable_name` as
-the final export-safe Dictionary Variable Name. Question-backed rows use
-`row_source = "question"`, and flat Embedded Data Fields defined by Qualtrics
-metadata use `row_source = "embedded_data"`. Scoring Variables defined by
-survey description metadata use `row_source = "scoring"`, while Text-analysis
-Sidecars discovered from the response column map use
-`row_source = "text_analysis"`. Embedded Data Field block assignment, when
-requested, uses the richer Survey Flow returned by `fetch_description()`.
-Scoring Variables remain unassigned by Survey Block.
+Pass the survey ID to `dict_generate()`:
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 survey_id <- "SV_XXXXXXXXXXXXXXXX"
 
-dict <- dict_generate(
-  survey_id,
-  variable_name = "question_name"
-)
+dict <- dict_generate(survey_id, variable_name = "question_name")
 ```
 
-Use `dict_validate()` to return structured Validation Findings.
+The rest of this README uses `glad_example`, a small example bundled with the
+package: the metadata of a subset of the GLAD Study sign-up survey (four
+demographic questions, the PHQ-9 and GAD-7 blocks, embedded data and scoring
+variables) with synthetic responses. `glad_example$dictionary` is exactly
+what `dict_generate()` returns for that survey.
 
-```{r, eval=FALSE}
-validation <- dict_validate(dict)
-validation$validation_findings
+```{r}
+library(qualtdict)
+
+dict <- glad_example$dictionary
+dict
 ```
 
-Then create Labelled Survey Data. `qualtdict` calls
-`qualtRics::fetch_survey()` with the response-column settings needed to match
-downloaded data back to `response_column_id`, then renames Export Variables to
-`variable_name` and attaches labels from the Variable Dictionary.
+Every column of the dictionary, with its type:
 
-```{r, eval=FALSE}
-survey_dat <- fetch_labelled_survey_data(
-  dict,
-  extra_columns = c("externalDataReference", "startDate", "endDate"),
-  exclude_findings = "none",
-  unanswer_recode = -77,
-  unanswer_recode_multi = 0
-)
+```{r}
+dplyr::glimpse(dict)
 ```
 
-If Qualtrics Question Names are not suitable as analysis names, you can ask
-`qualtdict` to generate Semantic Names. Semantic Names are readable
-conveniences generated from survey text and metadata; they are not stable
-guarantees across package versions or survey text changes. For long text,
-Semantic Names select important words from ranked keywords and preserve those
-selected words in the order they appear in the naming text.
+The columns that identify a row are:
 
-```{r, eval=FALSE}
+- `response_column_id`: the column name in the downloaded Qualtrics response
+  file, such as `QID1147_5_TEXT`. This is how the dictionary is matched to
+  your data.
+- `row_source`: what the column comes from: a survey `question`, an
+  `embedded_data` field, a `scoring` variable, or a `text_analysis` sidecar.
+- `qid`: the Qualtrics question the column belongs to. One question can
+  produce many columns, such as one per matrix item or per ticked choice.
+- `question_name`: the question name you set in the Qualtrics survey editor.
+- `variable_name`: the name the column gets in your labelled data, unique and
+  safe for export.
+
+The other columns describe the content: the Survey Block, question text,
+item text, response level and label, and the Qualtrics question type. A
+column with response options takes one row per option. The first PHQ-9
+item, "Little interest or pleasure in doing things", is one response column
+with four levels:
+
+```{r}
+dict[
+  dict$variable_name == "PHQ.DEP.1.0",
+  c("response_column_id", "variable_name", "level", "label")
+]
+```
+
+Embedded data fields and scoring variables appear alongside the questions:
+
+```{r}
+dict[
+  dict$row_source != "question",
+  c("response_column_id", "row_source", "variable_name", "question")
+]
+```
+
+## Check the dictionary
+
+`dict_validate()` reports Validation Findings: dictionary rows worth a second
+look before you analyse the data.
+
+```{r}
+findings <- dict_validate(dict)$validation_findings
+findings[, c(
+  "severity", "response_column_id", "original_candidate", "variable_name",
+  "reason"
+)]
+```
+
+All findings here are suggestive: they report variable names that qualtdict
+repaired. The items of the PHQ-9 and GAD-7 matrices and the choices of the
+multi-select qualifications question share one Question Name, so their
+names are numbered to keep them unique, and the hyphen in the scoring
+variable names `PHQ-9` and `GAD-7` is not safe in an export variable name, so
+they become `PHQ_9` and `GAD_7`.
+
+A definite finding, such as two choices sharing one response code, would mean
+the column cannot be labelled reliably. `dict_assert_valid()` raises an error
+for such level-label findings, and `survey_fetch_labelled()` runs it before
+downloading anything.
+
+## Labelled survey data
+
+`survey_fetch_labelled()` downloads the responses through qualtRics and
+applies the dictionary:
+
+```{r, eval = FALSE}
+survey_dat <- survey_fetch_labelled(dict)
+```
+
+For the example survey, that call returns
+`glad_example$labelled_survey_data`:
+
+```{r}
+survey_dat <- glad_example$labelled_survey_data
+dim(survey_dat)
+head(survey_dat[, c(
+  "externalDataReference", "DEM.AGE.1.0", "DEM.SEX.1.0", "PHQ.DEP.1.0",
+  "HEAD", "PHQRaw", "PHQ_9"
+)])
+```
+
+Columns are named by `variable_name`. Choice columns carry their response
+options as value labels, and text and numeric columns carry the question
+text as a variable label:
+
+```{r}
+attr(survey_dat$PHQ.DEP.1.0, "labels")
+attr(survey_dat$DEM.AGE.1.0, "label")
+```
+
+so tools that read labels, such as sjlabelled, can use them directly:
+
+```{r}
+table(sjlabelled::as_label(survey_dat$DEM.SEX.1.0))
+```
+
+`survey_export_findings()` lists dictionary columns that were missing from
+the download. For the example there are none:
+
+```{r}
+survey_export_findings(survey_dat)
+```
+
+## One block at a time
+
+`dict_split_blocks()` and `survey_split_blocks()` split the dictionary and the
+data by Survey Block. Embedded data fields and scoring variables are not
+assigned to a block by default, so they are kept under `"..unassigned"`.
+
+```{r}
+dict_blocks <- dict_split_blocks(dict)
+names(dict_blocks)
+unique(dict_blocks$GAD7[, c("response_column_id", "variable_name", "item")])
+
+survey_blocks <- survey_split_blocks(survey_dat)
+names(survey_blocks$GAD7)
+```
+
+## Semantic Names
+
+If the Question Names in your survey are not good analysis names, ask for
+Semantic Names, generated from the question text. Here `block_pattern` turns
+each Survey Block name into a prefix:
+
+```{r, eval = FALSE}
 block_pattern <- function(block) {
   substring(block, 1, 3)
 }
@@ -141,12 +256,16 @@ dict <- dict_generate(
 )
 ```
 
+Semantic Names are a readable convenience, not stable identifiers: they can
+change with the survey text or the package version. They need the suggested
+packages slowraker, SnowballC, stringi and tidyr.
+
 ## How To Cite
 
 If `qualtdict` contributes to published work, please cite it. The citation
 for the installed version is returned by `citation()`.
 
-```{r, eval=FALSE}
+```{r, eval = FALSE}
 citation("qualtdict")
 ```
 
@@ -156,10 +275,13 @@ citation("qualtdict")
   qualtdict](https://lyh970817.github.io/qualtdict/articles/qualtdict.html)
   is the package vignette, which works through the same Variable Dictionary
   to Labelled Survey Data path in more detail.
+- The [Glossary](https://lyh970817.github.io/qualtdict/articles/glossary.html)
+  defines the terms used across the documentation.
 - The [reference site](https://lyh970817.github.io/qualtdict/) documents
   every exported function.
-- The [contributing guide](.github/CONTRIBUTING.md) describes how to propose
-  a change.
+- The [contributing
+  guide](https://github.com/lyh970817/qualtdict/blob/main/.github/CONTRIBUTING.md)
+  describes how to propose a change.
 - This project is released with a [Contributor Code of
-  Conduct](.github/CODE_OF_CONDUCT.md). By contributing to this project you
-  agree to abide by its terms.
+  Conduct](https://github.com/lyh970817/qualtdict/blob/main/.github/CODE_OF_CONDUCT.md).
+  By contributing to this project you agree to abide by its terms.

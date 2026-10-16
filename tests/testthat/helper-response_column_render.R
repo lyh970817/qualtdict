@@ -27,5 +27,5 @@ compact_response_column_render <- function(rendered) {
 }
 
 expect_renderer_rows_aligned <- function(rendered) {
-  expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
+  expect_all_equal(lengths(rendered), nrow(rendered))
 }

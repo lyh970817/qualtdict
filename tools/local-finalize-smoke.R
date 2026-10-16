@@ -8,7 +8,7 @@ usage <- function() {
       "  Rscript tools/local-finalize-smoke.R bless",
       paste0(
         "  Rscript tools/local-finalize-smoke.R check ",
-        "--functions fetch_labelled_survey_data"
+        "--functions survey_fetch_labelled"
       ),
       paste0(
         "  Rscript tools/local-finalize-smoke.R check ",
@@ -1050,16 +1050,16 @@ run_scenario <- function(
   }
 
   # The sole labelled scenario. There is deliberately no default-path
-  # `fetch_labelled_survey_data(dict)` scenario: live survey metadata can
+  # `survey_fetch_labelled(dict)` scenario: live survey metadata can
   # legitimately carry Definite Validation Findings, and the severity gate
   # (commit fb05802) aborts the default path before download when it does.
   # The smoke's job is Response Column ID parity and labelled-export shape,
   # not re-testing the abort gate, which the unit tests cover
-  # (`tests/testthat/test-fetch_labelled_survey_data.R`).
+  # (`tests/testthat/test-survey_fetch_labelled.R`).
   if (requirements$needs_labelled) {
     labelled_excluding_validation <- run_step(
-      paste(scenario_label, "fetch_labelled_survey_data exclude validation"),
-      qualtdict::fetch_labelled_survey_data(
+      paste(scenario_label, "survey_fetch_labelled exclude validation"),
+      qualtdict::survey_fetch_labelled(
         dict,
         exclude_findings = "validation",
         quiet = FALSE
@@ -1070,10 +1070,10 @@ run_scenario <- function(
 
   if (requirements$needs_export_findings) {
     export_findings <- run_step(
-      paste(scenario_label, "labelled_export_findings"),
-      qualtdict::labelled_export_findings(objects$labelled_excluding_validation)
+      paste(scenario_label, "survey_export_findings"),
+      qualtdict::survey_export_findings(objects$labelled_excluding_validation)
     )
-    objects$labelled_export_findings <- export_findings
+    objects$survey_export_findings <- export_findings
   }
 
   if (requirements$needs_dict_blocks) {
@@ -1101,13 +1101,13 @@ run_scenario <- function(
   if ("dict_validate" %in% selected_functions) {
     summaries$validation <- validation_summary(objects$validation)
   }
-  if ("fetch_labelled_survey_data" %in% selected_functions) {
+  if ("survey_fetch_labelled" %in% selected_functions) {
     summaries$labelled_excluding_validation <-
       data_frame_summary(objects$labelled_excluding_validation)
   }
-  if ("labelled_export_findings" %in% selected_functions) {
-    summaries$labelled_export_findings <-
-      data_frame_summary(objects$labelled_export_findings)
+  if ("survey_export_findings" %in% selected_functions) {
+    summaries$survey_export_findings <-
+      data_frame_summary(objects$survey_export_findings)
   }
   if ("dict_split_blocks" %in% selected_functions) {
     summaries$dict_blocks <- block_list_summary(objects$dict_blocks)

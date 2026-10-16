@@ -38,14 +38,14 @@ test_that("column-map classification identifies metadata-defined exports", {
   expect_identical(row_source[["QID700_DO_1"]], "question_auxiliary")
   expect_identical(row_source[["x27_QID700_1"]], "question_auxiliary")
   expect_identical(row_source[["8_QID508_TEXT"]], "question_auxiliary")
-  expect_true(all(
-    glad_sa6_text_analysis_sidecar_ids() %in%
-      classified$response_column_id[classified$row_source == "text_analysis"]
-  ))
-  expect_true(all(
-    edgi_signup_text_analysis_sidecar_ids() %in%
-      classified$response_column_id[classified$row_source == "text_analysis"]
-  ))
+  expect_in(
+    glad_sa6_text_analysis_sidecar_ids(),
+    classified$response_column_id[classified$row_source == "text_analysis"]
+  )
+  expect_in(
+    edgi_signup_text_analysis_sidecar_ids(),
+    classified$response_column_id[classified$row_source == "text_analysis"]
+  )
 })
 
 test_that("ordinary SBS response columns are not Text-analysis Sidecars", {
@@ -79,7 +79,7 @@ test_that("ordinary SBS response columns are not Text-analysis Sidecars", {
     classified$row_source,
     c("question", "question", "question_auxiliary")
   )
-  expect_false(any(classified$row_source == "text_analysis"))
+  expect_all_false(classified$row_source == "text_analysis")
 })
 
 test_that("response-column map classifier reports edge-case unknown reasons", {

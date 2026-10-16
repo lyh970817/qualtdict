@@ -44,13 +44,13 @@ test_that("metadata fetching combines Qualtrics metadata endpoints", {
   local_mocked_bindings(
     metadata2 = function(surveyID, elements) {
       expect_identical(surveyID, "SV_FETCH")
-      expect_true("responsecounts" %in% elements)
+      expect_in("responsecounts", elements)
       metadata
     },
     fetch_description2 = function(surveyID, elements) {
       expect_identical(surveyID, "SV_FETCH")
       expect_false("responsecounts" %in% elements)
-      expect_true("scoring" %in% elements)
+      expect_in("scoring", elements)
       description
     },
     fetch_survey2 = function(...) {
@@ -134,8 +134,8 @@ test_that("dict_validate reports non-quiet finding messages", {
 
 test_that("Labelled Export helpers cover empty and recode branches", {
   expect_identical(
-    labelled_export_findings(tibble::tibble(q1 = "1")),
-    empty_labelled_export_findings()
+    survey_export_findings(tibble::tibble(q1 = "1")),
+    empty_survey_export_findings()
   )
 
   dict <- coverage_test_dict(response_column_id = "QID2")
@@ -173,7 +173,7 @@ test_that("Labelled Export helpers cover empty and recode branches", {
     unanswer_recode = "-99",
     unanswer_recode_multi = NULL
   )
-  expect_true("Seen but not answered" %in% names(attr(multi, "labels")))
+  expect_in("Seen but not answered", names(attr(multi, "labels")))
 })
 
 test_that("Loop and Merge helpers cover missing and empty branches", {
@@ -459,7 +459,7 @@ test_that("Variable Dictionary assembly covers empty branches", {
     looping = FALSE
   )
   cleaned <- clean_variable_dictionary_rows(rows, use_semantic_name = TRUE)
-  expect_true("semantic_name" %in% names(cleaned))
+  expect_in("semantic_name", names(cleaned))
 })
 
 test_that("normalisation and validation helpers cover fallback records", {
@@ -556,35 +556,74 @@ test_that("slowrake covers the POS-tag filtering branch", {
   )
 })
 
-test_that("retry covers deterministic fallback branches", {
+fast_retry_rate <- function(max_times = 5) {
+  purrr::rate_backoff(
+    pause_base = 0.001,
+    pause_cap = 0.001,
+    pause_min = 0,
+    max_times = max_times
+  )
+}
+
+test_that("retry succeeds after transient failures", {
   attempts <- new.env(parent = emptyenv())
   attempts$count <- 0
-  succeeds_second_time <- retry(function() {
-    attempts$count <- attempts$count + 1
-    if (attempts$count == 1) {
-      stop("first failure")
-    }
-    "ok"
-  })
-  capture.output(
-    messages <- capture.output(
-      result <- succeeds_second_time(),
-      type = "message"
-    )
+  flaky <- retry(
+    function() {
+      attempts$count <- attempts$count + 1
+      if (attempts$count < 3) {
+        stop("transient failure")
+      }
+      "ok"
+    },
+    rate = fast_retry_rate()
   )
-  expect_identical(result, "ok")
-  expect_match(paste(messages, collapse = "\n"), "first failure")
 
-  always_fails <- retry(function() {
-    stop("still failing")
-  })
-  capture.output(
-    messages <- capture.output(
-      expect_error(always_fails(), "still failing"),
-      type = "message"
-    )
+  expect_silent(result <- flaky())
+  expect_identical(result, "ok")
+  expect_identical(attempts$count, 3)
+})
+
+test_that("retry gives up after the limit and rethrows the last error", {
+  attempts <- new.env(parent = emptyenv())
+  attempts$count <- 0
+  always_fails <- retry(
+    function() {
+      attempts$count <- attempts$count + 1
+      stop("still failing ", attempts$count)
+    },
+    rate = fast_retry_rate()
   )
-  expect_match(paste(messages, collapse = "\n"), "still failing")
+
+  expect_error(always_fails(), "still failing 5", fixed = TRUE)
+  expect_identical(attempts$count, 5)
+})
+
+test_that("retry does not retry a NULL return", {
+  attempts <- new.env(parent = emptyenv())
+  attempts$count <- 0
+  returns_null <- retry(
+    function() {
+      attempts$count <- attempts$count + 1
+      NULL
+    },
+    rate = fast_retry_rate()
+  )
+
+  expect_null(returns_null())
+  expect_identical(attempts$count, 1)
+})
+
+test_that("retry passes arguments through", {
+  add <- retry(function(x, y) x + y, rate = fast_retry_rate())
+  expect_identical(add(1, y = 2), 3)
+})
+
+test_that("Qualtrics retry rate allows five attempts with backoff", {
+  rate <- qualtrics_retry_rate()
+  expect_s3_class(rate, "purrr_rate_backoff")
+  expect_identical(rate$max_times, 5)
+  expect_identical(rate$pause_cap, 30)
 })
 
 test_that("survey_split_blocks requires Labelled Survey Data", {

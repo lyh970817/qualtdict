@@ -19,12 +19,7 @@ Create block-specific views of a Variable Dictionary without changing the
 return type of \code{\link[qualtdict]{dict_generate}}.
 }
 \examples{
-dict <- data.frame(
-  response_column_id = c("QID1", "QID2"),
-  variable_name = c("q1", "q2"),
-  block = c("Block A", "Block B")
-)
-class(dict) <- c("qualtdict", class(dict))
-
-dict_split_blocks(dict)
+dict_blocks <- dict_split_blocks(glad_example$dictionary)
+names(dict_blocks)
+dict_blocks$GAD7
 }

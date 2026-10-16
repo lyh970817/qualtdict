@@ -9,6 +9,49 @@ affect exported behavior, usually after ordinary tests and requested review
 work are complete. Missing local artifacts are not a feature failure; report
 that the smoke check could not be run.
 
+## Vocabulary
+
+The terms this guide uses for the smoke check. The package vocabulary is in
+`CONTEXT.md`.
+
+**Finalize Smoke**:
+The local-only workflow that runs qualtdict's exported functions over fixed
+local survey artifacts and compares the results against Smoke Baselines. It is
+a finalization gate run by a human or agent on one machine, never CI.
+_Avoid_: smoke test suite, integration tests
+
+**Smoke Scenario**:
+One exported-function execution against one survey within a Finalize Smoke
+run, such as `dict_generate` on one survey. Bless and Check runs execute the
+same Smoke Scenarios; they differ only in what is done with the results.
+_Avoid_: test case, smoke step
+
+**Scenario Time**:
+The summed execution time spent inside Smoke Scenarios during one Finalize
+Smoke run. It excludes harness overhead such as artifact loading, object
+hashing, and baseline reading and writing, so a run's wall-clock time is a
+multiple of its Scenario Time. It is a property of any run, whether Bless or
+Check.
+_Avoid_: run time, wall time, smoke duration
+
+**Bless**:
+A Finalize Smoke run that records its Smoke Scenario results as the Smoke
+Baseline. Blessing asserts that the current behaviour is the intended
+reference, so it follows verification, never substitutes for it.
+_Avoid_: update baselines, snapshot
+
+**Check**:
+A Finalize Smoke run that executes the Smoke Scenarios and compares their
+results against the Smoke Baseline, failing loudly on any mismatch or missing
+baseline entry.
+_Avoid_: verify run, smoke comparison
+
+**Smoke Baseline**:
+The recorded per-survey Smoke Scenario results that Check compares against,
+keyed by survey and scenario. Smoke Baselines are local to the machine that
+Blessed them and are never committed.
+_Avoid_: snapshot, expected output, golden file
+
 ## Scope
 
 `tools/local-finalize-smoke.R check` replays local Qualtrics smoke artifacts,
@@ -25,7 +68,7 @@ ordinary tests and package checks.
 
 ## Labelled Scenario Policy
 
-The smoke's only `fetch_labelled_survey_data` scenario calls it with
+The smoke's only `survey_fetch_labelled` scenario calls it with
 `exclude_findings = "validation"`. Its summary is recorded as
 `labelled_excluding_validation`; there is no default-path scenario and no
 `labelled` summary any more. Live survey metadata can legitimately carry
@@ -34,7 +77,7 @@ the default path before download when it does, so a default-path scenario
 would block the full smoke on a healthy corpus. The smoke's job is Response
 Column ID parity and labelled-export shape, not re-testing the abort gate;
 definite-finding aborts are unit-tested in
-`tests/testthat/test-fetch_labelled_survey_data.R`, not smoke-tested. The
+`tests/testthat/test-survey_fetch_labelled.R`, not smoke-tested. The
 Labelled Export Findings and survey block outputs are derived from this same
 excluding-validation Labelled Survey Data.
 
@@ -85,8 +128,8 @@ Run one self-contained smoke invocation for the relevant finalization surface:
 ```sh
 Rscript tools/local-finalize-smoke.R check
 Rscript tools/local-finalize-smoke.R check --functions dict_generate
-Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data
-Rscript tools/local-finalize-smoke.R check --functions fetch_labelled_survey_data,dict_split_blocks
+Rscript tools/local-finalize-smoke.R check --functions survey_fetch_labelled
+Rscript tools/local-finalize-smoke.R check --functions survey_fetch_labelled,dict_split_blocks
 Rscript tools/local-finalize-smoke.R check --variable-name question_name
 Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-name question_name
 ```
@@ -94,7 +137,7 @@ Rscript tools/local-finalize-smoke.R check --functions dict_generate --variable-
 The script runs prerequisites needed for selected downstream outputs, but
 compares only the selected output summaries. Do not broaden `--functions` only
 because a prerequisite runs internally. For example,
-`--functions fetch_labelled_survey_data` generates a Variable Dictionary as
+`--functions survey_fetch_labelled` generates a Variable Dictionary as
 setup, then compares only the excluding-validation Labelled Survey Data
 summary.
 
@@ -280,7 +323,7 @@ Selective blessing updates only the selected output summaries inside each
 baseline record:
 
 ```sh
-Rscript tools/local-finalize-smoke.R bless --functions fetch_labelled_survey_data
+Rscript tools/local-finalize-smoke.R bless --functions survey_fetch_labelled
 Rscript tools/local-finalize-smoke.R bless --variable-name question_name
 ```
 
@@ -290,7 +333,7 @@ selected summaries and leaves the rest of the record untouched at whatever
 state it was last written in, so the baseline silently becomes a mixture of
 eras. That is how the 2026-08-05 refresh was owed: a
 `bless --functions dict_generate` left the six labelled-family summaries of
-that era (`validation`, `labelled`, `labelled_export_findings`,
+that era (`validation`, `labelled`, `survey_export_findings`,
 `dict_blocks`, `survey_blocks`, `labelled_excluding_validation`; the plain
 `labelled` summary has since been removed by the labelled scenario policy
 above) behind at a much older

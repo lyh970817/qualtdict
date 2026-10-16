@@ -222,8 +222,8 @@ export_blocking_message <- function(findings) {
 #'
 #' Error when a Variable Dictionary carries Export-blocking Validation
 #' Findings: level-label codings that make Labelled Export wrong or
-#' impossible. `assert_dict_valid()` is the gate
-#' [fetch_labelled_survey_data()] applies before downloading responses, so a
+#' impossible. `dict_assert_valid()` is the gate
+#' [survey_fetch_labelled()] applies before downloading responses, so a
 #' defective Variable Dictionary is reported by Response Column ID instead of
 #' aborting deep inside labelling after the download is paid for.
 #'
@@ -254,22 +254,17 @@ export_blocking_message <- function(findings) {
 #'
 #' @export
 #' @examples
-#' dict <- data.frame(
-#'   response_column_id = c("QID1", "QID1"),
-#'   variable_name = "q1",
-#'   label = c("Yes", "No"),
-#'   level = c("1", "2")
-#' )
-#' class(dict) <- c("qualtdict", class(dict))
-#'
-#' assert_dict_valid(dict)
+#' # The example dictionary has no Export-blocking Validation Findings, so it
+#' # passes silently
+#' dict <- glad_example$dictionary
+#' dict_assert_valid(dict)
 #'
 #' # Two choices sharing one Qualtrics recode are exported as one column.
 #' broken <- dict
-#' broken$level <- c("1", "1")
+#' broken$level[broken$variable_name == "DEM.SEX.1.0"] <- "1"
 #'
-#' try(assert_dict_valid(broken))
-assert_dict_valid <- function(dict) {
+#' try(dict_assert_valid(broken))
+dict_assert_valid <- function(dict) {
   checkarg_isqualtdict(dict)
 
   findings <- export_blocking_validation_findings(dict)

@@ -46,7 +46,7 @@ minimal_survey_data <- function() {
   )
 }
 
-test_that("fetch_labelled_survey_data returns one labelled data frame", {
+test_that("survey_fetch_labelled returns one labelled data frame", {
   captured_args <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -55,7 +55,7 @@ test_that("fetch_labelled_survey_data returns one labelled data frame", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     minimal_export_dict(),
     include_questions = "QID1"
   )
@@ -80,145 +80,127 @@ test_that("fetch_labelled_survey_data returns one labelled data frame", {
   expect_true(captured_args$value$breakout_sets)
 })
 
-test_that(
-  paste(
-    "fetch_labelled_survey_data includes",
-    "Embedded Data Fields by default"
-  ),
-  {
-    dict <- minimal_export_dict(
-      response_column_id = c("QID1", "Source Channel"),
-      row_source = c("question", "embedded_data"),
-      variable_name = c("q1", "Source_Channel"),
-      qid = c("QID1", NA_character_),
-      question_name = c("q1", NA_character_),
-      block = c("Block A", NA_character_),
-      question = c("Question q1", "Embedded Data: Source Channel"),
-      label = c("Yes", NA_character_),
-      level = c("1", NA_character_),
-      type = c("MC", NA_character_),
-      selector = c("SAVR", NA_character_),
-      sub_selector = c("TX", NA_character_)
-    )
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        tibble::tibble(
-          QID1 = "1",
-          `Source Channel` = "newsletter"
-        )
-      }
-    )
+test_that("includes Embedded Data Fields by default", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "Source Channel"),
+    row_source = c("question", "embedded_data"),
+    variable_name = c("q1", "Source_Channel"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
+    block = c("Block A", NA_character_),
+    question = c("Question q1", "Embedded Data: Source Channel"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        QID1 = "1",
+        `Source Channel` = "newsletter"
+      )
+    }
+  )
 
-    dat <- fetch_labelled_survey_data(
-      dict,
-      extra_columns = NULL,
-      unanswer_recode_multi = 0
-    )
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode_multi = 0
+  )
 
-    expect_named(dat, c("q1", "Source_Channel"))
-    expect_identical(as.character(dat$Source_Channel), "newsletter")
-    expect_identical(
-      sjlabelled::get_label(dat$Source_Channel),
-      "Embedded Data: Source Channel"
-    )
-    expect_null(attr(dat$Source_Channel, "labels", exact = TRUE))
-    expect_identical(nrow(labelled_export_findings(dat)), 0L)
-  }
-)
+  expect_named(dat, c("q1", "Source_Channel"))
+  expect_identical(as.character(dat$Source_Channel), "newsletter")
+  expect_identical(
+    sjlabelled::get_label(dat$Source_Channel),
+    "Embedded Data: Source Channel"
+  )
+  expect_null(attr(dat$Source_Channel, "labels", exact = TRUE))
+  expect_identical(nrow(survey_export_findings(dat)), 0L)
+})
 
-test_that(
-  paste(
-    "fetch_labelled_survey_data includes",
-    "Scoring Variables by default"
-  ),
-  {
-    dict <- minimal_export_dict(
-      response_column_id = c("QID1", "Total Score"),
-      row_source = c("question", "scoring"),
-      variable_name = c("q1", "Total_Score"),
-      qid = c("QID1", NA_character_),
-      question_name = c("q1", NA_character_),
-      block = c("Block A", NA_character_),
-      question = c("Question q1", "Scoring Variable: Total Score"),
-      label = c("Yes", NA_character_),
-      level = c("1", NA_character_),
-      type = c("MC", NA_character_),
-      selector = c("SAVR", NA_character_),
-      sub_selector = c("TX", NA_character_)
-    )
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        tibble::tibble(
-          QID1 = "1",
-          `Total Score` = "7"
-        )
-      }
-    )
+test_that("includes Scoring Variables by default", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "Total Score"),
+    row_source = c("question", "scoring"),
+    variable_name = c("q1", "Total_Score"),
+    qid = c("QID1", NA_character_),
+    question_name = c("q1", NA_character_),
+    block = c("Block A", NA_character_),
+    question = c("Question q1", "Scoring Variable: Total Score"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        QID1 = "1",
+        `Total Score` = "7"
+      )
+    }
+  )
 
-    dat <- fetch_labelled_survey_data(
-      dict,
-      extra_columns = NULL,
-      unanswer_recode_multi = 0
-    )
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode_multi = 0
+  )
 
-    expect_named(dat, c("q1", "Total_Score"))
-    expect_identical(as.character(dat$Total_Score), "7")
-    expect_identical(
-      sjlabelled::get_label(dat$Total_Score),
-      "Scoring Variable: Total Score"
-    )
-    expect_null(attr(dat$Total_Score, "labels", exact = TRUE))
-    expect_identical(nrow(labelled_export_findings(dat)), 0L)
-  }
-)
+  expect_named(dat, c("q1", "Total_Score"))
+  expect_identical(as.character(dat$Total_Score), "7")
+  expect_identical(
+    sjlabelled::get_label(dat$Total_Score),
+    "Scoring Variable: Total Score"
+  )
+  expect_null(attr(dat$Total_Score, "labels", exact = TRUE))
+  expect_identical(nrow(survey_export_findings(dat)), 0L)
+})
 
-test_that(
-  paste(
-    "fetch_labelled_survey_data includes",
-    "Text-analysis Sidecars by default"
-  ),
-  {
-    dict <- minimal_export_dict(
-      response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
-      row_source = c("question", "text_analysis"),
-      variable_name = c("q1", "Q1_Text_Sentiment"),
-      qid = c("QID1", "QID1"),
-      question_name = c("q1", "q1"),
-      block = c("Block A", "Block A"),
-      question = c("Question q1", "Text Analysis: Q1 Text Sentiment"),
-      label = c("Yes", NA_character_),
-      level = c("1", NA_character_),
-      type = c("MC", NA_character_),
-      selector = c("SAVR", NA_character_),
-      sub_selector = c("TX", NA_character_)
-    )
-    local_mocked_bindings(
-      fetch_survey2 = function(...) {
-        tibble::tibble(
-          QID1 = "1",
-          QID1_TEXT_SENTIMENT = "positive"
-        )
-      }
-    )
+test_that("includes Text-analysis Sidecars by default", {
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
+    row_source = c("question", "text_analysis"),
+    variable_name = c("q1", "Q1_Text_Sentiment"),
+    qid = c("QID1", "QID1"),
+    question_name = c("q1", "q1"),
+    block = c("Block A", "Block A"),
+    question = c("Question q1", "Text Analysis: Q1 Text Sentiment"),
+    label = c("Yes", NA_character_),
+    level = c("1", NA_character_),
+    type = c("MC", NA_character_),
+    selector = c("SAVR", NA_character_),
+    sub_selector = c("TX", NA_character_)
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(
+        QID1 = "1",
+        QID1_TEXT_SENTIMENT = "positive"
+      )
+    }
+  )
 
-    dat <- fetch_labelled_survey_data(
-      dict,
-      extra_columns = NULL,
-      unanswer_recode_multi = 0
-    )
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode_multi = 0
+  )
 
-    expect_named(dat, c("q1", "Q1_Text_Sentiment"))
-    expect_identical(as.character(dat$Q1_Text_Sentiment), "positive")
-    expect_identical(
-      sjlabelled::get_label(dat$Q1_Text_Sentiment),
-      "Text Analysis: Q1 Text Sentiment"
-    )
-    expect_null(attr(dat$Q1_Text_Sentiment, "labels", exact = TRUE))
-    expect_identical(nrow(labelled_export_findings(dat)), 0L)
-  }
-)
+  expect_named(dat, c("q1", "Q1_Text_Sentiment"))
+  expect_identical(as.character(dat$Q1_Text_Sentiment), "positive")
+  expect_identical(
+    sjlabelled::get_label(dat$Q1_Text_Sentiment),
+    "Text Analysis: Q1 Text Sentiment"
+  )
+  expect_null(attr(dat$Q1_Text_Sentiment, "labels", exact = TRUE))
+  expect_identical(nrow(survey_export_findings(dat)), 0L)
+})
 
-test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
+test_that("survey_fetch_labelled reports missing Response Column IDs", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
       tibble::tibble(
@@ -230,8 +212,8 @@ test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(minimal_export_dict())
-  findings <- labelled_export_findings(dat)
+  dat <- survey_fetch_labelled(minimal_export_dict())
+  findings <- survey_export_findings(dat)
 
   expect_named(
     dat,
@@ -260,7 +242,7 @@ test_that("fetch_labelled_survey_data reports missing Response Column IDs", {
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 
-test_that("fetch_labelled_survey_data reports missing Embedded Data Fields", {
+test_that("survey_fetch_labelled reports missing Embedded Data Fields", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "Source Channel"),
     row_source = c("question", "embedded_data"),
@@ -281,18 +263,18 @@ test_that("fetch_labelled_survey_data reports missing Embedded Data Fields", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(dict, extra_columns = NULL)
-  findings <- labelled_export_findings(dat)
+  dat <- survey_fetch_labelled(dict, extra_columns = NULL)
+  findings <- survey_export_findings(dat)
 
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "Source Channel")
-  expect_true(is.na(findings$qid))
+  expect_identical(findings$qid, NA_character_)
   expect_identical(findings$variable_name, "Source_Channel")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 
-test_that("fetch_labelled_survey_data reports missing Scoring Variables", {
+test_that("survey_fetch_labelled reports missing Scoring Variables", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "Total Score"),
     row_source = c("question", "scoring"),
@@ -313,18 +295,18 @@ test_that("fetch_labelled_survey_data reports missing Scoring Variables", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(dict, extra_columns = NULL)
-  findings <- labelled_export_findings(dat)
+  dat <- survey_fetch_labelled(dict, extra_columns = NULL)
+  findings <- survey_export_findings(dat)
 
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "Total Score")
-  expect_true(is.na(findings$qid))
+  expect_identical(findings$qid, NA_character_)
   expect_identical(findings$variable_name, "Total_Score")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 
-test_that("fetch_labelled_survey_data reports missing Text-analysis Sidecars", {
+test_that("survey_fetch_labelled reports missing Text-analysis Sidecars", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "QID1_TEXT_SENTIMENT"),
     row_source = c("question", "text_analysis"),
@@ -345,8 +327,8 @@ test_that("fetch_labelled_survey_data reports missing Text-analysis Sidecars", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(dict, extra_columns = NULL)
-  findings <- labelled_export_findings(dat)
+  dat <- survey_fetch_labelled(dict, extra_columns = NULL)
+  findings <- survey_export_findings(dat)
 
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
@@ -375,7 +357,7 @@ test_that("exclude_findings removes validation findings after download", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     minimal_export_dict(),
     exclude_findings = "validation",
     include_questions = c("QID1", "QID2")
@@ -395,7 +377,7 @@ test_that("exclude_findings removes validation findings after download", {
   expect_identical(attr(dat, "dict")$response_column_id, "QID1")
 })
 
-test_that("fetch_labelled_survey_data forwards quiet to validation exclusion", {
+test_that("survey_fetch_labelled forwards quiet to validation exclusion", {
   captured_quiet <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -407,7 +389,7 @@ test_that("fetch_labelled_survey_data forwards quiet to validation exclusion", {
     }
   )
 
-  fetch_labelled_survey_data(
+  survey_fetch_labelled(
     minimal_export_dict(),
     exclude_findings = "validation",
     quiet = FALSE
@@ -416,7 +398,7 @@ test_that("fetch_labelled_survey_data forwards quiet to validation exclusion", {
   expect_false(captured_quiet$value)
 })
 
-test_that("fetch_labelled_survey_data omits quiet from fetch_survey", {
+test_that("survey_fetch_labelled omits quiet from fetch_survey", {
   captured_args <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
@@ -425,7 +407,7 @@ test_that("fetch_labelled_survey_data omits quiet from fetch_survey", {
     }
   )
 
-  fetch_labelled_survey_data(
+  survey_fetch_labelled(
     minimal_export_dict(),
     NULL,
     "none",
@@ -453,14 +435,14 @@ test_that("extra_columns distinguish user-specified columns from defaults", {
   )
 
   expect_warning(
-    dat <- fetch_labelled_survey_data(dict),
+    dat <- survey_fetch_labelled(dict),
     "Missing default `extra_columns`"
   )
   expect_named(dat, "q1")
 
   # Absent user-specified columns warn and are skipped rather than aborting.
   expect_warning(
-    dat_user <- fetch_labelled_survey_data(dict, extra_columns = "IPAddress"),
+    dat_user <- survey_fetch_labelled(dict, extra_columns = "IPAddress"),
     "Missing user-specified `extra_columns`"
   )
   expect_named(dat_user, "q1")
@@ -487,7 +469,7 @@ test_that("extra_columns keeps present candidates when others are absent", {
   # Ordered id-column fallback: only `externalDataReference` is present, so the
   # missing `subjectid` warns but the fetch succeeds with the present column.
   expect_warning(
-    dat <- fetch_labelled_survey_data(
+    dat <- survey_fetch_labelled(
       dict,
       extra_columns = c("externalDataReference", "subjectid")
     ),
@@ -513,7 +495,7 @@ test_that("Labelled Survey Data carries normalised response metadata", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(minimal_export_dict())
+  dat <- survey_fetch_labelled(minimal_export_dict())
 
   expect_named(
     dat,
@@ -549,9 +531,9 @@ test_that("response metadata normalises PascalCase export casing", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(minimal_export_dict())
+  dat <- survey_fetch_labelled(minimal_export_dict())
 
-  expect_true(all(c("recordedDate", "ResponseId", "Progress") %in% names(dat)))
+  expect_in(c("recordedDate", "ResponseId", "Progress"), names(dat))
   expect_identical(dat$recordedDate, "2026-06-02")
   expect_identical(dat$ResponseId, "R_xyz")
   expect_identical(dat$Progress, "50")
@@ -571,10 +553,10 @@ test_that("response metadata degrades gracefully when columns are absent", {
     }
   )
 
-  expect_no_warning(dat <- fetch_labelled_survey_data(minimal_export_dict()))
+  expect_no_warning(dat <- survey_fetch_labelled(minimal_export_dict()))
 
-  expect_true("recordedDate" %in% names(dat))
-  expect_false(any(c("ResponseId", "Progress") %in% names(dat)))
+  expect_in("recordedDate", names(dat))
+  expect_all_false(c("ResponseId", "Progress") %in% names(dat))
 })
 
 test_that("extra_columns = NULL suppresses response metadata", {
@@ -593,28 +575,28 @@ test_that("extra_columns = NULL suppresses response metadata", {
     }
   )
 
-  dat <- fetch_labelled_survey_data(minimal_export_dict(), extra_columns = NULL)
+  dat <- survey_fetch_labelled(minimal_export_dict(), extra_columns = NULL)
 
   expect_named(dat, c("q1", "q2"))
 })
 
 test_that("users cannot override qualtdict-owned fetch settings", {
   expect_error(
-    fetch_labelled_survey_data(minimal_export_dict(), import_id = FALSE),
+    survey_fetch_labelled(minimal_export_dict(), import_id = FALSE),
     "owned by qualtdict"
   )
   expect_error(
-    fetch_labelled_survey_data(minimal_export_dict(), breakout_sets = FALSE),
+    survey_fetch_labelled(minimal_export_dict(), breakout_sets = FALSE),
     "owned by qualtdict"
   )
 })
 
-test_that("fetch_labelled_survey_data requires a surveyID attribute", {
+test_that("survey_fetch_labelled requires a surveyID attribute", {
   dict <- minimal_export_dict()
   attr(dict, "surveyID") <- NULL
 
   expect_error(
-    fetch_labelled_survey_data(dict),
+    survey_fetch_labelled(dict),
     "missing its `surveyID` attribute",
     fixed = TRUE
   )
@@ -954,7 +936,7 @@ test_that("per-choice tick columns label the tick and the unanswer recodes", {
     selector = "MACOL"
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     dict,
     unanswer_recode = -77,
     unanswer_recode_multi = 0
@@ -1000,7 +982,7 @@ test_that("display-order columns carry no value labels", {
     selector = "MAVR"
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     dict,
     unanswer_recode = -77,
     unanswer_recode_multi = 0
@@ -1076,7 +1058,7 @@ test_that("single-row single-answer columns keep the legacy label facts", {
     level = "1"
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     dict,
     unanswer_recode = -77,
     unanswer_recode_multi = 0
@@ -1108,7 +1090,7 @@ tick_column_collision_export_dict <- function() {
   )
 }
 
-test_that("fetch_labelled_survey_data gates the dictionary before fetching", {
+test_that("survey_fetch_labelled gates the dictionary before fetching", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
       stop("responses must not be downloaded for a gated dictionary")
@@ -1116,7 +1098,7 @@ test_that("fetch_labelled_survey_data gates the dictionary before fetching", {
   )
 
   expect_error(
-    fetch_labelled_survey_data(tick_column_collision_export_dict()),
+    survey_fetch_labelled(tick_column_collision_export_dict()),
     class = "qualtdict_export_blocking_findings"
   )
 })
@@ -1145,11 +1127,11 @@ test_that("require_valid_dict = FALSE downloads from a defective dictionary", {
   )
 
   expect_error(
-    fetch_labelled_survey_data(dict, extra_columns = NULL),
+    survey_fetch_labelled(dict, extra_columns = NULL),
     class = "qualtdict_export_blocking_findings"
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     dict,
     extra_columns = NULL,
     require_valid_dict = FALSE
@@ -1185,7 +1167,7 @@ test_that("exclude_findings = \"validation\" needs no dictionary gate", {
     selector = c("MACOL", "MACOL", "SAVR")
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     dict,
     extra_columns = NULL,
     exclude_findings = "validation"
@@ -1229,7 +1211,7 @@ test_that("exclude_findings = \"definite\" drops only definite rows", {
     reason = "unsafe"
   )
 
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     dict,
     extra_columns = NULL,
     exclude_findings = "definite"
@@ -1252,7 +1234,7 @@ test_that("exclude_findings = \"definite\" needs no dictionary gate", {
   # The dictionary carries an Export-blocking Validation Finding, but the
   # definite rows are dropped after download anyway, so the pre-download gate
   # does not fire and the download proceeds.
-  dat <- fetch_labelled_survey_data(
+  dat <- survey_fetch_labelled(
     tick_column_collision_export_dict(),
     extra_columns = NULL,
     exclude_findings = "definite"
@@ -1264,7 +1246,7 @@ test_that("exclude_findings = \"definite\" needs no dictionary gate", {
 
 test_that("require_valid_dict must be a single TRUE or FALSE", {
   expect_error(
-    fetch_labelled_survey_data(
+    survey_fetch_labelled(
       minimal_export_dict(),
       require_valid_dict = NA
     ),
@@ -1278,7 +1260,7 @@ test_that("a tick column with two labels on one level cannot be labelled", {
   # label/level arithmetic is deliberately NOT repaired: two choices sharing
   # one Qualtrics RecodeValue is a survey-authoring error, and the Variable
   # Dictionary reports both rows faithfully. Pin the mismatch that
-  # `assert_dict_valid()` now catches ahead of the download.
+  # `dict_assert_valid()` now catches ahead of the download.
   var_dict <- tick_column_collision_export_dict()
   context <- survey_var_recode_context(var_dict)
   label_facts <- survey_var_label_facts(
@@ -1297,6 +1279,7 @@ test_that("a tick column with two labels on one level cannot be labelled", {
       var_dict,
       unanswer_recode = -77,
       unanswer_recode_multi = 0
-    )
+    ),
+    class = "qualtdict_level_label_mismatch"
   )
 })

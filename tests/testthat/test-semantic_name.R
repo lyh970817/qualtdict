@@ -43,10 +43,10 @@ test_that("dict_generate generates a semantic-name Variable Dictionary", {
 
   expect_s3_class(x, "data.frame")
   expect_identical(names(x)[1:2], c("response_column_id", "row_source"))
-  expect_true("semantic_name" %in% names(x))
+  expect_in("semantic_name", names(x))
   expect_false(all(is.na(x$semantic_name)))
-  expect_true(all(x$row_source == "question"))
-  expect_true("looping_option" %in% names(x))
+  expect_all_equal(x$row_source, "question")
+  expect_in("looping_option", names(x))
   expect_false(all(is.na(x$looping_option)))
 })
 
@@ -75,7 +75,7 @@ test_that("Semantic Names are generated only on the semantic naming path", {
     question_name_dict$variable_name,
     c("Q1", "Q1", "Q1", "Q1.1")
   )
-  expect_true("semantic_name" %in% names(semantic_name_dict))
+  expect_in("semantic_name", names(semantic_name_dict))
   expect_false(all(is.na(semantic_name_dict$semantic_name)))
   expect_identical(
     semantic_name_dict$semantic_name,
@@ -106,7 +106,7 @@ test_that("Semantic Names skip Embedded Data Fields after preprocessing", {
   )
   embedded_rows <- dict[dict$row_source == "embedded_data", ]
 
-  expect_true(all(is.na(embedded_rows$semantic_name)))
+  expect_all_true(is.na(embedded_rows$semantic_name))
   expect_identical(
     embedded_rows$variable_name,
     c("Source_Channel", "Q1")
@@ -203,7 +203,7 @@ test_that("semantic_name_preprocess receives full dictionary rows", {
     semantic_name_preprocess = semantic_name_preprocess
   )
 
-  expect_true(all(
+  expect_in(
     c(
       "qid",
       "response_column_id",
@@ -221,9 +221,9 @@ test_that("semantic_name_preprocess receives full dictionary rows", {
       "sub_selector",
       "looping_option",
       "looping"
-    ) %in%
-      seen$names
-  ))
+    ),
+    seen$names
+  )
   expect_identical(
     seen$loop_rows$response_column_id,
     c("x1_QID2_TEXT", "x2_QID2_TEXT")
@@ -404,7 +404,7 @@ test_that("semantic_name_preprocess runs only for semantic naming", {
   )
 
   expect_identical(capture$calls, 1)
-  expect_true(all(grepl("^renamed_by_hook", dict$semantic_name)))
+  expect_all_true(grepl("^renamed_by_hook", dict$semantic_name))
 })
 
 
@@ -425,7 +425,7 @@ test_that("temporary semantic_name_preprocess columns do not leak", {
     semantic_name_preprocess = semantic_name_preprocess
   )
 
-  expect_true(all(grepl("^helper", dict$semantic_name)))
+  expect_all_true(grepl("^helper", dict$semantic_name))
   expect_false("temporary_helper" %in% names(dict))
 })
 

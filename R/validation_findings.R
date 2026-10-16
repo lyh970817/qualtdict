@@ -237,7 +237,7 @@ level_label_validation_findings <- function(mistake) {
 #' 4. one level is carried by more than one row.
 #'
 #' This is the one predicate behind both `dict_validate()` and
-#' `assert_dict_valid()`, so the reported findings and the Labelled Export gate
+#' `dict_assert_valid()`, so the reported findings and the Labelled Export gate
 #' cannot drift apart.
 #'
 #' @param cols A data frame whose first column holds labels and whose second

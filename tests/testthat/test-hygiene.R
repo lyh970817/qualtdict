@@ -13,12 +13,13 @@ root_text <- function(...) {
 test_that("README documents the qualtRics boundary and main workflow", {
   readme <- root_text("README.Rmd")
 
-  expect_match(readme, "`qualtRics` owns API access", fixed = TRUE)
   expect_match(
     readme,
-    "Variable Dictionary To Labelled Survey Data",
+    "qualtdict handles everything between the raw export and your analysis",
     fixed = TRUE
   )
+  expect_match(readme, "dict_generate(", fixed = TRUE)
+  expect_match(readme, "survey_fetch_labelled(", fixed = TRUE)
   expect_match(readme, "response_column_id", fixed = TRUE)
   expect_match(readme, "row_source", fixed = TRUE)
   expect_match(readme, "qid", fixed = TRUE)
@@ -28,8 +29,9 @@ test_that("README documents the qualtRics boundary and main workflow", {
   expect_match(readme, "Validation Findings", fixed = TRUE)
   expect_match(readme, "Labelled Survey Data", fixed = TRUE)
   expect_match(readme, "not stable", fixed = TRUE)
-  expect_match(readme, "tested offline", fixed = TRUE)
-  expect_match(readme, "require credentials", fixed = TRUE)
+  expect_match(readme, "glad_example$dictionary", fixed = TRUE)
+  expect_match(readme, "glad_example$labelled_survey_data", fixed = TRUE)
+  expect_match(readme, "need Qualtrics API credentials", fixed = TRUE)
 })
 
 test_that("README and vignette avoid stale API names and private IDs", {
@@ -51,7 +53,7 @@ test_that("exported function docs use canonical public terminology", {
   function_docs <- paste(
     root_text("R", "dict_generate.R"),
     root_text("R", "dict_validate.R"),
-    root_text("R", "fetch_labelled_survey_data.R"),
+    root_text("R", "survey_fetch_labelled.R"),
     root_text("R", "metadata_normalise.R"),
     root_text("R", "split_blocks.R"),
     collapse = "\n"
