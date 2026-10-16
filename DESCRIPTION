@@ -1,18 +1,20 @@
 Package: qualtdict
-Title: Generate Variable Dictionaries and Labelled Survey Data for
-    'Qualtrics' Surveys
+Title: Variable Dictionaries and Labelled Data for 'Qualtrics' Surveys
 Version: 0.1.0
 Authors@R:
-    person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre"),
+    person("Yuhao", "Lin", , "yuhao.lin@kcl.ac.uk", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0001-6357-5731"))
-Description: Generates Variable Dictionaries from 'Qualtrics'
-    <https://www.qualtrics.com/about/> survey metadata and applies those
-    dictionaries to create Labelled Survey Data. This package is a
+Description: Decodes nested 'Qualtrics' <https://www.qualtrics.com/about/>
+    survey metadata into a readable Variable Dictionary, one row per
+    exported response column with question, item, level, label and a
+    generated variable name, and applies it to downloaded responses to
+    produce labelled, analysis-ready survey data. The package is a
     metadata and labelled-export companion to 'qualtRics', which provides
     access to 'Qualtrics' survey data and metadata via the 'Qualtrics' API
     <https://api.qualtrics.com/>.
 License: MIT + file LICENSE
-URL: https://github.com/lyh970817/qualtdict, https://lyh970817.github.io/qualtdict/
+URL: https://github.com/lyh970817/qualtdict,
+    https://lyh970817.github.io/qualtdict/
 BugReports: https://github.com/lyh970817/qualtdict/issues
 Imports:
     dplyr,
@@ -33,14 +35,16 @@ Suggests:
     slowraker (>= 0.1.1),
     SnowballC,
     stringi,
-    testthat (>= 3.0.0),
+    testthat (>= 3.3.0),
     tidyr
+VignetteBuilder:
+    knitr
+Config/roxygen2/version: 8.0.0
+Config/testthat/edition: 3
+Config/testthat/start-first: dict_generate, dict_validate,
+    fetch_labelled_survey_data
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
 SystemRequirements: Java is needed only for POS-tag filtering via the
     suggested 'openNLP' package.
-VignetteBuilder: 
-    knitr
-Config/testthat/edition: 3
-Config/testthat/start-first: dict_generate, dict_validate, survey_fetch_labelled
-Encoding: UTF-8
-Roxygen: list(markdown = TRUE)
-Config/roxygen2/version: 8.0.0
