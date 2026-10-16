@@ -101,12 +101,23 @@ column absent from the download (for example in sanitized offline fixtures)
 is omitted without warning rather than erroring.
 }
 \examples{
+# The Labelled Survey Data survey_fetch_labelled() returns for the bundled
+# example survey (see ?glad_example)
+survey_dat <- glad_example$labelled_survey_data
+survey_dat
+
+# Choice columns carry value labels; text and numeric columns carry a
+# variable label
+attr(survey_dat$PHQ.DEP.1.0, "labels")
+attr(survey_dat$DEM.AGE.1.0, "label")
+
+# A live call downloads the responses from Qualtrics and needs Qualtrics API
+# credentials
 if (interactive()) {
   survey_id <- "SV_XXXXXXXXXXXXXXXX"
 
-  # Generate a dictionary
-  mydict <- dict_generate(survey_id, variable_name = "question_name")
-  survey_dat <- survey_fetch_labelled(mydict,
+  dict <- dict_generate(survey_id, variable_name = "question_name")
+  survey_dat <- survey_fetch_labelled(dict,
     unanswer_recode = -77,
     unanswer_recode_multi = 0
   )

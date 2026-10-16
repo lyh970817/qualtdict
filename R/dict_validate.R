@@ -35,15 +35,16 @@
 #' }
 #'
 #' @examples
-#' dict <- data.frame(
-#'   response_column_id = c("QID1", "QID2"),
-#'   variable_name = c("q1", "q2"),
-#'   label = c("Yes", "No"),
-#'   level = c("1", "2")
-#' )
-#' class(dict) <- c("qualtdict", class(dict))
+#' validation <- dict_validate(glad_example$dictionary)
+#' names(validation)
 #'
-#' validation <- dict_validate(dict)
+#' # For the example survey, every finding is a suggestive variable-name repair
+#' findings <- validation$validation_findings
+#' table(findings$severity)
+#' findings[, c(
+#'   "severity", "response_column_id", "original_candidate", "variable_name",
+#'   "reason"
+#' )]
 #'
 #' @export
 dict_validate <- function(dict, quiet = TRUE) {

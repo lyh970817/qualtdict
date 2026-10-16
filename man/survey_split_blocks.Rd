@@ -37,21 +37,7 @@ When \code{dict} is not supplied, \code{survey_split_blocks()} uses the
 \code{\link[qualtdict]{survey_fetch_labelled}}.
 }
 \examples{
-dict <- data.frame(
-  response_column_id = c("QID1", "QID2"),
-  variable_name = c("q1", "q2"),
-  block = c("Block A", "Block B")
-)
-class(dict) <- c("qualtdict", class(dict))
-
-dat <- data.frame(
-  externalDataReference = "R_1",
-  startDate = "2026-06-01",
-  endDate = "2026-06-01",
-  q1 = "1",
-  q2 = "2"
-)
-attr(dat, "dict") <- dict
-
-survey_split_blocks(dat)
+survey_blocks <- survey_split_blocks(glad_example$labelled_survey_data)
+names(survey_blocks)
+survey_blocks$GAD7
 }

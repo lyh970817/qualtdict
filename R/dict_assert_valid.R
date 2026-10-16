@@ -254,19 +254,14 @@ export_blocking_message <- function(findings) {
 #'
 #' @export
 #' @examples
-#' dict <- data.frame(
-#'   response_column_id = c("QID1", "QID1"),
-#'   variable_name = "q1",
-#'   label = c("Yes", "No"),
-#'   level = c("1", "2")
-#' )
-#' class(dict) <- c("qualtdict", class(dict))
-#'
+#' # The example dictionary has no Export-blocking Validation Findings, so it
+#' # passes silently
+#' dict <- glad_example$dictionary
 #' dict_assert_valid(dict)
 #'
 #' # Two choices sharing one Qualtrics recode are exported as one column.
 #' broken <- dict
-#' broken$level <- c("1", "1")
+#' broken$level[broken$variable_name == "DEM.SEX.1.0"] <- "1"
 #'
 #' try(dict_assert_valid(broken))
 dict_assert_valid <- function(dict) {

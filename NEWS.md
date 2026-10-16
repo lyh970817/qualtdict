@@ -17,10 +17,27 @@
   `"survey_export_findings"`. The error class
   `"qualtdict_export_blocking_findings"` is unchanged.
 
+## New features
+
+- The package now bundles `glad_example`, an offline example survey: the
+  metadata of a subset of the GLAD Study sign-up questionnaire, with the
+  Variable Dictionary and Labelled Survey Data qualtdict produces from it.
+  Its responses are synthetic. It lets you explore what qualtdict reads and
+  returns without Qualtrics credentials.
+
 ## Minor improvements and fixes
 
 - Labelling an Export Variable whose Levels and Labels differ in count now
   raises a classed `"qualtdict_level_label_mismatch"` error.
+
+## Documentation
+
+- The README, the introduction vignette, and the help-file examples are
+  rewritten for users. The README explains the problem qualtdict solves,
+  and all three now show real output from `glad_example` instead of
+  unevaluated calls. Live calls that need credentials stay unevaluated.
+- A new Glossary article on the package website defines the terms used
+  across the documentation.
 
 # qualtdict 0.1.0
 

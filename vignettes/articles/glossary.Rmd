@@ -1,0 +1,161 @@
+---
+title: "Glossary"
+---
+
+This glossary defines the terms the qualtdict documentation uses for
+Qualtrics surveys, Variable Dictionaries and Labelled Survey Data. Terms are
+capitalised throughout the documentation so you can look them up here.
+
+## Survey structure
+
+**QID**:
+The bare Qualtrics question identifier for a survey question, such as `QID1`
+or `QID16`. One QID can produce several response columns. Stored in the
+Variable Dictionary as `qid`.
+
+**Question Name**:
+The question number or name you can edit in the Qualtrics survey editor,
+such as `Q1`, `CSAT` or `Intro` (`questionName` in the Qualtrics API).
+Stored in the Variable Dictionary as `question_name`. It is always present
+and remains distinct from the selected Dictionary Variable Name.
+
+**Survey Block**:
+A Qualtrics grouping of questions, stored in the Variable Dictionary as
+`block`.
+
+**Embedded Data Field**:
+A Qualtrics embedded data field defined in the survey metadata or Survey
+Flow. It is not a question, so it has no QID, but it is exported as a
+response column and has its own Variable Dictionary row with
+`row_source = "embedded_data"`.
+
+**Scoring Variable**:
+A score computed by Qualtrics from its scoring settings. Its values are
+derived from question answers, but it is not a question response. It has its
+own Variable Dictionary row with `row_source = "scoring"`.
+
+**Text-analysis Sidecar**:
+A column added by Qualtrics text analysis of a text response. It belongs to
+the text question, and may refer to its parent QID, but it is distinct from
+the text response itself. It has its own Variable Dictionary row with
+`row_source = "text_analysis"`.
+
+**Loop and Merge Support**:
+How qualtdict represents Qualtrics Loop and Merge structures in
+Variable Dictionaries, Response Column IDs, question text, Semantic Names and
+Labelled Survey Data. Not every Loop and Merge structure is covered yet.
+
+**Loop Option**:
+A value in a Qualtrics Loop and Merge structure. Each Loop Option expands a
+looped question into its own Variable Dictionary rows and Export Variables.
+Stored in the Variable Dictionary as `looping_option`.
+
+## The Variable Dictionary
+
+**Variable Dictionary**:
+A table describing a Qualtrics survey's exported variables: their
+identifiers, question text, item text, levels, labels, Survey Blocks and
+question types. Besides question responses, it has rows for Metadata-defined
+Export Variables. `dict_generate()` returns one.
+
+**qualtdict object**:
+The R representation of a Variable Dictionary: a data frame with class
+`qualtdict`.
+
+**Response Column ID**:
+The name of a column in the response data downloaded from Qualtrics with
+`qualtRics::fetch_survey(import_id = TRUE)`, such as `QID12_3_TEXT`. It may
+encode the choice, item, text entry, timing, column or loop the column
+belongs to. qualtdict uses it to match the downloaded data to Variable
+Dictionary rows. Stored in the Variable Dictionary as `response_column_id`.
+
+**Dictionary Row Source**:
+What produced a Variable Dictionary row, stored as `row_source`: a survey
+`question`, an `embedded_data` field, a `scoring` variable, or a
+`text_analysis` sidecar.
+
+**Metadata-defined Export Variable**:
+An exported column that is defined in the Qualtrics survey metadata rather
+than by a question response: an Embedded Data Field, a Scoring Variable or a
+Text-analysis Sidecar. It still has a Response Column ID and its own
+Dictionary Row Source.
+
+**Dictionary Variable Name**:
+The variable name qualtdict assigns to a response column, stored in the
+Variable Dictionary as `variable_name`. It is taken from the Question Name
+or from a Semantic Name, and repaired where needed so that it is unique and
+safe as a column name in Labelled Survey Data.
+
+**Semantic Name**:
+A best-effort Dictionary Variable Name generated from survey text, Survey
+Block and response metadata, for surveys whose Question Names are not good
+analysis names. It is a readable convenience, not a stable identifier: it
+can change with the survey text or the package version. When it is built
+from words of the question text, it keeps them in their original order.
+
+**Block Prefix**:
+A short string derived from a Survey Block and prepended to a Semantic Name
+to tell apart variables from different blocks. The `block_pattern` argument
+of `dict_generate()` creates it.
+
+## Validation
+
+**Validation Finding**:
+A possible structural inconsistency in a Variable Dictionary, such as a
+non-unique or repaired name, duplicated levels or labels, non-consecutive
+levels, or a level-label mapping that is not one-to-one. `dict_validate()`
+reports them. A clean result is a consistency check, not proof that the
+survey metadata is correct.
+
+**Definite Validation Finding**:
+A Validation Finding that makes its column uninterpretable or its identity
+unreliable: an Export-blocking level-label coding, or an inconsistent,
+duplicate or unsafe final `variable_name`. Reported with
+`severity == "definite"`. `exclude_findings = "definite"` in
+`survey_fetch_labelled()` drops these columns. A finding of a kind qualtdict does not
+recognise counts as definite.
+
+**Suggestive Validation Finding**:
+A Validation Finding worth review that leaves the column's data and identity
+sound: a repaired `variable_name`, or a gapped level run, which is ordinary
+Qualtrics survey design. Reported with `severity == "suggestive"`. It never
+stops `survey_fetch_labelled()` and is not dropped by
+`exclude_findings = "definite"`.
+
+**Export-blocking Validation Finding**:
+A Definite Validation Finding whose level-label coding makes labelling wrong
+or impossible: label and level are not one-to-one, one label is carried by
+several rows, or one level is carried by several rows. For example, two
+choices sharing one Qualtrics recode are exported as one column carrying
+both meanings. `dict_assert_valid()` raises an error for these findings, and
+`survey_fetch_labelled()` runs it before downloading. They are reported,
+never repaired: the Variable Dictionary keeps every row as the survey
+defines it.
+
+## Labelled Survey Data
+
+**Participant Response Data**:
+Record-level data submitted by or about survey participants, whether
+downloaded directly from Qualtrics or turned into Labelled Survey Data.
+Variable Dictionaries, survey metadata and findings are not Participant
+Response Data unless they contain row-level participant values.
+
+**Labelled Export**:
+Applying a Variable Dictionary to Qualtrics responses to produce Labelled
+Survey Data, as `survey_fetch_labelled()` does.
+
+**Export Variable**:
+A column of Labelled Survey Data: a downloaded response column that qualtdict
+matched by Response Column ID, renamed to its Dictionary Variable Name and
+labelled.
+
+**Labelled Survey Data**:
+Participant Response Data whose Export Variables have been renamed and
+labelled from a Variable Dictionary. `survey_fetch_labelled()` returns it.
+
+**Labelled Export Finding**:
+A problem found while matching a Variable Dictionary to downloaded survey
+data, such as a Response Column ID in the Variable Dictionary that is absent
+from the download. Unlike Validation Findings, which concern the dictionary
+alone, these are found while building Labelled Survey Data.
+`survey_export_findings()` returns them.

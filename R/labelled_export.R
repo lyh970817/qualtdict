@@ -194,6 +194,10 @@ empty_survey_export_findings <- function() {
 #' @return A data frame of Labelled Export Findings.
 #' @export
 #' @examples
+#' # Every Variable Dictionary column was found in the example download
+#' survey_export_findings(glad_example$labelled_survey_data)
+#'
+#' # A download that lacked a dictionary column would report it like this
 #' dat <- data.frame(q1 = "1")
 #' attr(dat, "survey_export_findings") <- data.frame(
 #'   finding = "missing_response_column_id",
