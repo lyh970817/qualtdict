@@ -30,6 +30,11 @@
 - Labelling an Export Variable whose Levels and Labels differ in count now
   raises a classed `"qualtdict_level_label_mismatch"` error.
 
+- Qualtrics API calls are now retried with exponentially increasing waits
+  through `purrr::insistently()`, up to five attempts with waits capped at
+  30 seconds. A `NULL` result is no longer retried, and the last error is
+  raised again.
+
 ## Documentation
 
 - The README, the introduction vignette, and the help-file examples are
