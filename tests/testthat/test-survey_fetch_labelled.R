@@ -1297,6 +1297,7 @@ test_that("a tick column with two labels on one level cannot be labelled", {
       var_dict,
       unanswer_recode = -77,
       unanswer_recode_multi = 0
-    )
+    ),
+    class = "qualtdict_level_label_mismatch"
   )
 })

@@ -376,6 +376,7 @@ survey_var_recode <- function(
     text_label <- unique(paste_narm(var_dict[["question"]], var_dict[["item"]]))
     var <- set_label(var, label = text_label)
   } else {
+    survey_var_check_level_label_counts(var_dict, label_facts)
     var <- set_labels(
       var,
       labels = setNames(label_facts$levels, label_facts$labels)
@@ -383,6 +384,45 @@ survey_var_recode <- function(
   }
 
   return(var)
+}
+
+#' Abort when an Export Variable's Levels and Labels cannot be paired
+#'
+#' Value labels pair each Level with one Label, so the two must have the same
+#' length. A mismatch means the Variable Dictionary rows are inconsistent
+#' (for example two choices sharing one Qualtrics RecodeValue on a tick
+#' column); `dict_assert_valid()` normally reports this before download. This
+#' check raises a classed error rather than letting labelling fail
+#' incidentally downstream.
+#'
+#' Signals a condition of class `qualtdict_level_label_mismatch`.
+#' @noRd
+survey_var_check_level_label_counts <- function(var_dict, label_facts) {
+  n_levels <- length(label_facts$levels)
+  n_labels <- length(label_facts$labels)
+  if (n_levels == n_labels) {
+    return(invisible(NULL))
+  }
+
+  variable_name <- dict_first_or_na(dict_variable_name(var_dict))
+
+  rlang::abort(
+    paste0(
+      "Cannot label Export Variable `",
+      variable_name,
+      "`: ",
+      n_levels,
+      " Levels but ",
+      n_labels,
+      " Labels. ",
+      "Run `dict_assert_valid()` on the Variable Dictionary to locate ",
+      "the inconsistent rows."
+    ),
+    class = "qualtdict_level_label_mismatch",
+    variable_name = variable_name,
+    n_levels = n_levels,
+    n_labels = n_labels
+  )
 }
 
 #' Build labelling context for one Export Variable

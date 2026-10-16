@@ -17,6 +17,11 @@
   `"survey_export_findings"`. The error class
   `"qualtdict_export_blocking_findings"` is unchanged.
 
+## Minor improvements and fixes
+
+- Labelling an Export Variable whose Levels and Labels differ in count now
+  raises a classed `"qualtdict_level_label_mismatch"` error.
+
 # qualtdict 0.1.0
 
 First release. It collects everything below, previously carried as unreleased
