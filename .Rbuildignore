@@ -38,6 +38,7 @@
 ^\.worktrees/
 ^_pkgdown\.yml$
 ^codecov\.yml$
+^data-raw$
 ^docs$
 ^docs/superpowers/plans$
 ^helper-pkg\.R$

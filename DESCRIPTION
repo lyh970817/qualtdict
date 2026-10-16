@@ -42,7 +42,7 @@ VignetteBuilder:
 Config/roxygen2/version: 8.0.0
 Config/testthat/edition: 3
 Config/testthat/start-first: dict_generate, dict_validate,
-    fetch_labelled_survey_data
+    survey_fetch_labelled
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
