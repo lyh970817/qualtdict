@@ -26,7 +26,7 @@ test_that("render_response_columns renders MC rows with aligned facts", {
     unname(rendered$label),
     c("Yes", "No", "Other", "Other_TEXT")
   )
-  expect_true(all(vapply(rendered, length, integer(1)) == nrow(rendered)))
+  expect_all_equal(vapply(rendered, length, integer(1)), nrow(rendered))
 })
 
 test_that("MC independent columns preserve recode suffix behavior", {
@@ -96,7 +96,7 @@ test_that("multiple-answer Response Column IDs use numeric choice recodes", {
     unname(dict$level),
     c("1", "1", "1", "1", "1", "0_TEXT")
   )
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("MC renderer keeps recodes in IDs and ticks in Levels", {
@@ -164,7 +164,7 @@ test_that("non-analysed multiple-answer choices are not response columns", {
   # The recode lives in the Response Column ID, never in `level`, so the
   # suppressed choice has to be asserted on the ID.
   expect_false("QID1_-99" %in% dict$response_column_id)
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("non-analysed MAVR text choices remain response columns", {
@@ -182,8 +182,8 @@ test_that("non-analysed MAVR text choices remain response columns", {
     semantic_name_preprocess = NULL
   )
 
-  expect_true("QID1_-99" %in% dict$response_column_id)
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_in("QID1_-99", dict$response_column_id)
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("plain non-analysed MAVR text choices are not response columns", {
@@ -199,7 +199,7 @@ test_that("plain non-analysed MAVR text choices are not response columns", {
   )
 
   expect_false("QID1_-99" %in% dict$response_column_id)
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("non-analysed single-answer choices remain value labels", {
@@ -214,10 +214,10 @@ test_that("non-analysed single-answer choices remain value labels", {
     semantic_name_preprocess = NULL
   )
 
-  expect_true("QID1" %in% dict$response_column_id)
-  expect_true("1" %in% dict$level)
-  expect_true("Yes" %in% dict$label)
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_in("QID1", dict$response_column_id)
+  expect_in("1", dict$level)
+  expect_in("Yes", dict$label)
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("randomized MAVR text questions render display order helpers", {
@@ -250,7 +250,7 @@ test_that("randomized MAVR text questions render display order helpers", {
     do_response_column_ids,
     c("QID1_DO_1", "QID1_DO_2", "QID1_DO_99")
   )
-  expect_true("QID1_99" %in% dict$response_column_id)
+  expect_in("QID1_99", dict$response_column_id)
   expect_identical(
     unname(dict$label[dict$response_column_id %in% do_response_column_ids]),
     c("Yes", "No", "Other")
@@ -269,7 +269,7 @@ test_that("randomized MAVR text questions render display order helpers", {
     ),
     c("Yes", "missing")
   )
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("display-order helpers declare no Level and name their choice", {
@@ -299,7 +299,7 @@ test_that("display-order helpers declare no Level and name their choice", {
     display_order_rows$response_column_id,
     c("QID1_DO_1", "QID1_DO_2", "QID1_DO_99")
   )
-  expect_true(all(is.na(display_order_rows$level)))
+  expect_all_true(is.na(display_order_rows$level))
   expect_identical(
     display_order_rows$item,
     c(
@@ -314,7 +314,7 @@ test_that("display-order helpers declare no Level and name their choice", {
     unname(display_order_rows$label),
     c("Yes", "No", "Other")
   )
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("looped MC text columns keep loop prefix before QID", {

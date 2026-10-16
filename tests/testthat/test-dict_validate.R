@@ -221,8 +221,8 @@ test_that("dict_validate skips level-label checks for Embedded Data Fields", {
 
   findings <- dict_validate(dict)$validation_findings
 
-  expect_false(any(findings$finding == "level_label_mistake"))
-  expect_true(any(findings$finding == "unsafe_variable_name"))
+  expect_all_false(findings$finding == "level_label_mistake")
+  expect_in("unsafe_variable_name", findings$finding)
 })
 
 test_that("dict_validate skips level-label checks for Text-analysis Sidecars", {
@@ -239,6 +239,6 @@ test_that("dict_validate skips level-label checks for Text-analysis Sidecars", {
 
   findings <- dict_validate(dict)$validation_findings
 
-  expect_false(any(findings$finding == "level_label_mistake"))
-  expect_true(any(findings$finding == "unsafe_variable_name"))
+  expect_all_false(findings$finding == "level_label_mistake")
+  expect_in("unsafe_variable_name", findings$finding)
 })

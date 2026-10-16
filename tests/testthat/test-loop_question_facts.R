@@ -463,7 +463,7 @@ test_that("normalised metadata renders supported Loop and Merge rows", {
     c("Why did you choose Apples?", "Why did you choose Bananas?")
   )
   expect_identical(target_rows$looping_option, c("Apples", "Bananas"))
-  expect_true(all(is.na(target_rows$item)))
+  expect_all_true(is.na(target_rows$item))
   expect_identical(target_rows$type, c("TE", "TE"))
   expect_identical(target_rows$selector, c("SL", "SL"))
   expect_identical(attr(dict, "survey_name"), "Loop Survey")
@@ -497,7 +497,7 @@ test_that(
 
     expect_false("QID1_1" %in% dict$response_column_id)
     expect_false("QID1_2" %in% dict$response_column_id)
-    expect_true("QID1_3" %in% dict$response_column_id)
+    expect_in("QID1_3", dict$response_column_id)
 
     target_rows <- dict[grepl("QID2", dict$response_column_id, fixed = TRUE), ]
 
@@ -692,7 +692,7 @@ test_that("matrix source Loop and Merge prefixes use source response rows", {
     target_rows$response_column_id,
     c("1_QID2_TEXT", "2_QID2_TEXT", "3_QID2_TEXT")
   )
-  expect_false(any(grepl("^QID1_QID2_TEXT$", target_rows$response_column_id)))
+  expect_all_false(grepl("^QID1_QID2_TEXT$", target_rows$response_column_id))
   expect_identical(
     target_rows$looping_option,
     c("Condition 1", "Condition 2", "Condition 3")

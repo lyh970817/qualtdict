@@ -287,7 +287,7 @@ test_that("survey_fetch_labelled reports missing Embedded Data Fields", {
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "Source Channel")
-  expect_true(is.na(findings$qid))
+  expect_identical(findings$qid, NA_character_)
   expect_identical(findings$variable_name, "Source_Channel")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
@@ -319,7 +319,7 @@ test_that("survey_fetch_labelled reports missing Scoring Variables", {
   expect_named(dat, "q1")
   expect_identical(findings$finding, "missing_response_column_id")
   expect_identical(findings$response_column_id, "Total Score")
-  expect_true(is.na(findings$qid))
+  expect_identical(findings$qid, NA_character_)
   expect_identical(findings$variable_name, "Total_Score")
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
@@ -551,7 +551,7 @@ test_that("response metadata normalises PascalCase export casing", {
 
   dat <- survey_fetch_labelled(minimal_export_dict())
 
-  expect_true(all(c("recordedDate", "ResponseId", "Progress") %in% names(dat)))
+  expect_in(c("recordedDate", "ResponseId", "Progress"), names(dat))
   expect_identical(dat$recordedDate, "2026-06-02")
   expect_identical(dat$ResponseId, "R_xyz")
   expect_identical(dat$Progress, "50")
@@ -573,8 +573,8 @@ test_that("response metadata degrades gracefully when columns are absent", {
 
   expect_no_warning(dat <- survey_fetch_labelled(minimal_export_dict()))
 
-  expect_true("recordedDate" %in% names(dat))
-  expect_false(any(c("ResponseId", "Progress") %in% names(dat)))
+  expect_in("recordedDate", names(dat))
+  expect_all_false(c("ResponseId", "Progress") %in% names(dat))
 })
 
 test_that("extra_columns = NULL suppresses response metadata", {

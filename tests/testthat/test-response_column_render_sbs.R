@@ -46,8 +46,9 @@ test_that("render_response_columns renders SBS and sidecar columns", {
       "QID2#3_9"
     )
   )
-  expect_true(
-    all(vapply(sbs_rendered, length, integer(1)) == nrow(sbs_rendered))
+  expect_all_equal(
+    vapply(sbs_rendered, length, integer(1)),
+    nrow(sbs_rendered)
   )
 
   expect_identical(
@@ -340,15 +341,15 @@ test_that("SBS multiple-answer columns include column, row, and choice IDs", {
     semantic_name_preprocess = NULL
   )
 
-  expect_true(all(
+  expect_in(
     c(
       "QID2#3_2_1",
       "QID2#3_2_2",
       "QID2#3_4_1",
       "QID2#3_4_2"
-    ) %in%
-      dict$response_column_id
-  ))
+    ),
+    dict$response_column_id
+  )
   expect_identical(
     grep("^QID2#3_", dict$response_column_id, value = TRUE),
     c("QID2#3_2_1", "QID2#3_2_2", "QID2#3_4_1", "QID2#3_4_2")
@@ -357,7 +358,7 @@ test_that("SBS multiple-answer columns include column, row, and choice IDs", {
     unname(dict$level[grepl("^QID2#3_", dict$response_column_id)]),
     c("1", "2", "1", "2")
   )
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("carried-forward SBS rows use subquestion response column IDs", {
@@ -377,7 +378,7 @@ test_that("carried-forward SBS rows use subquestion response column IDs", {
     c("QID2_x1", "QID2_x2", "QID2_x3")
   )
   expect_identical(unname(dict$item), c("First row", "Second row", "Third row"))
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
 })
 
 test_that("SBS text-entry subquestions keep row metadata lengths aligned", {
@@ -394,7 +395,7 @@ test_that("SBS text-entry subquestions keep row metadata lengths aligned", {
     )
   )
 
-  expect_true(all(lengths(dict) == nrow(dict)))
+  expect_all_equal(lengths(dict), nrow(dict))
   expect_identical(
     dict$response_column_id,
     c(
