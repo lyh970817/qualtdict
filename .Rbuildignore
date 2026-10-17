@@ -1,7 +1,6 @@
 ^.*\.Rds$
 ^.*\.Rproj$
 ^AGENTS\.md$
-^CONTEXT\.md$
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.R-lib$
