@@ -49,6 +49,16 @@ This tiering is provisional; see
 https://github.com/lyh970817/qualtdict/issues/27 before restructuring
 it.
 
+## autotest Release Gate
+
+`tools/autotest.R` is the autotest release gate. Run it through the nix shell
+before a release or a review resubmission; see `tools/autotest.md` for what it
+checks. It needs the `autotest` package from the rOpenSci r-universe
+(https://ropensci.r-universe.dev). Exclusions live in
+`tools/autotest-exclusions.yaml`, and each one needs a written reason. Do not
+add exclusions just to make the gate pass without saying so; fix the code or
+documentation instead, or report the exclusion and why.
+
 ## Worktree Location
 
 Create any temporary Git worktrees for agent work under `.worktrees/` or
@@ -77,4 +87,6 @@ Do not commit Qualtrics API keys, `.Renviron`, `.Rhistory`, `.RData`, `.Rds`, or
 
 ### Domain docs
 
-Single-context repo: use root `CONTEXT.md` and root `docs/adr/` when present. See `docs/agents/domain.md`.
+Single-context repo: use root `CONTEXT.md` and root `docs/adr/` when present.
+Both exist only on the `personal` branch, not on `main` or in worktrees cut
+from `main`; read them from the main checkout. See `docs/agents/domain.md`.

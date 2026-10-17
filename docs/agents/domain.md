@@ -7,11 +7,15 @@ How the engineering skills should consume this repo's domain documentation when 
 - **`CONTEXT.md`** at the repo root.
 - **`docs/adr/`** -- read ADRs that touch the area you're about to work in.
 
+Both are personal-only: they exist on the `personal` branch but not on
+`main`, so a worktree cut from `main` lacks them. Read them from the main
+checkout on `personal`.
+
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The producer skill (`/grill-with-docs`) creates them lazily when terms or decisions actually get resolved.
 
 ## File structure
 
-Single-context repo:
+Single-context repo (on `personal` only):
 
 ```
 /
