@@ -58,8 +58,7 @@ write a unit test, if needed).
     `air format .`, which the pre-commit hooks also run. Don't reformat code
     unrelated to your change.
 
-*   Source lines are limited to 80 columns (see
-    `docs/adr/0007-use-80-column-source-line-limit.md`).
+*   Source lines are limited to 80 columns.
 
 *   Documentation uses [roxygen2](https://roxygen2.r-lib.org/) with
     [Markdown syntax](https://roxygen2.r-lib.org/articles/markdown.html).
@@ -91,11 +90,6 @@ article on the package website, whose source is
 and tests follow. Use its terms in your changes, and update the article when a
 change alters one of its definitions. The vocabulary of the maintainer smoke
 check is in `tools/local-finalize-smoke.md`.
-
-`docs/adr/` holds dated architecture decision records. A change that reverses
-a recorded decision adds a new ADR rather than editing the old one.
-
-`docs/design/` holds longer design notes.
 
 `tools/` holds maintainer scripts that need Qualtrics credentials, following
 the unofficial convention described at

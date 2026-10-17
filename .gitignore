@@ -15,8 +15,6 @@ tools/raw-response-column-parity.R
 .worktrees/
 .claude/worktrees/
 docs/*
-!docs/adr/
-!docs/design/
 .superpowers/
 .Renviron
 .nix/
