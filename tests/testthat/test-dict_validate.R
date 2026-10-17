@@ -74,6 +74,48 @@ test_that("dict_validate is quiet by default with opt-in progress messages", {
   )
 })
 
+test_that("dict_validate rejects dictionaries without the qualtdict class", {
+  dict <- minimal_validation_dict()
+  class(dict) <- setdiff(class(dict), "qualtdict")
+
+  expect_error(
+    dict_validate(dict),
+    "Argument must be a `qualtdict` from `dict_generate`."
+  )
+})
+
+test_that("dict_validate requires quiet to be a single TRUE or FALSE", {
+  dict <- minimal_validation_dict()
+
+  for (quiet in list(NA, "yes", c(TRUE, FALSE), 1L)) {
+    expect_error(
+      dict_validate(dict, quiet = quiet),
+      "Argument must be a single `TRUE` or `FALSE`."
+    )
+  }
+})
+
+test_that("dict_validate stays silent by default when findings exist", {
+  dict <- minimal_validation_dict(
+    response_column_id = c("QID1", "QID1", "QID1"),
+    variable_name = c("q1_repaired", "q1_repaired", "q1_repaired"),
+    label = c("A", "A", "B"),
+    level = c("1", "1", "3")
+  )
+  attr(dict, "variable_name_findings") <- tibble::tibble(
+    response_column_id = "QID1",
+    original_candidate = "q1 repaired",
+    variable_name = "q1_repaired",
+    reason = "unsafe"
+  )
+
+  expect_silent(validation <- dict_validate(dict))
+  expect_setequal(
+    validation$validation_findings$finding,
+    c("repaired_variable_name", "level_label_mistake")
+  )
+})
+
 test_that("dict_validate reports progress for long validation phases", {
   dict <- minimal_validation_dict(
     response_column_id = paste0("QID", seq_len(3)),

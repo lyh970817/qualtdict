@@ -605,6 +605,26 @@ test_that("users cannot override qualtdict-owned fetch settings", {
   )
 })
 
+test_that("every documented owned fetch setting is rejected", {
+  owned_args <- list(
+    surveyID = "SV_other",
+    import_id = FALSE,
+    convert = TRUE,
+    label = TRUE,
+    breakout_sets = FALSE
+  )
+
+  for (arg in names(owned_args)) {
+    expect_error(
+      do.call(
+        survey_fetch_labelled,
+        c(list(minimal_export_dict()), owned_args[arg])
+      ),
+      "owned by qualtdict"
+    )
+  }
+})
+
 test_that("survey_fetch_labelled requires a surveyID attribute", {
   dict <- minimal_export_dict()
   attr(dict, "surveyID") <- NULL
