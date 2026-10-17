@@ -41,7 +41,6 @@
 ^codecov\.yml$
 ^data-raw$
 ^docs$
-^docs/superpowers/plans$
 ^flake\.lock$
 ^flake\.nix$
 ^helper-pkg\.R$

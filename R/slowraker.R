@@ -200,18 +200,23 @@ slowrake_pos_annotators <- function(stop_pos) {
 #
 # This pulls six non-exported slowraker functions (get_cand_words,
 # filter_words, process_keyword_df, get_pos_tags, handle_pos_error,
-# stop_pos_tags) through getFromNamespace(). They are not stable API, and no
-# version constraint protects against an upstream refactor breaking this
-# without an API-breaking slowraker release. That coupling is a knowingly
-# accepted risk, reviewed and accepted on 2026-08-18, not an oversight: the
-# RAKE/Semantic Name feature is optional (slowraker is in Suggests, moved
-# there by e144a55), guarded, and the README already describes the package
-# as not being a stable Semantic Name generator, so the blast radius is one
-# optional feature, not the package's core job. The three exit routes if
-# this needs revisiting -- vendor the functions locally with attribution and
-# tests, get upstream to export a supported API, or redesign Semantic Name
-# generation so the internals are unnecessary -- are recorded in the ADR at
-# docs/adr/0012-accept-slowraker-private-internals-coupling.md (full detail).
+# stop_pos_tags) through getFromNamespace(). They let slowrake() above run
+# RAKE step by step: Semantic Name generation calls it with stop_pos = NULL,
+# so the POS-tagging step, the only one that needs openNLP and therefore
+# Java, is skipped, and keywords are scored against the words of all the
+# survey's question texts (all_words), which slowraker::slowrake() does not
+# offer. The six are not stable API, and no version constraint protects
+# against an upstream refactor that breaks this without an API-breaking
+# slowraker release. That coupling is a knowingly accepted risk, reviewed on
+# 2026-08-18, not an oversight: the RAKE/Semantic Name feature is optional
+# (slowraker is in Suggests), guarded, and the README already describes the
+# package as not being a stable Semantic Name generator, so the blast radius
+# is one optional feature, not the package's core job. Revisit it if a
+# slowraker release changes or removes any of the six, or if Semantic Name
+# generation becomes core functionality. The exit routes then are: vendor
+# the functions locally with attribution to slowraker and dedicated tests,
+# get upstream to export a supported API and depend on that, or redesign
+# Semantic Name generation so the internals are unnecessary.
 slowraker_internal <- local({
   cache <- new.env(parent = emptyenv())
   function(name) {
