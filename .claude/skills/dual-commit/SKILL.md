@@ -21,6 +21,9 @@ rOpenSci reviewers are reading.
   `origin` as `personal` and tracking `origin/personal`. It is where the owner
   works day to day. It adds exactly these paths, absent from `main`:
   - `AGENTS.md`
+  - `CONTEXT.md` (the agent-facing vocabulary, with "Avoid" lines; the
+    public vocabulary is the Glossary article,
+    `vignettes/articles/glossary.Rmd`, on `main`)
   - `.claude/skills/ci-green-after-push/SKILL.md`
   - `.claude/skills/dual-commit/SKILL.md` (this file)
   - `docs/agents/` (agent domain notes)
@@ -28,9 +31,10 @@ rOpenSci reviewers are reading.
     software review book, with their upstream LICENSE)
   - `flake.nix`, `flake.lock` and `.envrc`
 
-  It also modifies one path: `.Rbuildignore` gains the three lines
-  `^\.envrc$`, `^flake\.lock$` and `^flake\.nix$`, so that R CMD check on
-  `personal` does not flag the Nix files as non-standard.
+  It also modifies one path: `.Rbuildignore` gains four lines: the three Nix
+  lines `^\.envrc$`, `^flake\.lock$` and `^flake\.nix$`, plus
+  `^CONTEXT\.md$`, so that R CMD check on `personal` does not flag these
+  files as non-standard.
 
 The three Nix files are one environment, not three: `flake.nix` defines it,
 `flake.lock` pins it, and `.envrc` is the single line `use nix` that makes
@@ -45,7 +49,8 @@ them again, which it should not).
 `.gitignore`. They were added with `git add -f` and stay tracked; new files
 under them need `git add -f` again. Do not edit `.gitignore` or
 `.Rbuildignore` to accommodate personal files: those are package files and
-belong to `main`. The one exception is the three Nix lines in `.Rbuildignore`.
+belong to `main`. The one exception is the four personal lines in
+`.Rbuildignore` (the three Nix lines and `^CONTEXT\.md$`).
 
 `personal` is a branch on the public GitHub repository, so anyone can read
 it. It must never contain credentials (`.Renviron` and `tools/.Renviron` stay
@@ -108,9 +113,10 @@ git diff --name-status main personal
 That last command is the check that matters. It must list the personal-only
 paths above as `A` lines, plus exactly one `M` line, `.Rbuildignore` (today
 every `docs/ropensci/` file appears individually). Check that
-`git diff main personal -- .Rbuildignore` shows only the three added Nix
-lines. If `main` changes `.Rbuildignore`, the merge may conflict there:
-resolve it as `main`'s content plus the three Nix lines. Any path missing
+`git diff main personal -- .Rbuildignore` shows only the four added lines
+(the three Nix lines and `^CONTEXT\.md$`). If `main` changes `.Rbuildignore`,
+the merge may conflict there: resolve it as `main`'s content plus those four
+lines. Any path missing
 from the `A` lines was deleted on `main` since the last merge, and the merge
 faithfully propagated that deletion onto `personal`. Put it back in a
 follow-up commit. For the Nix files, restore them from the last `personal`
@@ -123,6 +129,10 @@ git checkout personal@{1} -- flake.nix flake.lock .envrc
 git add .Rbuildignore
 git commit -m "Restore the Nix environment on personal"
 ```
+
+`CONTEXT.md` follows the same pattern: if a merge drops it, restore it with
+`git checkout personal@{1} -- CONTEXT.md` and re-add `^CONTEXT\.md$` to
+`.Rbuildignore` in one follow-up commit.
 
 Any other `M` or `D` line means `personal` has drifted from `main` on a
 package file, which should never happen: find out how before doing anything
@@ -165,8 +175,9 @@ checks; use the `ci-green-after-push` skill after pushing `main`.
   pre-commit hook fails solely because of personal-only files, commit with
   `--no-verify` and say so.
 - **Never edit `.gitignore` or `.Rbuildignore` on `personal`** to hide or
-  reveal personal files; use `git add -f`. The single exception is the three
-  Nix lines in `.Rbuildignore`.
+  reveal personal files; use `git add -f`. The single exception is the four
+  personal lines in `.Rbuildignore` (the three Nix lines and
+  `^CONTEXT\.md$`).
 
 ## Verifying you got it right
 
