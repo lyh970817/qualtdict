@@ -14,8 +14,8 @@ survey_fetch_labelled(
 )
 }
 \arguments{
-\item{dict}{A Variable Dictionary returned by
-\code{\link[qualtdict]{dict_generate}}.}
+\item{dict}{A Variable Dictionary: a \code{qualtdict} object (a tibble with class
+\code{qualtdict}) as returned by \code{\link[qualtdict]{dict_generate}}.}
 
 \item{extra_columns}{A character vector of downloaded survey data columns to
 retain in the Labelled Survey Data in addition to Export Variables. Defaults

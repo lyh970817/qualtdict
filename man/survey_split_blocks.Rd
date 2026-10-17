@@ -11,11 +11,11 @@ survey_split_blocks(
 )
 }
 \arguments{
-\item{dat}{Labelled Survey Data returned by
+\item{dat}{A data frame of Labelled Survey Data: a tibble as returned by
 \code{\link[qualtdict]{survey_fetch_labelled}}.}
 
-\item{dict}{A Variable Dictionary returned by
-\code{\link[qualtdict]{dict_generate}}.}
+\item{dict}{A Variable Dictionary: a \code{qualtdict} object (a tibble with class
+\code{qualtdict}) as returned by \code{\link[qualtdict]{dict_generate}}.}
 
 \item{extra_columns}{A character vector of raw Labelled Survey Data columns
 to retain in each block data set. Defaults to
@@ -39,5 +39,14 @@ When \code{dict} is not supplied, \code{survey_split_blocks()} uses the
 \examples{
 survey_blocks <- survey_split_blocks(glad_example$labelled_survey_data)
 names(survey_blocks)
+survey_blocks$GAD7
+
+# Pass the Variable Dictionary explicitly and keep only the respondent
+# identifier alongside each block's Export Variables
+survey_blocks <- survey_split_blocks(
+  glad_example$labelled_survey_data,
+  dict = glad_example$dictionary,
+  extra_columns = "externalDataReference"
+)
 survey_blocks$GAD7
 }
