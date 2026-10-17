@@ -242,6 +242,20 @@ test_that("survey_fetch_labelled reports missing Response Column IDs", {
   expect_identical(findings$reason, "not_found_in_downloaded_survey_data")
 })
 
+test_that("survey_export_findings rejects objects that are not data frames", {
+  dat <- tibble::tibble(q1 = "1")
+  attr(dat, "survey_export_findings") <- empty_survey_export_findings()
+
+  expect_error(
+    survey_export_findings(list(block = dat)),
+    "`x` must be Labelled Survey Data."
+  )
+  expect_error(
+    survey_export_findings(NULL),
+    "`x` must be Labelled Survey Data."
+  )
+})
+
 test_that("survey_fetch_labelled reports missing Embedded Data Fields", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "Source Channel"),
