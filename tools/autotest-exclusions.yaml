@@ -1,0 +1,50 @@
+# Exclusions for the autotest release gate, tools/autotest.R.
+#
+# autotest itself reads no exclusion file: its `test_data` argument switches
+# tests off package-wide or by operation, not per function. tools/autotest.R
+# therefore runs every test and drops the diagnostics matched here before it
+# decides whether the gate passes. Each entry names the `functions` it
+# applies to and narrows the match with any of `test_name`, `parameter` and
+# `content` (fixed substrings, any of which may occur in the diagnostic's
+# content). It needs a `test_name` or `content`, and a `note` saying why the
+# diagnostic reflects deliberate behaviour; an entry without a note is an
+# error. See tools/autotest.md.
+
+exclusions:
+  # `dict` must be a Variable Dictionary, a `qualtdict` object as returned by
+  # dict_generate(). These functions check the class on purpose
+  # (checkarg_isqualtdict()) and reject a plain data frame, tibble or
+  # data.table: the class marks a table built by dict_generate(), with the
+  # columns and attributes (such as `surveyID` and the variable-name repair
+  # findings) that validation and splitting rely on. autotest's rect_as_other
+  # test converts `dict` to those classes and reports the deliberate error.
+  - test_name: rect_as_other
+    functions:
+      - dict_validate
+      - dict_assert_valid
+      - dict_split_blocks
+      - survey_split_blocks
+    parameter: dict
+    note: >-
+      `dict` must be a qualtdict object; the class check rejecting plain
+      data frames, tibbles and data.tables is deliberate.
+
+  # The dict_assert_valid() example deliberately shows the error on a broken
+  # dictionary, `try(dict_assert_valid(broken))`, after the passing call.
+  # autotest traces every call in the examples and tests each as a base call,
+  # whatever the order, so the deliberate error comes back as an error from
+  # the normal call, from return_successful and from extend_rect_class, with
+  # the error's bullets as messages. Only diagnostics that carry that error's
+  # text are excluded, so a new failure of the passing call still fails the
+  # gate.
+  - functions:
+      - dict_assert_valid
+    content:
+      - Variable Dictionary has level-label codings that break Labelled Export
+      - "QID1127 (DEM.SEX.1.0): level 1 carries 2 labels"
+      - Levels and labels are reported as the Qualtrics survey defines them
+      - Use `dict_validate()` to list every Validation Finding without erroring
+      - To download anyway, use `exclude_findings = "definite"`
+    note: >-
+      The example's try() call errors on purpose to show the Export-blocking
+      error; autotest treats it as a base call.

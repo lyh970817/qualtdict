@@ -91,10 +91,18 @@ and tests follow. Use its terms in your changes, and update the article when a
 change alters one of its definitions. The vocabulary of the maintainer smoke
 check is in `tools/local-finalize-smoke.md`.
 
-`tools/` holds maintainer scripts that need Qualtrics credentials, following
-the unofficial convention described at
-<https://r-pkgs.org/misc.html#sec-misc-tools>. See
-`tools/local-finalize-smoke.md` and `tools/fetch-local-finalize-smoke.md`.
+`tools/` holds maintainer scripts that are not part of the package or of CI,
+following the unofficial convention described at
+<https://r-pkgs.org/misc.html#sec-misc-tools>. The smoke check scripts need
+Qualtrics credentials; see `tools/local-finalize-smoke.md` and
+`tools/fetch-local-finalize-smoke.md`. `tools/autotest.R` runs rOpenSci's
+autotest as a release gate, with exclusions in
+`tools/autotest-exclusions.yaml`; see `tools/autotest.md`.
+
+### Before a release
+
+Before a release or a review resubmission, run `Rscript tools/autotest.R`
+from the package root; it must exit with status 0.
 
 ## Code of Conduct
 
