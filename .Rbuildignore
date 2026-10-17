@@ -39,7 +39,6 @@
 ^codecov\.yml$
 ^data-raw$
 ^docs$
-^docs/superpowers/plans$
 ^helper-pkg\.R$
 ^node_modules$
 ^node_modules/

@@ -69,7 +69,7 @@ development entries.
 - The Variable Dictionary returned by `dict_generate()` now names its Loop
   Option column `looping_option` instead of `loop_option`. The two names
   carried the same value and the internal duplicate is removed, so the
-  dictionary keeps one name per concept (ADR 0010).
+  dictionary keeps one name per concept.
 
 - `dict_generate()` no longer accepts the pre-release compatibility arguments
   `name` and `preprocess`, nor the `easy_name` value. Use `variable_name`

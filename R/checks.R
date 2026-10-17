@@ -123,7 +123,7 @@ checkarg_isfunction <- function(arg, null_okay = TRUE) {
 
 #' Check that an argument is a normalised metadata bundle
 #'
-#' Enforces the ADR-0001 normalisation boundary: Variable Dictionary
+#' Enforces the normalisation boundary: Variable Dictionary
 #' assembly accepts only `qualtdict_normalised_metadata`, never raw
 #' Qualtrics metadata.
 #' @importFrom rlang abort
