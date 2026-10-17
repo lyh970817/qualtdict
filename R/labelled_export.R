@@ -189,7 +189,8 @@ empty_survey_export_findings <- function() {
 #' Labelled Export Findings describe issues detected while matching a Variable
 #' Dictionary to downloaded survey data.
 #'
-#' @param x Labelled Survey Data returned by [survey_fetch_labelled()].
+#' @param x A data frame of Labelled Survey Data, such as the tibble returned
+#' by [survey_fetch_labelled()].
 #'
 #' @return A data frame of Labelled Export Findings.
 #' @export

@@ -7,8 +7,8 @@
 dict_assert_valid(dict)
 }
 \arguments{
-\item{dict}{A Variable Dictionary returned by
-\code{\link[qualtdict]{dict_generate}}.}
+\item{dict}{A Variable Dictionary: a \code{qualtdict} object (a tibble with class
+\code{qualtdict}) as returned by \code{\link[qualtdict]{dict_generate}}.}
 }
 \value{
 \code{dict}, invisibly, when it carries no Export-blocking Validation

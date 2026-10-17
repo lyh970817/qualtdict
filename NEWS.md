@@ -47,6 +47,11 @@
   unevaluated calls. Live calls that need credentials stay unevaluated.
 - A new Glossary article on the package website defines the terms used
   across the documentation.
+- Parameter documentation now names the expected class: a Variable
+  Dictionary is a `qualtdict` object as returned by `dict_generate()`, and
+  Labelled Survey Data is a data frame as returned by
+  `survey_fetch_labelled()`. The examples of `dict_validate()` and
+  `survey_split_blocks()` now demonstrate every argument.
 
 # qualtdict 0.1.0
 

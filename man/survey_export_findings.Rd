@@ -7,7 +7,8 @@
 survey_export_findings(x)
 }
 \arguments{
-\item{x}{Labelled Survey Data returned by \code{\link[=survey_fetch_labelled]{survey_fetch_labelled()}}.}
+\item{x}{A data frame of Labelled Survey Data, such as the tibble returned
+by \code{\link[=survey_fetch_labelled]{survey_fetch_labelled()}}.}
 }
 \value{
 A data frame of Labelled Export Findings.

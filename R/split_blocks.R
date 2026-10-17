@@ -39,7 +39,7 @@ dict_split_blocks <- function(dict) {
 #' Create block-specific views of Labelled Survey Data without changing the
 #' return type of \code{\link[qualtdict]{survey_fetch_labelled}}.
 #'
-#' @param dat Labelled Survey Data returned by
+#' @param dat A data frame of Labelled Survey Data: a tibble as returned by
 #' \code{\link[qualtdict]{survey_fetch_labelled}}.
 #' @inheritParams dict_validate
 #' @param extra_columns A character vector of raw Labelled Survey Data columns
@@ -58,6 +58,15 @@ dict_split_blocks <- function(dict) {
 #' @examples
 #' survey_blocks <- survey_split_blocks(glad_example$labelled_survey_data)
 #' names(survey_blocks)
+#' survey_blocks$GAD7
+#'
+#' # Pass the Variable Dictionary explicitly and keep only the respondent
+#' # identifier alongside each block's Export Variables
+#' survey_blocks <- survey_split_blocks(
+#'   glad_example$labelled_survey_data,
+#'   dict = glad_example$dictionary,
+#'   extra_columns = "externalDataReference"
+#' )
 #' survey_blocks$GAD7
 survey_split_blocks <- function(
   dat,
