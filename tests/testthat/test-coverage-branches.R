@@ -103,16 +103,10 @@ test_that("dict_validate reports non-quiet finding messages", {
     reason = "unsafe"
   )
 
-  capture.output(
-    messages <- capture.output(
-      invisible(dict_validate(repaired, quiet = FALSE)),
-      type = "message"
-    )
-  )
-  expect_match(
-    paste(messages, collapse = "\n"),
+  expect_output(suppressMessages(expect_message(
+    dict_validate(repaired, quiet = FALSE),
     "Variable names were repaired"
-  )
+  )))
 
   level_issue <- coverage_test_dict(
     response_column_id = c("QID1", "QID1", "QID1"),
@@ -120,16 +114,10 @@ test_that("dict_validate reports non-quiet finding messages", {
     label = c("A", "A", "B"),
     level = c("1", "1", "3")
   )
-  capture.output(
-    messages <- capture.output(
-      invisible(dict_validate(level_issue, quiet = FALSE)),
-      type = "message"
-    )
-  )
-  expect_match(
-    paste(messages, collapse = "\n"),
+  expect_output(suppressMessages(expect_message(
+    dict_validate(level_issue, quiet = FALSE),
     "potential incorrect level-label codings"
-  )
+  )))
 })
 
 test_that("Labelled Export helpers cover empty and recode branches", {
@@ -527,16 +515,23 @@ test_that("slowrake covers deterministic fallback branches", {
     pos_annotator = NULL
   )))
 
-  capture.output(
-    keywords <- slowrake(
+  keywords <- slowrake(
+    c("alpha beta", "beta gamma"),
+    all_words = "alpha beta gamma",
+    stop_pos = NULL,
+    stem = FALSE
+  )
+  expect_type(keywords, "list")
+  expect_output(
+    slowrake(
       c("alpha beta", "beta gamma"),
       all_words = "alpha beta gamma",
       stop_pos = NULL,
       stem = FALSE,
       quiet = FALSE
-    )
+    ),
+    "100%"
   )
-  expect_type(keywords, "list")
 })
 
 test_that("slowrake covers the POS-tag filtering branch", {

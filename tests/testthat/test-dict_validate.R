@@ -61,17 +61,10 @@ test_that("dict_validate is quiet by default with opt-in progress messages", {
   )
 
   expect_silent(dict_validate(dict))
-  progress_messages <- NULL
-  capture.output(
-    progress_messages <- capture.output(
-      dict_validate(dict, quiet = FALSE),
-      type = "message"
-    )
-  )
-  expect_match(
-    paste(progress_messages, collapse = "\n"),
+  expect_output(suppressMessages(expect_message(
+    dict_validate(dict, quiet = FALSE),
     "Validating dictionary"
-  )
+  )))
 })
 
 test_that("dict_validate reports progress for long validation phases", {
@@ -83,19 +76,21 @@ test_that("dict_validate reports progress for long validation phases", {
   )
 
   expect_silent(dict_validate(dict))
-  progress_messages <- NULL
-  progress_output <- capture.output(
-    progress_messages <- capture.output(
-      dict_validate(dict, quiet = FALSE),
-      type = "message"
-    )
+  expect_output(
+    suppressMessages(
+      expect_message(
+        expect_message(
+          expect_message(
+            dict_validate(dict, quiet = FALSE),
+            "Validating dictionary"
+          ),
+          "Checking level-label pairs"
+        ),
+        "Checking level-label consistency"
+      )
+    ),
+    "100%"
   )
-
-  progress_messages <- paste(progress_messages, collapse = "\n")
-  expect_match(progress_messages, "Validating dictionary")
-  expect_match(progress_messages, "Checking level-label pairs")
-  expect_match(progress_messages, "Checking level-label consistency")
-  expect_match(paste(progress_output, collapse = "\n"), "100%")
 })
 
 test_that("dict_validate validates final variable_name export consistency", {
