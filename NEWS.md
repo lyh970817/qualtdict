@@ -35,6 +35,10 @@
   30 seconds. A `NULL` result is no longer retried, and the last error is
   raised again.
 
+- `survey_export_findings()` now errors when `x` is not a data frame instead
+  of returning an empty findings table, so passing the list returned by
+  `survey_split_blocks()` no longer reports no findings.
+
 ## Documentation
 
 - The README, the introduction vignette, and the help-file examples are
