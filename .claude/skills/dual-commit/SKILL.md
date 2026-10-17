@@ -1,6 +1,6 @@
 ---
 name: dual-commit
-description: Use when publishing qualtdict work to GitHub, when bringing `personal` back up to date with `main`, or when one piece of work touches both package files and this machine's personal-only files (agent instructions, skills, local rOpenSci reference docs, the Nix environment). Covers the branch and remote map — `main` is the public branch under rOpenSci review and `personal` is `main` plus the personal-only paths — where work is cut and merged, how to split mixed changes, the exact push commands, the post-merge restore step, and the checks that prove it landed.
+description: Use when publishing qualtdict work to GitHub, when bringing `personal` back up to date with `main`, or when one piece of work touches both package files and this machine's personal-only files (agent instructions, skills, design records, local rOpenSci reference docs, the Nix environment). Covers the branch and remote map — `main` is the public branch under rOpenSci review and `personal` is `main` plus the personal-only paths — where work is cut and merged, how to split mixed changes, the exact push commands, the post-merge restore step, and the checks that prove it landed.
 ---
 
 qualtdict has one remote and two long-lived branches. Nothing is filtered at
@@ -26,15 +26,21 @@ rOpenSci reviewers are reading.
     `vignettes/articles/glossary.Rmd`, on `main`)
   - `.claude/skills/ci-green-after-push/SKILL.md`
   - `.claude/skills/dual-commit/SKILL.md` (this file)
+  - `docs/adr/` and `docs/design/` (architecture decision records and
+    design notes used in agent-assisted development; the public repository
+    keeps the reasoning that code depends on in code comments and in
+    `.github/CONTRIBUTING.md`)
   - `docs/agents/` (agent domain notes)
   - `docs/ropensci/` (snapshots of the rOpenSci dev guide and statistical
     software review book, with their upstream LICENSE)
   - `flake.nix`, `flake.lock` and `.envrc`
 
-  It also modifies one path: `.Rbuildignore` gains four lines: the three Nix
+  It also modifies two paths. `.Rbuildignore` gains four lines: the three Nix
   lines `^\.envrc$`, `^flake\.lock$` and `^flake\.nix$`, plus
   `^CONTEXT\.md$`, so that R CMD check on `personal` does not flag these
-  files as non-standard.
+  files as non-standard. And `.gitignore` gains two lines, `!docs/adr/` and
+  `!docs/design/`, right after `docs/*`, so that the design records stay
+  tracked without `git add -f`.
 
 The three Nix files are one environment, not three: `flake.nix` defines it,
 `flake.lock` pins it, and `.envrc` is the single line `use nix` that makes
@@ -47,10 +53,13 @@ them again, which it should not).
 
 `docs/agents/` and `docs/ropensci/` are caught by the `docs/*` rule in
 `.gitignore`. They were added with `git add -f` and stay tracked; new files
-under them need `git add -f` again. Do not edit `.gitignore` or
-`.Rbuildignore` to accommodate personal files: those are package files and
-belong to `main`. The one exception is the four personal lines in
-`.Rbuildignore` (the three Nix lines and `^CONTEXT\.md$`).
+under them need `git add -f` again. `docs/adr/` and `docs/design/` are
+re-included by the two personal `!docs/...` lines in `.gitignore`, so new
+files there are added normally. Do not edit `.gitignore` or `.Rbuildignore`
+to accommodate personal files: those are package files and belong to
+`main`. The only exceptions are the four personal lines in `.Rbuildignore`
+(the three Nix lines and `^CONTEXT\.md$`) and the two personal lines in
+`.gitignore` (`!docs/adr/` and `!docs/design/`).
 
 `personal` is a branch on the public GitHub repository, so anyone can read
 it. It must never contain credentials (`.Renviron` and `tools/.Renviron` stay
@@ -111,11 +120,14 @@ git diff --name-status main personal
 ```
 
 That last command is the check that matters. It must list the personal-only
-paths above as `A` lines, plus exactly one `M` line, `.Rbuildignore` (today
-every `docs/ropensci/` file appears individually). Check that
+paths above as `A` lines, plus exactly two `M` lines, `.Rbuildignore` and
+`.gitignore` (today every `docs/adr/`, `docs/design/` and `docs/ropensci/`
+file appears individually). Check that
 `git diff main personal -- .Rbuildignore` shows only the four added lines
-(the three Nix lines and `^CONTEXT\.md$`). If `main` changes `.Rbuildignore`,
-the merge may conflict there: resolve it as `main`'s content plus those four
+(the three Nix lines and `^CONTEXT\.md$`), and that
+`git diff main personal -- .gitignore` shows only the two added lines
+`!docs/adr/` and `!docs/design/`. If `main` changes either file, the merge
+may conflict there: resolve it as `main`'s content plus those personal
 lines. Any path missing
 from the `A` lines was deleted on `main` since the last merge, and the merge
 faithfully propagated that deletion onto `personal`. Put it back in a
@@ -132,7 +144,10 @@ git commit -m "Restore the Nix environment on personal"
 
 `CONTEXT.md` follows the same pattern: if a merge drops it, restore it with
 `git checkout personal@{1} -- CONTEXT.md` and re-add `^CONTEXT\.md$` to
-`.Rbuildignore` in one follow-up commit.
+`.Rbuildignore` in one follow-up commit. So do the design records: restore
+them with `git checkout personal@{1} -- docs/adr docs/design` and re-add
+`!docs/adr/` and `!docs/design/` after `docs/*` in `.gitignore`, in one
+follow-up commit.
 
 Any other `M` or `D` line means `personal` has drifted from `main` on a
 package file, which should never happen: find out how before doing anything
@@ -175,9 +190,10 @@ checks; use the `ci-green-after-push` skill after pushing `main`.
   pre-commit hook fails solely because of personal-only files, commit with
   `--no-verify` and say so.
 - **Never edit `.gitignore` or `.Rbuildignore` on `personal`** to hide or
-  reveal personal files; use `git add -f`. The single exception is the four
+  reveal personal files; use `git add -f`. The only exceptions are the four
   personal lines in `.Rbuildignore` (the three Nix lines and
-  `^CONTEXT\.md$`).
+  `^CONTEXT\.md$`) and the two personal lines in `.gitignore`
+  (`!docs/adr/` and `!docs/design/`).
 
 ## Verifying you got it right
 
@@ -188,7 +204,7 @@ means unpushed work, a nonzero right number means someone else pushed.
 git fetch origin
 git rev-list --left-right --count main...origin/main          # expect 0  0
 git rev-list --left-right --count personal...origin/personal  # expect 0  0
-git diff --name-status main personal   # expect only A lines for personal-only paths plus M .Rbuildignore
+git diff --name-status main personal   # expect personal-only A lines, M .Rbuildignore, M .gitignore
 git log --oneline main..personal       # personal's own commits plus merges of main
 git rev-list --count personal..main    # expect 0 right after a refresh
 ```
