@@ -345,23 +345,13 @@ survey_recode <- function(
 #' @importFrom sjlabelled set_label set_labels
 #' @importFrom haven read_xpt
 #' @noRd
-# `haven` is a real runtime Import, not dead weight: sjlabelled::set_labels()
-# calls haven::is_tagged_na() in its named-labels branch, and this function
-# exercises that branch (verified in 915cb20, whose message records a test
-# failing with "Package 'haven' required for this function" once haven was
-# removed). The `@importFrom haven read_xpt` tag above is false -- read_xpt()
-# is never called anywhere in the package -- and is kept deliberately: a
-# truthful declaration reintroduces the R CMD check NOTE "Namespace in
-# Imports field not imported from: 'haven'", because qualtdict itself never
-# calls into haven (sjlabelled does, on its behalf), and the goodpractice
-# pre-commit hook fails the commit on any failed_checks() entry with no
-# note/warning/error distinction, so that NOTE cannot be committed honestly.
-# Alternatives considered: relaxing the hook to tolerate that one check or
-# NOTEs generally (rejected: it weakens the hook for every future check), or
-# dropping sjlabelled and setting the `label` and `labels` attributes
-# directly, which removes the need for haven (not yet attempted; it needs its
-# own verification against sjlabelled's labelled-vector semantics). Remove
-# the tag if either is done rather than carry it forward out of habit.
+# `haven` is a real runtime dependency: sjlabelled::set_labels() calls
+# haven::is_tagged_na() in its named-labels branch, which this function
+# exercises. The `@importFrom haven read_xpt` tag above is kept deliberately
+# although read_xpt() is never called: qualtdict never calls haven itself,
+# so without any import R CMD check notes that haven is in Imports but not
+# imported. Remove the tag if the package stops needing haven, for example
+# by setting the `label` and `labels` attributes directly.
 survey_var_recode <- function(
   var,
   var_dict,
