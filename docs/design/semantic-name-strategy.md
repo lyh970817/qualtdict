@@ -13,9 +13,9 @@ algorithm, without qualtdict learning anything about LLM providers,
 keys, or networking — and without weakening any existing identity,
 uniqueness, or reproducibility invariant.
 
-## Glossary alignment (CONTEXT.md)
+## Glossary alignment
 
-A **Semantic Name** remains what CONTEXT.md says it is: a best-effort
+A **Semantic Name** remains what the Glossary article says it is: a best-effort
 Dictionary Variable Name generated from survey text, block information,
 and response metadata; a readable convenience, not a stability
 guarantee. This design does not change that contract. New term

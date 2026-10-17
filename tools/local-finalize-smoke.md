@@ -11,8 +11,8 @@ that the smoke check could not be run.
 
 ## Vocabulary
 
-The terms this guide uses for the smoke check. The package vocabulary is in
-`CONTEXT.md`.
+The terms this guide uses for the smoke check. The package vocabulary is the
+Glossary article, `vignettes/articles/glossary.Rmd`.
 
 **Finalize Smoke**:
 The local-only workflow that runs qualtdict's exported functions over fixed
