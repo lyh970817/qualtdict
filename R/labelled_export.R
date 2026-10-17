@@ -209,6 +209,10 @@ empty_survey_export_findings <- function() {
 #'
 #' survey_export_findings(dat)
 survey_export_findings <- function(x) {
+  if (!is.data.frame(x)) {
+    rlang::abort("`x` must be Labelled Survey Data.")
+  }
+
   findings <- attr(x, "survey_export_findings", exact = TRUE)
   if (is.null(findings)) {
     return(empty_survey_export_findings())
