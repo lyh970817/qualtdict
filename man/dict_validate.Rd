@@ -7,8 +7,8 @@
 dict_validate(dict, quiet = TRUE)
 }
 \arguments{
-\item{dict}{A Variable Dictionary returned by
-\code{\link[qualtdict]{dict_generate}}.}
+\item{dict}{A Variable Dictionary: a \code{qualtdict} object (a tibble with class
+\code{qualtdict}) as returned by \code{\link[qualtdict]{dict_generate}}.}
 
 \item{quiet}{Boolean. If \code{TRUE}, suppress routine validation messages.
 Defaults to \code{TRUE}.}
@@ -45,7 +45,8 @@ Dictionary. Use \code{\link[=dict_assert_valid]{dict_assert_valid()}} when you w
 subset to error instead.
 }
 \examples{
-validation <- dict_validate(glad_example$dictionary)
+# quiet = FALSE would also print routine progress messages
+validation <- dict_validate(glad_example$dictionary, quiet = TRUE)
 names(validation)
 
 # For the example survey, every finding is a suggestive variable-name repair

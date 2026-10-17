@@ -11,8 +11,8 @@
 #' Dictionary. Use [dict_assert_valid()] when you want the Export-blocking
 #' subset to error instead.
 #'
-#' @param dict A Variable Dictionary returned by
-#' \code{\link[qualtdict]{dict_generate}}.
+#' @param dict A Variable Dictionary: a `qualtdict` object (a tibble with class
+#' `qualtdict`) as returned by \code{\link[qualtdict]{dict_generate}}.
 #' @param quiet Boolean. If \code{TRUE}, suppress routine validation messages.
 #' Defaults to \code{TRUE}.
 #'
@@ -35,7 +35,8 @@
 #' }
 #'
 #' @examples
-#' validation <- dict_validate(glad_example$dictionary)
+#' # quiet = FALSE would also print routine progress messages
+#' validation <- dict_validate(glad_example$dictionary, quiet = TRUE)
 #' names(validation)
 #'
 #' # For the example survey, every finding is a suggestive variable-name repair

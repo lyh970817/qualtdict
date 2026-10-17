@@ -16,6 +16,8 @@ License: MIT + file LICENSE
 URL: https://github.com/lyh970817/qualtdict,
     https://lyh970817.github.io/qualtdict/
 BugReports: https://github.com/lyh970817/qualtdict/issues
+Depends:
+    R (>= 4.2.0)
 Imports:
     dplyr,
     glue,

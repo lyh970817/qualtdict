@@ -1175,7 +1175,7 @@ test_that("require_valid_dict = FALSE downloads from a defective dictionary", {
   expect_named(dat, "gp.practice")
 })
 
-test_that("exclude_findings = \"validation\" needs no dictionary gate", {
+test_that("exclude_findings = 'validation' needs no dictionary gate", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
       tibble::tibble(
@@ -1210,7 +1210,7 @@ test_that("exclude_findings = \"validation\" needs no dictionary gate", {
   expect_named(dat, "q2")
 })
 
-test_that("exclude_findings = \"definite\" drops only definite rows", {
+test_that("exclude_findings = 'definite' drops only definite rows", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
       tibble::tibble(
@@ -1256,7 +1256,7 @@ test_that("exclude_findings = \"definite\" drops only definite rows", {
   expect_identical(attr(dat, "dict")$response_column_id, "QID2")
 })
 
-test_that("exclude_findings = \"definite\" needs no dictionary gate", {
+test_that("exclude_findings = 'definite' needs no dictionary gate", {
   fetched <- new.env(parent = emptyenv())
   local_mocked_bindings(
     fetch_survey2 = function(...) {
