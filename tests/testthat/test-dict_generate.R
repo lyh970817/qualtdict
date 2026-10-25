@@ -709,3 +709,55 @@ test_that("Loop and Merge without source facts prefixes IDs, not bare QIDs", {
   )
   expect_identical(target_rows$qid, c("QID2", "QID2"))
 })
+
+test_that("dict_generate defaults to question names and stays quiet", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      synthetic_survey_flow_embedded_data_raw_metadata()
+    }
+  )
+
+  expect_silent(
+    dict <- dict_generate(
+      "SV_SYNTHETIC",
+      embedded_data_block_assignment = "previous"
+    )
+  )
+
+  expect_false("semantic_name" %in% names(dict))
+  expect_identical(
+    dict,
+    dict_generate(
+      "SV_SYNTHETIC",
+      variable_name = "question_name",
+      embedded_data_block_assignment = "previous",
+      quiet = TRUE
+    )
+  )
+})
+
+test_that("dict_generate checks its arguments before fetching metadata", {
+  local_mocked_bindings(
+    fetch_dictionary_metadata = function(surveyID) {
+      stop("metadata must not be fetched for invalid arguments")
+    }
+  )
+  invalid_args <- list(
+    list(surveyID = 1, message = "single string"),
+    list(surveyID = NULL, message = "single string"),
+    list(block_pattern = "Block", message = "must be a function"),
+    list(block_sep = NULL, message = "single string"),
+    list(block_sep = c(".", "_"), message = "single string"),
+    list(semantic_name_preprocess = "tolower", message = "must be a function"),
+    list(quiet = NA, message = "single `TRUE` or `FALSE`")
+  )
+
+  for (case in invalid_args) {
+    args <- utils::modifyList(
+      list(surveyID = "SV_SYNTHETIC"),
+      case["message" != names(case)],
+      keep.null = TRUE
+    )
+    expect_error(do.call(dict_generate, args), case$message, fixed = TRUE)
+  }
+})
