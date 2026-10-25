@@ -1013,6 +1013,14 @@ assert_level_universe <- function(survey, level_universe, run_dir) {
   invisible(summary)
 }
 
+# Arguments of the sole labelled scenario, besides the dictionary and
+# `quiet`. The recodes mirror the production pipeline; see `run_scenario()`.
+smoke_labelled_arguments <- list(
+  exclude_findings = "validation",
+  unanswer_recode = -77,
+  unanswer_recode_multi = 0
+)
+
 run_scenario <- function(
   survey,
   variable_name,
@@ -1056,12 +1064,23 @@ run_scenario <- function(
   # The smoke's job is Response Column ID parity and labelled-export shape,
   # not re-testing the abort gate, which the unit tests cover
   # (`tests/testthat/test-survey_fetch_labelled.R`).
+  #
+  # The scenario passes the unanswered recodes the production pipeline uses
+  # (`unanswer_recode = -77`, `unanswer_recode_multi = 0`), so it mirrors
+  # production use and exercises the recode path of value labelling. Without
+  # them that path went untested by the smoke, and a bug there was found only
+  # by mutation testing. The arguments are recorded in the labelled summary.
   if (requirements$needs_labelled) {
     labelled_excluding_validation <- run_step(
-      paste(scenario_label, "survey_fetch_labelled exclude validation"),
+      paste(
+        scenario_label,
+        "survey_fetch_labelled exclude validation, production recodes"
+      ),
       qualtdict::survey_fetch_labelled(
         dict,
-        exclude_findings = "validation",
+        exclude_findings = smoke_labelled_arguments$exclude_findings,
+        unanswer_recode = smoke_labelled_arguments$unanswer_recode,
+        unanswer_recode_multi = smoke_labelled_arguments$unanswer_recode_multi,
         quiet = FALSE
       )
     )
@@ -1102,8 +1121,10 @@ run_scenario <- function(
     summaries$validation <- validation_summary(objects$validation)
   }
   if ("survey_fetch_labelled" %in% selected_functions) {
-    summaries$labelled_excluding_validation <-
+    summaries$labelled_excluding_validation <- c(
+      list(arguments = smoke_labelled_arguments),
       data_frame_summary(objects$labelled_excluding_validation)
+    )
   }
   if ("survey_export_findings" %in% selected_functions) {
     summaries$survey_export_findings <-
