@@ -40,7 +40,3 @@ articles:
   navbar: ~
   contents:
   - qualtdict
-- title: Concepts
-  navbar: ~
-  contents:
-  - articles/glossary

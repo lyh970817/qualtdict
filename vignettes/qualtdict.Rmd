@@ -294,7 +294,8 @@ If the Question Names in your survey are not good analysis names, ask for
 Semantic Names. They are generated from the question text, block information
 and response metadata, and need the suggested packages slowraker, SnowballC,
 stringi and tidyr. `block_pattern` turns each Survey Block name into a Block
-Prefix:
+Prefix, which is prepended to the Semantic Names in that block so that
+variables from different blocks stay distinct:
 
 ```{r, eval = FALSE}
 block_pattern <- function(block) {
@@ -335,6 +336,5 @@ the returned Variable Dictionary.
 
 ## Learn more
 
-The [Glossary](https://lyh970817.github.io/qualtdict/articles/glossary.html)
-defines the terms used across the documentation, and the help page of each
-function documents its arguments in full.
+The help page of each function, such as `?dict_generate` or
+`?survey_fetch_labelled`, documents its arguments in full.

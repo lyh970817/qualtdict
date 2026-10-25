@@ -275,8 +275,6 @@ citation("qualtdict")
   qualtdict](https://lyh970817.github.io/qualtdict/articles/qualtdict.html)
   is the package vignette, which works through the same Variable Dictionary
   to Labelled Survey Data path in more detail.
-- The [Glossary](https://lyh970817.github.io/qualtdict/articles/glossary.html)
-  defines the terms used across the documentation.
 - The [reference site](https://lyh970817.github.io/qualtdict/) documents
   every exported function.
 - The [contributing

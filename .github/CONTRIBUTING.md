@@ -83,13 +83,8 @@ surveys. It is not part of CI.
 
 ## Repository layout
 
-The
-[Glossary](https://lyh970817.github.io/qualtdict/articles/glossary.html)
-article on the package website, whose source is
-`vignettes/articles/glossary.Rmd`, is the vocabulary that code, documentation
-and tests follow. Use its terms in your changes, and update the article when a
-change alters one of its definitions. The vocabulary of the maintainer smoke
-check is in `tools/local-finalize-smoke.md`.
+The vocabulary of the maintainer smoke check is in
+`tools/local-finalize-smoke.md`.
 
 `tools/` holds maintainer scripts that are not part of the package or of CI,
 following the unofficial convention described at
