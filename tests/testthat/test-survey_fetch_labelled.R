@@ -1317,3 +1317,254 @@ test_that("a tick column with two labels on one level cannot be labelled", {
     class = "qualtdict_level_label_mismatch"
   )
 })
+
+test_that("survey_fetch_labelled always forces a fresh download", {
+  captured_args <- new.env(parent = emptyenv())
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      captured_args$value <- list(...)
+      minimal_survey_data()
+    }
+  )
+
+  survey_fetch_labelled(minimal_export_dict())
+  expect_true(captured_args$value$force_request)
+
+  survey_fetch_labelled(minimal_export_dict(), force_request = FALSE)
+  expect_true(captured_args$value$force_request)
+})
+
+test_that("fetch_survey argument aliases owned by qualtdict are rejected", {
+  owned_aliases <- list(
+    importId = FALSE,
+    breakoutSets = FALSE,
+    include_qids = TRUE
+  )
+
+  for (arg in names(owned_aliases)) {
+    expect_error(
+      do.call(
+        survey_fetch_labelled,
+        c(list(minimal_export_dict()), owned_aliases[arg])
+      ),
+      "owned by qualtdict"
+    )
+  }
+})
+
+test_that("surveyID is read by its exact attribute name", {
+  dict <- minimal_export_dict()
+  attr(dict, "surveyID") <- NULL
+  attr(dict, "surveyID_draft") <- "SV_DRAFT"
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      minimal_survey_data()
+    }
+  )
+
+  expect_error(
+    survey_fetch_labelled(dict),
+    "missing its `surveyID` attribute",
+    fixed = TRUE
+  )
+})
+
+test_that("response metadata accepts every supported column spelling", {
+  spellings <- list(
+    startDate = c("startDate", "StartDate"),
+    endDate = c("endDate", "EndDate"),
+    recordedDate = c("recordedDate", "RecordedDate"),
+    ResponseId = c("_recordId", "ResponseId", "ResponseID", "responseId"),
+    Progress = c("progress", "Progress")
+  )
+
+  for (canonical in names(spellings)) {
+    for (spelling in spellings[[canonical]]) {
+      survey <- tibble::tibble(QID1 = "1", QID2 = "2")
+      survey[[spelling]] <- "value"
+      local_mocked_bindings(
+        fetch_survey2 = function(...) {
+          survey
+        }
+      )
+
+      dat <- survey_fetch_labelled(
+        minimal_export_dict(),
+        extra_columns = character()
+      )
+
+      expect_named(dat, c("q1", "q2", canonical))
+      expect_identical(dat[[canonical]], "value")
+    }
+  }
+})
+
+test_that("an extra column that is also a Response Column ID is labelled", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      minimal_survey_data()
+    }
+  )
+
+  dat <- survey_fetch_labelled(
+    minimal_export_dict(),
+    extra_columns = c("externalDataReference", "QID1")
+  )
+
+  expect_named(
+    dat,
+    c("externalDataReference", "q1", "q2", "startDate", "endDate")
+  )
+  expect_identical(
+    attr(dat$q1, "labels", exact = TRUE),
+    stats::setNames("1", "Yes")
+  )
+})
+
+test_that("a download without any dictionary column keeps extra columns", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      minimal_survey_data()[c("externalDataReference", "startDate", "endDate")]
+    }
+  )
+
+  dat <- survey_fetch_labelled(minimal_export_dict())
+
+  expect_named(dat, c("externalDataReference", "startDate", "endDate"))
+  expect_identical(nrow(dat), 1L)
+  expect_identical(
+    survey_export_findings(dat)$response_column_id,
+    c("QID1", "QID2")
+  )
+})
+
+test_that("validation exclusion keeps the survey name and filters findings", {
+  dict <- minimal_export_dict()
+  attr(dict, "variable_name_findings") <- tibble::tibble(
+    response_column_id = c("QID1", "QID2"),
+    original_candidate = c("q 1", "q 2"),
+    variable_name = c("q1", "q2"),
+    reason = "invalid_variable_name"
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      minimal_survey_data()
+    },
+    dict_validate = function(dict, quiet = TRUE) {
+      list(
+        validation_findings = tibble::tibble(
+          finding = "level_label_mistake",
+          response_column_id = "QID2"
+        )
+      )
+    }
+  )
+
+  dat <- survey_fetch_labelled(dict, exclude_findings = "validation")
+  filtered_dict <- attr(dat, "dict")
+
+  expect_identical(attr(filtered_dict, "survey_name"), "Test Survey")
+  expect_identical(
+    attr(filtered_dict, "variable_name_findings")$response_column_id,
+    "QID1"
+  )
+})
+
+test_that("validation exclusion reads qualtdict attributes by exact name", {
+  dict <- minimal_export_dict()
+  attr(dict, "survey_name") <- NULL
+  attr(dict, "survey_name_draft") <- "Draft Survey"
+  attr(dict, "variable_name_findings_draft") <- tibble::tibble(
+    response_column_id = "QID1",
+    original_candidate = "q 1",
+    variable_name = "q1",
+    reason = "invalid_variable_name"
+  )
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      minimal_survey_data()
+    },
+    dict_validate = function(dict, quiet = TRUE) {
+      list(
+        validation_findings = tibble::tibble(
+          finding = "level_label_mistake",
+          response_column_id = "QID2"
+        )
+      )
+    }
+  )
+
+  dat <- survey_fetch_labelled(dict, exclude_findings = "validation")
+  filtered_dict <- attr(dat, "dict")
+
+  expect_null(attr(filtered_dict, "survey_name", exact = TRUE))
+  expect_identical(
+    attr(filtered_dict, "variable_name_findings", exact = TRUE),
+    empty_variable_name_findings()
+  )
+})
+
+test_that("survey_export_findings reads its attribute by exact name", {
+  dat <- tibble::tibble(q1 = "1")
+  attr(dat, "survey_export_findings_draft") <- tibble::tibble(
+    finding = "missing_response_column_id",
+    response_column_id = "QID2",
+    qid = "QID2",
+    variable_name = "q2",
+    reason = "not_found_in_downloaded_survey_data"
+  )
+
+  expect_identical(survey_export_findings(dat), empty_survey_export_findings())
+})
+
+test_that("text entry columns carry no value labels under unanswer recodes", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "free text")
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = "QID1",
+    variable_name = "q1",
+    block = "Block A",
+    label = NA_character_,
+    level = NA_character_,
+    type = "TE",
+    selector = "SL",
+    sub_selector = NA_character_
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  expect_identical(as.character(dat$q1), "free text")
+  expect_identical(sjlabelled::get_label(dat$q1), "Question q1")
+  expect_null(attr(dat$q1, "labels", exact = TRUE))
+})
+
+test_that("only the Number content type coerces responses to numeric", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "1", QID2 = "2")
+    }
+  )
+  content_type_dict <- function(content_type) {
+    minimal_export_dict(content_type = content_type)
+  }
+
+  number <- survey_fetch_labelled(
+    content_type_dict("Number"),
+    extra_columns = NULL
+  )
+  text_only <- survey_fetch_labelled(
+    content_type_dict("TextOnly"),
+    extra_columns = NULL
+  )
+
+  expect_type(number$q1, "double")
+  expect_type(text_only$q1, "character")
+})
