@@ -93,11 +93,18 @@ Qualtrics credentials; see `tools/local-finalize-smoke.md` and
 `tools/fetch-local-finalize-smoke.md`. `tools/autotest.R` runs rOpenSci's
 autotest as a release gate, with exclusions in
 `tools/autotest-exclusions.yaml`; see `tools/autotest.md`.
+`tools/mutator.R` runs the manual mutation-testing release gate; see
+`tools/mutator.md` for its scope, saved evidence and required human review.
 
 ### Before a release
 
 Before a release or a review resubmission, run `Rscript tools/autotest.R`
-from the package root; it must exit with status 0.
+from the package root; it must exit with status 0. Also run
+`Rscript tools/mutator.R` and complete the human review in its saved
+`review.md`, following `tools/mutator.md`. A successful mutation-run exit
+leaves that gate pending until a maintainer reviews every survivor, fixes
+consequential gaps or records specific accepted rationales, resolves timeouts
+and records the final decision. Both gates are local and outside CI.
 
 ## Code of Conduct
 
