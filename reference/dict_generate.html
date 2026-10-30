@@ -152,17 +152,58 @@ for POS-tag filtering, which the Semantic Name path does not use.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The Variable Dictionary dict_generate() returns for the bundled example</span></span></span>
+<span class="r-in"><span><span class="co"># survey (see ?glad_example), one row per response column and level</span></span></span>
+<span class="r-in"><span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="va">glad_example</span><span class="op">$</span><span class="va">dictionary</span></span></span>
+<span class="r-in"><span><span class="va">dict</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 97 × 14</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    response_column_id row_source qid     question_name variable_name block      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> QID1125_TEXT       question   QID1125 DEM.AGE.1.0   DEM.AGE.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> QID1147_1          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0   Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> QID1147_2          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0.1 Demographi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 87 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 8 more variables: question &lt;chr&gt;, item &lt;chr&gt;, level &lt;chr&gt;, label &lt;chr&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   type &lt;chr&gt;, selector &lt;chr&gt;, sub_selector &lt;chr&gt;, content_type &lt;chr&gt;</span></span>
+<span class="r-in"><span><span class="va">dict</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"response_column_id"</span>, <span class="st">"row_source"</span>, <span class="st">"variable_name"</span>, <span class="st">"level"</span>, <span class="st">"label"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 97 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    response_column_id row_source variable_name level label                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> QID1125_TEXT       question   DEM.AGE.1.0   <span style="color: #BB0000;">NA</span>    <span style="color: #BB0000;">NA</span>                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> QID1126            question   DEM.COR.1.0   1     England                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> QID1126            question   DEM.COR.1.0   2     Scotland                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> QID1126            question   DEM.COR.1.0   3     Wales                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> QID1126            question   DEM.COR.1.0   4     Northern Ireland           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> QID1126            question   DEM.COR.1.0   5     Outside UK                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> QID1127            question   DEM.SEX.1.0   0     Male                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> QID1127            question   DEM.SEX.1.0   1     Female                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> QID1147_1          question   DEM.EDU.1.0   1     College or university degr…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> QID1147_2          question   DEM.EDU.1.0.1 1     A levels/AS levels or equi…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 87 more rows</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A live call reads the survey metadata from Qualtrics and needs</span></span></span>
+<span class="r-in"><span><span class="co"># Qualtrics API credentials</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">survey_id</span> <span class="op">&lt;-</span> <span class="st">"SV_XXXXXXXXXXXXXXXX"</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="co"># Create a function for \code{block_pattern}</span></span></span>
-<span class="r-in"><span>  <span class="co"># that returns the first three letters of a string</span></span></span>
+<span class="r-in"><span>  <span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu">dict_generate</span><span class="op">(</span><span class="va">survey_id</span>, variable_name <span class="op">=</span> <span class="st">"question_name"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># Semantic Names, with the first three letters of each Survey Block as</span></span></span>
+<span class="r-in"><span>  <span class="co"># Block Prefix</span></span></span>
 <span class="r-in"><span>  <span class="va">block_pattern</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>    <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substring</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="op">}</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span>  <span class="va">mydict</span> <span class="op">&lt;-</span> <span class="fu">dict_generate</span><span class="op">(</span><span class="va">survey_id</span>,</span></span>
+<span class="r-in"><span>  <span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu">dict_generate</span><span class="op">(</span><span class="va">survey_id</span>,</span></span>
 <span class="r-in"><span>    variable_name <span class="op">=</span> <span class="st">"semantic_name"</span>,</span></span>
 <span class="r-in"><span>    block_pattern <span class="op">=</span> <span class="va">block_pattern</span>,</span></span>
 <span class="r-in"><span>    block_sep <span class="op">=</span> <span class="st">"."</span></span></span>

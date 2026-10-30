@@ -35,28 +35,47 @@
 
 <div id="contributing-to-qualtdict" class="section level1">
 
-<p>This outlines how to propose a change to qualtdict. For more detailed info about contributing to this, and other tidyverse packages, please see the <a href="https://rstd.io/tidy-contrib" class="external-link"><strong>development contributing guide</strong></a>.</p>
+<p>This outlines how to propose a change to qualtdict.</p>
 <div class="section level2">
 <h2 id="fixing-typos">Fixing typos<a class="anchor" aria-label="anchor" href="#fixing-typos"></a></h2>
-<p>You can fix typos, spelling mistakes, or grammatical errors in the documentation directly using the GitHub web interface, as long as the changes are made in the <em>source</em> file. This generally means you’ll need to edit <a href="https://roxygen2.r-lib.org/articles/roxygen2.html" class="external-link">roxygen2 comments</a> in an <code>.R</code>, not a <code>.Rd</code> file. You can find the <code>.R</code> file that generates the <code>.Rd</code> by reading the comment in the first line.</p>
+<p>You can fix typos, spelling mistakes, or grammatical errors in the documentation directly using the GitHub web interface, as long as the changes are made in the <em>source</em> file. This generally means you’ll need to edit <a href="https://roxygen2.r-lib.org/articles/roxygen2.html" class="external-link">roxygen2 comments</a> in an <code>.R</code> file, not a <code>.Rd</code> file. You can find the <code>.R</code> file that generates the <code>.Rd</code> by reading the comment in the first line. <code>README.md</code> is generated from <code>README.Rmd</code>, so edit the <code>.Rmd</code> file.</p>
+<p>The spelling hook checks documentation against <code>inst/WORDLIST</code>. If it flags a correctly spelled word, such as a package name or a technical term, add the word to <code>inst/WORDLIST</code>.</p>
 </div>
 <div class="section level2">
 <h2 id="bigger-changes">Bigger changes<a class="anchor" aria-label="anchor" href="#bigger-changes"></a></h2>
-<p>If you want to make a bigger change, it’s a good idea to first file an issue and make sure someone from the team agrees that it’s needed. If you’ve found a bug, please file an issue that illustrates the bug with a minimal <a href="https://www.tidyverse.org/help/#reprex" class="external-link">reprex</a> (this will also help you write a unit test, if needed).</p>
+<p>If you want to make a bigger change, first file an issue and make sure the maintainer agrees that it is needed. If you have found a bug, file an issue that illustrates the bug with a minimal <a href="https://www.tidyverse.org/help/#reprex" class="external-link">reprex</a> (this will also help you write a unit test, if needed).</p>
 <div class="section level3">
 <h3 id="pull-request-process">Pull request process<a class="anchor" aria-label="anchor" href="#pull-request-process"></a></h3>
-<ul><li><p>Fork the package and clone onto your computer. If you haven’t done this before, we recommend using <code>usethis::create_from_github("lyh970817/qualtdict", fork = TRUE)</code>.</p></li>
-<li><p>Enter the pinned development environment with <code>nix develop</code>. The flake provides the package and development dependencies, so make sure the package passes R CMD check by running <code>devtools::check()</code>. Update the pinned environment deliberately with <code>nix flake update</code> and commit the resulting <code>flake.lock</code> change. If R CMD check doesn’t pass cleanly, it’s a good idea to ask for help before continuing.</p></li>
-<li><p>Create a Git branch for your pull request (PR). We recommend using <code>usethis::pr_init("brief-description-of-change")</code>.</p></li>
-<li><p>Make your changes, commit to git, and then create a PR by running <code>usethis::pr_push()</code>, and following the prompts in your browser. The title of your PR should briefly describe the change. The body of your PR should contain <code>Fixes #issue-number</code>.</p></li>
-<li><p>For user-facing changes, add a bullet to the top of <code>NEWS.md</code> (i.e. just below the first header). Follow the style described in <a href="https://style.tidyverse.org/news.html" class="external-link uri">https://style.tidyverse.org/news.html</a>.</p></li>
+<ul><li><p>Fork the package and clone it onto your computer, for example with <code>usethis::create_from_github("lyh970817/qualtdict", fork = TRUE)</code>.</p></li>
+<li><p>Install the development dependencies with <code>devtools::install_dev_deps()</code>.</p></li>
+<li><p>Install the <a href="https://pre-commit.com" class="external-link">pre-commit</a> hooks with <code>pre-commit install</code>. The hooks run formatting, roxygen, lintr, spelling and dependency checks on each commit.</p></li>
+<li><p>Make sure the package passes R CMD check by running <code>devtools::check()</code>. If it doesn’t pass cleanly, ask for help before continuing.</p></li>
+<li><p>Create a Git branch for your pull request (PR), for example with <code>usethis::pr_init("brief-description-of-change")</code>.</p></li>
+<li><p>Make your changes, commit them, and create a PR with <code>usethis::pr_push()</code>, following the prompts in your browser. The title of your PR should briefly describe the change. The body of your PR should contain <code>Fixes #issue-number</code>.</p></li>
+<li><p>For user-facing changes, add a bullet to the top of <code>NEWS.md</code> (just below the first header). Follow the style described in <a href="https://style.tidyverse.org/news.html" class="external-link uri">https://style.tidyverse.org/news.html</a>.</p></li>
 </ul></div>
 <div class="section level3">
 <h3 id="code-style">Code style<a class="anchor" aria-label="anchor" href="#code-style"></a></h3>
-<ul><li><p>New code should follow the tidyverse <a href="https://style.tidyverse.org" class="external-link">style guide</a>. You can use the <a href="https://CRAN.R-project.org/package=styler" class="external-link">styler</a> package to apply these styles, but please don’t restyle code that has nothing to do with your PR.</p></li>
-<li><p>We use <a href="https://cran.r-project.org/package=roxygen2" class="external-link">roxygen2</a>, with <a href="https://cran.r-project.org/web/packages/roxygen2/vignettes/rd-formatting.html" class="external-link">Markdown syntax</a>, for documentation.</p></li>
-<li><p>We use <a href="https://cran.r-project.org/package=testthat" class="external-link">testthat</a> for unit tests. Contributions with test cases included are easier to accept.</p></li>
+<ul><li><p>New code follows the tidyverse <a href="https://style.tidyverse.org" class="external-link">style guide</a>. Formatting is done by <a href="https://posit-dev.github.io/air/" class="external-link">Air</a>: run <code>air format .</code>, which the pre-commit hooks also run. Don’t reformat code unrelated to your change.</p></li>
+<li><p>Source lines are limited to 80 columns.</p></li>
+<li><p>Documentation uses <a href="https://roxygen2.r-lib.org/" class="external-link">roxygen2</a> with <a href="https://roxygen2.r-lib.org/articles/markdown.html" class="external-link">Markdown syntax</a>.</p></li>
+<li><p>Unit tests use <a href="https://testthat.r-lib.org/" class="external-link">testthat</a> edition 3. Contributions with test cases included are easier to accept.</p></li>
 </ul></div>
+<div class="section level3">
+<h3 id="testing-without-credentials">Testing without credentials<a class="anchor" aria-label="anchor" href="#testing-without-credentials"></a></h3>
+<p>Tests and documentation examples never use private survey data. The fetch of Qualtrics metadata is isolated in one internal function, and tests replace it with <code><a href="https://testthat.r-lib.org/reference/local_mocked_bindings.html" class="external-link">testthat::local_mocked_bindings()</a></code>, feeding it synthetic Qualtrics-shaped metadata built by the helpers in <code>tests/testthat/helper-*.R</code>. The test suite and R CMD check therefore run without a Qualtrics account.</p>
+<p>Only live metadata or response downloads need credentials. Register them with <code><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtRics::qualtrics_api_credentials()</a></code>.</p>
+<p>The maintainer-only smoke check in <code>tools/</code> replays saved artifacts from real surveys. It is not part of CI.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="repository-layout">Repository layout<a class="anchor" aria-label="anchor" href="#repository-layout"></a></h2>
+<p>The vocabulary of the maintainer smoke check is in <code>tools/local-finalize-smoke.md</code>.</p>
+<p><code>tools/</code> holds maintainer scripts that are not part of the package or of CI, following the unofficial convention described at <a href="https://r-pkgs.org/misc.html#sec-misc-tools" class="external-link uri">https://r-pkgs.org/misc.html#sec-misc-tools</a>. The smoke check scripts need Qualtrics credentials; see <code>tools/local-finalize-smoke.md</code> and <code>tools/fetch-local-finalize-smoke.md</code>. <code>tools/autotest.R</code> runs rOpenSci’s autotest as a release gate, with exclusions in <code>tools/autotest-exclusions.yaml</code>; see <code>tools/autotest.md</code>. <code>tools/mutator.R</code> runs the manual mutation-testing release gate; see <code>tools/mutator.md</code> for its scope, saved evidence and required human review.</p>
+<div class="section level3">
+<h3 id="before-a-release">Before a release<a class="anchor" aria-label="anchor" href="#before-a-release"></a></h3>
+<p>Before a release or a review resubmission, run <code>Rscript tools/autotest.R</code> from the package root; it must exit with status 0. Also run <code>Rscript tools/mutator.R</code> and complete the human review in its saved <code>review.md</code>, following <code>tools/mutator.md</code>. A successful mutation-run exit leaves that gate pending until a maintainer reviews every survivor, fixes consequential gaps or records specific accepted rationales, resolves timeouts and records the final decision. Both gates are local and outside CI.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="code-of-conduct">Code of Conduct<a class="anchor" aria-label="anchor" href="#code-of-conduct"></a></h2>

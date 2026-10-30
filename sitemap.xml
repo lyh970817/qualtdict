@@ -31,7 +31,7 @@
     <loc>https://lyh970817.github.io/qualtdict/news/index.html</loc>
   </url>
   <url>
-    <loc>https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.html</loc>
+    <loc>https://lyh970817.github.io/qualtdict/reference/dict_assert_valid.html</loc>
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/dict_generate.html</loc>
@@ -43,19 +43,22 @@
     <loc>https://lyh970817.github.io/qualtdict/reference/dict_validate.html</loc>
   </url>
   <url>
-    <loc>https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.html</loc>
+    <loc>https://lyh970817.github.io/qualtdict/reference/glad_example.html</loc>
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://lyh970817.github.io/qualtdict/reference/labelled_export_findings.html</loc>
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/qualtdict-package.html</loc>
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/reexports.html</loc>
+  </url>
+  <url>
+    <loc>https://lyh970817.github.io/qualtdict/reference/survey_export_findings.html</loc>
+  </url>
+  <url>
+    <loc>https://lyh970817.github.io/qualtdict/reference/survey_fetch_labelled.html</loc>
   </url>
   <url>
     <loc>https://lyh970817.github.io/qualtdict/reference/survey_split_blocks.html</loc>

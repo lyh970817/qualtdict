@@ -9,7 +9,7 @@ findings.
   : Generate a Variable Dictionary for a survey
 - [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
   : Return Validation Findings for a Variable Dictionary
-- [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+- [`dict_assert_valid()`](https://lyh970817.github.io/qualtdict/reference/dict_assert_valid.md)
   : Require a Variable Dictionary that can be exported
 
 ## Create labelled survey data
@@ -17,9 +17,9 @@ findings.
 Apply a Variable Dictionary to downloaded responses and inspect export
 findings.
 
-- [`fetch_labelled_survey_data()`](https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.md)
+- [`survey_fetch_labelled()`](https://lyh970817.github.io/qualtdict/reference/survey_fetch_labelled.md)
   : Fetch Labelled Survey Data
-- [`labelled_export_findings()`](https://lyh970817.github.io/qualtdict/reference/labelled_export_findings.md)
+- [`survey_export_findings()`](https://lyh970817.github.io/qualtdict/reference/survey_export_findings.md)
   : Return Labelled Export Findings
 
 ## Work with survey blocks
@@ -39,3 +39,12 @@ helper.
 - [`reexports`](https://lyh970817.github.io/qualtdict/reference/reexports.md)
   [`qualtrics_api_credentials`](https://lyh970817.github.io/qualtdict/reference/reexports.md)
   : Objects exported from other packages
+
+## Example data
+
+An offline example survey with its metadata, Variable Dictionary, and
+Labelled Survey Data.
+
+- [`glad_example`](https://lyh970817.github.io/qualtdict/reference/glad_example.md)
+  : Example survey metadata, Variable Dictionary, and Labelled Survey
+  Data

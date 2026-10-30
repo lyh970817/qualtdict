@@ -61,120 +61,456 @@
 
     
     
-<p><code>qualtdict</code> is a metadata and labelled-export companion to
-<a href="https://github.com/ropensci/qualtRics" class="external-link">qualtRics</a> for <a href="https://www.qualtrics.com/" class="external-link">Qualtrics</a> surveys.
-<code>qualtRics</code> owns API access: authentication, metadata
-retrieval, and response downloads from Qualtrics. <code>qualtdict</code>
-owns the package workflow that turns that metadata and those import-ID
-response exports into a Variable Dictionary, Validation Findings, and
-Labelled Survey Data.</p>
+<p>A <a href="https://www.qualtrics.com/" class="external-link">Qualtrics</a> response
+download names its columns with identifiers such as
+<code>QID12_3_TEXT</code>, and what each identifier means is spread
+across several nested metadata objects: questions, choices, matrix
+items, loops, embedded data and scoring rules. Before any analysis,
+every column has to be matched back to that metadata, renamed, labelled
+and documented.</p>
+<p>qualtdict does that mapping for you. From the survey metadata it
+builds a Variable Dictionary, one table describing every exported
+response column, which you can inspect, validate and share as a
+codebook. It then applies the dictionary to the responses downloaded
+through <a href="https://github.com/ropensci/qualtRics" class="external-link">qualtRics</a>,
+so that every column carries its variable name and labels.</p>
 <p>The authors and contributors for this R package are not affiliated
 with Qualtrics, and Qualtrics does not offer support for this R
 package.</p>
 <div class="section level2">
-<h2 id="main-workflow">Main Workflow<a class="anchor" aria-label="anchor" href="#main-workflow"></a>
+<h2 id="the-workflow">The workflow<a class="anchor" aria-label="anchor" href="#the-workflow"></a>
 </h2>
-<p>The core workflow is:</p>
 <ol style="list-style-type: decimal">
-<li>Use <code><a href="../reference/dict_generate.html">dict_generate()</a></code> to build a Variable
-Dictionary.</li>
-<li>Use <code><a href="../reference/dict_validate.html">dict_validate()</a></code> to inspect Validation
-Findings.</li>
-<li>Use <code><a href="../reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data()</a></code> to create Labelled
-Survey Data.</li>
+<li>
+<code><a href="../reference/dict_generate.html">dict_generate()</a></code> builds a Variable Dictionary from the
+survey metadata.</li>
+<li>
+<code><a href="../reference/dict_validate.html">dict_validate()</a></code> reports Validation Findings in the
+dictionary.</li>
+<li>
+<code><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> downloads the responses and
+applies the dictionary, returning Labelled Survey Data.</li>
+<li>
+<code><a href="../reference/dict_split_blocks.html">dict_split_blocks()</a></code> and
+<code><a href="../reference/survey_split_blocks.html">survey_split_blocks()</a></code> give one view per Survey Block.</li>
 </ol>
-<p>A Variable Dictionary preserves several distinct identifiers:</p>
-<ul>
-<li>
-<code>response_column_id</code>: the downloaded response column used
-to match raw Qualtrics response data to dictionary rows.</li>
-<li>
-<code>row_source</code>: the Dictionary Row Source that identifies
-what kind of metadata fact produced the row. Current question-backed
-rows use <code>row_source = "question"</code>.</li>
-<li>
-<code>qid</code>: the bare Qualtrics question identifier, such as
-<code>QID1</code>.</li>
-<li>
-<code>question_name</code>: the raw Qualtrics Question Name.</li>
-<li>
-<code>variable_name</code>: the final export-safe Dictionary
-Variable Name used in Labelled Survey Data.</li>
-<li>
-<code>semantic_name</code>: a generated naming reference, present
-only when requested.</li>
-</ul>
-<p>This vignette avoids private survey data. The live workflow chunks
-use a placeholder survey ID and are not evaluated. The small table below
-shows the shape of a safe simulated Variable Dictionary.</p>
+<p>Steps 1 and 3 read your survey from Qualtrics and need API
+credentials. Your institution must allow API access, and it must be
+enabled for your account; the person who manages your Qualtrics account
+can give you your API token and base URL. Store them once with
+<code><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtrics_api_credentials()</a></code>, which qualtdict re-exports
+from qualtRics:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">example_dict</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html" class="external-link">tibble</a></span><span class="op">(</span></span>
-<span>  response_column_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QID1"</span>, <span class="st">"QID1_3_TEXT"</span><span class="op">)</span>,</span>
-<span>  row_source <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"question"</span>, <span class="st">"question"</span><span class="op">)</span>,</span>
-<span>  qid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QID1"</span>, <span class="st">"QID1"</span><span class="op">)</span>,</span>
-<span>  question_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Q1"</span>, <span class="st">"Q1"</span><span class="op">)</span>,</span>
-<span>  variable_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Q1"</span>, <span class="st">"Q1.1"</span><span class="op">)</span>,</span>
-<span>  block <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Main Block"</span>, <span class="st">"Main Block"</span><span class="op">)</span>,</span>
-<span>  question <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Choose one"</span>, <span class="st">"Choose one"</span><span class="op">)</span>,</span>
-<span>  item <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span>,</span>
-<span>  level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"3_TEXT"</span><span class="op">)</span>,</span>
-<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Yes"</span>, <span class="st">"Other_TEXT"</span><span class="op">)</span>,</span>
-<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"MC"</span>, <span class="st">"MC"</span><span class="op">)</span>,</span>
-<span>  selector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SAVR"</span>, <span class="st">"SAVR"</span><span class="op">)</span>,</span>
-<span>  sub_selector <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TX"</span>, <span class="st">"TX"</span><span class="op">)</span>,</span>
-<span>  content_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">example_dict</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 14</span></span></span>
-<span><span class="co">#&gt;   response_column_id row_source qid   question_name variable_name block question</span></span>
-<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> QID1               question   QID1  Q1            Q1            Main… Choose …</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> QID1_3_TEXT        question   QID1  Q1            Q1.1          Main… Choose …</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 7 more variables: item &lt;lgl&gt;, level &lt;chr&gt;, label &lt;chr&gt;, type &lt;chr&gt;,</span></span></span>
-<span><span class="co">#&gt; <span style="color: #949494;">#   selector &lt;chr&gt;, sub_selector &lt;chr&gt;, content_type &lt;lgl&gt;</span></span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="credentials">Credentials<a class="anchor" aria-label="anchor" href="#credentials"></a>
-</h2>
-<p>Live calls to <code><a href="../reference/dict_generate.html">dict_generate()</a></code> and
-<code><a href="../reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data()</a></code> require Qualtrics API
-credentials because they call Qualtrics through <code>qualtRics</code>.
-Your institution must support API access and it must be enabled for your
-account. The person who manages your Qualtrics account can help you find
-your API token and base URL.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/lyh970817/qualtdict" class="external-link">qualtdict</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">qualtRics</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtrics_api_credentials</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtrics_api_credentials</a></span><span class="op">(</span></span>
 <span>  api_key <span class="op">=</span> <span class="st">"&lt;YOUR-QUALTRICS_API_KEY&gt;"</span>,</span>
 <span>  base_url <span class="op">=</span> <span class="st">"&lt;YOUR-QUALTRICS_BASE_URL&gt;"</span>,</span>
 <span>  install <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Validation, dictionary schema checks, block splitting, and
-labelled-export mechanics can be tested offline with synthetic
-dictionaries and synthetic metadata. Only live metadata and response
-downloads require credentials.</p>
 </div>
 <div class="section level2">
-<h2 id="variable-dictionary">Variable Dictionary<a class="anchor" aria-label="anchor" href="#variable-dictionary"></a>
+<h2 id="the-example-survey">The example survey<a class="anchor" aria-label="anchor" href="#the-example-survey"></a>
 </h2>
-<p>Generate a Variable Dictionary from a Qualtrics survey ID:</p>
+<p>This vignette uses <code>glad_example</code>, an example bundled with
+the package. It holds the metadata of a subset of the GLAD Study sign-up
+survey (four demographic questions, the PHQ-9 and GAD-7 blocks, six
+embedded data fields and two scoring variables), 20 synthetic responses,
+and the objects qualtdict produces from them.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/lyh970817/qualtdict" class="external-link">qualtdict</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">glad_example</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "survey_metadata"      "survey_description"   "response_column_map" </span></span>
+<span><span class="co">#&gt; [4] "responses"            "dictionary"           "labelled_survey_data"</span></span></code></pre></div>
+<p>For your own survey, the calls below would download the metadata and
+the responses from Qualtrics. They are not run here; for the example
+survey they return exactly <code>glad_example$dictionary</code> and
+<code>glad_example$labelled_survey_data</code>, which the rest of this
+vignette uses.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">survey_id</span> <span class="op">&lt;-</span> <span class="st">"SV_XXXXXXXXXXXXXXXX"</span></span>
 <span></span>
-<span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dict_generate.html">dict_generate</a></span><span class="op">(</span></span>
-<span>  <span class="va">survey_id</span>,</span>
-<span>  variable_name <span class="op">=</span> <span class="st">"question_name"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>With <code>variable_name = "question_name"</code>,
-<code>variable_name</code> is derived from the raw Qualtrics Question
-Name and repaired as needed so Labelled Survey Data columns are
-export-safe and unique. The original <code>question_name</code> remains
-in the Variable Dictionary as a reference.</p>
-<p>If Qualtrics Question Names are not suitable as analysis names,
-request Semantic Names:</p>
+<span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dict_generate.html">dict_generate</a></span><span class="op">(</span><span class="va">survey_id</span>, variable_name <span class="op">=</span> <span class="st">"question_name"</span><span class="op">)</span></span>
+<span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="va">glad_example</span><span class="op">$</span><span class="va">dictionary</span></span>
+<span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="va">glad_example</span><span class="op">$</span><span class="va">labelled_survey_data</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="the-variable-dictionary">The Variable Dictionary<a class="anchor" aria-label="anchor" href="#the-variable-dictionary"></a>
+</h2>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 97 × 14</span></span></span>
+<span><span class="co">#&gt;    response_column_id row_source qid     question_name variable_name block      </span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> QID1125_TEXT       question   QID1125 DEM.AGE.1.0   DEM.AGE.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> QID1147_1          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> QID1147_2          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0.1 Demographi…</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 87 more rows</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 8 more variables: question &lt;chr&gt;, item &lt;chr&gt;, level &lt;chr&gt;, label &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   type &lt;chr&gt;, selector &lt;chr&gt;, sub_selector &lt;chr&gt;, content_type &lt;chr&gt;</span></span></span></code></pre></div>
+<p>Each row describes one downloaded response column, or one response
+level of it. The columns are:</p>
+<ul>
+<li>
+<code>response_column_id</code>: the column name in the downloaded
+Qualtrics response file. This is how the dictionary is matched to your
+data.</li>
+<li>
+<code>row_source</code>: what the column comes from (see
+below).</li>
+<li>
+<code>qid</code>: the Qualtrics question the column belongs to, such
+as <code>QID1125</code>. One question can produce many response
+columns.</li>
+<li>
+<code>question_name</code>: the question name set in the Qualtrics
+survey editor.</li>
+<li>
+<code>variable_name</code>: the name the column gets in Labelled
+Survey Data. It is unique and safe for export.</li>
+<li>
+<code>block</code>: the Survey Block the question belongs to.</li>
+<li>
+<code>question</code> and <code>item</code>: the question text and,
+for matrix and multi-column questions, the text of the row or
+choice.</li>
+<li>
+<code>level</code> and <code>label</code>: a response value and its
+label. A column with response options takes one row per option.</li>
+<li>
+<code>type</code>, <code>selector</code>, <code>sub_selector</code>
+and <code>content_type</code>: the Qualtrics question type and its
+settings.</li>
+</ul>
+<p><code>variable_name = "question_name"</code> builds
+<code>variable_name</code> from the Qualtrics Question Name, repaired
+where needed so that every name is unique and export-safe. The original
+<code>question_name</code> stays in the dictionary.</p>
+<p>A multi-select question gets one response column per choice, and a
+choice with a text box gets an extra <code>_TEXT</code> column:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict</span><span class="op">[</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">dict</span><span class="op">$</span><span class="va">qid</span> <span class="op">==</span> <span class="st">"QID1147"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"variable_name"</span>, <span class="st">"level"</span>, <span class="st">"label"</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 4</span></span></span>
+<span><span class="co">#&gt;   response_column_id variable_name level  label                                 </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                 </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> QID1147_1          DEM.EDU.1.0   1      College or university degree          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> QID1147_2          DEM.EDU.1.0.1 1      A levels/AS levels or equivalent      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> QID1147_3          DEM.EDU.1.0.2 1      O levels/GCSEs or equivalent          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> QID1147_4          DEM.EDU.1.0.3 1      CSEs or equivalent                    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> QID1147_6          DEM.EDU.1.0.4 1      NVQ or HND or HNC or equivalent       </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> QID1147_5          DEM.EDU.1.0.5 1      Other professional qualifications     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> QID1147_5_TEXT     DEM.EDU.1.0.6 5_TEXT Other professional qualifications_TEXT</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> QID1147_-999       DEM.EDU.1.0.7 1      Prefer not to answer</span></span></code></pre></div>
+<p>A matrix question gets one response column per item, each with the
+scale’s levels:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict</span><span class="op">[</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">dict</span><span class="op">$</span><span class="va">qid</span> <span class="op">==</span> <span class="st">"QID127303424"</span> <span class="op">&amp;</span> <span class="va">dict</span><span class="op">$</span><span class="va">level</span> <span class="op">==</span> <span class="st">"0"</span><span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"variable_name"</span>, <span class="st">"item"</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 9 × 3</span></span></span>
+<span><span class="co">#&gt;   response_column_id variable_name item                                         </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> QID127303424_1     PHQ.DEP.1.0   Little interest or pleasure in doing things  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> QID127303424_2     PHQ.DEP.1.0.1 Feeling down, depressed or hopeless          </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> QID127303424_3     PHQ.DEP.1.0.2 Trouble falling or staying asleep, or sleepi…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> QID127303424_4     PHQ.DEP.1.0.3 Feeling tired or having little energy        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> QID127303424_5     PHQ.DEP.1.0.4 Poor appetite or overeating                  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> QID127303424_6     PHQ.DEP.1.0.5 Feeling bad about yourself or that you are a…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> QID127303424_7     PHQ.DEP.1.0.6 Trouble concentrating on things, such as rea…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> QID127303424_8     PHQ.DEP.1.0.7 Moving or speaking so slowly that other peop…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">9</span> QID127303424_9     PHQ.DEP.1.0.8 Thoughts that you would be better off dead o…</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="row-sources">Row sources<a class="anchor" aria-label="anchor" href="#row-sources"></a>
+</h3>
+<p>Most rows come from survey questions, but Qualtrics also exports
+columns that are defined elsewhere in the survey.
+<code>row_source</code> says which:</p>
+<ul>
+<li>
+<code>question</code>: a response to a survey question.</li>
+<li>
+<code>embedded_data</code>: an Embedded Data Field set in the Survey
+Flow.</li>
+<li>
+<code>scoring</code>: a Scoring Variable computed by Qualtrics
+scoring.</li>
+<li>
+<code>text_analysis</code>: a Text-analysis Sidecar added by
+Qualtrics text analysis of a text response. The example survey has
+none.</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dict</span><span class="op">$</span><span class="va">row_source</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; embedded_data      question       scoring </span></span>
+<span><span class="co">#&gt;             6            89             2</span></span>
+<span></span>
+<span><span class="va">dict</span><span class="op">[</span></span>
+<span>  <span class="va">dict</span><span class="op">$</span><span class="va">row_source</span> <span class="op">!=</span> <span class="st">"question"</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"row_source"</span>, <span class="st">"variable_name"</span>, <span class="st">"question"</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 8 × 4</span></span></span>
+<span><span class="co">#&gt;   response_column_id row_source    variable_name     question                   </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>             <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> Age                embedded_data Age               Embedded Data: Age         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> sex                embedded_data sex               Embedded Data: sex         </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span> PHQRaw             embedded_data PHQRaw            Embedded Data: PHQRaw      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span> CurrentDepression  embedded_data CurrentDepression Embedded Data: CurrentDepr…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span> GADRaw             embedded_data GADRaw            Embedded Data: GADRaw      </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span> CurrentGAD         embedded_data CurrentGAD        Embedded Data: CurrentGAD  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">7</span> SC_5gvP3Yxax8TWHcN scoring       GAD_7             Scoring Variable: GAD-7    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">8</span> SC_3rtKxr7Lzd9OHhX scoring       PHQ_9             Scoring Variable: PHQ-9</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="validation-findings">Validation Findings<a class="anchor" aria-label="anchor" href="#validation-findings"></a>
+</h2>
+<p><code><a href="../reference/dict_validate.html">dict_validate()</a></code> returns a list with two components:
+<code>validation_findings</code>, one row per finding, and
+<code>level_label_pairs</code>, the distinct level-label codings of the
+survey’s questions.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dict_validate.html">dict_validate</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">validation</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "validation_findings" "level_label_pairs"</span></span>
+<span></span>
+<span><span class="va">validation</span><span class="op">$</span><span class="va">validation_findings</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"finding"</span>, <span class="st">"severity"</span>, <span class="st">"response_column_id"</span>, <span class="st">"original_candidate"</span>,</span>
+<span>  <span class="st">"variable_name"</span>, <span class="st">"reason"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 23 × 6</span></span></span>
+<span><span class="co">#&gt;    finding   severity response_column_id original_candidate variable_name reason</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> repaired… suggest… QID1147_2          DEM.EDU.1.0        DEM.EDU.1.0.1 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> repaired… suggest… QID1147_3          DEM.EDU.1.0        DEM.EDU.1.0.2 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> repaired… suggest… QID1147_4          DEM.EDU.1.0        DEM.EDU.1.0.3 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> repaired… suggest… QID1147_6          DEM.EDU.1.0        DEM.EDU.1.0.4 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> repaired… suggest… QID1147_5          DEM.EDU.1.0        DEM.EDU.1.0.5 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> repaired… suggest… QID1147_5_TEXT     DEM.EDU.1.0        DEM.EDU.1.0.6 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> repaired… suggest… QID1147_-999       DEM.EDU.1.0        DEM.EDU.1.0.7 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> repaired… suggest… QID127303424_2     PHQ.DEP.1.0        PHQ.DEP.1.0.1 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> repaired… suggest… QID127303424_3     PHQ.DEP.1.0        PHQ.DEP.1.0.2 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> repaired… suggest… QID127303424_4     PHQ.DEP.1.0        PHQ.DEP.1.0.3 dupli…</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 13 more rows</span></span></span></code></pre></div>
+<p>Each finding has a <code>severity</code>:</p>
+<ul>
+<li>
+<strong>Suggestive</strong> findings are worth a look but leave the
+column’s data and identity sound. All findings here are of this kind:
+matrix items and multi-select choices share one Question Name, so their
+variable names are numbered, and the hyphens in <code>PHQ-9</code> and
+<code>GAD-7</code> are replaced so the scoring variables get export-safe
+names.</li>
+<li>
+<strong>Definite</strong> findings mean the column cannot be
+interpreted or identified reliably: duplicate or unsafe final variable
+names, or level-label codings that are not one-to-one, such as two
+choices sharing one response code.</li>
+</ul>
+<p>A clean result is a consistency check, not proof that the survey
+itself is correct.</p>
+<p><code><a href="../reference/dict_assert_valid.html">dict_assert_valid()</a></code> is the strict version for the
+definite findings that make labelling wrong or impossible, the
+Export-blocking level-label codings. It returns the dictionary invisibly
+when there are none, and raises an error naming the offending columns
+otherwise. The example dictionary passes:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/dict_assert_valid.html">dict_assert_valid</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> runs this check before it
+downloads anything, so a dictionary that cannot be labelled fails before
+the download.</p>
+</div>
+<div class="section level2">
+<h2 id="labelled-survey-data">Labelled Survey Data<a class="anchor" aria-label="anchor" href="#labelled-survey-data"></a>
+</h2>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Rows: 20</span></span>
+<span><span class="co">#&gt; Columns: 43</span></span>
+<span><span class="co">#&gt; $ externalDataReference <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "example-001"<span style="color: #949494;">, </span>"example-002"<span style="color: #949494;">, </span>"example-003"<span style="color: #949494;">, </span>"ex…</span></span>
+<span><span class="co">#&gt; $ startDate             <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span> 2026-01-08 13:05:38<span style="color: #949494;">, </span>2026-01-31 19:57:56<span style="color: #949494;">, </span>2026-…</span></span>
+<span><span class="co">#&gt; $ endDate               <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span> 2026-01-08 13:44:46<span style="color: #949494;">, </span>2026-01-31 20:26:22<span style="color: #949494;">, </span>2026-…</span></span>
+<span><span class="co">#&gt; $ DEM.AGE.1.0           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 34<span style="color: #949494;">, </span>53<span style="color: #949494;">, </span>63<span style="color: #949494;">, </span>37<span style="color: #949494;">, </span>68<span style="color: #949494;">, </span>70<span style="color: #949494;">, </span>59<span style="color: #949494;">, </span>30<span style="color: #949494;">, </span>54<span style="color: #949494;">, </span>20<span style="color: #949494;">, </span>21<span style="color: #949494;">, </span>26<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ DEM.COR.1.0           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ DEM.SEX.1.0           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.1         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.2         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.3         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.4         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">,</span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.5         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">N</span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.6         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "example note 1"<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>"example note 3"<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ DEM.EDU.1.0.7         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span>1<span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">NA</span><span style="color: #949494;">, </span><span style="color: #BB0000;">N</span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.1         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.2         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.3         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.4         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.5         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.6         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.7         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.DEP.1.0.8         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ.EFT.1.0           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>5<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD.1                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD.2                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD.3                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD.4                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD.5                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ HEAD.6                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ Q5                    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>4<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ Age                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 34<span style="color: #949494;">, </span>53<span style="color: #949494;">, </span>63<span style="color: #949494;">, </span>37<span style="color: #949494;">, </span>68<span style="color: #949494;">, </span>70<span style="color: #949494;">, </span>59<span style="color: #949494;">, </span>30<span style="color: #949494;">, </span>54<span style="color: #949494;">, </span>20<span style="color: #949494;">, </span>21<span style="color: #949494;">, </span>26<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ sex                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQRaw                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 16<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>13<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>18<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>9<span style="color: #949494;">, </span>1…</span></span>
+<span><span class="co">#&gt; $ CurrentDepression     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>3<span style="color: #949494;">, </span>2<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ GADRaw                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 12<span style="color: #949494;">, </span>9<span style="color: #949494;">, </span>7<span style="color: #949494;">, </span>11<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>16<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>13<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>16<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>11<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ CurrentGAD            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>1<span style="color: #949494;">, </span>0<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ GAD_7                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 12<span style="color: #949494;">, </span>9<span style="color: #949494;">, </span>7<span style="color: #949494;">, </span>11<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>16<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>13<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>16<span style="color: #949494;">, </span>8<span style="color: #949494;">, </span>11<span style="color: #949494;">, </span>…</span></span>
+<span><span class="co">#&gt; $ PHQ_9                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 16<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>13<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>14<span style="color: #949494;">, </span>12<span style="color: #949494;">, </span>18<span style="color: #949494;">, </span>10<span style="color: #949494;">, </span>15<span style="color: #949494;">, </span>9<span style="color: #949494;">, </span>1…</span></span>
+<span><span class="co">#&gt; $ recordedDate          <span style="color: #949494; font-style: italic;">&lt;dttm&gt;</span> 2026-01-08 13:44:47<span style="color: #949494;">, </span>2026-01-31 20:26:23<span style="color: #949494;">, </span>2026-…</span></span>
+<span><span class="co">#&gt; $ ResponseId            <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> "R_0EzWRxwAbYshrZF"<span style="color: #949494;">, </span>"R_VAw94UQKF3Yt6xr"<span style="color: #949494;">, </span>"R_B48…</span></span>
+<span><span class="co">#&gt; $ Progress              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> 100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100<span style="color: #949494;">, </span>100…</span></span></code></pre></div>
+<p>Export Variables are renamed from <code>response_column_id</code> to
+<code>variable_name</code>. By default
+<code><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> also keeps
+<code>externalDataReference</code>, <code>startDate</code> and
+<code>endDate</code>, and appends the response metadata columns
+<code>recordedDate</code>, <code>ResponseId</code> and
+<code>Progress</code>.</p>
+<p>Choice columns carry their response options as value labels, and text
+and numeric columns carry the question text as a variable label:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">$</span><span class="va">DEM.COR.1.0</span>, <span class="st">"labels"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          England         Scotland            Wales Northern Ireland </span></span>
+<span><span class="co">#&gt;                1                2                3                4 </span></span>
+<span><span class="co">#&gt;       Outside UK </span></span>
+<span><span class="co">#&gt;                5</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">$</span><span class="va">DEM.AGE.1.0</span>, <span class="st">"label"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "How old are you now?"</span></span></code></pre></div>
+<p>Packages that read these attributes, such as sjlabelled, can use them
+directly, for example to turn a coded column into a factor:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu">sjlabelled</span><span class="fu">::</span><span class="fu"><a href="https://strengejacke.github.io/sjlabelled/reference/as_label.html" class="external-link">as_label</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">$</span><span class="va">DEM.COR.1.0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;          England         Scotland            Wales Northern Ireland </span></span>
+<span><span class="co">#&gt;                3                6                6                3 </span></span>
+<span><span class="co">#&gt;       Outside UK </span></span>
+<span><span class="co">#&gt;                2</span></span></code></pre></div>
+<p>The Variable Dictionary used to build the data travels with it as the
+<code>dict</code> attribute, so the question and item text of every
+column stay at hand:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">survey_dict</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">survey_dat</span>, <span class="st">"dict"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">survey_dict</span><span class="op">[</span></span>
+<span>  <span class="va">survey_dict</span><span class="op">$</span><span class="va">variable_name</span> <span class="op">==</span> <span class="st">"PHQ.DEP.1.0.2"</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"variable_name"</span>, <span class="st">"item"</span><span class="op">)</span></span>
+<span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 1 × 2</span></span></span>
+<span><span class="co">#&gt;   variable_name item                                                   </span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                                  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> PHQ.DEP.1.0.2 Trouble falling or staying asleep, or sleeping too much</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="labelled-export-findings">Labelled Export Findings<a class="anchor" aria-label="anchor" href="#labelled-export-findings"></a>
+</h3>
+<p>While applying the dictionary, <code><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code>
+records Labelled Export Findings: for example, a dictionary column that
+is missing from the downloaded data.
+<code><a href="../reference/survey_export_findings.html">survey_export_findings()</a></code> returns them. The example has
+none:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/survey_export_findings.html">survey_export_findings</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 0 × 5</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 5 variables: finding &lt;chr&gt;, response_column_id &lt;chr&gt;, qid &lt;chr&gt;,</span></span></span>
+<span><span class="co">#&gt; <span style="color: #949494;">#   variable_name &lt;chr&gt;, reason &lt;chr&gt;</span></span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="download-options">Download options<a class="anchor" aria-label="anchor" href="#download-options"></a>
+</h3>
+<p><code><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> calls
+<code><a href="https://docs.ropensci.org/qualtRics/reference/fetch_survey.html" class="external-link">qualtRics::fetch_survey()</a></code> with the settings it needs to
+match columns to <code>response_column_id</code>:
+<code>import_id = TRUE</code>, <code>label = FALSE</code>,
+<code>convert = FALSE</code> and <code>breakout_sets = TRUE</code>. You
+may pass other <code>fetch_survey()</code> arguments, such as
+<code>include_questions</code>, but not ones that override those
+settings.</p>
+<p>By default, variables with Validation Findings stay in the data.
+<code>exclude_findings = "definite"</code> drops the variables with
+definite findings, and <code>exclude_findings = "validation"</code>
+drops every variable with any finding:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled</a></span><span class="op">(</span></span>
+<span>  <span class="va">dict</span>,</span>
+<span>  extra_columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"externalDataReference"</span>, <span class="st">"startDate"</span>, <span class="st">"endDate"</span><span class="op">)</span>,</span>
+<span>  exclude_findings <span class="op">=</span> <span class="st">"definite"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="survey-block-views">Survey Block views<a class="anchor" aria-label="anchor" href="#survey-block-views"></a>
+</h2>
+<p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> returns one Variable Dictionary and
+<code><a href="../reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> returns one data frame. To work
+with one Survey Block at a time, split them. Rows without a block, here
+the embedded data fields and scoring variables, are kept under
+<code>"..unassigned"</code>.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict_by_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dict_split_blocks.html">dict_split_blocks</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dict_by_block</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "..unassigned" "Demographics" "GAD7"         "PHQ9"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dict_by_block</span><span class="op">$</span><span class="va">PHQ9</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"variable_name"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 10 × 2</span></span></span>
+<span><span class="co">#&gt;    response_column_id variable_name</span></span>
+<span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> QID127303424_1     PHQ.DEP.1.0  </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> QID127303424_2     PHQ.DEP.1.0.1</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> QID127303424_3     PHQ.DEP.1.0.2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> QID127303424_4     PHQ.DEP.1.0.3</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> QID127303424_5     PHQ.DEP.1.0.4</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> QID127303424_6     PHQ.DEP.1.0.5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> QID127303424_7     PHQ.DEP.1.0.6</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> QID127303424_8     PHQ.DEP.1.0.7</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> QID127303424_9     PHQ.DEP.1.0.8</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> QID127303425       PHQ.EFT.1.0</span></span>
+<span></span>
+<span><span class="va">data_by_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survey_split_blocks.html">survey_split_blocks</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data_by_block</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "..unassigned" "Demographics" "GAD7"         "PHQ9"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data_by_block</span><span class="op">$</span><span class="va">PHQ9</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  [1] "externalDataReference" "startDate"             "endDate"              </span></span>
+<span><span class="co">#&gt;  [4] "PHQ.DEP.1.0"           "PHQ.DEP.1.0.1"         "PHQ.DEP.1.0.2"        </span></span>
+<span><span class="co">#&gt;  [7] "PHQ.DEP.1.0.3"         "PHQ.DEP.1.0.4"         "PHQ.DEP.1.0.5"        </span></span>
+<span><span class="co">#&gt; [10] "PHQ.DEP.1.0.6"         "PHQ.DEP.1.0.7"         "PHQ.DEP.1.0.8"        </span></span>
+<span><span class="co">#&gt; [13] "PHQ.EFT.1.0"</span></span></code></pre></div>
+<p>By default each block’s data keeps
+<code>externalDataReference</code>, <code>startDate</code> and
+<code>endDate</code> so the blocks can be joined back together.</p>
+</div>
+<div class="section level2">
+<h2 id="semantic-names">Semantic Names<a class="anchor" aria-label="anchor" href="#semantic-names"></a>
+</h2>
+<p>If the Question Names in your survey are not good analysis names, ask
+for Semantic Names. They are generated from the question text, block
+information and response metadata, and need the suggested packages
+slowraker, SnowballC, stringi and tidyr. <code>block_pattern</code>
+turns each Survey Block name into a Block Prefix, which is prepended to
+the Semantic Names in that block so that variables from different blocks
+stay distinct:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">block_pattern</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">block</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substring</a></span><span class="op">(</span><span class="va">block</span>, <span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
@@ -185,16 +521,14 @@ request Semantic Names:</p>
 <span>  block_pattern <span class="op">=</span> <span class="va">block_pattern</span>,</span>
 <span>  block_sep <span class="op">=</span> <span class="st">"."</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Semantic Names are best-effort readable conveniences generated from
-survey text, block information, and response metadata. They are not
-stable guarantees across package versions or survey text changes. For
-long text, Semantic Names select important words from ranked keywords
-and preserve those selected words in the order they appear in the naming
-text. Use them when they improve analysis ergonomics, but do not treat
-them as permanent identifiers.</p>
+<p>Semantic Names are best-effort readable conveniences. They are not
+stable across package versions or survey text changes, so do not treat
+them as permanent identifiers. For long text, Semantic Names select
+important words from ranked keywords and keep them in the order they
+appear in the text.</p>
 <p>You can also preprocess the text used only for Semantic Name
 generation:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">drop_intro_text</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">dict</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">dict</span><span class="op">$</span><span class="va">question</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">sub</a></span><span class="op">(</span><span class="st">"^Please answer: "</span>, <span class="st">""</span>, <span class="va">dict</span><span class="op">$</span><span class="va">question</span><span class="op">)</span></span>
 <span>  <span class="va">dict</span></span>
@@ -205,66 +539,16 @@ generation:</p>
 <span>  variable_name <span class="op">=</span> <span class="st">"semantic_name"</span>,</span>
 <span>  semantic_name_preprocess <span class="op">=</span> <span class="va">drop_intro_text</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><code>semantic_name_preprocess</code> receives the full
-post-normalisation dictionary and runs only on the Semantic Name path.
-Temporary helper columns created by the function are not included in the
-returned Variable Dictionary.</p>
+<p><code>semantic_name_preprocess</code> receives the full dictionary
+and runs only on the Semantic Name path. Temporary helper columns it
+creates are not included in the returned Variable Dictionary.</p>
 </div>
 <div class="section level2">
-<h2 id="findings">Findings<a class="anchor" aria-label="anchor" href="#findings"></a>
+<h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
-<p><code><a href="../reference/dict_validate.html">dict_validate()</a></code> returns a stable validation object with
-two components: <code>validation_findings</code> and
-<code>level_label_pairs</code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dict_validate.html">dict_validate</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">validation</span><span class="op">$</span><span class="va">validation_findings</span></span>
-<span><span class="va">validation</span><span class="op">$</span><span class="va">level_label_pairs</span></span></code></pre></div>
-<p>Validation Findings cover consistency issues in the generated
-Variable Dictionary, including repaired <code>variable_name</code>
-values, non-unique or unsafe Dictionary Variable Names, and level-label
-coding findings.</p>
-</div>
-<div class="section level2">
-<h2 id="labelled-survey-data">Labelled Survey Data<a class="anchor" aria-label="anchor" href="#labelled-survey-data"></a>
-</h2>
-<p>Create Labelled Survey Data from a Variable Dictionary:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data</a></span><span class="op">(</span></span>
-<span>  <span class="va">dict</span>,</span>
-<span>  extra_columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"externalDataReference"</span>, <span class="st">"startDate"</span>, <span class="st">"endDate"</span><span class="op">)</span>,</span>
-<span>  exclude_findings <span class="op">=</span> <span class="st">"none"</span>,</span>
-<span>  unanswer_recode <span class="op">=</span> <span class="op">-</span><span class="fl">77</span>,</span>
-<span>  unanswer_recode_multi <span class="op">=</span> <span class="fl">0</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p><code><a href="../reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data()</a></code> calls
-<code><a href="https://docs.ropensci.org/qualtRics/reference/fetch_survey.html" class="external-link">qualtRics::fetch_survey()</a></code> with the settings needed for
-reliable matching to <code>response_column_id</code>:
-<code>import_id = TRUE</code>, <code>label = FALSE</code>,
-<code>convert = FALSE</code>, and <code>breakout_sets = TRUE</code>. You
-may pass filtering arguments such as <code>include_questions</code>, but
-not arguments that would override the response-column naming, labelling,
-conversion, or breakout contract owned by <code>qualtdict</code>.</p>
-<p>By default, variables with Validation Findings remain in the Labelled
-Survey Data. Use <code>exclude_findings</code> only when you explicitly
-want to drop those variables after download.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">survey_dat_clean</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data</a></span><span class="op">(</span></span>
-<span>  <span class="va">dict</span>,</span>
-<span>  exclude_findings <span class="op">=</span> <span class="st">"validation"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="survey-block-views">Survey Block Views<a class="anchor" aria-label="anchor" href="#survey-block-views"></a>
-</h2>
-<p><code><a href="../reference/dict_generate.html">dict_generate()</a></code> returns one Variable Dictionary and
-<code><a href="../reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data()</a></code> returns one Labelled Survey
-Data object. Use explicit helpers when you want block-specific
-views:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dict_by_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/dict_split_blocks.html">dict_split_blocks</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
-<span><span class="va">data_by_block</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/survey_split_blocks.html">survey_split_blocks</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span></code></pre></div>
+<p>The help page of each function, such as <code><a href="../reference/dict_generate.html">?dict_generate</a></code>
+or <code><a href="../reference/survey_fetch_labelled.html">?survey_fetch_labelled</a></code>, documents its arguments in
+full.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

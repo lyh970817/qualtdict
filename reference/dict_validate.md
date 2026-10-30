@@ -16,7 +16,8 @@ dict_validate(dict, quiet = TRUE)
 
 - dict:
 
-  A Variable Dictionary returned by
+  A Variable Dictionary: a `qualtdict` object (a tibble with class
+  `qualtdict`) as returned by
   [`dict_generate`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md).
 
 - quiet:
@@ -48,19 +49,39 @@ A list with stable components:
 `dict_validate()` is total: it reports every Validation Finding and
 never errors, so it can be used to survey the damage in a defective
 Variable Dictionary. Use
-[`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
+[`dict_assert_valid()`](https://lyh970817.github.io/qualtdict/reference/dict_assert_valid.md)
 when you want the Export-blocking subset to error instead.
 
 ## Examples
 
 ``` r
-dict <- data.frame(
-  response_column_id = c("QID1", "QID2"),
-  variable_name = c("q1", "q2"),
-  label = c("Yes", "No"),
-  level = c("1", "2")
-)
-class(dict) <- c("qualtdict", class(dict))
+# quiet = FALSE would also print routine progress messages
+validation <- dict_validate(glad_example$dictionary, quiet = TRUE)
+names(validation)
+#> [1] "validation_findings" "level_label_pairs"  
 
-validation <- dict_validate(dict)
+# For the example survey, every finding is a suggestive variable-name repair
+findings <- validation$validation_findings
+table(findings$severity)
+#> 
+#> suggestive 
+#>         23 
+findings[, c(
+  "severity", "response_column_id", "original_candidate", "variable_name",
+  "reason"
+)]
+#> # A tibble: 23 × 5
+#>    severity   response_column_id original_candidate variable_name reason   
+#>    <chr>      <chr>              <chr>              <chr>         <chr>    
+#>  1 suggestive QID1147_2          DEM.EDU.1.0        DEM.EDU.1.0.1 duplicate
+#>  2 suggestive QID1147_3          DEM.EDU.1.0        DEM.EDU.1.0.2 duplicate
+#>  3 suggestive QID1147_4          DEM.EDU.1.0        DEM.EDU.1.0.3 duplicate
+#>  4 suggestive QID1147_6          DEM.EDU.1.0        DEM.EDU.1.0.4 duplicate
+#>  5 suggestive QID1147_5          DEM.EDU.1.0        DEM.EDU.1.0.5 duplicate
+#>  6 suggestive QID1147_5_TEXT     DEM.EDU.1.0        DEM.EDU.1.0.6 duplicate
+#>  7 suggestive QID1147_-999       DEM.EDU.1.0        DEM.EDU.1.0.7 duplicate
+#>  8 suggestive QID127303424_2     PHQ.DEP.1.0        PHQ.DEP.1.0.1 duplicate
+#>  9 suggestive QID127303424_3     PHQ.DEP.1.0        PHQ.DEP.1.0.2 duplicate
+#> 10 suggestive QID127303424_4     PHQ.DEP.1.0        PHQ.DEP.1.0.3 duplicate
+#> # ℹ 13 more rows
 ```

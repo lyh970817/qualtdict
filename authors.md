@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Yuhao Lin**. Author, maintainer.
+- **Yuhao Lin**. Author, maintainer, copyright holder.
   [](https://orcid.org/0000-0001-6357-5731)
 
 ## Citation

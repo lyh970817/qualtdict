@@ -1,5 +1,86 @@
 # Changelog
 
+## qualtdict (development version)
+
+### Breaking changes
+
+- Exported functions now follow one object-verb naming scheme: `dict_`
+  for Variable Dictionary functions and `survey_` for Labelled Survey
+  Data functions, matching
+  [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md),
+  [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md),
+  [`dict_split_blocks()`](https://lyh970817.github.io/qualtdict/reference/dict_split_blocks.md),
+  and
+  [`survey_split_blocks()`](https://lyh970817.github.io/qualtdict/reference/survey_split_blocks.md).
+  Three functions are renamed without deprecated aliases:
+
+  - `assert_dict_valid()` is now
+    [`dict_assert_valid()`](https://lyh970817.github.io/qualtdict/reference/dict_assert_valid.md).
+  - `fetch_labelled_survey_data()` is now
+    [`survey_fetch_labelled()`](https://lyh970817.github.io/qualtdict/reference/survey_fetch_labelled.md).
+  - `labelled_export_findings()` is now
+    [`survey_export_findings()`](https://lyh970817.github.io/qualtdict/reference/survey_export_findings.md).
+
+  The attribute holding Labelled Export Findings on Labelled Survey Data
+  is renamed with its accessor, from `"labelled_export_findings"` to
+  `"survey_export_findings"`. The error class
+  `"qualtdict_export_blocking_findings"` is unchanged.
+
+### New features
+
+- The package now bundles `glad_example`, an offline example survey: the
+  metadata of a subset of the GLAD Study sign-up questionnaire, with the
+  Variable Dictionary and Labelled Survey Data qualtdict produces from
+  it. Its responses are synthetic. It lets you explore what qualtdict
+  reads and returns without Qualtrics credentials.
+
+### Minor improvements and fixes
+
+- Labelling an Export Variable whose Levels and Labels differ in count
+  now raises a classed `"qualtdict_level_label_mismatch"` error.
+
+- Qualtrics API calls are now retried with exponentially increasing
+  waits through
+  [`purrr::insistently()`](https://purrr.tidyverse.org/reference/insistently.html),
+  up to five attempts with waits capped at 30 seconds. A `NULL` result
+  is no longer retried, and the last error is raised again.
+
+- [`survey_export_findings()`](https://lyh970817.github.io/qualtdict/reference/survey_export_findings.md)
+  now errors when `x` is not a data frame instead of returning an empty
+  findings table, so passing the list returned by
+  [`survey_split_blocks()`](https://lyh970817.github.io/qualtdict/reference/survey_split_blocks.md)
+  no longer reports no findings.
+
+- [`survey_fetch_labelled()`](https://lyh970817.github.io/qualtdict/reference/survey_fetch_labelled.md)
+  no longer fails with a `"qualtdict_level_label_mismatch"` error when a
+  choice label contains “TEXT”, such as “TEXT message”. Only the
+  separate other-specify text columns are left without value labels, as
+  before.
+
+- [`survey_fetch_labelled()`](https://lyh970817.github.io/qualtdict/reference/survey_fetch_labelled.md)
+  no longer attaches meaningless value labels (`NA` labelled “Not NA”)
+  to columns with no choices, such as Timing, File Upload, Slider, and
+  carried-forward side-by-side columns, when `unanswer_recode_multi` is
+  set. These columns now keep their question text as the variable label
+  instead.
+
+### Documentation
+
+- The README, the introduction vignette, and the help-file examples are
+  rewritten for users. The README explains the problem qualtdict solves,
+  and all three now show real output from `glad_example` instead of
+  unevaluated calls. Live calls that need credentials stay unevaluated.
+- Parameter documentation now names the expected class: a Variable
+  Dictionary is a `qualtdict` object as returned by
+  [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md),
+  and Labelled Survey Data is a data frame as returned by
+  [`survey_fetch_labelled()`](https://lyh970817.github.io/qualtdict/reference/survey_fetch_labelled.md).
+  The examples of
+  [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
+  and
+  [`survey_split_blocks()`](https://lyh970817.github.io/qualtdict/reference/survey_split_blocks.md)
+  now demonstrate every argument.
+
 ## qualtdict 0.1.0
 
 First release. It collects everything below, previously carried as
@@ -14,8 +95,7 @@ unreleased development entries.
   decorative classes on normalised records were dropped at the same
   time; the `"qualtdict"` class on generated Variable Dictionaries and
   the error class `"qualtdict_export_blocking_findings"` raised by
-  [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
-  are unchanged.
+  `assert_dict_valid()` are unchanged.
 
 - The Semantic Name dependencies `slowraker`, `SnowballC`, `stringi`,
   `tidyr`, and `openNLP` moved from Imports to Suggests: the package now
@@ -29,8 +109,7 @@ unreleased development entries.
   [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   now names its Loop Option column `looping_option` instead of
   `loop_option`. The two names carried the same value and the internal
-  duplicate is removed, so the dictionary keeps one name per concept
-  (ADR 0010).
+  duplicate is removed, so the dictionary keeps one name per concept.
 
 - [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   no longer accepts the pre-release compatibility arguments `name` and
@@ -54,30 +133,26 @@ unreleased development entries.
   (a repaired `variable_name`; a gapped level run). Severity is derived
   from the finding class on every normalisation, so it cannot drift, and
   an unrecognised class classifies as `"definite"` (fails closed).
-  [`fetch_labelled_survey_data()`](https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.md)
-  gains `exclude_findings = "definite"`, which drops only the rows
-  carrying Definite Validation Findings and keeps every row whose
-  findings are merely suggestive; `"validation"` keeps its existing
-  drop-everything meaning. The pre-download
-  [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
-  gate is skipped for both `"definite"` and `"validation"` (every
-  Export-blocking Response Column ID is dropped after download under
-  either), and it never aborts on Suggestive Validation Findings under
-  any setting.
+  `fetch_labelled_survey_data()` gains `exclude_findings = "definite"`,
+  which drops only the rows carrying Definite Validation Findings and
+  keeps every row whose findings are merely suggestive; `"validation"`
+  keeps its existing drop-everything meaning. The pre-download
+  `assert_dict_valid()` gate is skipped for both `"definite"` and
+  `"validation"` (every Export-blocking Response Column ID is dropped
+  after download under either), and it never aborts on Suggestive
+  Validation Findings under any setting.
 
-- [`assert_dict_valid()`](https://lyh970817.github.io/qualtdict/reference/assert_dict_valid.md)
-  is a new exported gate that errors when a Variable Dictionary carries
-  Export-blocking Validation Findings: level-label codings where label
-  and level are not one-to-one, one label is carried by several rows, or
-  one level is carried by several rows. The error names every offending
-  Response Column ID, its Dictionary Variable Name, and the colliding
-  labels. A gapped level sequence is not Export-blocking.
-  [`fetch_labelled_survey_data()`](https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.md)
-  now applies the gate before downloading responses, so a defective
-  Variable Dictionary no longer aborts a whole survey deep inside
-  labelling after the download is paid for; pass
-  `require_valid_dict = FALSE` to download from a survey known to carry
-  such findings.
+- `assert_dict_valid()` is a new exported gate that errors when a
+  Variable Dictionary carries Export-blocking Validation Findings:
+  level-label codings where label and level are not one-to-one, one
+  label is carried by several rows, or one level is carried by several
+  rows. The error names every offending Response Column ID, its
+  Dictionary Variable Name, and the colliding labels. A gapped level
+  sequence is not Export-blocking. `fetch_labelled_survey_data()` now
+  applies the gate before downloading responses, so a defective Variable
+  Dictionary no longer aborts a whole survey deep inside labelling after
+  the download is paid for; pass `require_valid_dict = FALSE` to
+  download from a survey known to carry such findings.
   [`dict_validate()`](https://lyh970817.github.io/qualtdict/reference/dict_validate.md)
   is unchanged and stays total: it reports every Validation Finding and
   never errors.
@@ -88,8 +163,7 @@ unreleased development entries.
   the recode names the column and the cell holds the position at which
   that choice was displayed. These columns now declare no Level
   universe, carry the choice in `item`, and take a variable label but no
-  value labels in
-  [`fetch_labelled_survey_data()`](https://lyh970817.github.io/qualtdict/reference/fetch_labelled_survey_data.md).
+  value labels in `fetch_labelled_survey_data()`.
 
 - [`dict_generate()`](https://lyh970817.github.io/qualtdict/reference/dict_generate.md)
   now resolves response-column-id parity with Qualtrics exports for

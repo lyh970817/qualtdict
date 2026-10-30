@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Generate Variable Dictionaries and Labelled Survey Data for Qualtrics Surveys • qualtdict</title>
+<title>Variable Dictionaries and Labelled Data for Qualtrics Surveys • qualtdict</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Generate Variable Dictionaries and Labelled Survey Data for Qualtrics Surveys">
-<meta name="description" content="Generates Variable Dictionaries from Qualtrics &lt;https://www.qualtrics.com/about/&gt; survey metadata and applies those dictionaries to create Labelled Survey Data. This package is a metadata and labelled-export companion to qualtRics, which provides access to Qualtrics survey data and metadata via the Qualtrics API &lt;https://api.qualtrics.com/&gt;.">
-<meta property="og:description" content="Generates Variable Dictionaries from Qualtrics &lt;https://www.qualtrics.com/about/&gt; survey metadata and applies those dictionaries to create Labelled Survey Data. This package is a metadata and labelled-export companion to qualtRics, which provides access to Qualtrics survey data and metadata via the Qualtrics API &lt;https://api.qualtrics.com/&gt;.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Variable Dictionaries and Labelled Data for Qualtrics Surveys">
+<meta name="description" content="Decodes nested Qualtrics &lt;https://www.qualtrics.com/about/&gt; survey metadata into a readable Variable Dictionary, one row per exported response column with question, item, level, label and a generated variable name, and applies it to downloaded responses to produce labelled, analysis-ready survey data. The package is a metadata and labelled-export companion to qualtRics, which provides access to Qualtrics survey data and metadata via the Qualtrics API &lt;https://api.qualtrics.com/&gt;.">
+<meta property="og:description" content="Decodes nested Qualtrics &lt;https://www.qualtrics.com/about/&gt; survey metadata into a readable Variable Dictionary, one row per exported response column with question, item, level, label and a generated variable name, and applies it to downloaded responses to produce labelled, analysis-ready survey data. The package is a metadata and labelled-export companion to qualtRics, which provides access to Qualtrics survey data and metadata via the Qualtrics API &lt;https://api.qualtrics.com/&gt;.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -53,64 +53,231 @@
 <p><strong>License:</strong> <a href="https://opensource.org/licenses/MIT" class="external-link">MIT</a></p>
 <!-- badges: start -->
 
-<p><a href="https://www.qualtrics.com/" class="external-link">Qualtrics</a> is an online survey and data collection software platform. <code>qualtdict</code> is a metadata and labelled-export companion to <a href="https://github.com/ropensci/qualtRics" class="external-link">qualtRics</a> for Qualtrics surveys.</p>
-<p><code>qualtRics</code> owns API access to Qualtrics. <code>qualtdict</code> owns the package workflow that turns Qualtrics metadata and import-ID response exports into:</p>
-<ul>
-<li>a <strong>Variable Dictionary</strong> with <code>response_column_id</code>, <code>row_source</code>, <code>qid</code>, <code>question_name</code>, <code>variable_name</code>, and survey metadata needed for analysis;</li>
-<li>
-<strong>Validation Findings</strong> that make dictionary consistency issues visible; and</li>
-<li>
-<strong>Labelled Survey Data</strong> whose Export Variables are renamed to <code>variable_name</code> and labelled from the Variable Dictionary.</li>
-</ul>
-<p><code>qualtdict</code> is not a replacement downloader for <code>qualtRics</code>, a general survey cleaning framework, or a stable Semantic Name generator.</p>
+<p><a href="https://www.qualtrics.com/" class="external-link">Qualtrics</a> is widely used to collect questionnaire and follow-up data, and the analyst’s work begins when the survey closes. Qualtrics describes a survey in a deeply nested JSON structure: questions, choices, matrix items, loops, embedded fields and scoring rules are spread across several API objects. The downloaded response file refers back to them only through identifiers like <code>QID12_3_TEXT</code>, and can contain hundreds of such columns covering question choices, matrix items, text-entry fields, Loop and Merge iterations, embedded data, scoring outputs and text-analysis sidecars. Before any analysis, every column has to be matched back to the metadata, renamed, labelled with its response options, and documented. Done by hand or in ad hoc scripts, that mapping is slow, error-prone, and hard for anyone else to check, especially for surveys with matrix, side-by-side or multi-select questions and repeated waves.</p>
+<p>qualtdict makes that mapping explicit, readable and reproducible. From the Qualtrics metadata it builds a Variable Dictionary: a flat table with one row per exported response column, showing the question, item, response level and label it belongs to, plus a generated variable name. The dictionary is easy to inspect and validate, and it doubles as a codebook you can review with collaborators or publish alongside the data.</p>
+<p>Applying the dictionary to downloaded responses attaches that structure to the data itself. Every column is renamed to its variable name; choice columns carry their response options as value labels, and text and numeric columns carry the question text as a variable label. You can tell what each column is just by looking at it, so the response data are analysis-ready from the first <code>glimpse()</code>.</p>
+<p><a href="https://github.com/ropensci/qualtRics" class="external-link">qualtRics</a> handles the Qualtrics API; qualtdict handles everything between the raw export and your analysis. It is not a replacement downloader for qualtRics, and not a general survey-cleaning framework.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>This package can be installed with the <a href="https://cran.r-project.org/package=remotes" class="external-link">remotes</a> package.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"remotes"</span><span class="op">)</span></span>
-<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"lyh970817/qualtdict"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"lyh970817/qualtdict"</span><span class="op">)</span></span></code></pre></div>
+<p>qualtdict does not need Java. The <code>SystemRequirements</code> field of its <code>DESCRIPTION</code> mentions Java only because the suggested openNLP package needs it for POS-tag filtering, which the Semantic Names in qualtdict do not use.</p>
 </div>
 <div class="section level2">
-<h2 id="credentials-and-offline-work">Credentials And Offline Work<a class="anchor" aria-label="anchor" href="#credentials-and-offline-work"></a>
+<h2 id="credentials">Credentials<a class="anchor" aria-label="anchor" href="#credentials"></a>
 </h2>
-<p>Live calls to <code><a href="reference/dict_generate.html">dict_generate()</a></code> and <code><a href="reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data()</a></code> require Qualtrics API credentials because they retrieve metadata and responses through <code>qualtRics</code>. Register credentials with <code><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtRics::qualtrics_api_credentials()</a></code>, which <code>qualtdict</code> also re-exports for convenience.</p>
+<p><code><a href="reference/dict_generate.html">dict_generate()</a></code> and <code><a href="reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> read your survey from Qualtrics, so they need Qualtrics API credentials. Your institution must allow API access, and it must be enabled for your account; the person who manages your Qualtrics account can give you your API token and base URL. Store them once with <code><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtrics_api_credentials()</a></code>, which qualtdict re-exports from qualtRics:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/lyh970817/qualtdict" class="external-link">qualtdict</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">qualtRics</span><span class="fu">::</span><span class="fu"><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtrics_api_credentials</a></span><span class="op">(</span></span>
+<span><span class="fu"><a href="https://docs.ropensci.org/qualtRics/reference/qualtrics_api_credentials.html" class="external-link">qualtrics_api_credentials</a></span><span class="op">(</span></span>
 <span>  api_key <span class="op">=</span> <span class="st">"&lt;YOUR-QUALTRICS_API_KEY&gt;"</span>,</span>
 <span>  base_url <span class="op">=</span> <span class="st">"&lt;YOUR-QUALTRICS_BASE_URL&gt;"</span>,</span>
 <span>  install <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Package tests and documentation examples avoid private survey data. Validation, dictionary schema checks, block splitting, and labelled-export mechanics can be tested offline with synthetic dictionaries and synthetic metadata. Only live Qualtrics metadata or response downloads require credentials.</p>
+<p>The rest of the functions work on objects you already have and need no credentials.</p>
 </div>
 <div class="section level2">
-<h2 id="variable-dictionary-to-labelled-survey-data">Variable Dictionary To Labelled Survey Data<a class="anchor" aria-label="anchor" href="#variable-dictionary-to-labelled-survey-data"></a>
+<h2 id="a-variable-dictionary-for-your-survey">A Variable Dictionary for your survey<a class="anchor" aria-label="anchor" href="#a-variable-dictionary-for-your-survey"></a>
 </h2>
-<p>Generate a Variable Dictionary from a survey ID. The dictionary keeps <code>response_column_id</code> as the downloaded response-column key, <code>row_source</code> as the Dictionary Row Source, <code>qid</code> as the bare Qualtrics question identifier, <code>question_name</code> as the raw Qualtrics naming reference, and <code>variable_name</code> as the final export-safe Dictionary Variable Name. Question-backed rows use <code>row_source = "question"</code>, and flat Embedded Data Fields defined by Qualtrics metadata use <code>row_source = "embedded_data"</code>. Scoring Variables defined by survey description metadata use <code>row_source = "scoring"</code>, while Text-analysis Sidecars discovered from the response column map use <code>row_source = "text_analysis"</code>. Embedded Data Field block assignment, when requested, uses the richer Survey Flow returned by <code>fetch_description()</code>. Scoring Variables remain unassigned by Survey Block.</p>
+<p>Pass the survey ID to <code><a href="reference/dict_generate.html">dict_generate()</a></code>:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">survey_id</span> <span class="op">&lt;-</span> <span class="st">"SV_XXXXXXXXXXXXXXXX"</span></span>
 <span></span>
-<span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dict_generate.html">dict_generate</a></span><span class="op">(</span></span>
-<span>  <span class="va">survey_id</span>,</span>
-<span>  variable_name <span class="op">=</span> <span class="st">"question_name"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>Use <code><a href="reference/dict_validate.html">dict_validate()</a></code> to return structured Validation Findings.</p>
+<span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dict_generate.html">dict_generate</a></span><span class="op">(</span><span class="va">survey_id</span>, variable_name <span class="op">=</span> <span class="st">"question_name"</span><span class="op">)</span></span></code></pre></div>
+<p>The rest of this README uses <code>glad_example</code>, a small example bundled with the package: the metadata of a subset of the GLAD Study sign-up survey (four demographic questions, the PHQ-9 and GAD-7 blocks, embedded data and scoring variables) with synthetic responses. <code>glad_example$dictionary</code> is exactly what <code><a href="reference/dict_generate.html">dict_generate()</a></code> returns for that survey.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dict_validate.html">dict_validate</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
-<span><span class="va">validation</span><span class="op">$</span><span class="va">validation_findings</span></span></code></pre></div>
-<p>Then create Labelled Survey Data. <code>qualtdict</code> calls <code><a href="https://docs.ropensci.org/qualtRics/reference/fetch_survey.html" class="external-link">qualtRics::fetch_survey()</a></code> with the response-column settings needed to match downloaded data back to <code>response_column_id</code>, then renames Export Variables to <code>variable_name</code> and attaches labels from the Variable Dictionary.</p>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/lyh970817/qualtdict" class="external-link">qualtdict</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="va">glad_example</span><span class="op">$</span><span class="va">dictionary</span></span>
+<span><span class="va">dict</span></span>
+<span><span class="co">#&gt; # A tibble: 97 × 14</span></span>
+<span><span class="co">#&gt;    response_column_id row_source qid     question_name variable_name block      </span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;              &lt;chr&gt;      &lt;chr&gt;   &lt;chr&gt;         &lt;chr&gt;         &lt;chr&gt;      </span></span>
+<span><span class="co">#&gt;  1 QID1125_TEXT       question   QID1125 DEM.AGE.1.0   DEM.AGE.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  2 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  3 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  4 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  5 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  6 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  7 QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  8 QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…</span></span>
+<span><span class="co">#&gt;  9 QID1147_1          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0   Demographi…</span></span>
+<span><span class="co">#&gt; 10 QID1147_2          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0.1 Demographi…</span></span>
+<span><span class="co">#&gt; # ℹ 87 more rows</span></span>
+<span><span class="co">#&gt; # ℹ 8 more variables: question &lt;chr&gt;, item &lt;chr&gt;, level &lt;chr&gt;, label &lt;chr&gt;,</span></span>
+<span><span class="co">#&gt; #   type &lt;chr&gt;, selector &lt;chr&gt;, sub_selector &lt;chr&gt;, content_type &lt;chr&gt;</span></span></code></pre></div>
+<p>Every column of the dictionary, with its type:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/fetch_labelled_survey_data.html">fetch_labelled_survey_data</a></span><span class="op">(</span></span>
-<span>  <span class="va">dict</span>,</span>
-<span>  extra_columns <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"externalDataReference"</span>, <span class="st">"startDate"</span>, <span class="st">"endDate"</span><span class="op">)</span>,</span>
-<span>  exclude_findings <span class="op">=</span> <span class="st">"none"</span>,</span>
-<span>  unanswer_recode <span class="op">=</span> <span class="op">-</span><span class="fl">77</span>,</span>
-<span>  unanswer_recode_multi <span class="op">=</span> <span class="fl">0</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<p>If Qualtrics Question Names are not suitable as analysis names, you can ask <code>qualtdict</code> to generate Semantic Names. Semantic Names are readable conveniences generated from survey text and metadata; they are not stable guarantees across package versions or survey text changes. For long text, Semantic Names select important words from ranked keywords and preserve those selected words in the order they appear in the naming text.</p>
+<code class="sourceCode R"><span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://pillar.r-lib.org/reference/glimpse.html" class="external-link">glimpse</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Rows: 97</span></span>
+<span><span class="co">#&gt; Columns: 14</span></span>
+<span><span class="co">#&gt; $ response_column_id &lt;chr&gt; "QID1125_TEXT", "QID1126", "QID1126", "QID1126", "Q…</span></span>
+<span><span class="co">#&gt; $ row_source         &lt;chr&gt; "question", "question", "question", "question", "qu…</span></span>
+<span><span class="co">#&gt; $ qid                &lt;chr&gt; "QID1125", "QID1126", "QID1126", "QID1126", "QID112…</span></span>
+<span><span class="co">#&gt; $ question_name      &lt;chr&gt; "DEM.AGE.1.0", "DEM.COR.1.0", "DEM.COR.1.0", "DEM.C…</span></span>
+<span><span class="co">#&gt; $ variable_name      &lt;chr&gt; "DEM.AGE.1.0", "DEM.COR.1.0", "DEM.COR.1.0", "DEM.C…</span></span>
+<span><span class="co">#&gt; $ block              &lt;chr&gt; "Demographics", "Demographics", "Demographics", "De…</span></span>
+<span><span class="co">#&gt; $ question           &lt;chr&gt; "How old are you now?", "Please confirm where you a…</span></span>
+<span><span class="co">#&gt; $ item               &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…</span></span>
+<span><span class="co">#&gt; $ level              &lt;chr&gt; NA, "1", "2", "3", "4", "5", "0", "1", "1", "1", "1…</span></span>
+<span><span class="co">#&gt; $ label              &lt;chr&gt; NA, "England", "Scotland", "Wales", "Northern Irela…</span></span>
+<span><span class="co">#&gt; $ type               &lt;chr&gt; "TE", "MC", "MC", "MC", "MC", "MC", "MC", "MC", "MC…</span></span>
+<span><span class="co">#&gt; $ selector           &lt;chr&gt; "SL", "DL", "DL", "DL", "DL", "DL", "SAVR", "SAVR",…</span></span>
+<span><span class="co">#&gt; $ sub_selector       &lt;chr&gt; NA, NA, NA, NA, NA, NA, "TX", "TX", "TX", "TX", "TX…</span></span>
+<span><span class="co">#&gt; $ content_type       &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,…</span></span></code></pre></div>
+<p>The columns that identify a row are:</p>
+<ul>
+<li>
+<code>response_column_id</code>: the column name in the downloaded Qualtrics response file, such as <code>QID1147_5_TEXT</code>. This is how the dictionary is matched to your data.</li>
+<li>
+<code>row_source</code>: what the column comes from: a survey <code>question</code>, an <code>embedded_data</code> field, a <code>scoring</code> variable, or a <code>text_analysis</code> sidecar.</li>
+<li>
+<code>qid</code>: the Qualtrics question the column belongs to. One question can produce many columns, such as one per matrix item or per ticked choice.</li>
+<li>
+<code>question_name</code>: the question name you set in the Qualtrics survey editor.</li>
+<li>
+<code>variable_name</code>: the name the column gets in your labelled data, unique and safe for export.</li>
+</ul>
+<p>The other columns describe the content: the Survey Block, question text, item text, response level and label, and the Qualtrics question type. A column with response options takes one row per option. The first PHQ-9 item, “Little interest or pleasure in doing things”, is one response column with four levels:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict</span><span class="op">[</span></span>
+<span>  <span class="va">dict</span><span class="op">$</span><span class="va">variable_name</span> <span class="op">==</span> <span class="st">"PHQ.DEP.1.0"</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"variable_name"</span>, <span class="st">"level"</span>, <span class="st">"label"</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span><span class="co">#&gt; # A tibble: 4 × 4</span></span>
+<span><span class="co">#&gt;   response_column_id variable_name level label                  </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;              &lt;chr&gt;         &lt;chr&gt; &lt;chr&gt;                  </span></span>
+<span><span class="co">#&gt; 1 QID127303424_1     PHQ.DEP.1.0   0     Not at all             </span></span>
+<span><span class="co">#&gt; 2 QID127303424_1     PHQ.DEP.1.0   1     Several days           </span></span>
+<span><span class="co">#&gt; 3 QID127303424_1     PHQ.DEP.1.0   2     More than half the days</span></span>
+<span><span class="co">#&gt; 4 QID127303424_1     PHQ.DEP.1.0   3     Nearly every day</span></span></code></pre></div>
+<p>Embedded data fields and scoring variables appear alongside the questions:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict</span><span class="op">[</span></span>
+<span>  <span class="va">dict</span><span class="op">$</span><span class="va">row_source</span> <span class="op">!=</span> <span class="st">"question"</span>,</span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"row_source"</span>, <span class="st">"variable_name"</span>, <span class="st">"question"</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span><span class="co">#&gt; # A tibble: 8 × 4</span></span>
+<span><span class="co">#&gt;   response_column_id row_source    variable_name     question                   </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;              &lt;chr&gt;         &lt;chr&gt;             &lt;chr&gt;                      </span></span>
+<span><span class="co">#&gt; 1 Age                embedded_data Age               Embedded Data: Age         </span></span>
+<span><span class="co">#&gt; 2 sex                embedded_data sex               Embedded Data: sex         </span></span>
+<span><span class="co">#&gt; 3 PHQRaw             embedded_data PHQRaw            Embedded Data: PHQRaw      </span></span>
+<span><span class="co">#&gt; 4 CurrentDepression  embedded_data CurrentDepression Embedded Data: CurrentDepr…</span></span>
+<span><span class="co">#&gt; 5 GADRaw             embedded_data GADRaw            Embedded Data: GADRaw      </span></span>
+<span><span class="co">#&gt; 6 CurrentGAD         embedded_data CurrentGAD        Embedded Data: CurrentGAD  </span></span>
+<span><span class="co">#&gt; 7 SC_5gvP3Yxax8TWHcN scoring       GAD_7             Scoring Variable: GAD-7    </span></span>
+<span><span class="co">#&gt; 8 SC_3rtKxr7Lzd9OHhX scoring       PHQ_9             Scoring Variable: PHQ-9</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="check-the-dictionary">Check the dictionary<a class="anchor" aria-label="anchor" href="#check-the-dictionary"></a>
+</h2>
+<p><code><a href="reference/dict_validate.html">dict_validate()</a></code> reports Validation Findings: dictionary rows worth a second look before you analyse the data.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">findings</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dict_validate.html">dict_validate</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span><span class="op">$</span><span class="va">validation_findings</span></span>
+<span><span class="va">findings</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"severity"</span>, <span class="st">"response_column_id"</span>, <span class="st">"original_candidate"</span>, <span class="st">"variable_name"</span>,</span>
+<span>  <span class="st">"reason"</span></span>
+<span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; # A tibble: 23 × 5</span></span>
+<span><span class="co">#&gt;    severity   response_column_id original_candidate variable_name reason   </span></span>
+<span><span class="co">#&gt;    &lt;chr&gt;      &lt;chr&gt;              &lt;chr&gt;              &lt;chr&gt;         &lt;chr&gt;    </span></span>
+<span><span class="co">#&gt;  1 suggestive QID1147_2          DEM.EDU.1.0        DEM.EDU.1.0.1 duplicate</span></span>
+<span><span class="co">#&gt;  2 suggestive QID1147_3          DEM.EDU.1.0        DEM.EDU.1.0.2 duplicate</span></span>
+<span><span class="co">#&gt;  3 suggestive QID1147_4          DEM.EDU.1.0        DEM.EDU.1.0.3 duplicate</span></span>
+<span><span class="co">#&gt;  4 suggestive QID1147_6          DEM.EDU.1.0        DEM.EDU.1.0.4 duplicate</span></span>
+<span><span class="co">#&gt;  5 suggestive QID1147_5          DEM.EDU.1.0        DEM.EDU.1.0.5 duplicate</span></span>
+<span><span class="co">#&gt;  6 suggestive QID1147_5_TEXT     DEM.EDU.1.0        DEM.EDU.1.0.6 duplicate</span></span>
+<span><span class="co">#&gt;  7 suggestive QID1147_-999       DEM.EDU.1.0        DEM.EDU.1.0.7 duplicate</span></span>
+<span><span class="co">#&gt;  8 suggestive QID127303424_2     PHQ.DEP.1.0        PHQ.DEP.1.0.1 duplicate</span></span>
+<span><span class="co">#&gt;  9 suggestive QID127303424_3     PHQ.DEP.1.0        PHQ.DEP.1.0.2 duplicate</span></span>
+<span><span class="co">#&gt; 10 suggestive QID127303424_4     PHQ.DEP.1.0        PHQ.DEP.1.0.3 duplicate</span></span>
+<span><span class="co">#&gt; # ℹ 13 more rows</span></span></code></pre></div>
+<p>All findings here are suggestive: they report variable names that qualtdict repaired. The items of the PHQ-9 and GAD-7 matrices and the choices of the multi-select qualifications question share one Question Name, so their names are numbered to keep them unique, and the hyphen in the scoring variable names <code>PHQ-9</code> and <code>GAD-7</code> is not safe in an export variable name, so they become <code>PHQ_9</code> and <code>GAD_7</code>.</p>
+<p>A definite finding, such as two choices sharing one response code, would mean the column cannot be labelled reliably. <code><a href="reference/dict_assert_valid.html">dict_assert_valid()</a></code> raises an error for such level-label findings, and <code><a href="reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> runs it before downloading anything.</p>
+</div>
+<div class="section level2">
+<h2 id="labelled-survey-data">Labelled survey data<a class="anchor" aria-label="anchor" href="#labelled-survey-data"></a>
+</h2>
+<p><code><a href="reference/survey_fetch_labelled.html">survey_fetch_labelled()</a></code> downloads the responses through qualtRics and applies the dictionary:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/survey_fetch_labelled.html">survey_fetch_labelled</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span></code></pre></div>
+<p>For the example survey, that call returns <code>glad_example$labelled_survey_data</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">survey_dat</span> <span class="op">&lt;-</span> <span class="va">glad_example</span><span class="op">$</span><span class="va">labelled_survey_data</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 20 43</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"externalDataReference"</span>, <span class="st">"DEM.AGE.1.0"</span>, <span class="st">"DEM.SEX.1.0"</span>, <span class="st">"PHQ.DEP.1.0"</span>,</span>
+<span>  <span class="st">"HEAD"</span>, <span class="st">"PHQRaw"</span>, <span class="st">"PHQ_9"</span></span>
+<span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 7</span></span>
+<span><span class="co">#&gt;   externalDataReference DEM.AGE.1.0 DEM.SEX.1.0 PHQ.DEP.1.0  HEAD PHQRaw PHQ_9</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;                       &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 example-001                    34           0           3     0     16    16</span></span>
+<span><span class="co">#&gt; 2 example-002                    53           0           1     3     14    14</span></span>
+<span><span class="co">#&gt; 3 example-003                    63           1           0     1     13    13</span></span>
+<span><span class="co">#&gt; 4 example-004                    37           0           1     3     12    12</span></span>
+<span><span class="co">#&gt; 5 example-005                    68           0           3     3     15    15</span></span>
+<span><span class="co">#&gt; 6 example-006                    70           0           3     3     14    14</span></span></code></pre></div>
+<p>Columns are named by <code>variable_name</code>. Choice columns carry their response options as value labels, and text and numeric columns carry the question text as a variable label:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">$</span><span class="va">PHQ.DEP.1.0</span>, <span class="st">"labels"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;              Not at all            Several days More than half the days </span></span>
+<span><span class="co">#&gt;                       0                       1                       2 </span></span>
+<span><span class="co">#&gt;        Nearly every day </span></span>
+<span><span class="co">#&gt;                       3</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">$</span><span class="va">DEM.AGE.1.0</span>, <span class="st">"label"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "How old are you now?"</span></span></code></pre></div>
+<p>so tools that read labels, such as sjlabelled, can use them directly:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="fu">sjlabelled</span><span class="fu">::</span><span class="fu"><a href="https://strengejacke.github.io/sjlabelled/reference/as_label.html" class="external-link">as_label</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">$</span><span class="va">DEM.SEX.1.0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Male Female </span></span>
+<span><span class="co">#&gt;     11      9</span></span></code></pre></div>
+<p><code><a href="reference/survey_export_findings.html">survey_export_findings()</a></code> lists dictionary columns that were missing from the download. For the example there are none:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/survey_export_findings.html">survey_export_findings</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 0 × 5</span></span>
+<span><span class="co">#&gt; # ℹ 5 variables: finding &lt;chr&gt;, response_column_id &lt;chr&gt;, qid &lt;chr&gt;,</span></span>
+<span><span class="co">#&gt; #   variable_name &lt;chr&gt;, reason &lt;chr&gt;</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="one-block-at-a-time">One block at a time<a class="anchor" aria-label="anchor" href="#one-block-at-a-time"></a>
+</h2>
+<p><code><a href="reference/dict_split_blocks.html">dict_split_blocks()</a></code> and <code><a href="reference/survey_split_blocks.html">survey_split_blocks()</a></code> split the dictionary and the data by Survey Block. Embedded data fields and scoring variables are not assigned to a block by default, so they are kept under <code>"..unassigned"</code>.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dict_blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/dict_split_blocks.html">dict_split_blocks</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">dict_blocks</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "..unassigned" "Demographics" "GAD7"         "PHQ9"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">dict_blocks</span><span class="op">$</span><span class="va">GAD7</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"response_column_id"</span>, <span class="st">"variable_name"</span>, <span class="st">"item"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 8 × 3</span></span>
+<span><span class="co">#&gt;   response_column_id variable_name item                                         </span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;              &lt;chr&gt;         &lt;chr&gt;                                        </span></span>
+<span><span class="co">#&gt; 1 QID127303430_1     HEAD          Feeling nervous, anxious, or on edge         </span></span>
+<span><span class="co">#&gt; 2 QID127303430_2     HEAD.1        Not being able to stop or control worrying   </span></span>
+<span><span class="co">#&gt; 3 QID127303430_3     HEAD.2        Worrying too much about different things     </span></span>
+<span><span class="co">#&gt; 4 QID127303430_4     HEAD.3        Trouble relaxing                             </span></span>
+<span><span class="co">#&gt; 5 QID127303430_5     HEAD.4        Being so restless that it is hard to sit sti…</span></span>
+<span><span class="co">#&gt; 6 QID127303430_6     HEAD.5        Becoming easily annoyed or irritable         </span></span>
+<span><span class="co">#&gt; 7 QID127303430_7     HEAD.6        Feeling afraid as if something awful might h…</span></span>
+<span><span class="co">#&gt; 8 QID127303448       Q5            &lt;NA&gt;</span></span>
+<span></span>
+<span><span class="va">survey_blocks</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/survey_split_blocks.html">survey_split_blocks</a></span><span class="op">(</span><span class="va">survey_dat</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">survey_blocks</span><span class="op">$</span><span class="va">GAD7</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  [1] "externalDataReference" "startDate"             "endDate"              </span></span>
+<span><span class="co">#&gt;  [4] "HEAD"                  "HEAD.1"                "HEAD.2"               </span></span>
+<span><span class="co">#&gt;  [7] "HEAD.3"                "HEAD.4"                "HEAD.5"               </span></span>
+<span><span class="co">#&gt; [10] "HEAD.6"                "Q5"</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="semantic-names">Semantic Names<a class="anchor" aria-label="anchor" href="#semantic-names"></a>
+</h2>
+<p>If the Question Names in your survey are not good analysis names, ask for Semantic Names, generated from the question text. Here <code>block_pattern</code> turns each Survey Block name into a prefix:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">block_pattern</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">block</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/substr.html" class="external-link">substring</a></span><span class="op">(</span><span class="va">block</span>, <span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
@@ -121,12 +288,13 @@
 <span>  block_pattern <span class="op">=</span> <span class="va">block_pattern</span>,</span>
 <span>  block_sep <span class="op">=</span> <span class="st">"."</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>Semantic Names are a readable convenience, not stable identifiers: they can change with the survey text or the package version. They need the suggested packages slowraker, SnowballC, stringi and tidyr.</p>
 </div>
 <div class="section level2">
 <h2 id="how-to-cite">How To Cite<a class="anchor" aria-label="anchor" href="#how-to-cite"></a>
 </h2>
 <p>If <code>qualtdict</code> contributes to published work, please cite it. The citation for the installed version is returned by <code><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation()</a></code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"qualtdict"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -136,8 +304,8 @@
 <li>
 <a href="https://lyh970817.github.io/qualtdict/articles/qualtdict.html">Introduction to qualtdict</a> is the package vignette, which works through the same Variable Dictionary to Labelled Survey Data path in more detail.</li>
 <li>The <a href="https://lyh970817.github.io/qualtdict/">reference site</a> documents every exported function.</li>
-<li>The <a href="CONTRIBUTING.html">contributing guide</a> describes how to propose a change.</li>
-<li>This project is released with a <a href="CODE_OF_CONDUCT.html">Contributor Code of Conduct</a>. By contributing to this project you agree to abide by its terms.</li>
+<li>The <a href="https://github.com/lyh970817/qualtdict/blob/main/.github/CONTRIBUTING.md" class="external-link">contributing guide</a> describes how to propose a change.</li>
+<li>This project is released with a <a href="https://github.com/lyh970817/qualtdict/blob/main/.github/CODE_OF_CONDUCT.md" class="external-link">Contributor Code of Conduct</a>. By contributing to this project you agree to abide by its terms.</li>
 </ul>
 </div>
 </div>
@@ -175,7 +343,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Yuhao Lin <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0001-6357-5731" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
+<li>Yuhao Lin <br><small class="roles"> Author, maintainer, copyright holder </small> <a href="https://orcid.org/0000-0001-6357-5731" target="orcid.widget" aria-label="ORCID" class="external-link"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a>  </li>
 </ul>
 </div>
 

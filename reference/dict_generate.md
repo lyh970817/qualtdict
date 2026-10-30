@@ -108,17 +108,58 @@ POS-tag filtering, which the Semantic Name path does not use.
 ## Examples
 
 ``` r
+# The Variable Dictionary dict_generate() returns for the bundled example
+# survey (see ?glad_example), one row per response column and level
+dict <- glad_example$dictionary
+dict
+#> # A tibble: 97 × 14
+#>    response_column_id row_source qid     question_name variable_name block      
+#>    <chr>              <chr>      <chr>   <chr>         <chr>         <chr>      
+#>  1 QID1125_TEXT       question   QID1125 DEM.AGE.1.0   DEM.AGE.1.0   Demographi…
+#>  2 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…
+#>  3 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…
+#>  4 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…
+#>  5 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…
+#>  6 QID1126            question   QID1126 DEM.COR.1.0   DEM.COR.1.0   Demographi…
+#>  7 QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…
+#>  8 QID1127            question   QID1127 DEM.SEX.1.0   DEM.SEX.1.0   Demographi…
+#>  9 QID1147_1          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0   Demographi…
+#> 10 QID1147_2          question   QID1147 DEM.EDU.1.0   DEM.EDU.1.0.1 Demographi…
+#> # ℹ 87 more rows
+#> # ℹ 8 more variables: question <chr>, item <chr>, level <chr>, label <chr>,
+#> #   type <chr>, selector <chr>, sub_selector <chr>, content_type <chr>
+dict[, c(
+  "response_column_id", "row_source", "variable_name", "level", "label"
+)]
+#> # A tibble: 97 × 5
+#>    response_column_id row_source variable_name level label                      
+#>    <chr>              <chr>      <chr>         <chr> <chr>                      
+#>  1 QID1125_TEXT       question   DEM.AGE.1.0   NA    NA                         
+#>  2 QID1126            question   DEM.COR.1.0   1     England                    
+#>  3 QID1126            question   DEM.COR.1.0   2     Scotland                   
+#>  4 QID1126            question   DEM.COR.1.0   3     Wales                      
+#>  5 QID1126            question   DEM.COR.1.0   4     Northern Ireland           
+#>  6 QID1126            question   DEM.COR.1.0   5     Outside UK                 
+#>  7 QID1127            question   DEM.SEX.1.0   0     Male                       
+#>  8 QID1127            question   DEM.SEX.1.0   1     Female                     
+#>  9 QID1147_1          question   DEM.EDU.1.0   1     College or university degr…
+#> 10 QID1147_2          question   DEM.EDU.1.0.1 1     A levels/AS levels or equi…
+#> # ℹ 87 more rows
+
+# A live call reads the survey metadata from Qualtrics and needs
+# Qualtrics API credentials
 if (interactive()) {
   survey_id <- "SV_XXXXXXXXXXXXXXXX"
 
-  # Create a function for \code{block_pattern}
-  # that returns the first three letters of a string
+  dict <- dict_generate(survey_id, variable_name = "question_name")
+
+  # Semantic Names, with the first three letters of each Survey Block as
+  # Block Prefix
   block_pattern <- function(x) {
     substring(x, 1, 3)
   }
 
-
-  mydict <- dict_generate(survey_id,
+  dict <- dict_generate(survey_id,
     variable_name = "semantic_name",
     block_pattern = block_pattern,
     block_sep = "."

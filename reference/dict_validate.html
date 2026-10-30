@@ -60,8 +60,8 @@ source Qualtrics metadata is correct.</p>
 
 
 <dl><dt id="arg-dict">dict<a class="anchor" aria-label="anchor" href="#arg-dict"></a></dt>
-<dd><p>A Variable Dictionary returned by
-<code><a href="dict_generate.html">dict_generate</a></code>.</p></dd>
+<dd><p>A Variable Dictionary: a <code>qualtdict</code> object (a tibble with class
+<code>qualtdict</code>) as returned by <code><a href="dict_generate.html">dict_generate</a></code>.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
@@ -89,21 +89,41 @@ pairings.</p></li>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code>dict_validate()</code> is total: it reports every Validation Finding and never
 errors, so it can be used to survey the damage in a defective Variable
-Dictionary. Use <code><a href="assert_dict_valid.html">assert_dict_valid()</a></code> when you want the Export-blocking
+Dictionary. Use <code><a href="dict_assert_valid.html">dict_assert_valid()</a></code> when you want the Export-blocking
 subset to error instead.</p>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dict</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
-<span class="r-in"><span>  response_column_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"QID1"</span>, <span class="st">"QID2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  variable_name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"q1"</span>, <span class="st">"q2"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Yes"</span>, <span class="st">"No"</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>  level <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"2"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"qualtdict"</span>, <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">dict</span><span class="op">)</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># quiet = FALSE would also print routine progress messages</span></span></span>
+<span class="r-in"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu">dict_validate</span><span class="op">(</span><span class="va">glad_example</span><span class="op">$</span><span class="va">dictionary</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">validation</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "validation_findings" "level_label_pairs"  </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">validation</span> <span class="op">&lt;-</span> <span class="fu">dict_validate</span><span class="op">(</span><span class="va">dict</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># For the example survey, every finding is a suggestive variable-name repair</span></span></span>
+<span class="r-in"><span><span class="va">findings</span> <span class="op">&lt;-</span> <span class="va">validation</span><span class="op">$</span><span class="va">validation_findings</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">findings</span><span class="op">$</span><span class="va">severity</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> suggestive </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         23 </span>
+<span class="r-in"><span><span class="va">findings</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"severity"</span>, <span class="st">"response_column_id"</span>, <span class="st">"original_candidate"</span>, <span class="st">"variable_name"</span>,</span></span>
+<span class="r-in"><span>  <span class="st">"reason"</span></span></span>
+<span class="r-in"><span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 23 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    severity   response_column_id original_candidate variable_name reason   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> suggestive QID1147_2          DEM.EDU.1.0        DEM.EDU.1.0.1 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> suggestive QID1147_3          DEM.EDU.1.0        DEM.EDU.1.0.2 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> suggestive QID1147_4          DEM.EDU.1.0        DEM.EDU.1.0.3 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> suggestive QID1147_6          DEM.EDU.1.0        DEM.EDU.1.0.4 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> suggestive QID1147_5          DEM.EDU.1.0        DEM.EDU.1.0.5 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> suggestive QID1147_5_TEXT     DEM.EDU.1.0        DEM.EDU.1.0.6 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> suggestive QID1147_-999       DEM.EDU.1.0        DEM.EDU.1.0.7 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> suggestive QID127303424_2     PHQ.DEP.1.0        PHQ.DEP.1.0.1 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> suggestive QID127303424_3     PHQ.DEP.1.0        PHQ.DEP.1.0.2 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> suggestive QID127303424_4     PHQ.DEP.1.0        PHQ.DEP.1.0.3 duplicate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 13 more rows</span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
