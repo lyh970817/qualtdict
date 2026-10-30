@@ -664,6 +664,28 @@ test_that("dict_split_blocks returns block-specific Variable Dictionaries", {
   )
 })
 
+test_that("block views preserve the absence of an exact survey ID", {
+  dict <- minimal_export_dict()
+  attr(dict, "surveyID") <- NULL
+  attr(dict, "surveyID_draft") <- "SV_DRAFT"
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      stop("A missing survey ID must fail before fetching.")
+    }
+  )
+
+  block_dicts <- dict_split_blocks(dict)
+
+  for (block_dict in block_dicts) {
+    expect_null(attr(block_dict, "surveyID", exact = TRUE))
+    expect_error(
+      survey_fetch_labelled(block_dict),
+      "missing its `surveyID` attribute",
+      fixed = TRUE
+    )
+  }
+})
+
 test_that("dict_split_blocks preserves unassigned Variable Dictionary rows", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "ED1"),
@@ -1597,6 +1619,29 @@ test_that("numeric-validated text entry preserves its text values", {
   expect_type(dat$entry, "character")
   expect_identical(as.character(dat$entry), c("06", "001"))
   expect_null(attr(dat$entry, "labels", exact = TRUE))
+})
+
+test_that("partially declared levels retain their available value labels", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = c("1", NA_character_))
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1"),
+    variable_name = "q1",
+    block = "Block A",
+    label = c("Unrecorded", "Yes"),
+    level = c(NA_character_, "1")
+  )
+
+  dat <- survey_fetch_labelled(dict, extra_columns = NULL)
+
+  expect_identical(
+    attr(dat$q1, "labels", exact = TRUE),
+    c(Unrecorded = NA_character_, Yes = "1")
+  )
+  expect_identical(as.character(dat$q1), c("1", NA_character_))
 })
 
 test_that("a choice label containing TEXT keeps its value label", {
