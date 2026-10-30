@@ -26,10 +26,3 @@ dict_question_rows <- function(dict) {
   row_source <- dict_row_source(dict)
   !is.na(row_source) & row_source == "question"
 }
-
-#' Return row positions for metadata-defined Variable Dictionary rows
-#' @noRd
-dict_metadata_defined_rows <- function(dict) {
-  row_source <- dict_row_source(dict)
-  !is.na(row_source) & row_source != "question"
-}

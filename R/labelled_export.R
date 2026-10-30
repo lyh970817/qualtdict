@@ -441,7 +441,6 @@ survey_var_recode_context <- function(var_dict) {
     content_type = var_dict[["content_type"]][[1]],
     levels = levels,
     labels = var_dict[["label"]],
-    is_metadata_defined_row = dict_metadata_defined_rows(var_dict)[[1]],
     is_text_var = isTRUE(type == "TE") ||
       any(grepl("_TEXT", levels, fixed = TRUE), na.rm = TRUE),
     is_choice_tick_column = dict_choice_tick_column(var_dict),
@@ -504,6 +503,11 @@ survey_var_should_coerce_numeric <- function(context) {
 }
 
 #' Build value-label facts for one Export Variable
+#'
+#' Labels are taken verbatim, whatever text they contain: a choice labelled
+#' "TEXT message" is an ordinary Label. Text-entry rows never reach the value
+#' branches, because each one is its own Response Column (`QID1_4_TEXT`) and
+#' `survey_var_carries_no_value_labels()` returns early for it.
 #' @noRd
 survey_var_label_facts <- function(
   var_dict,
@@ -537,9 +541,10 @@ survey_var_label_facts <- function(
       labels <- c(labels, paste("Not", labels))
     }
   } else if (nrow(var_dict) > 1) {
-    # If multiple rows it's ordinal
-    labels <- grep("TEXT", labels, invert = TRUE, value = TRUE, fixed = TRUE)
-    levels <- grep("TEXT", levels, invert = TRUE, value = TRUE, fixed = TRUE)
+    # If multiple rows it's ordinal. Levels and Labels are not filtered for
+    # "TEXT": a substring filter dropped genuine Labels such as "TEXT message"
+    # while keeping their Levels, and the text-entry rows it was meant to drop
+    # are separate Response Columns that are never labelled here.
     if (!is.null(unanswer_recode)) {
       levels <- c(levels, unanswer_recode)
       labels <- c(labels, "Seen but not answered")
@@ -553,11 +558,15 @@ survey_var_label_facts <- function(
 #'
 #' Free text has no value universe. Neither does a display-order column: it
 #' stores the position at which one choice was displayed, and the
-#' unticked/unseen recodes describe a tick it never holds. A Metadata-defined
-#' row with no declared Level has none either.
+#' unticked/unseen recodes describe a tick it never holds. Nor does any
+#' variable with no declared Level, whatever its row source: a Metadata-defined
+#' row, or a question column such as Timing, File Upload, Slider or a
+#' carried-forward side-by-side statement. Labelling such a column would
+#' declare the unticked recode against a missing Level (`NA` as "Not NA") and
+#' drop its question-text variable label.
 #' @noRd
 survey_var_carries_no_value_labels <- function(context) {
   context$is_text_var ||
     context$is_display_order_column ||
-    (context$is_metadata_defined_row && !context$has_value_labels)
+    !context$has_value_labels
 }

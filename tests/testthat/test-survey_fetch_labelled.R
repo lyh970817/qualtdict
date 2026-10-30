@@ -1568,3 +1568,76 @@ test_that("only the Number content type coerces responses to numeric", {
   expect_type(number$q1, "double")
   expect_type(text_only$q1, "character")
 })
+
+test_that("a choice label containing TEXT keeps its value label", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "2", QID1_3_TEXT = "Letter")
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1", "QID1", "QID1_3_TEXT"),
+    variable_name = c("q1", "q1", "q1", "q1.txt"),
+    qid = "QID1",
+    block = "Block A",
+    question = "How did we contact you?",
+    label = c("Phone call", "TEXT message", "Other", "Other_TEXT"),
+    level = c("1", "2", "3", "3_TEXT")
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  # The ordinal column labels every choice, "TEXT message" included.
+  expect_identical(
+    attr(dat$q1, "labels", exact = TRUE),
+    stats::setNames(
+      c("1", "2", "3", "-77"),
+      c("Phone call", "TEXT message", "Other", "Seen but not answered")
+    )
+  )
+  # Only the other-specify text column is left without value labels.
+  expect_null(attr(dat[["q1.txt"]], "labels", exact = TRUE))
+  expect_identical(as.character(dat[["q1.txt"]]), "Letter")
+})
+
+test_that("a column without Levels carries no value labels", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID9_PAGE_SUBMIT = "12.3")
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = "QID9_PAGE_SUBMIT",
+    variable_name = "q9_page_submit",
+    qid = "QID9",
+    block = "Block A",
+    question = "Timing",
+    item = "Page Submit",
+    label = NA_character_,
+    level = NA_character_,
+    type = "Timing",
+    selector = "PageTimer",
+    sub_selector = NA_character_
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  # A question-backed column with no declared Level has no value universe:
+  # the unticked recode must not be declared against a missing Level, and
+  # the question text stays as the variable label.
+  expect_null(attr(dat$q9_page_submit, "labels", exact = TRUE))
+  expect_identical(
+    sjlabelled::get_label(dat$q9_page_submit),
+    "Timing Page Submit"
+  )
+})
