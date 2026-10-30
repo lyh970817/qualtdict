@@ -664,6 +664,28 @@ test_that("dict_split_blocks returns block-specific Variable Dictionaries", {
   )
 })
 
+test_that("block views preserve the absence of an exact survey ID", {
+  dict <- minimal_export_dict()
+  attr(dict, "surveyID") <- NULL
+  attr(dict, "surveyID_draft") <- "SV_DRAFT"
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      stop("A missing survey ID must fail before fetching.")
+    }
+  )
+
+  block_dicts <- dict_split_blocks(dict)
+
+  for (block_dict in block_dicts) {
+    expect_null(attr(block_dict, "surveyID", exact = TRUE))
+    expect_error(
+      survey_fetch_labelled(block_dict),
+      "missing its `surveyID` attribute",
+      fixed = TRUE
+    )
+  }
+})
+
 test_that("dict_split_blocks preserves unassigned Variable Dictionary rows", {
   dict <- minimal_export_dict(
     response_column_id = c("QID1", "ED1"),
@@ -1567,4 +1589,130 @@ test_that("only the Number content type coerces responses to numeric", {
 
   expect_type(number$q1, "double")
   expect_type(text_only$q1, "character")
+})
+
+test_that("numeric-validated text entry preserves its text values", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1_TEXT = c("06", "001"))
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = "QID1_TEXT",
+    variable_name = "entry",
+    block = "Block A",
+    label = NA_character_,
+    level = NA_character_,
+    type = "TE",
+    selector = "SL",
+    sub_selector = NA_character_,
+    content_type = "Number"
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  expect_type(dat$entry, "character")
+  expect_identical(as.character(dat$entry), c("06", "001"))
+  expect_null(attr(dat$entry, "labels", exact = TRUE))
+})
+
+test_that("partially declared levels retain their available value labels", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = c("1", NA_character_))
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1"),
+    variable_name = "q1",
+    block = "Block A",
+    label = c("Unrecorded", "Yes"),
+    level = c(NA_character_, "1")
+  )
+
+  dat <- survey_fetch_labelled(dict, extra_columns = NULL)
+
+  expect_identical(
+    attr(dat$q1, "labels", exact = TRUE),
+    c(Unrecorded = NA_character_, Yes = "1")
+  )
+  expect_identical(as.character(dat$q1), c("1", NA_character_))
+})
+
+test_that("a choice label containing TEXT keeps its value label", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1 = "2", QID1_3_TEXT = "Letter")
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = c("QID1", "QID1", "QID1", "QID1_3_TEXT"),
+    variable_name = c("q1", "q1", "q1", "q1.txt"),
+    qid = "QID1",
+    block = "Block A",
+    question = "How did we contact you?",
+    label = c("Phone call", "TEXT message", "Other", "Other_TEXT"),
+    level = c("1", "2", "3", "3_TEXT")
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  # The ordinal column labels every choice, "TEXT message" included.
+  expect_identical(
+    attr(dat$q1, "labels", exact = TRUE),
+    stats::setNames(
+      c("1", "2", "3", "-77"),
+      c("Phone call", "TEXT message", "Other", "Seen but not answered")
+    )
+  )
+  # Only the other-specify text column is left without value labels.
+  expect_null(attr(dat[["q1.txt"]], "labels", exact = TRUE))
+  expect_identical(as.character(dat[["q1.txt"]]), "Letter")
+})
+
+test_that("a column without Levels carries no value labels", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID9_PAGE_SUBMIT = "12.3")
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = "QID9_PAGE_SUBMIT",
+    variable_name = "q9_page_submit",
+    qid = "QID9",
+    block = "Block A",
+    question = "Timing",
+    item = "Page Submit",
+    label = NA_character_,
+    level = NA_character_,
+    type = "Timing",
+    selector = "PageTimer",
+    sub_selector = NA_character_
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  # A question-backed column with no declared Level has no value universe:
+  # the unticked recode must not be declared against a missing Level, and
+  # the question text stays as the variable label.
+  expect_null(attr(dat$q9_page_submit, "labels", exact = TRUE))
+  expect_identical(
+    sjlabelled::get_label(dat$q9_page_submit),
+    "Timing Page Submit"
+  )
 })

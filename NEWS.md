@@ -39,6 +39,17 @@
   of returning an empty findings table, so passing the list returned by
   `survey_split_blocks()` no longer reports no findings.
 
+- `survey_fetch_labelled()` no longer fails with a
+  `"qualtdict_level_label_mismatch"` error when a choice label contains
+  "TEXT", such as "TEXT message". Only the separate other-specify text
+  columns are left without value labels, as before.
+
+- `survey_fetch_labelled()` no longer attaches meaningless value labels
+  (`NA` labelled "Not NA") to columns with no choices, such as Timing, File
+  Upload, Slider, and carried-forward side-by-side columns, when
+  `unanswer_recode_multi` is set. These columns now keep their question text
+  as the variable label instead.
+
 ## Documentation
 
 - The README, the introduction vignette, and the help-file examples are

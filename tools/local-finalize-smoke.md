@@ -68,9 +68,11 @@ ordinary tests and package checks.
 ## Labelled Scenario Policy
 
 The smoke's only `survey_fetch_labelled` scenario calls it with
-`exclude_findings = "validation"`. Its summary is recorded as
-`labelled_excluding_validation`; there is no default-path scenario and no
-`labelled` summary any more. Live survey metadata can legitimately carry
+`exclude_findings = "validation"`, `unanswer_recode = -77` and
+`unanswer_recode_multi = 0`. Its summary is recorded as
+`labelled_excluding_validation`, and records these arguments under
+`arguments`; there is no default-path scenario and no `labelled` summary any
+more. Live survey metadata can legitimately carry
 Definite Validation Findings, and the severity gate (commit `fb05802`) aborts
 the default path before download when it does, so a default-path scenario
 would block the full smoke on a healthy corpus. The smoke's job is Response
@@ -79,6 +81,14 @@ definite-finding aborts are unit-tested in
 `tests/testthat/test-survey_fetch_labelled.R`, not smoke-tested. The
 Labelled Export Findings and survey block outputs are derived from this same
 excluding-validation Labelled Survey Data.
+
+The two unanswered recodes are the ones the consuming production pipeline
+passes, so the scenario mirrors production use and exercises the recode path
+of value labelling. Before they were added the smoke never took that path, and
+a bug in it (value labels attached to columns that declare no Level) was found
+only by mutation testing. The `arguments` entry is informational: Check
+compares only the summary hashes, but a change of arguments moves the
+labelled-output hash on any survey whose columns the recodes touch.
 
 ## Artifacts
 
