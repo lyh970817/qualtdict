@@ -1569,6 +1569,36 @@ test_that("only the Number content type coerces responses to numeric", {
   expect_type(text_only$q1, "character")
 })
 
+test_that("numeric-validated text entry preserves its text values", {
+  local_mocked_bindings(
+    fetch_survey2 = function(...) {
+      tibble::tibble(QID1_TEXT = c("06", "001"))
+    }
+  )
+  dict <- minimal_export_dict(
+    response_column_id = "QID1_TEXT",
+    variable_name = "entry",
+    block = "Block A",
+    label = NA_character_,
+    level = NA_character_,
+    type = "TE",
+    selector = "SL",
+    sub_selector = NA_character_,
+    content_type = "Number"
+  )
+
+  dat <- survey_fetch_labelled(
+    dict,
+    extra_columns = NULL,
+    unanswer_recode = -77,
+    unanswer_recode_multi = 0
+  )
+
+  expect_type(dat$entry, "character")
+  expect_identical(as.character(dat$entry), c("06", "001"))
+  expect_null(attr(dat$entry, "labels", exact = TRUE))
+})
+
 test_that("a choice label containing TEXT keeps its value label", {
   local_mocked_bindings(
     fetch_survey2 = function(...) {
