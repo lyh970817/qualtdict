@@ -10,6 +10,8 @@
 [![Project Status: Active - The project has reached a stable, usable
 state and is being actively
 developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Status at rOpenSci Software Peer
+Review](https://badges.ropensci.org/807_status.svg)](https://github.com/ropensci/software-review/issues/807)
 [![check-standard](https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/check-standard.yaml)
 [![test-coverage](https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml/badge.svg)](https://github.com/lyh970817/qualtdict/actions/workflows/test-coverage.yaml)
 [![Codecov test
